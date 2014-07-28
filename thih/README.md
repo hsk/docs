@@ -45,29 +45,29 @@ Version of November 23, 2000.
 
 ### 7.2  Class Environments クラス環境
 
-### 7.3  Entailment
+### 7.3  Entailment 論理的含意、ならば、派生体?
 
-### 7.4  Context Reduction
+### 7.4  Context Reduction コンテキストリダクション
 
-## 8  Type Schemes
+## 8  Type Schemes 型スキーム
 
 ## 9  Assumptions
 
-## 10  A Type Inference Monad
+## 10  A Type Inference Monad 型推論モナド
 
-## 11  Type Inference
-## 11.1  Literals
-## 11.2  Patterns
-## 11.3  Expressions
-## 11.4  Alternatives
-## 11.5  From Types to Type Schemes
+## 11  Type Inference 型推論
+## 11.1  Literals リテラル
+## 11.2  Patterns パターン
+## 11.3  Expressions 式
+## 11.4  Alternatives Alternative
+## 11.5  From Types to Type Schemes 型から型スキーム
 ## 11.5.1  Ambiguity and Defaults
-## 11.6  Binding Groups
+## 11.6  Binding Groups バインディンググループ
 ## 11.6.1  Explicitly Typed Bindings
 ## 11.6.2  Implicitly Typed Bindings
 ## 11.6.3  Combined Binding Groups
 ## 11.6.4  Top-level Binding Groups
-## 12  Conclusions
-## Acknowledgments
-## References
+## 12  Conclusions まとめ
+## Acknowledgments　ナレッジメント
+## References 参照
 ## Footnotes:
