@@ -1,11 +1,15 @@
 (*
- This file is a translation of the code pertaining to the article
+
+ This file is a translation and changing of the code pertaining to the article
  `Typing Haskell in Haskell' by Mark P. Jones [1], from Haskell to OCaml.
+ Original OCaml file made by Cyril Soldani [2]. 
 
  1: http://web.cecs.pdx.edu/~mpj/thih/
-
+ 2: http://devmusings.legiasoft.com/_media/blog/2010/08/04/typinghaskellinml.ml
+ 
  Copyright (C) 1999 - 2000  Mark P. Jones
  Copyright (C) 2010 Cyril Soldani
+ Copyrigtt (C) 2014 Hiroshi Sakurai
 
  Here follows the license (license of the original Haskell code from the
  article).
