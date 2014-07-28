@@ -1,7 +1,6 @@
 # Typing Haskell in Haskell
 
-http://web.cecs.pdx.edu/~mpj/thih/TypingHaskellInHaskell.htmlの翻訳
-
+http://web.cecs.pdx.edu/~mpj/thih/TypingHaskellInHaskell.html の翻訳
 
 MARK P. JONES
 
