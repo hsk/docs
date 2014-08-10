@@ -58,42 +58,50 @@ open Num
 (* 2 予備知識 *)
 module Pre = struct
   (* 和集合 *)
-  let union xs ys = filter (fun x -> not (mem x ys)) xs @ ys
+  let union (xs: 'a list) (ys: 'a list):'a list =
+    filter (fun x -> not (mem x ys)) xs @ ys
 
   (* 積集合 *)
-  let intersect xs ys = filter (fun x -> mem x ys) xs
+  let intersect (xs: 'a list) (ys: 'a list): 'a list =
+    filter (fun x -> mem x ys) xs
 
   (* リストをセットにする。要素が１つずつにまとめる *)
-  let nub xs =
+  let nub (xs : 'a list): 'a list =
     let addToSet ys y = if mem y ys then ys else y :: ys in
     fold_left addToSet [] xs
 
   (* 空チェック *)
-  let isEmpty = function
+  let isEmpty(xs: 'a list):bool =
+    match xs with
     | [] -> true
     | _ -> false
 
   (* たぶんこれは、reduceじゃないのかな *)
-  let fold_left1 f = function
+  let fold_left1 (f:'a -> 'a -> 'a) (xs:'a list): 'a = 
+    match xs with
     | [] -> invalid_arg "empty list"
     | [x] -> x
     | x :: xs -> fold_left f x xs
 
   (* リスト内の最初の1個目のxを削除する *)
-  let rec deleteFirst x = function
+  let rec deleteFirst (x:'a) (ys:'a list): 'a list = 
+    match ys with
     | [] -> []
     | y :: ys ->
       if x = y then ys
       else y :: deleteFirst x ys
 
   (* 最初のリストから2番目のリストの要素を消す *)
-  let rec diff xs = function
+  let rec diff (xs:'a list) (ys:'a list): 'a list =
+    match ys with
     | [] -> xs
     | y :: ys -> diff (deleteFirst y xs) ys
 
   (*3つの多値を持っているリストを３つのリストに分割する *)
-  let split3 xs =
-    let rec loop (ws, xs, ys) = function
+  let split3 (xs:('a * 'b * 'c)list):('a list * 'b list * 'c list) =
+    let rec loop ((ws:'a list), (xs:'b list), (ys:'c list))
+      (zs:('a * 'b * 'c)list):('a list * 'b list * 'c list) =
+      match zs with
       | [] -> (rev ws, rev xs, rev ys)
       | (w, x, y) :: zs -> loop (w :: ws, x :: xs, y :: ys) zs in
     loop ([], [], []) xs
@@ -103,7 +111,8 @@ module Id = struct
   type id = string
 
   (* 数値に対するidを取得する *)
-  let enumId n : id = "v" ^ string_of_int n
+  let enumId (n:int) : id =
+    "v" ^ string_of_int n
 end
 
 (* 3 Kinds *)
@@ -127,28 +136,29 @@ module Type = struct
     | TAp of type_ * type_
     | TGen of int
 
-  let tUnit = TCon(Tycon("()", Star))
-  let tChar = TCon(Tycon("Char", Star))
-  let tInt = TCon(Tycon("Int", Star))
-  let tInteger = TCon(Tycon("Integer", Star))
-  let tFloat = TCon(Tycon("Float", Star))
-  let tDouble = TCon(Tycon("Double", Star))
+  let tUnit :type_ = TCon(Tycon("()", Star))
+  let tChar :type_ = TCon(Tycon("Char", Star))
+  let tInt :type_ = TCon(Tycon("Int", Star))
+  let tInteger :type_ = TCon(Tycon("Integer", Star))
+  let tFloat :type_ = TCon(Tycon("Float", Star))
+  let tDouble :type_ = TCon(Tycon("Double", Star))
 
-  let tList = TCon(Tycon("[]", Kfun(Star, Star)))
-  let tArrow = TCon(Tycon("(->)", Kfun(Star, Kfun(Star, Star))))
-  let tTuple2 = TCon(Tycon("(,)", Kfun(Star, Kfun(Star, Star))))
+  let tList :type_ = TCon(Tycon("[]", Kfun(Star, Star)))
+  let tArrow :type_ = TCon(Tycon("(->)", Kfun(Star, Kfun(Star, Star))))
+  let tTuple2 :type_ = TCon(Tycon("(,)", Kfun(Star, Kfun(Star, Star))))
 
-  let fn a b = TAp(TAp(tArrow, a), b)
+  let fn a b :type_ = TAp(TAp(tArrow, a), b)
 
-  let list t = TAp(tList, t)
+  let list t :type_ = TAp(tList, t)
 
-  let tString = list tChar
+  let tString :type_ = list tChar
 
-  let pair a b = TAp(TAp(tTuple2, a), b)
+  let pair a b :type_ = TAp(TAp(tTuple2, a), b)
 
-  let tyvarKind (Tyvar(_, k)) = k
-  let tyconKind (Tycon(_, k)) = k
-  let rec typeKind = function
+  let tyvarKind (Tyvar(_, k)) :kind = k
+  let tyconKind (Tycon(_, k)) :kind = k
+  let rec typeKind t:kind =
+    match t with
     | TCon tc -> tyconKind tc
     | TVar u -> tyvarKind u
     | TAp(t, _) ->
@@ -169,23 +179,31 @@ module Subst = struct
 
   let (+->) u t : subst = [(u, t)]
 
-  let rec typeApply (s : subst) = function
+  (* 型変数を展開する *)
+  let rec typeApply (s : subst) (t:type_):type_ = 
+    match t with
     | TVar u as t ->
-      begin try assoc u s
-      with Not_found -> t
-      end
+      (try
+        assoc u s
+      with
+        Not_found -> t
+      )
     | TAp(l, r) -> TAp(typeApply s l, typeApply s r)
     | t -> t
 
-  let rec typeTv = function
+  let rec typeTv (t:type_):tyvar list =
+    match t with
     | TVar u -> [u]
     | TAp(l, r) -> Pre.union (typeTv l) (typeTv r)
     | _ -> []
 
-  let listApply (apply : subst -> 'a -> 'a) (s : subst) xs = map (apply s) xs
-  let listTv tv xs : tyvar list = Pre.nub (concat (map tv xs))
+  let listApply (apply : subst -> 'a -> 'b) (s : subst) (xs:'a list):'b list =
+    map (apply s) xs
 
-  let (@@) s1 (s2 : subst) : subst =
+  let listTv (tv:'a -> tyvar list) (xs:'a list) : tyvar list =
+    Pre.nub (concat (map tv xs))
+
+  let (@@) (s1:subst) (s2 : subst) : subst =
      map (fun (u, t) -> (u, typeApply s1 t)) s2 @ s1
 
   let merge s1 s2 : subst =
@@ -201,7 +219,7 @@ module Unify = struct
   open Type
   open Subst
 
-  let rec mgu t1 t2 =
+  let rec mgu (t1:type_) (t2:type_):subst =
     match t1, t2 with
     | TAp(l, r), TAp(l', r') ->
       let s1 = mgu l l' in
@@ -211,13 +229,13 @@ module Unify = struct
     | TCon tc1, TCon tc2 when tc1 = tc2 -> nullSubst
     | _ -> failwith "types do not unify"
 
-  and varBind u t =
+  and varBind (u:tyvar) (t:type_):subst =
     if t = TVar u then nullSubst
     else if mem u (typeTv t) then failwith "occurs check fails"
     else if tyvarKind u <> typeKind t then failwith "kinds do not match"
     else u +-> t
 
-  let rec match_ t1 t2 =
+  let rec match_ (t1:type_) (t2:type_):subst =
     match t1, t2 with
     | TAp(l, r), TAp(l', r') ->
       let sl = match_ l l' in
@@ -232,24 +250,40 @@ end
 module Pred = struct
   open Kind
   open Type
+  open Subst
 
   (* 7.1 Basic definitions *)
   type pred = IsIn of Id.id * type_
   type 't qual = Qual of pred list * 't
 
-  let predApply s (IsIn(i, t)) = IsIn(i, Subst.typeApply s t)
-  let predsApply = Subst.listApply predApply
+  let predApply (s:subst) (pred:pred):pred =
+    match pred with
+    | IsIn(i, t) -> IsIn(i, Subst.typeApply s t)
 
-  let qualTypeApply s (Qual(ps, t)) = Qual(predsApply s ps, Subst.typeApply s t)
+  let predsApply (s:subst) (xs:pred list):pred list =
+    Subst.listApply predApply s xs
 
-  let predTv (IsIn(_, t)) = Subst.typeTv t
-  let predsTv = Subst.listTv predTv
+  let qualTypeApply (s:subst) (qual:type_ qual):type_ qual =
+    match qual with
+    | Qual(ps, t) -> Qual(predsApply s ps, Subst.typeApply s t)
 
-  let qualTypeTv (Qual(ps, t)) = Pre.union (predsTv ps) (Subst.typeTv t)
+  let predTv (pred:pred):tyvar list =
+    match pred with
+    | IsIn(_, t) -> Subst.typeTv t
 
-  let lift m (IsIn(i, t)) (IsIn(i', t')) =
-    if i = i' then m t t'
-    else failwith "classes differ"
+  let predsTv (xs:'a list) : tyvar list =
+    Subst.listTv predTv xs
+
+  let qualTypeTv qual =
+    match qual with
+    | Qual(ps, t) ->
+      Pre.union (predsTv ps) (Subst.typeTv t)
+
+  let lift (m:type_->type_->'a) (p:pred) (p':pred):'a =
+    match (p, p') with
+    | IsIn(i, t), IsIn(i', t') ->
+      if i = i' then m t t'
+      else failwith "classes differ"
 
   let mguPred = lift Unify.mgu
   let matchPred = lift Unify.match_
@@ -265,20 +299,20 @@ module Pred = struct
   }
 
 
-  let super ce i = fst (ce.classes i)
+  let super (ce:classEnv) i = fst (ce.classes i)
 
-  let insts ce i = snd (ce.classes i)
+  let insts (ce:classEnv) i = snd (ce.classes i)
 
-  let defined ce i =
+  let defined (ce:classEnv) i =
     try
       ignore (ce.classes i);
       true
     with Not_found -> false
 
-  let modify ce i c =
+  let modify (ce:classEnv) i c =
     { ce with classes = fun j -> if i = j then c else ce.classes j; }
 
-  let initialEnv = {
+  let initialEnv :classEnv = {
     classes = (fun i -> raise Not_found);
     defaults = [tInteger; tDouble]
   }
@@ -286,16 +320,16 @@ module Pred = struct
   type envTransformer = classEnv -> classEnv
 
   let (<:>) (f : envTransformer) (g : envTransformer) : envTransformer =
-    fun ce -> g (f ce)
+    fun (ce:classEnv) -> g (f ce)
 
   let addClass i is : envTransformer =
-    fun ce ->
+    fun (ce:classEnv) ->
       if defined ce i then failwith "class already defined"
       else if exists (fun i -> not (defined ce i)) is then
         failwith "superclass not defined"
       else modify ce i (is, [])
 
-  let addCoreClasses =
+  let addCoreClasses :envTransformer =
         addClass "Eq" []
     <:> addClass "Ord" ["Eq"]
     <:> addClass "Show" []
@@ -305,7 +339,7 @@ module Pred = struct
     <:> addClass "Functor" []
     <:> addClass "Monad" []
 
-  let addNumClasses =
+  let addNumClasses :envTransformer =
         addClass "Num" ["Eq"; "Show"]
     <:> addClass "Real" ["Num"; "Ord"]
     <:> addClass "Fractional" ["Num"]
@@ -314,26 +348,25 @@ module Pred = struct
     <:> addClass "Floating" ["Fractional"]
     <:> addClass "RealFloat" ["RealFrac"; "Floating"]
 
-  let addPreludeClasses = addCoreClasses <:> addNumClasses
+  let addPreludeClasses :envTransformer =
+    addCoreClasses <:> addNumClasses
 
-  let overlap p q =
+  let overlap (p:pred) (q:pred) : bool =
     try
       ignore (mguPred p q);
       true
     with _ -> false
 
   let addInst ps (IsIn(i, _) as p) : envTransformer =
-    fun ce ->
-      if not (defined ce i) then failwith "no class for instance"
-      else
-        let its = insts ce i in
-        let qs = map (fun (Qual(_, q)) -> q) its in
-        if exists (overlap p) qs then failwith "overlapping instance"
-        else
-          let c = super ce i, Qual(ps, p) :: its in
-          modify ce i c
+    fun (ce:classEnv) ->
+      if not (defined ce i) then failwith "no class for instance";
+      let its = insts ce i in
+      let qs = map (fun (Qual(_, q)) -> q) its in
+      if exists (overlap p) qs then failwith "overlapping instance";      
+      let c = super ce i, Qual(ps, p) :: its in
+      modify ce i c
 
-  let exampleInsts =
+  let exampleInsts : envTransformer =
         addPreludeClasses
     <:> addInst [] (IsIn("Ord", tUnit))
     <:> addInst [] (IsIn("Ord", tChar))
@@ -345,11 +378,10 @@ module Pred = struct
 
   (* 7.3 Entailment *)
 
-
-  let rec bySuper ce (IsIn(i, t) as p) =
+  let rec bySuper (ce:classEnv) (IsIn(i, t) as p) =
     p :: concat (map (fun i' -> bySuper ce (IsIn(i', t))) (super ce i))
 
-  let byInst ce (IsIn(i, t) as p) =
+  let byInst (ce:classEnv) (IsIn(i, t) as p) =
     let tryInst (Qual(ps, h)) =
       try
        let u = matchPred h p in
@@ -361,7 +393,7 @@ module Pred = struct
       | x :: _ -> x in
     msum (map tryInst (insts ce i))
 
-  let rec entail ce ps p =
+  let rec entail (ce:classEnv) ps p =
     exists (mem p) (map (bySuper ce) ps) ||
     match byInst ce p with
     | None -> false
@@ -369,23 +401,26 @@ module Pred = struct
 
   (* 7.4 Context Reduction *)
 
-  let inHnf (IsIn(_, t)) =
-    let rec hnf = function
-      | TVar _ -> true
-      | TCon _ -> false
-      | TAp(t, _) -> hnf t
-      | TGen _ -> failwith "context reduction on generic variable" in
-    hnf t
+  let inHnf (p:pred):bool =
+    match p with
+    | IsIn(_, t) ->
+      let rec hnf = function
+        | TVar _ -> true
+        | TCon _ -> false
+        | TAp(t, _) -> hnf t
+        | TGen _ -> failwith "context reduction on generic variable"
+      in
+      hnf t
 
-  let rec toHnfs ce ps = concat (map (toHnf ce) ps)
-  and toHnf ce p =
+  let rec toHnfs (ce:classEnv) ps = concat (map (toHnf ce) ps)
+  and toHnf (ce:classEnv) p =
     if inHnf p then [p]
     else
       match byInst ce p with
       | None -> failwith "context reduction"
       | Some ps -> toHnfs ce ps
 
-  let simplify ce ps =
+  let simplify (ce:classEnv) ps =
     let rec loop rs = function
       | [] -> rs
       | p :: ps ->
@@ -393,9 +428,11 @@ module Pred = struct
         else loop (p :: rs) ps in
     loop [] ps
 
-  let reduce ce ps = simplify ce (toHnfs ce ps)
+  let reduce (ce:classEnv) ps =
+    simplify ce (toHnfs ce ps)
 
-  let scEntail ce ps p = exists (mem p) (map (bySuper ce) ps)
+  let scEntail (ce:classEnv) ps p =
+    exists (mem p) (map (bySuper ce) ps)
 end
 
 (* 8 Type Schemes *)
@@ -407,11 +444,12 @@ module Scheme = struct
 
   type scheme = Forall of kind list * type_ qual
 
-  let schemeApply s (Forall(ks, qt)) = Forall(ks, qualTypeApply s qt)
+  let schemeApply (s:Subst.subst) (Forall(ks, qt):scheme):scheme =
+    Forall(ks, qualTypeApply s qt)
 
-  let schemeTv (Forall(_, qt)) = qualTypeTv qt
+  let schemeTv (Forall(_, qt):scheme):tyvar list = qualTypeTv qt
 
-  let quantify vs qt =
+  let quantify(vs:tyvar list) (qt:type_ qual):scheme =
     let vs' = filter (fun v -> mem v vs) (qualTypeTv qt) in
     let ks = map tyvarKind vs' in
     let newGen v =
@@ -422,7 +460,7 @@ module Scheme = struct
     let s = map newGen vs' in
     Forall(ks, qualTypeApply s qt)
 
-  let toScheme t = Forall([], (Qual([], t)))
+  let toScheme (t:type_) :scheme = Forall([], (Qual([], t)))
 end
 
 (* 9 Assumptions *)
@@ -432,16 +470,20 @@ module Assump = struct
 
   type assump = Assump of Id.id * scheme
 
-  let assumpApply s (Assump(i, sc)) = Assump(i, schemeApply s sc)
+  let assumpApply (s:Subst.subst) (Assump(i, sc):assump) : assump =
+    Assump(i, schemeApply s sc)
 
-  let assumpTv (Assump(_, sc)) = schemeTv sc
+  let assumpTv (Assump(_, sc):assump):Type.tyvar list =
+    schemeTv sc
 
-  let assumpsApply = Subst.listApply assumpApply
+  let assumpsApply (s:Subst.subst) (ass:assump list): assump list =
+    Subst.listApply assumpApply s ass
 
-  let assumpsTv = Subst.listTv assumpTv
+  let assumpsTv (ass:assump list): Type.tyvar list =
+    Subst.listTv assumpTv ass
 
-  let find i as_ =
-    let Assump(_, sc) = List.find (fun (Assump(i', _)) -> i = i') as_ in
+  let find (i:Id.id) (ass:assump list): scheme =
+    let Assump(_, sc) = List.find (fun (Assump(i', _)) -> i = i') ass in
     sc
 end
 
@@ -456,35 +498,41 @@ module TIMonad = struct
 
   type ti = subst ref * int ref
 
-  let runTI (f : ti -> 'a) = f (ref nullSubst, ref 0)
+  let runTI (f : ti -> 'a):'a =
+    f (ref nullSubst, ref 0)
 
   let getSubst ((s, _) : ti):subst = !s
 
-
-  let extSubst ((s, _) : ti) u:unit = s := u @@ !s
+  let extSubst ((s, _) : ti) (u:subst) :unit = s := u @@ !s
 
   let unify (ti:ti) (t1:type_) (t2:type_) :unit=
     let s:subst = getSubst ti in
     let u = Unify.mgu (typeApply s t1) (typeApply s t2) in
     extSubst ti u
 
-  let newTVar ((_, n) : ti) k =
+  let newTVar ((_, n) : ti) k : type_ =
     let v = Tyvar(Id.enumId !n, k) in
     incr n;
     TVar v
 
-  let rec typeInst ts = function
+  let rec typeInst (ts:type_ list) (t:type_):type_ = 
+    match t with
     | TAp(l, r) -> TAp(typeInst ts l, typeInst ts r)
     | TGen n -> nth ts n
     | t -> t
 
-  let listInst inst (ts : type_ list) (xs : 'a list) : 'a list = map (inst ts) xs
+  let listInst (inst: type_ list -> 'a -> 'a)
+    (ts : type_ list) (xs : 'a list) : 'a list =
+    map (inst ts) xs
 
-  let predInst ts (IsIn(c, t)) = IsIn(c, typeInst ts t)
+  let predInst (ts: type_ list) (IsIn(c, t): pred):pred =
+    IsIn(c, typeInst ts t)
 
-  let qualTypeInst ts (Qual(ps, t)) = Qual(listInst predInst ts ps, typeInst ts t)
+  let qualTypeInst (ts:type_ list)
+    (Qual(ps, t):type_ qual):type_ qual =
+    Qual(listInst predInst ts ps, typeInst ts t)
 
-  let freshInst ti (Forall(ks, qt)) =
+  let freshInst (ti:ti) (Forall(ks, qt):scheme) : type_ qual =
     let ts = map (newTVar ti) ks in
     qualTypeInst ts qt
 end
@@ -512,7 +560,8 @@ module Lit = struct
     | LitRat of num
     | LitStr of string
 
-  let tiLit ti = function
+  let tiLit (ti:ti) (lit:literal):pred list * type_ =
+    match lit with
     | LitChar _ -> ([], tChar)
     | LitInt _ ->
       let v = newTVar ti Star in
@@ -542,7 +591,8 @@ module Pat = struct
     | PNpk of Id.id * big_int
     | PCon of assump * pat list
 
-  let rec tiPat ti = function
+  let rec tiPat (ti:ti) (pat:pat):pred list * assump list * type_ =
+    match pat with
     | PVar i ->
       let t = newTVar ti Star in
       ([], [Assump(i, toScheme t)], t)
@@ -562,7 +612,7 @@ module Pat = struct
       let Qual(qs, t) = freshInst ti sc in
       unify ti t (fold_right fn ts t');
       (ps @ qs, as_, t')
-  and tiPats ti pats =
+  and tiPats (ti:ti) (pats:pat list):pred list * assump list * type_ list =
     let (pss, ass, ts) = Pre.split3 (map (tiPat ti) pats) in
     (concat pss, concat ass, ts)
 end
@@ -585,7 +635,7 @@ module TIMain = struct
 
   type ambiguity = tyvar * pred list
 
-  let ambiguities vs ps : ambiguity list =
+  let ambiguities (vs:tyvar list) (ps:pred list) : ambiguity list =
     let vs' = Pre.diff (predsTv ps) vs in
     map (fun v -> (v, filter (fun p -> mem v (predTv p)) ps)) vs'
 
@@ -597,7 +647,7 @@ module TIMain = struct
     "Eq"; "Ord"; "Show"; "Read"; "Bounded"; "Enum"; "Ix"; "Functor"; "Monad";
     "MonadPlus"] @ numClasses
 
-  let candidates ce ((v, qs) : ambiguity) =
+  let candidates (ce:classEnv) ((v, qs) : ambiguity): type_ list =
     let is = map (fun (IsIn(i, _)) -> i) qs in
     let ts = map (fun (IsIn(_, t)) -> t) qs in
     if for_all (fun t -> t = TVar v) ts &&
@@ -608,18 +658,21 @@ module TIMain = struct
       filter isCandidate ce.defaults
     else []
 
-  let withDefaults f ce vs ps =
+  let withDefaults (f:ambiguity list -> type_ list -> 'a)
+    (ce:classEnv) (vs:tyvar list) (ps:pred list):'a =
     let vps = ambiguities vs ps in
     let tss = map (candidates ce) vps in
     if exists Pre.isEmpty tss then failwith "cannot resolve ambiguity"
     else f vps (map hd tss)
 
-  let defaultedPreds = withDefaults (fun vps ts -> concat (map snd vps))
+  let defaultedPreds (ce:classEnv) (vs:tyvar list) (ps:pred list):pred list =
+    withDefaults (fun vps ts -> concat (map snd vps)) ce vs ps
 
-  let defaultSubst ce vs ps : subst =
+  let defaultSubst (ce:classEnv) (vs:tyvar list) (ps:pred list): subst =
     withDefaults (fun vps ts -> combine (map fst vps) ts) ce vs ps
 
-  let split ce fs gs ps =
+  let split (ce:classEnv) (fs:tyvar list) (gs:tyvar list)
+    (ps:pred list): pred list * pred list =
     let ps' = reduce ce ps in
     let (ds, rs) =
       partition (fun p -> for_all (fun t -> mem t fs) (predTv p)) ps' in
@@ -640,7 +693,7 @@ module TIMain = struct
     (*| If of expr * expr * expr*)
     (*| Case of expr * (Pat * Expr) list*)
 
-  let restricted (bs : impl list) =
+  let restricted (bs : impl list):bool =
     let simple (i, alts) = exists (fun alt -> Pre.isEmpty (fst alt)) alts in
     exists simple bs
 
@@ -652,7 +705,8 @@ module TIMain = struct
         let (qs, as'') = tiSeq f ti ce (as' @ as_) bss in
         (ps @ qs, as'' @ as')
 
-  let rec tiExpr ti ce as_ = function
+  let rec tiExpr (ti:ti)(ce:classEnv)(as_:assump list)(expr: expr): pred list * type_ =
+    match expr with
     | Var i ->
       let sc = find i as_ in
       let Qual(ps, t) = freshInst ti sc in
@@ -672,13 +726,13 @@ module TIMain = struct
       let (qs, t) = tiExpr ti ce (as' @ as_) e in
       (ps @ qs, t)
     (*| Lam(alt) -> tiAlt ti ce as_ alt *)
-    | If(e, e1, e2) ->
+    (*| If(e, e1, e2) ->
       let (ps,t) = tiExpr ti ce as_ e in
       unify ti t tBool;
       let (ps1,t1) = tiExpr ti ce as_ e1 in
       let (ps2,t2) = tiExpr ti ce as_ e2 in
       unify ti t1 t2;
-      (ps @ ps1 @ ps2, t1)
+      (ps @ ps1 @ ps2, t1)*)
     (*| Case(e, branches) ->
       let (ps, t) = tiExpr ti ce as_ e in
       let v = newTVar Star in
@@ -698,11 +752,11 @@ module TIMain = struct
       let (ps, as', ts) = tiPats ti pats in
       let (qs, t) = tiExpr ti ce (as' @ as_) e in
       (ps @ qs, fold_right fn ts t)
-  and tiAlts ti ce as_ alts t =
+  and tiAlts (ti:ti)(ce:classEnv)(as_:assump list)(alts:alt list)(t:type_):pred list =
     let (ps, ts) = List.split (map (tiAlt ti ce as_) alts) in
     iter (unify ti t) ts;
     concat ps
-  and tiExpl ti ce as_ ((i, sc, alts) : expl) =
+  and tiExpl (ti:ti)(ce:classEnv)(as_:assump list)((i, sc, alts) : expl):pred list =
     let Qual(qs, t) = freshInst ti sc in
     let ps = tiAlts ti ce as_ alts t in
     let s = getSubst ti in
@@ -746,7 +800,7 @@ module TIMain = struct
 
   type program = bindGroup list
 
-  let tiProgram ce as_ (bgs : program) =
+  let tiProgram (ce:classEnv) (as_:assump list) (bgs : program):assump list =
     runTI (fun ti ->
             let (ps, as') = tiSeq tiBindGroup ti ce as_ bgs in
             let s = getSubst ti in
