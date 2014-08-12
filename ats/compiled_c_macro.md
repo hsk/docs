@@ -1,8 +1,15 @@
-# ATSのコンパイラ結果マクロ
+# Index of ATS0.1.0 compiled results macros 
 
-# pats_ccomp_config.h
+ATS0.1.0で以下のコードをコンパイルしました。
+
+		implement main0() = {}
+
+この結果のヘッダファイルを見やすく書き出しました。
+
+# [pats_ccomp_config.h](https://github.com/githwxi/ATS-Postiats/blob/master/ccomp/runtime/pats_ccomp_config.h)
 
 empty
+
 
 # [pats_ccomp_basics.h](https://github.com/githwxi/ATS-Postiats/blob/master/ccomp/runtime/pats_ccomp_basics.h)
 
@@ -153,7 +160,7 @@ void_int(err) argc_argv_int(argc, argv, err) argc_argv_envp_int(argc, argv, envp
 * extern void atsruntime_handle_unmatchedval (char *msg0) ;
 * extern void atsruntime_handle_unmatchedarg (char *msg0) ;
 
-# pats_ccomp_typedefs.h
+# [pats_ccomp_typedefs.h](https://github.com/githwxi/ATS-Postiats/blob/master/ccomp/runtime/pats_ccomp_typedefs.h)
 
 
 ## struct types
@@ -331,13 +338,13 @@ HX-2014-05: making it not usable!!!
 
 		atstype_ref
 
-# pats_ccomp_instrset.h
+# [pats_ccomp_instrset.h](https://github.com/githwxi/ATS-Postiats/blob/master/ccomp/runtime/pats_ccomp_instrset.h)
 
 ## bool
 
 bool_true bool_false
 
-boolの値の定義
+define of bool value
 
 * atsbool_true
 
@@ -355,32 +362,32 @@ tysum tyexn tylist tyclo tylazy
 
 		struct{ int contag; }
 
-	sum用の構造体
+	struct of sum
 * ATStyexn()
 
 		struct{ int exntag; char *exnmsg; }
-	exn用の構造体
+	struct of exn
 * ATStylist(tyelt)
 
 		struct{ tyelt head; void *tail; }
-	リスト用の構造体
+	struct of list
 * ATStyclo()
 
 		struct{ void *cfun; }
 
-	クロージャ用の構造体
+	struct of closure
 * ATStylazy(tyval)
 
 		struct{ int flag; union{ void* thunk; tyval saved; } lazy; }
 
-	遅延評価用の構造体
+	struct of lazy evalution
 
 ## empty
 
 * ATSempty()
 
 		　
-	なにもしない
+	empty
 
 ## If
 
@@ -1015,7 +1022,7 @@ atspre_lazy_vt_free
           ATS_MFREE(__thunk) ;
         } while (0) /* atspre_lazy_vt_free */
 
-# pats_ccomp_memalloc.h
+# [pats_ccomp_memalloc.h](https://github.com/githwxi/ATS-Postiats/blob/master/ccomp/runtime/pats_ccomp_memalloc.h)
 
 ## malloc functions
 
@@ -1073,7 +1080,7 @@ atspre_lazy_vt_free
 * ATS_CALLOC atsruntime_calloc_undef
 * ATS_REALLOC atsruntime_realloc_undef
 
-# pats_ccomp_memalloca.h
+# [pats_ccomp_memalloca.h](https://github.com/githwxi/ATS-Postiats/blob/master/ccomp/runtime/pats_ccomp_memalloca.h)
 
 * extern void *alloca (size_t bsz) ;
 
@@ -1094,7 +1101,7 @@ HX: [afree] matches [alloca]
 		  (atstype_size bsz) { return alloca(bsz) ; }
 
 
-# pats_ccomp_exception.h
+# [pats_ccomp_exception.h](https://github.com/githwxi/ATS-Postiats/blob/master/ccomp/runtime/pats_ccomp_exception.h)
 
 
 	#include <setjmp.h>
