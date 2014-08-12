@@ -1,5 +1,338 @@
 # ATSのコンパイラ結果マクロ
 
+# pats_ccomp_config.h
+
+empty
+
+# pats_ccomp_basics.h
+
+## primitives
+
+bool_true bool_false ptr_null extval(name)
+
+* atsbool_true
+
+		1
+* atsbool_false
+
+		0
+* atsptr_null
+
+		((void*)0)
+
+* ATSextval(name)
+
+		name
+
+## inline extern static
+
+inline() extern() static()
+
+* ATSinline()
+
+		static inline
+
+* ATSextern()
+
+		extern
+* ATSstatic()
+
+		static
+
+## dyn
+
+	load0(flag) load1(flag) loadset(flag) loadfcall(dynloadfun)
+
+* ATSdynload0(flag)
+
+		int flag = 0
+* ATSdynload1(flag)
+
+		ATSextern() int flag
+* ATSdynloadset(flag)
+
+		flag = 1
+* ATSdynloadfcall(dynloadfun)
+
+		dynloadfun()
+
+## dynexn
+
+		#ifndef _ATS_CCOMP_EXCEPTION_NONE
+
+dec(d2c) initize(d2c, exnmsg) extdec(d2c)
+
+* ATSdynexn_dec(d2c)
+
+		atstype_exncon d2c = { 0, "ats-exncon-name" }
+* ATSdynexn_initize(d2c, exnmsg)
+
+		the_atsexncon_initize(&(d2c), exnmsg)
+* ATSdynexn_extdec(d2c)
+
+		ATSextern() atstype_exncon d2c
+
+
+		#endif // end of [_ATS_CCOMP_EXCEPTION_NONE]
+
+## assume
+
+assume(flag)
+
+* ATSassume(flag)
+
+		void *flag = (void*)0
+
+## dyncst
+
+mac(d2c) castfn(d2c)
+
+extfun(d2c, targs, tres)
+
+stafun(d2c, targs, tres)
+
+* ATSdyncst_mac(d2c)
+
+		　
+
+* ATSdyncst_castfn(d2c)
+
+		　
+
+* ATSdyncst_extfun(d2c, targs, tres)
+
+		ATSextern() tres d2c targs
+
+* ATSdyncst_stafun(d2c, targs, tres)
+
+		ATSstatic() tres d2c targs
+
+## dyncst_val
+
+imp(d2c, type) dec(d2c, type) bind(d2c, pmv)
+
+* ATSdyncst_valimp(d2c, type)
+
+		type d2c
+* ATSdyncst_valdec(d2c, type)
+
+		ATSextern() type d2c
+* ATSdyncst_valbind(d2c, pmv)
+
+		d2c = (pmv)
+
+## mainats
+
+void_0(err) argc_argv_0(argc, argv, err) argc_argv_envp_0(argc, argv, envp, err)
+
+void_int(err) argc_argv_int(argc, argv, err) argc_argv_envp_int(argc, argv, envp, err)
+
+* ATSmainats_void_0(err)
+
+		mainats_void_0()
+* ATSmainats_argc_argv_0(argc, argv, err)
+
+		mainats_argc_argv_0(argc, argv)
+* ATSmainats_argc_argv_envp_0(argc, argv, envp, err)
+
+		mainats_argc_argv_envp_0(argc, argv, envp)
+* ATSmainats_void_int(err)
+
+		err = mainats_void_int()
+* ATSmainats_argc_argv_int(argc, argv, err)
+
+		err = mainats_argc_argv_int(argc, argv)
+* ATSmainats_argc_argv_envp_int(argc, argv, envp, err)
+
+		err = mainats_argc_argv_envp_int(argc, argv, envp)
+
+## error functions
+
+* extern void atsruntime_raise (void *exn) ;
+* extern void atsruntime_handle_uncaughtexn (void *exn0) ;
+* extern void atsruntime_handle_unmatchedval (char *msg0) ;
+* extern void atsruntime_handle_unmatchedarg (char *msg0) ;
+
+# pats_ccomp_typedefs.h
+
+
+## struct types
+
+* struct atstype_struct ;
+
+of indefinite size
+
+## void types
+
+* typedef void atstype_void ;
+* typedef void atsvoid_t0ype ;
+
+## primitive types
+
+* typedef int atstype_int ;
+* typedef unsigned int atstype_uint ;
+
+* typedef long int atstype_lint ;
+* typedef unsigned long int atstype_ulint ;
+
+* typedef long long int atstype_llint ;
+* typedef unsigned long long int atstype_ullint ;
+
+* typedef short int atstype_sint ;
+* typedef unsigned short int atstype_usint ;
+
+## size types
+
+* typedef atstype_lint atstype_ssize ;
+* typedef atstype_ulint atstype_size ;
+
+## bool type
+
+HX: true/false: 1/0
+
+* typedef int atstype_bool ;
+
+## byte type
+
+* typedef unsigned char atstype_byte ;
+
+## char types
+
+* typedef char atstype_char ;
+* typedef signed char atstype_schar ;
+* typedef unsigned char atstype_uchar ;
+
+## string types
+
+* typedef char *atstype_string ;
+* typedef char *atstype_stropt ;
+* typedef char *atstype_strptr ;
+
+## floating point types
+
+* typedef float atstype_float ;
+* typedef double atstype_double ;
+* typedef long double atstype_ldouble ;
+
+## pointer types
+
+HX: for pointers
+
+* typedef void *atstype_ptr ;
+* typedef void *atstype_ptrk ;
+
+HX: for references
+
+* typedef void *atstype_ref ;
+
+HX: for boxed values
+
+* typedef void* atstype_boxed ;
+
+HX: for [datconptr]
+
+* typedef void* atstype_datconptr ;
+
+HX: for [datcontyp]
+
+* typedef void* atstype_datcontyp ;
+
+## exncon types
+
+	#ifndef _ATS_CCOMP_EXCEPTION_NONE
+
+* atstype_exncon
+
+	typedef
+	struct
+	{
+	  int exntag ; char *exnmsg ;
+	} atstype_exncon ;
+
+* typedef atstype_exncon *atstype_exnconptr ;
+
+	#endif // end of [_ATS_CCOMP_EXCEPTION_NONE]
+
+## array pointer types
+
+HX: for pointers to arrays
+
+* typedef void* atstype_arrptr ;
+
+HX: for arrays plus size info
+
+* atstype_arrpsz
+
+		typedef
+		struct {
+		  atstype_arrptr ptr ; atstype_size size ;
+		} atstype_arrpsz ;
+
+## function types
+
+* typedef void* atstype_funptr ;
+* typedef void* atstype_cloptr ;
+
+## kind types
+
+* atstkind_type(tk)
+
+		tk
+* atstkind_t0ype(tk)
+
+		tk
+
+##
+
+HX-2014-05: making it not usable!!!
+
+	#ifndef _ATSTYPE_VAR_SIZE
+	#define _ATSTYPE_VAR_SIZE 0X10000
+	#endif // end of [#ifndef]
+	//
+	// HX-2014-05:
+	// for 8-bit or 16-bit march,
+	// _ATSTYPE_VAR_SIZE can be set to 0x100
+	//
+
+* asttype_var
+
+		typedef
+		struct{char _[_ATSTYPE_VAR_SIZE];} atstype_var[0] ;
+
+##
+
+* atstyvar_type(a)
+
+		atstype_var
+
+##
+
+* atstybox_type(hit)
+
+		atstype_boxed
+
+##
+
+* atstyclo_top
+
+		struct{ void *cfun; }
+* atstyclo_type(flab)
+
+		flab##__closure_t0ype
+
+##
+
+* atsrefarg0_type(hit)
+
+		hit
+
+* atsrefarg1_type(hit)
+
+		atstype_ref
+
+# pats_ccomp_instrset.h
+
 ## bool
 
 bool_true bool_false
@@ -682,3 +1015,184 @@ atspre_lazy_vt_free
           ATS_MFREE(__thunk) ;
         } while (0) /* atspre_lazy_vt_free */
 
+# pats_ccomp_memalloc.h
+
+## malloc functions
+
+* extern void atsruntime_mfree_undef (void *ptr) ;
+* extern void *atsruntime_malloc_undef (size_t bsz) ;
+* extern void *atsruntime_calloc_undef (size_t asz, size_t tsz) ;
+* extern void *atsruntime_realloc_undef (void *ptr, size_t bsz) ;
+
+## undef
+
+* undef ATS_MEMALLOC_FLAG
+
+## if defined ATS_MEMALLOC_LIBC
+
+* ATS_MEMALLOC_FLAG
+
+	#include "pats_ccomp_memalloc_libc.h"
+
+* ATS_MINIT atsruntime_minit_libc
+* ATS_MFREE atsruntime_mfree_libc
+* ATS_MALLOC atsruntime_malloc_libc_exn
+* ATS_CALLOC atsruntime_calloc_libc_exn
+* ATS_REALLOC atsruntime_realloc_libc_exn
+
+
+## if defined ATS_MEMALLOC_GCBDW
+
+* ATS_MEMALLOC_FLAG
+
+	#include "pats_ccomp_memalloc_gcbdw.h"
+
+* ATS_MINIT atsruntime_minit_gcbdw
+* ATS_MFREE atsruntime_mfree_gcbdw
+* ATS_MALLOC atsruntime_malloc_gcbdw_exn
+* ATS_CALLOC atsruntime_calloc_gcbdw_exn
+* ATS_REALLOC atsruntime_realloc_gcbdw_exn
+
+## if defined ATS_MEMALLOC_USER
+
+* ATS_MEMALLOC_FLAG
+
+	#include "pats_ccomp_memalloc_user.h"
+
+* ATS_MINIT atsruntime_minit_user
+* ATS_MFREE atsruntime_mfree_user
+* ATS_MALLOC atsruntime_malloc_user
+* ATS_CALLOC atsruntime_calloc_user
+* ATS_REALLOC atsruntime_realloc_user
+
+## not if defined ATS_MEMALLOC_FLAG
+
+* ATS_MINIT atsruntime_minit_undef
+* ATS_MFREE atsruntime_mfree_undef
+* ATS_MALLOC atsruntime_malloc_undef
+* ATS_CALLOC atsruntime_calloc_undef
+* ATS_REALLOC atsruntime_realloc_undef
+
+# pats_ccomp_memalloca.h
+
+* extern void *alloca (size_t bsz) ;
+
+HX: [afree] matches [alloca]
+
+* atsruntime_afree_libc
+
+		ATSinline()
+		atsvoid_t0ype
+		atsruntime_afree_libc
+		  (atstype_ptr ptr) { return ; }
+
+* atsruntime_alloca_libc
+
+		ATSinline()
+		atstype_ptr
+		atsruntime_alloca_libc
+		  (atstype_size bsz) { return alloca(bsz) ; }
+
+
+# pats_ccomp_exception.h
+
+
+	#include <setjmp.h>
+
+## jump functions
+
+* atstype_jmp_buf jmp_buf
+* atspre_setjmp(env, mask) setjmp(env)
+* atspre_longjmp(env, ret) longjmp(env, ret)
+
+## alloca
+
+* extern void *alloca (size_t bsz) ;
+
+## atsexnframe types
+
+* atsexnframe_t
+
+		typedef
+		struct atsexnframe
+		{
+		  atstype_jmp_buf env ;
+		  atstype_exnconptr exn ;
+		  struct atsexnframe *prev ;
+		} atsexnframe_t ;
+
+* atsexnframe_ptr
+
+		typedef
+		atsexnframe_t *atsexnframe_ptr ;
+
+## atsexnframe alloc mfree
+
+* atsexnframe_alloc()
+
+		alloca(sizeof(atsexnframe_t))
+
+* atsexnframe_mfree(frame)
+
+		/* there-is-nothing-to-do */
+
+## my_atsexnframe_getref
+
+* extern atsexnframe_ptr *my_atsexnframe_getref () ;
+
+## my_atsexnframe inline functions
+
+* my_atsexnframe_enter
+
+		static
+		inline
+		void my_atsexnframe_enter
+		(
+		  atsexnframe_ptr frame
+		, atsexnframe_ptr *framep
+		) {
+		  frame->prev = *framep ; *framep = frame ; return ;
+		} // end of [my_atsexnframe_enter]
+
+* my_atsexnframe_leave
+
+		static
+		inline
+		void my_atsexnframe_leave
+		(
+		  atsexnframe_ptr *framep
+		) {
+		  atsexnframe_mfree(*framep) ; *framep = (*framep)->prev ; return ;
+		} // end of [my_atsexnframe_leave]
+
+## trywith
+
+try with end
+
+	HX:
+	beg-of-WARNING:
+	DO NOT USE THE FOLLOWING MACROS:
+
+* ATStrywith_try(tmpexn)
+
+		do { \
+		  int flag ; \
+		  atsexnframe_ptr frame ; \
+		  atsexnframe_ptr *framep ; \
+		  frame = atsexnframe_alloc() ; \
+		  framep = my_atsexnframe_getref() ; \
+		  my_atsexnframe_enter(frame, framep) ; \
+		  flag = atspre_setjmp(frame->env, 1) ; \
+		  if (flag==0) { /* normal */
+
+* ATStrywith_with(tmpexn)
+
+		    my_atsexnframe_leave(framep) ; \
+		  } else { /* flag<>0 : exceptional */ \
+		    tmpexn = (*framep)->exn ; \
+		    my_atsexnframe_leave(framep) ;
+
+* ATStrywith_end(tmpexn)
+
+		  } \
+		} while(0) ; /* end of [do] */
