@@ -1,6 +1,5 @@
-[](2 Preliminaries)
-
 ## 2 前提知識
+[](2 Preliminaries)
 
 For simplicity, we present the code for our typechecker as a single Haskell module.
 
@@ -19,7 +18,7 @@ For the most part, our choice of variable names follows the notational conventio
 他のパートの為に、我々は変換の型と変数名の記法変換表を図1に示します。
 
 | 説明				| 識別子		| 型 		|
- ------------------- ----------- -----------
+|-------------------|-----------|-----------|
 | Description		| Symbol	| Type 		|
 | kind				| k, ...	| Kind		|
 | type constructor	| tc, ...	| Tycon		|
