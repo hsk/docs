@@ -94,9 +94,15 @@ For example, composition of substitutions, satisfying apply (s1 @@ s2) = apply s
 
 We can also form a 'parallel' composition s1++s2 of two substitutions s1 and s2, but the result is left-biased because bindings in s1 take precedence over any bindings for the same variables in s2.
 
+また、「パラレル」合成s1とs2が+ +2つの置換S1、S2のを形成することができますが、S1でバインディングがS2の同じ変数のための任意のバインディングよりも優先されるため、結果は左にバイアスされる。
+
 For a more symmetric version of this operation, we use a merge function, which checks that the two substitutions agree at every variable in the domain of both and hence guarantees that apply (s1++s2) = apply (s2++s1).
 
+この操作のより対称バージョンについては、我々はその `apply (s1++s2) = apply (s2++s1)` を2つの置換は、その両方のドメイン内のすべての変数に同意することを確認し、それ故に保証するマージ機能を使用します。
+
 Clearly, this is a partial function, which we reflect by arranging for merge to return its result in a monad, using the standard fail function to provide a string diagnostic in cases where the function is undefined.
+
+明らかに、これは私たちは、関数が定義されていない場合は、診断の文字列を提供するために、関数を失敗する標準を使用して、モナドで、その結果を返すようにマージ配置することにより反映部分関数は、ある。
 
 
 	  merge      :: Monad m => Subst -> Subst -> m Subst
@@ -106,5 +112,8 @@ Clearly, this is a partial function, which we reflect by arranging for merge to 
 
 It is easy to check that both (@@) and merge produce kind-preserving results from kind-preserving arguments.
 
+これは、ことを確認することは容易である両方（@@）とカインド保持引数から農産物カインド保持結果をマージ。
+
 In the next section, we will see how the first of these composition operators is used to describe unification, while the second is used in the formulation of a matching operation.
 
+次のセクションでは、第二の整合動作の製剤に使用されている間、これらの組成オペレータの最初の、統一を記述するために使用される方法を説明します。
