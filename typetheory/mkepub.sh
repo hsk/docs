@@ -1,6 +1,7 @@
 pandoc title.txt \
   README.md \
   set.md \
+  set00.md \
   set01.md \
   set02.md \
   set03.md \
