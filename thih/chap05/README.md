@@ -2,13 +2,21 @@
 
 Substitutions-finite functions, mapping type variables to types-play a major role in type inference.
 
+置換-有限関数へのマッピング型の変数型推論において主要な役割を型が演じる。
+
 In this paper, we represent substitutions using association lists:
+
+この論文では、連想リストを使用して置換を表します。
 
 	  type Subst  = [(Tyvar, Type)]
 
 To ensure that we work only with well-formed type expressions, we will be careful to construct only kind-preserving substitutions in which variables are mapped only to types of the same kind.
 
+私たちが唯一の整形型の式で動作することを保証するために、私たちは変数が、同じ種類の型にマップされている唯一の種類·保存置換を構築するために慎重になります。
+
 The simplest substitution is the null substitution, represented by the empty list, which is obviously kind-preserving:
+
+最も単純な置換は、空のリストで表わされるnull代入で、次のとおりに明らかにカインドは保持されます:
 
 	  nullSubst  :: Subst
 	  nullSubst   = []
@@ -57,6 +65,8 @@ It is straightforward (and useful!) to extend these operations to work on lists:
 The apply function can be used to build more complex substitutions.
 
 For example, composition of substitutions, satisfying apply (s1 @@ s2) = apply s1 . apply s2, can be defined using:
+
+例えば、
 
 	  infixr 4 @@
 	  (@@)       :: Subst -> Subst -> Subst

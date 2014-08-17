@@ -5,11 +5,11 @@ module Kind = struct
     | Kfun of kind * kind
 
   let rec show (k:kind):string =
-  	begin match k with
-  	  | Star -> "*"
+    begin match k with
+      | Star -> "*"
   	  | Kfun(Kfun _ as k1,k2) -> Printf.sprintf "(%s) -> %s" (show k1) (show k2) 
-  	  | Kfun(k1,k2) -> Printf.sprintf "%s -> %s" (show k1) (show k2) 
-	end
+      | Kfun(k1,k2) -> Printf.sprintf "%s -> %s" (show k1) (show k2) 
+    end
 end
 
 let _ =

@@ -1,0 +1,7 @@
+---
+title: Typing Haskell In Haskell
+author: 櫻井洋志
+language: ja-JP
+description: てすてす
+---
+

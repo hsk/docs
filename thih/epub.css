@@ -1,0 +1,56 @@
+/* This defines styles and classes used in the book */
+body { font-size:1em;}
+pre {
+  background:#eeeeee;
+  line-height:0.5em;
+  padding-bottom:0.3em;
+}
+code { font-family: monospace; font-size: 0.5em; }
+h1, h2, h3, h4, h5, h6 { margin-bottom:2em; font-size: 0.8em;}
+h1.title { font-size: 0.8em;}
+h2.author {font-size: 0.6em; }
+table { 
+ margin-left: auto;
+ margin-right: auto;
+}
+p,center{
+	padding:0;
+	margin:0;
+	text-indent:.5em;
+	font-size:.5em;
+}
+th,td,li {
+  font-size:.5em;
+}
+tr { background:#eeeeee;}
+tr:nth-child(even){
+    background:#F8F8F8;
+}
+th{
+    background:#222222;
+    color:white;
+}
+
+blockquote{
+	margin-left:3em;
+	margin-right:3em;
+}
+.caption{
+	text-align:center;
+	font-style:italic;
+	margin-bottom:1em;
+	margin-top:.2em;
+	font-size:.8em;
+}
+blockquote > p{
+	text-indent:0;
+	margin-bottom:1em;
+}
+img{
+	display:block;
+	margin-left: auto;
+	margin-right: auto;
+	text-align:center;
+	margin-top:1em;
+}
+

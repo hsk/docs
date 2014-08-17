@@ -1,4 +1,4 @@
-## 3  Kinds
+# 3  Kinds
 
 To ensure that they are valid, Haskell type constructors are classified into different kinds: the kind * (pronounced `star') represents the set of all simple (i.e., nullary) type expressions, like Int and Char -> Bool; kinds of the form k1 -> k2 represent type constructors that take an argument type of kind k1 to a result type of kind k2.
 

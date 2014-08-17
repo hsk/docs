@@ -1,4 +1,4 @@
-## 2 前提知識
+# 2 前提知識
 [](2 Preliminaries)
 
 For simplicity, we present the code for our typechecker as a single Haskell module.
@@ -44,9 +44,12 @@ For the most part, our choice of variable names follows the notational conventio
 | alternative		| alt, ...	| Alt		|
 | binding group		| bg, ...	| BindGroup	|
 
+<center>
 Figure 1: Notational Conventions
-
+</center>
+<center>
 図1: 記法変換表
+</center>
 
 A trailing s on a variable name usually indicates a list.
 

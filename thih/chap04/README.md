@@ -1,4 +1,4 @@
-## 4  Types
+# 4  Types
 
 The next step is to define a representation for types.
 
