@@ -23,16 +23,23 @@ The simplest substitution is the null substitution, represented by the empty lis
 
 Almost as simple are the substitutions (u +-> t)3 that map a single variable u to a type t of the same kind:
 
+ほとんど同じ種類の型tに単一の変数uをマップするのと同じくらい簡単な置換(u +-> t)です。
+
 	  (+->)      :: Tyvar -> Type -> Subst
 	  u +-> t     = [(u, t)]
 
 This is kind-preserving if, and only if, kind u = kind t.
 
+これがあればカインド保持されており、唯一、もし種類のu= tのカインド。
 
 
 Substitutions can be applied to types-and, in fact, to any other value with type components-in a natural way.
 
+置換は、型コンポーネントのある自然な方法で他の値に、実際にタイプ·アンドに適用することができる。
+
 This suggests that we overload the operation to apply a substitution so that it can work on different types of object:
+
+これは、オブジェクトの異なる種類で作業できるように、置換を適用する操作をオーバーロードしていることを示唆している：
 
 	  class Types t where
 	    apply :: Subst -> t -> t
@@ -40,9 +47,16 @@ This suggests that we overload the operation to apply a substitution so that it 
 
 In each case, the purpose of applying a substitution is the same: To replace every occurrence of a type variable in the domain of the substitution with the corresponding type.
 
+それぞれの場合において、置換を適用する目的は同じです。対応するタイプの置換ドメイン内の型変数のすべての発生を置き換えるには。
+
+
 We also include a function tv that returns the set of type variables (i.e., Tyvars) appearing in its argument, listed in order of first occurrence (from left to right), with no duplicates.
 
+また、重複なし​​で（左から右）最初に出現する順にリストを引数に現れる型変数の集合（すなわち、Tyvars）を返す関数テレビが含まれる。
+
 The definitions of these operations for Type are as follows:
+
+次のようにタイプのため、これらの操作の定義は次のとおりです:
 
 
 	  instance Types Type where
@@ -58,21 +72,27 @@ The definitions of these operations for Type are as follows:
 
 It is straightforward (and useful!) to extend these operations to work on lists:
 
+それは簡単ですリスト上で動作するようにこれらの操作を拡張するために（そして便利！）：
+
+
 	  instance Types a => Types [a] where
 	    apply s = map (apply s)
 	    tv      = nub . concat . map tv
 
 The apply function can be used to build more complex substitutions.
 
+関数適用はより複雑な置換を生成するために使う事が出来ます。
+
 For example, composition of substitutions, satisfying apply (s1 @@ s2) = apply s1 . apply s2, can be defined using:
 
-例えば、
+例えば、置換の組成物は、`apply (s1 @@ s2) = apply s1 . apply s2` を用いて定義することができる。
+
 
 	  infixr 4 @@
 	  (@@)       :: Subst -> Subst -> Subst
 	  s1 @@ s2    = [ (u, apply s1 t) | (u,t) <- s2 ] ++ s1
 
-We can also form a `parallel' composition s1++s2 of two substitutions s1 and s2, but the result is left-biased because bindings in s1 take precedence over any bindings for the same variables in s2.
+We can also form a 'parallel' composition s1++s2 of two substitutions s1 and s2, but the result is left-biased because bindings in s1 take precedence over any bindings for the same variables in s2.
 
 For a more symmetric version of this operation, we use a merge function, which checks that the two substitutions agree at every variable in the domain of both and hence guarantees that apply (s1++s2) = apply (s2++s1).
 
