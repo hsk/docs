@@ -41,17 +41,17 @@ Version of November 23, 2000.
 * 9 [Assumptions](chap09/README.md)
 * 10 [A Type Inference Monad 型推論モナド](chap10/REAEME.md)
 * 11 [Type Inference 型推論](chap11/README.md)
-	* 11.1 Literals リテラル
-	* 11.2 Patterns パターン
-	* 11.3 Expressions 式
-	* 11.4 Alternatives Alternative
-	* 11.5 From Types to Type Schemes 型から型スキーム
-		* 11.5.1 Ambiguity and Defaults
-	* 11.6 Binding Groups バインディンググループ
-		* 11.6.1 Explicitly Typed Bindings
-		* 11.6.2 Implicitly Typed Bindings
-		* 11.6.3 Combined Binding Groups
-		* 11.6.4 Top-level Binding Groups
+	* 11.1 [Literals リテラル](chap11/README_1.md)
+	* 11.2 [Patterns パターン](chap11/README_2.md)
+	* 11.3 [Expressions 式](chap11/README_3.md)
+	* 11.4 [Alternatives Alternative](chap11/README_4.md)
+	* 11.5 [From Types to Type Schemes 型から型スキーム](chap11/README_5.md)
+		* 11.5.1 [Ambiguity and Defaults](chap11/README_5_1.md)
+	* 11.6 [Binding Groups バインディンググループ](chap11/README_6.md)
+		* 11.6.1 [Explicitly Typed Bindings](chap11/README_6_1.md)
+		* 11.6.2 [Implicitly Typed Bindings](chap11/README_6_2.md)
+		* 11.6.3 [Combined Binding Groups](chap11/README_6_3.md)
+		* 11.6.4 [Top-level Binding Groups](chap11/README_6_4.md)
 * 12 [Conclusions まとめ](chap12/README.md)
 * [Acknowledgments ナレッジメント](acknowlegedgments.md)
 * [References 参照](references.md)

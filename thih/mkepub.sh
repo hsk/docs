@@ -16,6 +16,17 @@ pandoc title.txt \
   chap09/README.md \
   chap10/README.md \
   chap11/README.md \
+  chap11/README_1.md \
+  chap11/README_2.md \
+  chap11/README_3.md \
+  chap11/README_4.md \
+  chap11/README_5.md \
+  chap11/README_5_1.md \
+  chap11/README_6.md \
+  chap11/README_6_1.md \
+  chap11/README_6_2.md \
+  chap11/README_6_3.md \
+  chap11/README_6_4.md \
   chap12/README.md \
   acknowledgments.md \
   references.md \
