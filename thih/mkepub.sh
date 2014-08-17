@@ -12,6 +12,14 @@ pandoc title.txt \
   chap07/README_2.md \
   chap07/README_3.md \
   chap07/README_4.md \
+  chap08/README.md \
+  chap09/README.md \
+  chap10/README.md \
+  chap11/README.md \
+  chap12/README.md \
+  acknowledgments.md \
+  references.md \
+  footnotes.md \
   -o thih.epub \
   --epub-stylesheet=epub.css --smart
 open thih.epub
