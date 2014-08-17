@@ -1,0 +1,7 @@
+---
+title: 型理論入門
+author: 櫻井洋志
+language: ja-JP
+description: 型理論を出来るだけ簡単に理解できるように説明してみます。
+---
+
