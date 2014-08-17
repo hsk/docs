@@ -58,6 +58,6 @@ blockquote > p{
 	text-indent:0;
 	margin-bottom:1em;
 }
-img[alt=char1] { height:1em;  }
+/*img[alt=char1] { height:1em;  }
 img[alt=char2] { height:2em;  }
-img[alt=char3] { height:3em;  }
+img[alt=char3] { height:3em;  }*/
