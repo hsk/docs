@@ -1,4 +1,4 @@
-## Abstract 要約
+# Abstract 要約
 
 [](Haskell benefits from a sophisticated type system, but implementors, programmers, and researchers suffer because it has no formal description.)
 
