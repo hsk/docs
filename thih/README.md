@@ -33,14 +33,14 @@ Version of November 23, 2000.
 * 5 [Substitutions 代入](chap05)
 * 6 [Unification and Matching 単一化とマッチング](chap06)
 * 7 [Type Classes, Predicates and Qualified Types 型クラス, 述語と量化型](chap07)
-	* 7.1 Basic Definitions 基本定義
-	* 7.2 Class Environments クラス環境
-	* 7.3 Entailment 論理的含意、ならば、派生体?
-	* 7.4 Context Reduction コンテキストリダクション
-* 8 Type Schemes 型スキーム
-* 9 Assumptions
-* 10 A Type Inference Monad 型推論モナド
-* 11 Type Inference 型推論
+	* 7.1 [Basic Definitions 基本定義](chap07/README_1.md)
+	* 7.2 [Class Environments クラス環境](chap07/README_2.md)
+	* 7.3 [Entailment 論理的含意、ならば、派生体?](chap07/README_3.md)
+	* 7.4 [Context Reduction コンテキストリダクション](chap07/README_4.md)
+* 8 [Type Schemes 型スキーム](chap08/README.md)
+* 9 [Assumptions](chap09/README.md)
+* 10 [A Type Inference Monad 型推論モナド](chap10/REAEME.md)
+* 11 [Type Inference 型推論](chap11/README.md)
 	* 11.1 Literals リテラル
 	* 11.2 Patterns パターン
 	* 11.3 Expressions 式
@@ -52,7 +52,8 @@ Version of November 23, 2000.
 		* 11.6.2 Implicitly Typed Bindings
 		* 11.6.3 Combined Binding Groups
 		* 11.6.4 Top-level Binding Groups
-* 12 Conclusions まとめ
-* Acknowledgments ナレッジメント
-* References 参照
-* Footnotes:
+* 12 [Conclusions まとめ](chap12/README.md)
+* [Acknowledgments ナレッジメント](acknowlegedgments.md)
+* [References 参照](references.md)
+* [Footnotes](footnotes.md)
+
