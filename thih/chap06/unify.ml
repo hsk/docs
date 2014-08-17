@@ -175,42 +175,42 @@ module Subst = struct
     end "; " xs
 end
 
-
-let _ =
-  Printf.printf "nullSubst = %s\n" (Subst.show Subst.nullSubst);
-
-module TEST = struct
+(* 6 Unification and Matching *)
+module Unify = struct
+  open List
   open Kind
   open Type
   open Subst
+  
+  let rec mgu (t1:type_) (t2:type_):subst =
+    match t1, t2 with
+    | TAp(l, r), TAp(l', r') ->
+      let s1 = mgu l l' in
+      let s2 = mgu (typeApply s1 r) (typeApply s1 r') in
+      s2 @@ s1
+    | TVar u, t | t, TVar u -> varBind u t
+    | TCon tc1, TCon tc2 when tc1 = tc2 -> nullSubst
+    | _ -> failwith "types do not unify"
 
-  let _ =
-    let subst = Tyvar("a", Star) +-> tInt in
-    Printf.printf "a * +-> tInt = %s\n" (Subst.show subst);
-    let subst = subst @ Tyvar("b", Star) +-> tChar in
-    Printf.printf "subst = %s\n" (Subst.show subst);
+  and varBind (u:tyvar) (t:type_):subst =
+    if t = TVar u then nullSubst
+    else if mem u (typeTv t) then failwith "occurs check fails"
+    else if tyvarKind u <> typeKind t then failwith "kinds do not match"
+    else u +-> t
 
-    let showApply t1 =  
-      let t2 = typeApply subst t1 in
-      Printf.printf "%s apply %s\n" (Type.show t1) (Type.show t2)
-    in
-    let tva = TVar(Tyvar("a", Star)) in
-    let tvb = TVar(Tyvar("b", Star)) in
-    showApply tva;
-    showApply tvb;
-    let tap = TAp(tva,tvb) in
-    showApply tap;
-    Printf.printf "tva typeTv = %s\n" (show_tyvar_list (typeTv tva));
-    Printf.printf "tvb typeTv = %s\n" (show_tyvar_list (typeTv tvb));
-    Printf.printf "tap typeTv = %s\n" (show_tyvar_list (typeTv tap));
-
-    (* listApply *)
-
-    (* listTv *)
-
-    (* (@@) *)
-
-    (* merge *)
-
+  let rec match_ (t1:type_) (t2:type_):subst =
+    match t1, t2 with
+    | TAp(l, r), TAp(l', r') ->
+      let sl = match_ l l' in
+      let sr = match_ r r' in
+      merge sl sr
+    | TVar u, t when tyvarKind u = typeKind t -> u +-> t
+    | TCon tc1, TCon tc2 when tc1 = tc2 -> nullSubst
+    | _ -> failwith "types do not match"
 end
 
+let _ =
+  (* mgu *)
+  (* varBind *)
+  (* match_ *)
+  ()

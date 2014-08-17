@@ -1,4 +1,4 @@
-## 6  Unification and Matching (ユニフィケーション)単一化とマッチング
+# 6 Unification and Matching (ユニフィケーション)単一化とマッチング
 
 The goal of unification is to find a substitution that makes two types equal-for example, to ensure that the domain type of a function matches up with the type of an argument value.
 
