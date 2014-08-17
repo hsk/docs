@@ -1,5 +1,8 @@
 # 1. 集合と要素
 
+
+<link rel="stylesheet" href="css/epub.css" type="text/css" />
+
 それでは、謎の集合を勉強していってしまいます。
 この章ではまず基本を覚えていくゾ！
 
