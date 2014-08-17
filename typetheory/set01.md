@@ -1,9 +1,7 @@
 # 1. 集合と要素
 
-<style>
-    img[alt=char2] { height:2em;}
-    img[alt=char1] { height:1em;}
-</style>
+
+<link rel="stylesheet" href="css/epub.css" type="text/css" />
 
 それでは、謎の集合を勉強していってしまいます。
 この章ではまず基本を覚えていくゾ！
