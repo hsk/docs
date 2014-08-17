@@ -1,8 +1,5 @@
 # 1. 集合と要素
 
-
-<link rel="stylesheet" href="css/epub.css" type="text/css" />
-
 ![char1](images/char1_1.png) それでは、謎の集合を勉強していってしまいます。突然ですが、教える担当のAです。でこちらが、突っ込み担当のB子ちゃんです。
 
 ![char3](images/char3_1.png) よろしくB子ちゃんです。味も素っ気もないですけど、教えられつつ突っ込みます。
@@ -299,7 +296,18 @@
 
 ## 1.8. 真部分集合
 
-![char1](images/char1_1.png) A ⊆ B かつ A =/ B のとき、 A を B の真部分集合 (proper subset) と呼び A ⊂ B と表記します。
+![char1](images/char1_1.png) 次は真部分集合です。
+
+![char3](images/char3_1.png) トゥルー部分集合ですね。
+
+![char1](images/char1_1.png) ま、そうです。
+
+A ⊆ B かつ A =/ B のとき、 A を B の真部分集合 (proper subset) と呼び A ⊂ B と表記します。
+
+![char1](images/char1_1.png) AとBが同じではない場合はアンダーバーがくなるってわけです。
+
+![char3](images/char3_1.png) これは簡単だから、分かります。忘れるかもしれないけどw
+
 
 ## 1.9.￼集合の濃度
 
@@ -321,41 +329,135 @@
 
 ![char1](images/char1_1.png) いっぽうN, R, Zは無限集合です。
 
-• 無限集合の濃度については後述する
-￼べき集合
-• 集合Sを与えたときSのべき集合(power set)はSの部分集合の集合であり、P(S)と表記する
-￼例
-• S = { 0,1,2 }ならば、
-• P(S) = { ∅, {0}, {1}, {2}, {0, 1}, {1, 2}, {2, 0}, {0, 1, 2} }
-• S = ∅ならば P(S) = {∅}
-• S ={∅}ならばP(S)=P({∅})={∅, {∅}}
-￼直積(デカルト積)
-• 順序対を(a1, a2, ..., an)と表記する
-• AとBの直積(Cartesian product)をA×Bであらわす: A×B={(a,b)|a∈A∧b∈B }
-￼例
-• A={ 0, 1, 2 }, B={ a,b }とすると、
-• A×B={ (0, a), (1, a), (2, a), (0, b), (1, b), (2, b) }
-￼集合演算
-集合和(union): A ∪ B = { x | x ∈ A ∨ x ∈ B }
-集合積(intersection): A ∩ B = { x | x ∈ A ∧ x ∈ B }
-集合差(difference): A - B = { x | x ∈ A ∧ x ∈/ B }
-補集合(complement): A = { x | x ∈/ A } = U - A (U: universe)
+![char3](images/char3_1.png) Nは0,1,2,...で無限にって殺気も話しましたよね。RとかZは覚えなくていいって言ってたけど、また出て来てるし。
+
+![char1](images/char1_1.png) Rが実数で、Zが正数で、無限にあります。NもRも無限にあるんだけど、Rのほうが、沢山詰まっている感じがしますよね。
+その辺まで考える必要があるのですけど、無限集合の濃度については後で詳しくやります。
+
+![char3](images/char3_1.png) とにかく、今は個数が濃度ってところでいいんですかね。
+
+![char1](images/char1_1.png) とりあえずはね。
+
+## 1.10.￼べき集合
+
+![char1](images/char1_1.png) つぎは冪(べき)集合です。
+
+
+- 集合Sを与えたときSのべき集合(power set)はSの部分集合の集合であり、P(S)と表記します。
+
+![char1](images/char1_1.png)￼例えば、
+
+- S = { 0,1,2 }ならば、
+- P(S) = { ∅, {0}, {1}, {2}, {0, 1}, {1, 2}, {2, 0}, {0, 1, 2} }
+
+です。
+
+![char3](images/char3_1.png) えーと、0,1,2の集合があった場合に、P(S)がべき集合なんですよね。
+
+![char1](images/char1_1.png)￼そうです。P(S)が冪集合。
+
+![char3](images/char3_1.png) で、べきしゅうごうは、Sの部分集合の集合ってことは、全パターンを書き出したものになるということ？
+
+![char1](images/char1_1.png)￼そのとおり。
+
+![char3](images/char3_1.png) ということは、空と、0と1と2と、２個のパターンが{0,1}と{0,2}と{1,2}の３つと、３個のパターンは{1,2,3}か。
+
+![char1](images/char1_1.png)￼うんうん。式で書くと？
+
+![char3](images/char3_1.png) えーっと、
+
+	P(S) = {{},{0},{1},{2},{0,1},{0,2},{1,2},{0,1,2}}
+
+ですかね？
+
+![char1](images/char1_1.png)￼そうだね。{}は∅と書いて、{0,2}は{2,0}でもあるから、同じ意味になるという事で正解です。
+
+![char3](images/char3_1.png) やった！
+
+![char1](images/char1_1.png)￼まだ規則があります。
+
+- S = ∅ ならば P(S) = {∅}
+- S ={∅} ならば P(S) = P({∅}) = {∅, {∅}}
+
+です。
+
+![char3](images/char3_1.png) 空のときは、べき集合は空の集合だけになると。
+
+![char3](images/char3_1.png) もう一つは、空の集合のべき集合は、空と空の集合のみ含まれた集合の２つになると。空のべき集合の冪集合は空だけじゃないんですね。
+
+![char1](images/char1_1.png)￼そう。２個になる。３個の場合は更に増えていきます。
+
+
+##￼1.11. 直積(デカルト積)
+
+![char1](images/char1_1.png)次は直積です。
+
+- 順序対を(a1, a2, ..., an)と表記する
+- AとBの直積(Cartesian product)をA×Bであらわす: A×B={(a,b)|a∈A∧b∈B }
+
+![char1](images/char1_1.png)￼例えば、
+
+- A={ 0, 1, 2 }, B={ a,b }とすると、
+- A×B={ (0, a), (1, a), (2, a), (0, b), (1, b), (2, b) }
+
+です。
+
+![char3](images/char3_1.png) ふむ。かけると、ペアを作るのか。
+
+![char1](images/char1_1.png)￼そんな感じだけど、集合のかけ算は集合積で次に出てくるのもあるので注意が必要です。
+
+![char3](images/char3_1.png) はい。
+
+##￼1.12. 集合演算
+
+![char1](images/char1_1.png)￼次は集合の演算です。足したり、書けたり、差を取ったり、反対を求めたりします。
+
+![char3](images/char3_1.png) 集合だとなんかベン図とか使うと良いんですよね。
+
+![char1](images/char1_1.png)￼以下のような演算があるよ。
+
+- 集合和(union): A ∪ B = { x | x ∈ A ∨ x ∈ B }
+- 集合積(intersection): A ∩ B = { x | x ∈ A ∧ x ∈ B }
+- 集合差(difference): A - B = { x | x ∈ A ∧ x ∈/ B }
+- 補集合(complement): A = { x | x ∈/ A } = U - A (U: universe)
 ￼
-￼例
-• 等式 A ∩ B = A ∪ B を証明しよう
-￼￼￼
-￼例
-• x ∈ A ∩ B とせよ
-• x ∈/ A ∩ B すなわち x ∈/ A 又は x ∈/ B が成立
-• これは x ∈ A ∪ B 、したがって
+![char1](images/char1_1.png)￼では、等式 complement(A ∩ B) = complement(A) ∪ complement(B) の場合
 
-A ∩ B ⊆ A ∪ B
+![char3](images/char3_1.png) C言語だと、!(a && b) == !a || !bとかいう話ですよね。ベン図書けばいいのでは？
+
+![char1](images/char1_1.png)￼それでは、証明になってませんよね。
+
+![char3](images/char3_1.png) エーでも面倒くさいー。
+
+![char1](images/char1_1.png)￼例えば
+
+- x ∈ A ∩ B とします。
+- x ∈/ A ∩ B すなわち x ∈/ A 又は x ∈/ B が成立
+- これは x ∈ A ∪ B 、したがって
+
+	A ∩ B ⊆ A ∪ B
 ￼￼￼￼￼￼
-例
-• 逆に、x ∈ A ∪ B とせよ
-• x ∈/ A 又は x ∈/ B すなわち x ∈/ A ∩ B が成立
-• これは x ∈ A ∩ B、したがって
 
-A ∩ B ⊇ A ∪ B
+- 逆に、x ∈ A ∪ B とせよ
+- x ∈/ A 又は x ∈/ B すなわち x ∈/ A ∩ B が成立
+- これは x ∈ A ∩ B、したがって
 
-両方から A ∩ B = A ∪ B
+	A ∩ B ⊇ A ∪ B
+
+	両方から A ∩ B = A ∪ B
+
+です。
+
+![char3](images/char3_1.png) なるほどねぇ。
+
+![char1](images/char1_1.png)￼今回はここまでにしましょう。
+
+![char3](images/char3_1.png) 疲れたー。ここで何か落ちを考えないと行けないのだけど、気力がない。。。
+
+![char1](images/char1_1.png)￼ハハハ。お疲れさまでした。
+
+![char3](images/char3_1.png) もうホント疲れた。これ本当に必要なの？
+
+![char1](images/char1_1.png)￼TAPLでも最初に書いてある事なので、必要なんです。分かってれば難しくないので覚えてしまいましょう。
+
+![char3](images/char3_1.png) わっかりました。
