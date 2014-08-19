@@ -32,7 +32,7 @@ Version of November 23, 2000.
 * 4 [Types 型](chap04)
 * 5 [Substitutions 代入](chap05)
 * 6 [Unification and Matching 単一化とマッチング](chap06)
-* 7 [Type Classes, Predicates and Qualified Types 型クラス, 述語と量化型](chap07)
+* 7 [Type Classes, Predicates and Qualified Types 型クラス, 述語と限定型](chap07)
 	* 7.1 [Basic Definitions 基本定義](chap07/README_1.md)
 	* 7.2 [Class Environments クラス環境](chap07/README_2.md)
 	* 7.3 [Entailment 論理的含意、ならば、派生体?](chap07/README_3.md)
