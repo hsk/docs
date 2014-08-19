@@ -7,28 +7,35 @@ pre {
 }
 code { font-family: monospace; font-size: 0.5em; }
 
-h1.title { font-size: 0.8em;}
-h2.author {font-size: 0.6em; }
+h1 {
+	margin-bottom:2em;
+	font-size: 0.8em;
+	border-bottom: solid 0.4em #888899;
+}
 
 h2 {
+	margin-bottom:2em;
 	font-size: 0.7em;
-	border-bottom: solid 3px #888899;
+	border-bottom: solid 0.3em #888899;
 }
 h3 {
 	font-size: 0.6em;
 	margin-bottom:2em;
-	border-bottom: solid 1px #888899;
+	border-bottom: solid 0.2em #888899;
 }
 h4,h5,h6 {
 	margin-bottom:2em;
-	border-bottom: solid 0px #888899;
+	border-bottom: none;
 	font-size: 0.5em;
 }
 
-h1, h2, h3, h4, h5, h6 {
-	margin-bottom:2em;
+.title {
 	font-size: 0.8em;
-	border-bottom: solid 5px #888899;
+	border-bottom: none;
+}
+.author {
+	font-size: 0.6em;
+	border-bottom: none;
 }
 
 table { 
