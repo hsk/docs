@@ -2,19 +2,19 @@
 
 The goal of unification is to find a substitution that makes two types equal-for example, to ensure that the domain type of a function matches up with the type of an argument value.
 
-ゴールオブユニフィケーションは代入を見つける事である、だって、たとえば２つの型が同じって作れるから、補償する事、だって関数の型はマッチ出来る引数変数の型と。
+ユニフィケーションのゴールは引数変数の型と補償する事で関数の型はマッチ出来て２つの型が同じという例から作って代入を見つける事です。
 
 However, it is also important for unification to find as `small' a substitution as possible because that will lead to most general types.
 
 なぜなら、ユニフィケーションの重要な所は、小さな代入を発見することで可能になる、なぜならば一般的な型かもしれないから。
 
 More formally, a substitution s is a unifier of two types t1 and t2 if apply s t1 = apply s t2.
-さらに形式的には、代入sは２つの型t1とt2のユにファイアである、もしもapply s t1 = apply s t2と計算出来るなら。
 
+さらに形式的には、もしも apply s t1 = apply s t2 と計算出来るなら、代入 s は２つの型 t1 と t2 の単一化です。
 
- A most general unifier, or mgu, of two such types is a unifier u with the property that any other unifier s can be written as s'@@u, for some substitution s'.
+A most general unifier, or mgu, of two such types is a unifier u with the property that any other unifier s can be written as s'@@u, for some substitution s'.
 
-さらなる一般的なユニファイアもしくは、mguオブ２つの型はユニファイヤu with プロパティである、だって いくつもの他のユニファイヤ sは s' @@ uと書ける、いくつかの代入s'から。
+さらなる一般的なユニファイアもしくは、２つの型の mgu はユニファイヤ u プロパティです、いくつもの他のユニファイヤ s は s' @@ u と書ける、いくつかの代入 s' から。
 
 The syntax of Haskell types has been chosen to ensure that, if two types have any unifying substitutions, then they have a most general unifier, which can be calculated by a simple variant of Robinson's algorithm [ Robinson, 1965].
 
@@ -74,7 +74,7 @@ At first glance, one might think that we could just use the substitution (u+->t)
 	              | kind u /= kind t = fail "kinds do not match"
 	              | otherwise        = return (u +-> t)
 
-In the following sections, we will also make use of an operation called matching that is closely related to unification. 
+In the following sections, we will also make use of an operation called matching that is closely related to unification.
 
 移行のセクションで、我々は作った関数を使うマッチングの操作を呼び出し、ユニフィケーションを完成させる。
 
@@ -82,7 +82,7 @@ Given two types t1 and t2, the goal of matching is to find a substitution s such
 
 2つの型t1とt2が与えられたとき、マッチングのゴールは代入sを見つける事だった。apply s t1 = t2 の。
 
-Because the substitution is applied only to one type, this operation is often described as one-way matching. 
+Because the substitution is applied only to one type, this operation is often described as one-way matching.
 
 なぜなら、代入は1つのタイプを評価するだけで、この操作はいつも1方向のマッチングで説明出来る。
 
@@ -103,4 +103,3 @@ Matching follows the same pattern as unification, except that it uses merge rath
 	  match (TCon tc1) (TCon tc2)
 	           | tc1==tc2         = return nullSubst
 	  match t1 t2                 = fail "types do not match"
-
