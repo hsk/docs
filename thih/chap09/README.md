@@ -34,6 +34,3 @@ In practice, occurrences of unbound variables will probably have been detected i
 
 実習では、非連結変数の出現はおそらく検出されている以前のコンパイラ パスで。
 
-
-
-sakurai:thih sakurai$ 

@@ -1,0 +1,7 @@
+---
+title: OCamlの型検査の働き
+author: 櫻井洋志
+language: ja-JP
+description: てすてす
+---
+

@@ -1,0 +1,80 @@
+/* This defines styles and classes used in the book */
+body { font-size:1em;}
+pre {
+  background:#eeeeee;
+  line-height:0.5em;
+  padding-bottom:0.3em;
+}
+code { font-family: monospace; font-size: 0.5em; }
+
+h1 {
+	margin-bottom:2em;
+	font-size: 0.8em;
+	border-bottom: 0.4em solid #888899;
+}
+
+h2 {
+	margin-bottom:2em;
+	font-size: 0.7em;
+	border-bottom: 0.3em solid #888899;
+}
+h3 {
+	font-size: 0.6em;
+	margin-bottom:2em;
+	border-bottom: 0.2em solid #888899;
+}
+h4,h5,h6 {
+	margin-bottom:2em;
+	border-bottom: none;
+	font-size: 0.5em;
+}
+
+.title {
+	font-size: 0.8em;
+	border-bottom: none;
+}
+.author {
+	font-size: 0.6em;
+	border-bottom: none;
+}
+
+table { 
+ margin-left: auto;
+ margin-right: auto;
+}
+p,center{
+	padding:0;
+	margin:0;
+	text-indent:.5em;
+	font-size:.5em;
+}
+th,td,li {
+  font-size:.5em;
+}
+tr { background:#eeeeee;}
+tr:nth-child(even){
+    background:#F8F8F8;
+}
+th{
+    background:#222222;
+    color:white;
+}
+
+blockquote{
+	margin-left:3em;
+	margin-right:3em;
+}
+.caption{
+	text-align:center;
+	font-style:italic;
+	margin-bottom:1em;
+	margin-top:.2em;
+	font-size:.8em;
+}
+blockquote > p{
+	text-indent:0;
+	margin-bottom:1em;
+}
+/*img[alt=char1] { height:1em;  }
+img[alt=char2] { height:2em;  }
+img[alt=char3] { height:3em;  }*/

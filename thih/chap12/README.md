@@ -7,6 +7,7 @@ We have presented a complete Haskell program that implements a type checker for 
 In the process, we have clarified certain aspects of the current design, as well as identifying some ambiguities in the existing, informal specification.
 
 プロセスでは、現在の非公式の仕様のいくつかのあいまいさを識別するだけでなく、現在の設計の特定の側面を明らかにしました。
+
 The type checker has been developed, type-checked, and tested using the ``Haskell 98 mode'' of Hugs 98 [ Jones & Peterson, 1999].
 
 型チェックは開発、型チェックと Hugs 98 [ジョーンズ & Peterson、1999年] の「Haskell 98 モード」を使用してテストをされています。

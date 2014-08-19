@@ -118,5 +118,3 @@ Hence the final set of retained predicates is produced by the expression rs \\ r
 
 剰余金の述語の最終的なセットと式 rs をプロデュースするそれ故に \\ rs' の定義の最後の行。
 
-
-sakurai:thih sakurai$ 
