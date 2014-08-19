@@ -6,21 +6,31 @@ pre {
   padding-bottom:0.3em;
 }
 code { font-family: monospace; font-size: 0.5em; }
-h1, h2, h3, h4, h5, h6 { margin-bottom:2em; font-size: 0.8em;
-border-bottom: solid 5px #888899;
-}
-h2 { font-size: 0.7em;
-  border-bottom: solid 3px #888899;
-}
-h3 { font-size: 0.6em;
-  border-bottom: solid 1px #888899;
-}
-h4,h5,h6 {
-  border-bottom: solid 0px #888899;
-  font-size: 0.5em; }
 
 h1.title { font-size: 0.8em;}
 h2.author {font-size: 0.6em; }
+
+h2 {
+	font-size: 0.7em;
+	border-bottom: solid 3px #888899;
+}
+h3 {
+	font-size: 0.6em;
+	margin-bottom:2em;
+	border-bottom: solid 1px #888899;
+}
+h4,h5,h6 {
+	margin-bottom:2em;
+	border-bottom: solid 0px #888899;
+	font-size: 0.5em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	margin-bottom:2em;
+	font-size: 0.8em;
+	border-bottom: solid 5px #888899;
+}
+
 table { 
  margin-left: auto;
  margin-right: auto;
