@@ -6,7 +6,19 @@ pre {
   padding-bottom:0.3em;
 }
 code { font-family: monospace; font-size: 0.5em; }
-h1, h2, h3, h4, h5, h6 { margin-bottom:2em; font-size: 0.8em;}
+h1, h2, h3, h4, h5, h6 { margin-bottom:2em; font-size: 0.8em;
+border-bottom: solid 5px #888899;
+}
+h2 { font-size: 0.7em;
+  border-bottom: solid 3px #888899;
+}
+h3 { font-size: 0.6em;
+  border-bottom: solid 1px #888899;
+}
+h4,h5,h6 {
+  border-bottom: solid 0px #888899;
+  font-size: 0.5em; }
+
 h1.title { font-size: 0.8em;}
 h2.author {font-size: 0.6em; }
 table { 
@@ -46,11 +58,6 @@ blockquote > p{
 	text-indent:0;
 	margin-bottom:1em;
 }
-img{
-	display:block;
-	margin-left: auto;
-	margin-right: auto;
-	text-align:center;
-	margin-top:1em;
-}
-
+/*img[alt=char1] { height:1em;  }
+img[alt=char2] { height:2em;  }
+img[alt=char3] { height:3em;  }*/
