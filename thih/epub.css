@@ -10,18 +10,18 @@ code { font-family: monospace; font-size: 0.5em; }
 h1 {
 	margin-bottom:2em;
 	font-size: 0.8em;
-	border-bottom: solid 0.4em #888899;
+	border-bottom: 0.4em solid #888899;
 }
 
 h2 {
 	margin-bottom:2em;
 	font-size: 0.7em;
-	border-bottom: solid 0.3em #888899;
+	border-bottom: 0.3em solid #888899;
 }
 h3 {
 	font-size: 0.6em;
 	margin-bottom:2em;
-	border-bottom: solid 0.2em #888899;
+	border-bottom: 0.2em solid #888899;
 }
 h4,h5,h6 {
 	margin-bottom:2em;
