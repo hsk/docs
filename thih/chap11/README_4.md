@@ -17,11 +17,11 @@ With a more complete syntax for Expr, values of type Alt might also be used in t
 
 Expr のより完全な構文と型 Alt 値ラムダとケース式の表現でされる可能性があります。
 
+#### tiAlt
+
 For type inference, we begin by using tiPats to infer a type for each of the patterns, and to build a new list as' of assumptions for any bound variables, as described in Section 11.2.
 
 型の推定、我々 は、パターンの各型を推論し、新しいリストを作成する tiPats を使用して開始の仮定で説明されているセクション 11.2 として、バインド変数のとして。
-
-#### tiAlt
 
 Next, we calculate the type of the body in the scope of the bound variables, and combine this with the types of each pattern to obtain a single (function) type for the whole Alt:
 

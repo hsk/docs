@@ -29,7 +29,6 @@ These functions are intended to be used only in cases where it is known that the
 
 これらの関数は、環境ce内でクラスiが定義されていることが分かっている場合にのみ使用されることが意図されています。
 
-
 In some cases, this condition might be guaranteed by static analysis prior to type checking.
 
 いくつかのケースでこの条件は型チェックの前に静的解析によって保証されます。
@@ -58,8 +57,6 @@ We will also define a helper function, modify, to describe how a class environme
 	  modify ce i c = ce{classes = \j -> if i==j then Just c
 	                                             else classes ce j}
 
-#### initialEnv
-
 The defaults component of a ClassEnv value is used to provide a list of types for defaulting, as described in Section 11.5.1.
 
 ClassEnv変数のデフォルトコンポーネントはデフォルトの型のリストを提供するために使用され、セクション 11.5.1 で説明しています。
@@ -79,6 +76,8 @@ For example, cedefaults=[tInt] is the result of modifying a class environment ce
 Further discussion of defaulting is deferred to Section 11.5.1.
 
 デフォルトの詳細については、セクション 11.5.1 まで遅延されます。
+
+#### initialEnv
 
 In the remainder of this section, we will show how to build an appropriate class environment for a given program, starting from an (almost) empty class environment, and extending it as necessary to reflect the effect of each class or instance declaration in the program.
 
@@ -119,11 +118,11 @@ The sequencing of multiple transformers can be described by a (forward) composit
 	  (f <:> g) ce = do ce' <- f ce
 	                    g ce'
 
-#### addClass
-
 Some readers will recognize this as a special case of the more general Kleisli composition operator; without the type declaration, the definition given here would work for any monad and for any element types, not just for Maybe and ClassEnv.
 
 何人かの読者はこのより一般的な Kleisli 合成演算子; の特殊なケースとして認識します型宣言を使用しないでここに与えられた定義任意モナドと、任意の種類の要素だけではなくのために働く多分と ClassEnv。
+
+#### addClass
 
 To add a new class to an environment, we must check that there is not already a class with the same name, and that all of the named superclasses are already defined.
 

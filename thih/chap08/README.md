@@ -18,6 +18,8 @@ Instead, implicit quantifiers are inserted as necessary to bind free type variab
 
 代わりに、暗黙的な量指定子は自由型の変数をバインドする必要に応じて挿入されます。
 
+-------
+
 In a type scheme Forall ks qt, each type of the form TGen n that appears in the qualified type qt represents a generic, or universally quantified type variable whose kind is given by ks!!n.
 
 型スキーム Forall ks qt, で TGen n 修飾型 qt に表示されるフォームの種類ごとまたは一般的なを表しますその種類は ks によって与えられた型の変数を普遍的に定量化!n。
@@ -72,11 +74,11 @@ This is important because it means that we can test whether two type schemes are
 
 2 種類の方式が同じかどうかをテストすることができることを意味するので、これは重要です-たとえばを決定するかどうか推論型と同意するもの、宣言された型を使用して Haskell の派生平等と等しいかどうかより複雑なテストを実装することがなく。
 
+#### toScheme 関数
+
 In practice, we sometimes need to convert a Type into a Scheme without adding any qualifying predicates or quantified variables.
 
 実習では、我々 は時々 予選述語を追加することがなく型スキームに変換する必要があります。 または変数を定量化しました。
-
-#### toScheme 関数
 
 For this special case, we can use the following function instead of quantify:
 

@@ -19,10 +19,15 @@ For example, consider the following fragment from a standard prelude for Haskell
 If these definitions were placed in the same binding group, then we would not obtain the most general possible type for foldr; all occurrences of a variable are required to have the same type at each point within the defining binding group, which would lead to the following type for foldr:
 
 これらの定義は、同じバインド グループ内に配置された場合、しない取得させて foldr; のための最も一般的な可能な型変数のすべての出現を foldr の次のタイプにつながる定義する結合のグループ内の各ポイントで、同じ型を持っている必要があります。
+
 	   (Bool -> Bool -> Bool) -> Bool -> [Bool] -> Bool
+
 To avoid this problem, we need only notice that the definition of foldr does not depend in any way on &&, and hence we can place the two functions in separate binding groups, inferring first the most general type for foldr, and then the correct type for and.
 
 お知らせ foldr の定義を何らかの方法で依存しない必要がありますこの問題を回避する &&、それゆえ私たち置くことができる 2 つの機能グループでは個別のバインド、最初 foldr の最も一般的な種類とその後の正しい型を推論し、。
+
+----------
+
 In the presence of explicitly typed bindings, we can refine the dependency analysis process a little further.
 
 明示的に型指定されたバインドは、存在を改良すること依存関係分析のプロセスは少しさらに。
@@ -88,6 +93,8 @@ In addition, if the group is restricted, then we must also ensure that none of t
 With hindsight, these are restrictions that we might prefer to avoid in any future revision of Haskell.
 
 後知恵で、これら我々 Haskell の任意の将来の改正を避けるために好むかもしれない制限であります。
+
+-------
 
 A more serious concern is that the Haskell report does not indicate clearly whether the previous example defining f and g should be valid.
 

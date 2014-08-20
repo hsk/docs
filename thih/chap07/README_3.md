@@ -101,6 +101,8 @@ If that fails, we look for a matching instance and generate a list of predicates
 
 失敗した場合、一致するインスタンスとそれぞれの ps から従う必要があります、順番に、新たな目標として述語 qs のリストを生成です。
 
+------
+
 Conditions specified in the Haskell report-namely that the class hierarchy is acyclic and that the types in any instance declaration are strictly smaller than those in the head-translate into conditions on the values for the ClassEnv that can be passed in as ce, and these are enough to guarantee that tests for entailment will terminate.
 
 クラスの階層構造が非環式、任意のインスタンスの宣言に型が厳密にこれらのより小さい、Haskell レポート-すなわちで指定された条件、ce、としてで渡すことができます ClassEnv の変換値を条件に頭と含意のテストが終了することを保証するのに十分です。

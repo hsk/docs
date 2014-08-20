@@ -8,11 +8,11 @@ At the top-level, a Haskell program can be thought of as a list of binding group
 
 	  type Program = [BindGroup]
 
+#### tiProgram
+
 Even the definitions of member functions in class and instance declarations can be included in this representation; they can be translated into top-level, explicitly typed bindings.
 
 クラスとインスタンスの宣言内のメンバー関数の定義もこの表現; で入れることができます。彼らは最上位レベル、明示的に型指定されたバインドに翻訳することができます。
-
-#### tiProgram
 
 The type inference process for a program takes a list of assumptions giving the types of any primitives, and returns a set of assumptions for any variables.
 

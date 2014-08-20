@@ -1,11 +1,10 @@
 # 5  Substitutions 置換
 
+#### Subst
+
 Substitutions-finite functions, mapping type variables to types-play a major role in type inference.
 
 置換有限関数、型変数から型へのマッピング が型推論において主要な役割を果たします。
-
-
-#### Subst
 
 In this paper, we represent substitutions using association lists:
 
@@ -17,9 +16,9 @@ To ensure that we work only with well-formed type expressions, we will be carefu
 
 我々が唯一の整形型の式で動作することを保証するために、私たちは変数が、同じkindの型にマップされている唯一の種類·保存置換を構築するために慎重になります。
 
-The simplest substitution is the null substitution, represented by the empty list, which is obviously kind-preserving:
-
 #### nullSubst
+
+The simplest substitution is the null substitution, represented by the empty list, which is obviously kind-preserving:
 
 最も単純な置換は、空のリストで表わされるnull代入で、次のとおりに明らかにカインドは保持されます:
 
@@ -56,7 +55,6 @@ This suggests that we overload the operation to apply a substitution so that it 
 In each case, the purpose of applying a substitution is the same: To replace every occurrence of a type variable in the domain of the substitution with the corresponding type.
 
 それぞれの場合において、置換を適用する目的は同じです。対応するタイプの置換ドメイン内の型変数のすべての発生を置き換えるには。
-
 
 We also include a function tv that returns the set of type variables (i.e., Tyvars) appearing in its argument, listed in order of first occurrence (from left to right), with no duplicates.
 

@@ -8,11 +8,11 @@ The types in each class (known as instances) are specified by a collection of in
 
 （インスタンスとして知られている）各クラスの型はインスタンス宣言の集合によって指定されます。
 
-Haskell types can be qualified by adding a (possibly empty) list of predicates, or class constraints, to restrict the ways in which type variables are instantiated [4] :
-
 #### data Qual
 
-Haskellの型は型変数がインスタンス化される方法を制限する述部は、クラスの制約の（空）のリストを追加することで修飾することができます:
+Haskell types can be qualified by adding a (possibly empty) list of predicates, or class constraints, to restrict the ways in which type variables are instantiated [4] :
+
+Haskellの型は型変数がインスタンス化される方法を制限する述部は、クラスの制約の（空）のリストを追加することで修飾することができます [4]:
 
 	  data Qual t = [Pred] :=> t
 	                deriving Eq
@@ -46,7 +46,6 @@ Another frequently requested extension is to allow classes to accept multiple pa
 もう一つの頻繁に要求される拡張は、クラスは型のリストではなく、上記の定義内の単一のタイプを必要とする複数のパラメータを受け入れるようにすることです。
 
 #### Qual, PredのTypesクラスのインスタンス apply, tv
-
 
 The extension of Types to the Qual and Pred datatypes is straightforward:
 
@@ -83,9 +82,9 @@ We will represent each class by a pair of lists, one containing the name of each
 	  type Class    = ([Id], [Inst])
 	  type Inst     = Qual Pred
 
-For example, a simplified version of the standard Haskell class Ord might be described by the following value of type Class:
-
 #### exampleInsts
+
+For example, a simplified version of the standard Haskell class Ord might be described by the following value of type Class:
 
 たとえば、標準的なHaskellのクラス Ord の簡易版は、Class型の次の値によって記述されることがあります:
 

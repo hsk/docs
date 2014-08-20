@@ -18,31 +18,31 @@ We will represent patterns using values of the Pat datatype:
 	                  | PNpk Id Integer
 	                  | PCon Assump [Pat]
 
-A PVari pattern matches any value and binds the result to the variablei.
+- A PVari pattern matches any value and binds the result to the variablei.
 
-PVar i パターンは任意の値と一致し、結果を変数 i にバインドします。
+	PVar i パターンは任意の値と一致し、結果を変数 i にバインドします。
 
-A PWildcard pattern, corresponding to an underscore _ in Haskell syntax, matches any value, but does not bind any variables.
+- A PWildcard pattern, corresponding to an underscore _ in Haskell syntax, matches any value, but does not bind any variables.
 
-PWildcard パターンは Haskell の構文の下線 _ に対応する任意の値に一致するが、任意の変数をバインドできません。
+	PWildcard パターンは Haskell の構文の下線 _ に対応する任意の値に一致するが、任意の変数をバインドできません。
 
-A pattern of the form (PAs i pat), known as an ``as-pattern'' and written using the syntax i@pat in Haskell, binds the variable i to any value that matches the pattern pat, while also binding any variables that appear in pat.
+- A pattern of the form (PAs i pat), known as an ``as-pattern'' and written using the syntax i@pat in Haskell, binds the variable i to any value that matches the pattern pat, while also binding any variables that appear in pat.
 
-(PAs i pat) 形式のパターン、 'as-pattern' として、Haskell の構文 i@pat を使用して書かれたとして知られているいずれかに一致するパターン pat 、pat に表れる変数のバインディングも中値変数をバインドします。
+	(PAs i pat) 形式のパターン、 'as-pattern' として、Haskell の構文 i@pat を使用して書かれたとして知られているいずれかに一致するパターン pat 、pat に表れる変数のバインディングも中値変数をバインドします。
 
-(PAs i pat)形式のパターン、'asパターン'として知られているハスケルにおいて適切なシンタックスi@patを使用して書かれた、patに現われるあらゆる変数を拘束している間、変数 iをパターン pat と一致する任意の値に結び付けます。
+	(PAs i pat)形式のパターン、'asパターン'として知られているハスケルにおいて適切なシンタックスi@patを使用して書かれた、patに現われるあらゆる変数を拘束している間、変数 iをパターン pat と一致する任意の値に結び付けます。
 
-A PLit l pattern matches only the particular value denoted by the literal l.
+-	A PLit l pattern matches only the particular value denoted by the literal l.
 
-PLit l パターンのみリテラル l で示される特定の値と一致します。
+	PLit l パターンのみリテラル l で示される特定の値と一致します。
 
-A pattern (PNpk i k) is an (n+k) pattern, which matches any positive integral value m that is greater than or equal to k, and binds the variable i to the difference (m-k).
+- A pattern (PNpk i k) is an (n+k) pattern, which matches any positive integral value m that is greater than or equal to k, and binds the variable i to the difference (m-k).
 
-パターン （PNpk i k） k 以上であり、バインドされ、変数 i を任意の正の整数値 m と一致する (n + k) パターンは (m k) の違い。
+	パターン （PNpk i k） k 以上であり、バインドされ、変数 i を任意の正の整数値 m と一致する (n + k) パターンは (m k) の違い。
 
-Finally, a pattern of the form PCon a pats matches only values that were built using the constructor function a with a sequence of arguments that matches pats.
+- Finally, a pattern of the form PCon a pats matches only values that were built using the constructor function a with a sequence of arguments that matches pats.
 
-最後に、軽打は PCon フォームのパターン一致コンス トラクター関数を使用してビルドされた値のみ、pats を一致する引数の順序と。
+	最後に、軽打は PCon フォームのパターン一致コンス トラクター関数を使用してビルドされた値のみ、pats を一致する引数の順序と。
 
 We use values a of type Assump to represent constructor functions; all that we really need for typechecking is the type, although the name is useful for debugging.
 
@@ -52,6 +52,8 @@ A full implementation would store additional details, such as arity, and use thi
 
 完全な実装はアリティなどの詳細を格納を使用してこのパターンのコンス トラクター関数は常に完全に適用されることを確認してください。
 
+-------
+
 Most Haskell patterns have a direct representation in Pat, but extensions would be needed to account for patterns using labeled fields.
 
 Haskell のほとんどのパターン直接的な表現で、パットがラベル フィールドを使用してパターンに対応する拡張機能が必要になります。
@@ -59,7 +61,6 @@ Haskell のほとんどのパターン直接的な表現で、パットがラベ
 This is not difficult, but adds some complexity, which we prefer to avoid in this presentation.
 
 これ、難しくはありませんが、我々 はこのプレゼンテーションでは避けることを好む、いくつかの複雑さを追加します。
-
 
 #### tiPat
 
@@ -154,9 +155,9 @@ We can check that this is possible by instantiating the known type sc of the con
 
 我々 は、これが可能なコンス トラクターの既知の型 sc をインスタンス化し、統一により確認できます。
 
-The tiPats function is a variation of tiPat that takes a list of patterns as input, and returns a list of types (together with a list of predicates and a list of assumptions) as its result.
-
 #### tiPats
+
+The tiPats function is a variation of tiPat that takes a list of patterns as input, and returns a list of types (together with a list of predicates and a list of assumptions) as its result.
 
 TiPats 関数は、パターンの一覧を入力として受け取り、その結果として (述語のリスト) および前提条件のリストと共に型の一覧を返しますヒントのバリエーション。
 

@@ -13,11 +13,11 @@ Haskell requires that each Alt in the definition of a given identifier has the s
 
 Haskell では、各特定の識別子の定義で Alt が左側の引数の数が同じがここでそれを強制する必要はありませんが必要です。
 
+#### tiExpl
+
 Type inference for an explicitly typed binding is fairly easy; we need only check that the declared type is valid, and do not need to infer a type from first principles.
 
 明示的に型指定されたバインディングの型の推論は簡単です。私たち、宣言された型は、有効をチェックするだけと第一原理計算から型を推論する必要はありません。
-
-#### tiExpl
 
 To support the use of polymorphic recursion [ Henglein, 1993, Kfoury et al. , 1993], we will assume that the declared typing for i is already included in the assumptions when we call the following function:
 
@@ -57,6 +57,8 @@ If the type declaration is accurate, then this should be the same, up to renamin
 If the type signature is too general, then the calculation of sc' will result in a type scheme that is more specific than sc and an error will be reported.
 
 型シグネチャが一般的すぎる場合はサウスカロライナの算定し ' sc よりも限定型方式になります、エラーが報告されます。
+
+------
 
 In the meantime, we must discharge any predicates that were generated while checking the list of alternatives.
 

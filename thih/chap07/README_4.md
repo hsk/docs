@@ -16,6 +16,8 @@ We believe therefore that this is one of the areas where a more formal specifica
 
 そのため正式な仕様は、特に貴重な領域の 1 つであると考えます。
 
+------
+
 One way to simplify a list of predicates is to simplify the type components of individual predicates in the list.
 
 述語の一覧を簡略化する 1 つの方法は、リスト内の個別の述語の型のコンポーネントの簡略化です。

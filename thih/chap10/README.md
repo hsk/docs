@@ -64,9 +64,9 @@ In particular, it avoids heavy use of apply every time an extension is (or might
 
 特に、頻繁に使用を回避するたびに拡張は (または、されている可能性があります) を適用する計算されます。
 
-There is only one primitive that deals with the integer portion of the state, using it in combination with enumId to generate a new type variable of a specified kind:
-
 #### newTVar
+
+There is only one primitive that deals with the integer portion of the state, using it in combination with enumId to generate a new type variable of a specified kind:
 
 指定した種類の新しい型の変数を生成する enumId との組み合わせでを使用して、状態の整数部分を扱うのみ 1 つのプリミティブがあります。
 
@@ -74,9 +74,9 @@ There is only one primitive that deals with the integer portion of the state, us
 	  newTVar k   = TI (\s n -> let v = Tyvar (enumId n) k
 	                            in  (s, n+1, TVar v))
 
-One place where newTVar is useful is in instantiating a type scheme with new type variables of appropriate kinds:
-
 #### freshInst
+
+One place where newTVar is useful is in instantiating a type scheme with new type variables of appropriate kinds:
 
 NewTVar は便利な 1 つの場所の適切な種類の新しい型の変数を持つ型方式をインスタンス化するのには。
 

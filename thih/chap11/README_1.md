@@ -1,10 +1,10 @@
 ## 11.1 Literals リテラル
 
+#### data Literal
+
 Like other languages, Haskell provides special syntax for constant values of certain primitive datatypes, including numerics, characters, and strings.
 
 他の言語のような Haskell 数値、文字、および文字列を含む特定のプリミティブ データ型の定数値に対して特殊な構文を提供します。
-
-#### data Literal
 
 We will represent these literal expressions as values of the Literal datatype:
 

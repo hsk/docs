@@ -65,6 +65,8 @@ We hope that this will serve as a resource for the Haskell community, and that i
 
 私たちは、これがHaskellのコミュニティのためのリソースとして機能し、それは、前述した問題に対処する上で重要な一歩になることをことを願っています。
 
+------
+
 One audience whose needs may not be particularly well met by this paper are researchers in programming language type systems who do not have experience of Haskell.
 
 そのニーズに特によくこの論文によって満たされない場合がありハスケルの経験を持っていないプログラミング言語タイプのシステムの研究者である一の観客。
@@ -85,6 +87,8 @@ Nevertheless, we believe that our specification could be recast in a standard, t
 
 それにもかかわらず、私たちは私たちの仕様が標準、タイプ理論的な方法で再計算し、より伝統的なスタイルでHaskellのタイピングの提示を開発するために使用することができると信じています。 
 
+--------
+
 The code presented here can be executed with any Haskell system, but our primary goals have been clarity and simplicity, and the resulting code is not intended to be an efficient implementation of type inference.
 
 ここで紹介するコードは、任意のHaskellシステムで実行することができますが、私たちの主な目標は明快さとシンプルされており、結果のコードは、型推論の効率的な実装であることを意図されていません。 
@@ -99,16 +103,15 @@ It would be interesting to try to derive a more efficient, but provably correct 
 
 We have not attempted to do this because we expect that it would obscure the key ideas that we want to emphasize.
 
-
 私たちは、それが私たちが強調したい重要なアイデアを不明瞭にすることを期待するので、私たちはこれを実行しようとしていません。 
 
 It therefore remains as a topic for future work, and as a test to assess the applicability of program transformation and synthesis to modestly sized Haskell programs.
 
-
 したがって、今後の作業のための課題として残り、テストとして緩やかにHaskellプログラムを大きさのためにプログラム変換と合成の適用性を評価する。 
 
-Another goal of this paper is to give as complete a description of the Haskell type system as possible, while also aiming for conciseness.
+--------
 
+Another goal of this paper is to give as complete a description of the Haskell type system as possible, while also aiming for conciseness.
 
 本論文のもう一つの目的は、また、簡潔さを目指しながら、可能な限りHaskellの型システムとしての完全な説明を与えることです。 
 
@@ -127,11 +130,9 @@ Haskellのタイピングのthorniest側面を含む基本的な構成要素の�
 
 Our specification does not attempt to deal with all of the issues that would occur in the implementation of a type checker in a full Haskell implementation.
 
-
 当社の仕様では、完全なHaskellの実装では型チェックの実装で起こる問題のすべてに対処しようとしません。 
 
 We do not tackle the problems of interfacing a typechecker with compiler front ends (to track source code locations in error diagnostics, for example) or back ends (to describe the implementation of overloading, for example), nor do we attempt to formalize any of the extensions that are implemented in current Haskell systems.
-
 
 私たちは、コンパイラのフロントエンド（例えば、エラー診断でのソースコードの位置を追跡するために）、またはバックエンド（例えば、オーバーロードの実装を記述するため）との型検査器のインタフェースの問題に取り組む、また私たちは、任意のを形式化しようとしておりません現在のHaskellのシステムに実装されている拡張機能。
 
@@ -142,6 +143,8 @@ This is one of things that makes our specification relatively concise (429 lines
 By comparison, the core parts of the Hugs typechecker take some 90+ pages of C code.
 
 比較すると、抱擁のコア部分は、Cコードのいくつかの90 +のページを取る型検査器。 
+
+--------
 
 Some examples are included in the paper to illustrate the datatypes and representations that are used.
 
@@ -154,6 +157,8 @@ However, for reasons of space, the definitions of some constants that represent 
 Apart from those details, this paper gives the full source code.
 
 別にこれらの詳細から、本稿では、完全なソースコードを提供します。 
+
+--------
 
 We expect the program described here to evolve in at least three different ways.
 

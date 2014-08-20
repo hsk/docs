@@ -71,13 +71,12 @@ The types and terms appearing in the table are described more fully in later sec
 
 表にある型(type)や項(term)は後のセクションで詳しく記述します。
 
-
-#### Id
-
 To distinguish the code for the typechecker from program fragments that are used to discuss its behavior, we typeset the former in an italic font, and the latter in a typewriter font.
 
 プログラムの断片から型検査のためのコードを 識別 することはこれらのビヘイビアを議論する為に使われ、我々は型集合をイタリックフォントでカキ、タイプライターフォントで書きます。
 これらのキーワードは見た目がイタリックでタイプラーターフォンとかなんかで書きます。
+
+#### Id
 
 Throughout this paper, we implement identifiers as strings, and assume that there is a simple way to generate identifiers from integers using the enumId function:
 

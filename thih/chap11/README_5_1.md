@@ -41,7 +41,9 @@ This semantic ambiguity is reflected by a syntactic ambiguity in the inferred ty
 (There is no Show a constraint here because Show is a superclass of Num.) A programmer can fix this particular problem quite easily by picking a particular type for a, and by adding an appropriate type annotation:
 
 (制約がないショー、ここでショー数のスーパークラスであるので)プログラマはこの問題を修正特定非常に簡単のための特定の種類を選択することにより、および、適切な型の注釈を追加することによって。
+
 	   stringInc x = show (read x + 1 :: Int)
+
 Practical experience suggests that ambiguities like this tend to occur quite infrequently in real Haskell code.
 
 実践的な経験が示すようにこのようなあいまいさは実際に Haskell コードでかなり頻繁に発生する傾向があります。
@@ -61,6 +63,9 @@ Haskell の既定の機構は便利です、実用的な妥協として導入さ
 For this latter reason, the use of defaulting is restricted so that it will only apply under certain, fairly restrictive circumstances.
 
 この後者の理由、かなり厳しい状況下でのみ適用されますように不履行の使用が制限されます。
+
+-------
+
 The remainder of this section explains in more detail how ambiguities in Haskell programs can be detected and, when appropriate, eliminated by a suitable choice of defaults.
 
 このセクションの残りの部分をどの Haskell プログラムであいまいさことができます検出され、適切な場合、デフォルトの適当な選択によって除去より詳細に説明します。
@@ -98,32 +103,33 @@ Given one of these pairs (v,qs), and as specified by the Haskell report [ Peyton
 
 Haskell report [ペイトン ・ ジョーンズ & ヒューズ、1999 年、セクション 5.4.3] で指定された v （qs）、これらのペアの 1 つを与えられた不履行は許可され、次の条件すべてが満たされている場合にのみ。
 
-All of the predicates in qs are of the form IsIn c (TVar v) for some class c.
+- All of the predicates in qs are of the form IsIn c (TVar v) for some class c.
 
-Qs の述部のすべては、いくつかのクラス c の形式 IsIn c (TVar v です)。
-At least one of the classes involved in qs is a standard numeric class.
+	Qs の述部のすべては、いくつかのクラス c の形式 IsIn c (TVar v です)。
 
-Qs に関連するクラスの少なくとも 1 つは、標準の数値クラスです。
+- At least one of the classes involved in qs is a standard numeric class.
 
-The list of these class names is provided by a constant:
+	Qs に関連するクラスの少なくとも 1 つは、標準の数値クラスです。
 
-これらのクラスの名前のリストは定数によって提供されます。
+	The list of these class names is provided by a constant:
 
-	  numClasses :: [Id]
-	  numClasses  = ["Num", "Integral", "Floating", "Fractional",
-	                 "Real", "RealFloat", "RealFrac"]
+	これらのクラスの名前のリストは定数によって提供されます。
 
-All of the classes involved in qs are standard classes, defined either in the standard prelude or standard libraries.
+		  numClasses :: [Id]
+		  numClasses  = ["Num", "Integral", "Floating", "Fractional",
+		                 "Real", "RealFloat", "RealFrac"]
 
-標準プレリュードまたは標準ライブラリで定義されている標準のクラスはすべて qs に関連するクラスです。
+- All of the classes involved in qs are standard classes, defined either in the standard prelude or standard libraries.
 
-Again, the list of these class names is provided by a constant:
+	標準プレリュードまたは標準ライブラリで定義されている標準のクラスはすべて qs に関連するクラスです。
 
-再度、これらのクラスの名前のリストは定数によって提供されます。
+	Again, the list of these class names is provided by a constant:
 
-	  stdClasses :: [Id]
-	  stdClasses  = ["Eq", "Ord", "Show", "Read", "Bounded", "Enum", "Ix",
-	                 "Functor", "Monad", "MonadPlus"] ++ numClasses
+	再度、これらのクラスの名前のリストは定数によって提供されます。
+
+		  stdClasses :: [Id]
+		  stdClasses  = ["Eq", "Ord", "Show", "Read", "Bounded", "Enum", "Ix",
+		                 "Functor", "Monad", "MonadPlus"] ++ numClasses
 
 That there is at least one type in the list of default types for the enclosing module that is an instance of all of the classes mentioned in qs.
 

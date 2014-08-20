@@ -15,9 +15,9 @@ We develop the complete algorithm in stages, working through the abstract syntax
 
 アルゴリズムを開発して完全な段階では、最も簡単な部分 (リテラル) から入力言語の抽象構文を介しての作業に最も複雑な (バインド グループ)。
 
-Most of the typing rules are expressed by functions whose types are simple variants of the following synonym:
-
 #### type Infer
+
+Most of the typing rules are expressed by functions whose types are simple variants of the following synonym:
 
 入力規則のほとんどは関数の型が次のシノニムの単純な変形によって表されます。
 

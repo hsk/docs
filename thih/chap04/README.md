@@ -88,11 +88,11 @@ In practice, however, implementations are likely to expand synonyms more lazily:
 
 しかし、実際には、実装はより遅延してシノニムを拡張する可能性があります: いくつかのケースでは、型エラーの診断は、彼らがシノニムではなく、拡張を表す考えると理解しやすいかもしれません。
 
+#### infixr fn list pair
+
 We end this section with the definition of a few helper functions.
 
 我々は残りのヘルパー関数の定義でこのセクションを終わらせます。
-
-#### infixr fn list pair
 
 The first three provide simple ways to construct function, list, and pair types, respectively:
 

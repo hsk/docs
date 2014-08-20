@@ -16,6 +16,8 @@ A most general unifier, or mgu, of two such types is a unifier u with the proper
 
 このような2つのタイプの中で最も一般的な単一化、またはMGUは、ユニファイヤ u でありuで使われる他の代入sは、いくつかの代入s'のために、s'@@uのように書くことができる性質を持ちます。
 
+------
+
 The syntax of Haskell types has been chosen to ensure that, if two types have any unifying substitutions, then they have a most general unifier, which can be calculated by a simple variant of Robinson's algorithm [ Robinson, 1965].
 
 Haskell型の構文は、もしも２つの型がいくつもの代入の単一化ならそれらはmguを持つことを、計算する事が出来る Robinson'sアルゴリズム [ robinson, 1965]のシンプルなバリアントによって補償する事を選択出来ます。
