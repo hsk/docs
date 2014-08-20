@@ -1,5 +1,8 @@
 ### 11.6.1 Explicitly Typed Bindings 型バインディングを明示的に指定
 
+
+#### type Expl
+
 The simplest case is for explicitly typed bindings, each of which is described by the name of the function that is being defined, the declared type scheme, and the list of alternatives in its definition:
 
 明示的に型指定されたバインディングは、それぞれの定義されている関数の名前で記述は、最も単純なケースは宣言型方式とその定義の選択肢のリスト。
@@ -13,6 +16,8 @@ Haskell では、各特定の識別子の定義で Alt が左側の引数の数�
 Type inference for an explicitly typed binding is fairly easy; we need only check that the declared type is valid, and do not need to infer a type from first principles.
 
 明示的に型指定されたバインディングの型の推論は簡単です。私たち、宣言された型は、有効をチェックするだけと第一原理計算から型を推論する必要はありません。
+
+#### tiExpl
 
 To support the use of polymorphic recursion [ Henglein, 1993, Kfoury et al. , 1993], we will assume that the declared typing for i is already included in the assumptions when we call the following function:
 

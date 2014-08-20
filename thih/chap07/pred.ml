@@ -193,10 +193,11 @@ module Unify = struct
     | _ -> failwith "types do not unify"
 
   and varBind (u:tyvar) (t:type_):subst =
-    if t = TVar u then nullSubst
-    else if mem u (typeTv t) then failwith "occurs check fails"
-    else if tyvarKind u <> typeKind t then failwith "kinds do not match"
-    else u +-> t
+    match a with
+    | _ when t = TVar u                -> nullSubst
+    | _ when mem u (typeTv t)          -> failwith "occurs check fails"
+    | _ when tyvarKind u <> typeKind t -> failwith "kinds do not match"
+    | _                                -> u +-> t
 
   let rec match_ (t1:type_) (t2:type_):subst =
     match t1, t2 with

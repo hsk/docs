@@ -4,6 +4,9 @@ Patterns are used to inspect and deconstruct data values in lambda abstractions,
 
 パターン検査し、ラムダの抽象化、関数とパターンのバインド、リストの内包表記、記法、および case 式内のデータ値を分解に使用されます。
 
+
+#### data Pat
+
 We will represent patterns using values of the Pat datatype:
 
 パターン Pat データ型の値を使用して表現してみます。
@@ -15,17 +18,19 @@ We will represent patterns using values of the Pat datatype:
 	                  | PNpk Id Integer
 	                  | PCon Assump [Pat]
 
-A PVar i pattern matches any value and binds the result to the variable i.
+A PVari pattern matches any value and binds the result to the variablei.
 
-私は模造 PVar 任意の値に一致して、結果を変数にバインドします私は。
+PVar i パターンは任意の値と一致し、結果を変数 i にバインドします。
 
 A PWildcard pattern, corresponding to an underscore _ in Haskell syntax, matches any value, but does not bind any variables.
 
-PWildcard パターン Haskell の構文で下線 _ に対応する任意の値に一致するが、任意の変数をバインドできません。
+PWildcard パターンは Haskell の構文の下線 _ に対応する任意の値に一致するが、任意の変数をバインドできません。
 
 A pattern of the form (PAs i pat), known as an ``as-pattern'' and written using the syntax i@pat in Haskell, binds the variable i to any value that matches the pattern pat, while also binding any variables that appear in pat.
 
-パターン (PAs はバッチリだ) フォームの 'パターン' として、Haskell の構文 i@pat を使用して書かれたとして知られているいずれかに一致するパターン パット、パットに表示される変数のバインディングも中値変数をバインドします。
+(PAs i pat) 形式のパターン、 'as-pattern' として、Haskell の構文 i@pat を使用して書かれたとして知られているいずれかに一致するパターン pat 、pat に表れる変数のバインディングも中値変数をバインドします。
+
+(PAs i pat)形式のパターン、'asパターン'として知られているハスケルにおいて適切なシンタックスi@patを使用して書かれた、patに現われるあらゆる変数を拘束している間、変数 iをパターン pat と一致する任意の値に結び付けます。
 
 A PLit l pattern matches only the particular value denoted by the literal l.
 
@@ -33,7 +38,7 @@ PLit l パターンのみリテラル l で示される特定の値と一致し�
 
 A pattern (PNpk i k) is an (n+k) pattern, which matches any positive integral value m that is greater than or equal to k, and binds the variable i to the difference (m-k).
 
-パターン （PNpk 私は k） k 以上であり、バインドされ、変数を任意の正の整数値 m と一致する (n + k) パターンは (m k) の違いを私は。
+パターン （PNpk i k） k 以上であり、バインドされ、変数 i を任意の正の整数値 m と一致する (n + k) パターンは (m k) の違い。
 
 Finally, a pattern of the form PCon a pats matches only values that were built using the constructor function a with a sequence of arguments that matches pats.
 
@@ -55,6 +60,9 @@ This is not difficult, but adds some complexity, which we prefer to avoid in thi
 
 これ、難しくはありませんが、我々 はこのプレゼンテーションでは避けることを好む、いくつかの複雑さを追加します。
 
+
+#### tiPat
+
 Type inference for patterns has two goals: To calculate a type for each bound variable, and to determine what type of values the whole pattern might match.
 
 型の推論のパターンは 2 つの目標： 各バインド変数の型を計算して全体のパターンに一致可能性がありますどのような値の型を決定します。
@@ -69,6 +77,8 @@ Note that we do not need to pass in a list of assumptions here; by definition, a
 
 ここ; の前提条件のリストで渡す必要がないことに注意してください。定義では、パターン変数の発生は非表示ではなく、外側のスコープで同じ名前の変数を参照してください。
 
+#### tiPat PVar
+
 For a variable pattern, PVar i, we just return a new assumption, binding i to a fresh type variable.
 
 変数パターン、PVar の私は、私達はちょうど新鮮な型の変数にバインドする私は新しい前提を返します。
@@ -80,12 +90,16 @@ Haskell does not allow multiple use of any variable in a pattern, so we can be s
 
 Haskell は、パターンでは、任意の変数の複数の使用を許可しないので、我々 はこれが最初で、パターンに遭遇することが私の 1 回だけ確認することができます。
 
+#### tiPat PWrildcard
+
 Wildcards are typed in the same way except that we do not need to create a new assumption:
 
 ワイルドカードは、新しい前提を作成する必要はないことを除いて同じ方法で入力します。
 
 	  tiPat PWildcard   = do v <- newTVar Star
 	                         return ([], [], v)
+
+#### tiPat PAs
 
 To type an as-pattern PAs i pat, we calculate a set of assumptions and a type for the pat pattern, and then add an extra assumption to bind i:
 
@@ -94,6 +108,8 @@ To type an as-pattern PAs i pat, we calculate a set of assumptions and a type fo
 	  tiPat (PAs i pat) = do (ps, as, t) <- tiPat pat
 	                         return (ps, (i:>:toScheme t):as, t)
 
+#### tiPat PLit
+
 For literal patterns, we use tiLit from the previous section:
 
 リテラル パターン、前のセクションから tiLit を使用します。
@@ -101,12 +117,16 @@ For literal patterns, we use tiLit from the previous section:
 	  tiPat (PLit l) = do (ps, t) <- tiLit l
 	                      return (ps, [], t)
 
+#### tiPat PNpk
+
 The rule for (n+k) patterns does not fix a type for the bound variable, but adds a predicate to constrain the choice to instances of the Integral class:
 
 (N + k) パターンのルール バインド変数の型を解決しないが、積分クラスのインスタンスに選択肢を制限するための述語を追加します。
 
 	  tiPat (PNpk i k)  = do t <- newTVar Star
 	                         return ([IsIn "Integral" t], [i:>:toScheme t], t)
+
+#### tiPat PCon
 
 The case for constructed patterns is slightly more complex:
 
@@ -135,6 +155,8 @@ We can check that this is possible by instantiating the known type sc of the con
 我々 は、これが可能なコンス トラクターの既知の型 sc をインスタンス化し、統一により確認できます。
 
 The tiPats function is a variation of tiPat that takes a list of patterns as input, and returns a list of types (together with a list of predicates and a list of assumptions) as its result.
+
+#### tiPats
 
 TiPats 関数は、パターンの一覧を入力として受け取り、その結果として (述語のリスト) および前提条件のリストと共に型の一覧を返しますヒントのバリエーション。
 

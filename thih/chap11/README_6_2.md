@@ -1,5 +1,7 @@
 ### 11.6.2 Implicitly Typed Bindings 暗黙的型指定バインディング
 
+#### type Impl
+
 Two complications occur when we deal with implicitly typed bindings.
 
 2 つの合併症は暗黙的に型指定されたバインドを扱うときに発生します。
@@ -11,6 +13,7 @@ The first is that we must deal with groups of mutually recursive bindings as a s
 The second is Haskell's monomorphism restriction, which restricts the use of overloading in certain cases.
 
 2 番目は、Haskell の相性の制限は、特定のケースでのオーバー ロードの使用を制限します。
+
 A single implicitly typed binding is described by a pair containing the name of the variable and a list of alternatives:
 
 1 つの暗黙的に型指定されたバインディングは変数の名前と選択肢のリストを含むペアで記述されます。
@@ -18,6 +21,8 @@ A single implicitly typed binding is described by a pair containing the name of 
 	  type Impl   = (Id, [Alt])
 
 The monomorphism restriction is invoked when one or more of the entries in a list of implicitly typed bindings is simple, meaning that it has an alternative with no left-hand side patterns.
+
+#### restricted
 
 暗黙的に型指定されたバインドの一覧のエントリの 1 つ以上は単純なそれがないの左側にあるパターンを持つ代替の意味と相性制限が呼び出されます。
 
@@ -28,6 +33,8 @@ The following function provides a way to test for this:
 	  restricted   :: [Impl] -> Bool
 	  restricted bs = any simple bs
 	   where simple (i,alts) = any (null . fst) alts
+
+#### tiImpls
 
 Type inference for groups of mutually recursive, implicitly typed bindings is described by the following function:
 

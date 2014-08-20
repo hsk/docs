@@ -1,19 +1,23 @@
 ## 7.2 Class Environments クラス環境
 
+#### ClassEnv
+
 The information provided by the class and instance declarations in a given program can be captured by a class environment of type:
 
-与えられたプログラムのクラスとインスタンスの宣言によって提供される情報は、型のクラスの環境でキャプチャできます。
+与えられたプログラムのクラスとインスタンスの宣言によって提供される情報は、型のクラスの環境と捉える事ができます。
 
 	  data ClassEnv = ClassEnv { classes  :: Id -> Maybe Class,
 	                             defaults :: [Type] }
 
 The classes component in a ClassEnv value is a partial function that maps identifiers to Class values (or to Nothing if there is no class corresponding to the specified identifier).
 
-ClassEnv 値のクラス コンポーネントは、クラスの値を (または指定した識別子に対応するクラスがない場合は Nothing) 識別子をマップする部分的な機能です。
+ClassEnv変数内のclassesは、識別子からClassの変数をマップする部分関数(もしくは指定した識別子に対応するクラスがない場合は Nothing)です。
+
+#### super insts 関数
 
 We define helper functions super and insts to extract the list of superclass identifiers, and the list of instances, respectively, for a class name i in a class environment ce:
 
-ヘルパー関数を定義するクラスのスーパークラスの識別子の一覧と、インスタンスのリストをそれぞれ抽出するスーパーと insts 名クラス環境での私は ce:
+クラス環境ce内でクラス名iについて、それぞれスーパークラス識別子のリスト、およびインスタンスのリストを抽出するために、我々はヘルパー関数のsuperとinstsを定義します。
 
 	  super     :: ClassEnv -> Id -> [Id]
 	  super ce i = case classes ce i of Just (is, its) -> is
@@ -23,19 +27,22 @@ We define helper functions super and insts to extract the list of superclass ide
 
 These functions are intended to be used only in cases where it is known that the class i is defined in the environment ce.
 
-これらの関数はここで知られているが、私にクラスを定義する場合にのみ使用するもので、環境 ce。
+これらの関数は、環境ce内でクラスiが定義されていることが分かっている場合にのみ使用されることが意図されています。
+
 
 In some cases, this condition might be guaranteed by static analysis prior to type checking.
 
-いくつかのケースでこの条件は型チェックの前に静的解析による保証があります。
+いくつかのケースでこの条件は型チェックの前に静的解析によって保証されます。
 
 Alternatively, we can resort to a dynamic check by testing defined (classes ce i) before applying either function.
 
-また、我々 動的チェック テストの定義によって訴えることができます （ce のクラス私は） いずれかの関数を適用する前に。
+代わりに、我々はどちらの関数を適用する前に定義された（classes ce i）をテストすることにより、動的なチェックに頼ることができます。
 
-The function defined used here is defined as follows5:
+#### defined 関数
 
-関数定義に使用されるここでは follows5 として定義されます。
+The function defined used here is defined as follows [5]:
+
+次のようにここで用いる関数 defined が定義されています [5]:
 
 	  defined :: Maybe a -> Bool
 	  defined (Just x) = True
@@ -43,19 +50,23 @@ The function defined used here is defined as follows5:
 
 We will also define a helper function, modify, to describe how a class environment can be updated to reflect a new binding of a Class value to a given identifier:
 
-我々 もヘルパーを定義する機能、変更、特定の識別子にクラス値の新しいバインドを反映するようにクラスの環境の更新方法を記述します。
+#### modify 関数
+
+我々は、特定の識別子にクラス値の新しいバインドを反映するようにクラス環境の更新方法が記述してある、ヘルパー関数modifyも定義します。
 
 	  modify       :: ClassEnv -> Id -> Class -> ClassEnv
 	  modify ce i c = ce{classes = \j -> if i==j then Just c
 	                                             else classes ce j}
 
+#### initialEnv
+
 The defaults component of a ClassEnv value is used to provide a list of types for defaulting, as described in Section 11.5.1.
 
-ClassEnv 値のデフォルト コンポーネントはセクション 11.5.1 で説明するよう、不履行のための種類の一覧を提供するために使用されます。
+ClassEnv変数のデフォルトコンポーネントはデフォルトの型のリストを提供するために使用され、セクション 11.5.1 で説明しています。
 
 Haskell allows programmers to specify a value for this list using a default declaration; if no explicit declaration is given, then a default (Integer,Double) declaration is assumed.
 
-既定の宣言; を使用してこのリストの値を指定するプログラマは Haskell を使用します。かどうか明示的な宣言はそれから与えられるない、既定値 (整数、二重) 宣言と見なされます。
+Haskellはプログラマがデフォルト宣言を使用して、このリストの値を指定することができます; 明示的な宣言が指定されていない場合、デフォルト（Integer, Double）宣言が想定されます。
 
 It is easy to describe this using the ClassEnv type.
 
@@ -63,7 +74,7 @@ ClassEnv 型を使用してこれを記述するは簡単です。
 
 For example, cedefaults=[tInt] is the result of modifying a class environment ce to reflect the presence of a default (Int) declaration.
 
-たとえば、cedefaults = クラスの環境を変更した結果は、[色合い] の既定 (Int) 宣言の存在を反映するために ce。
+例えば、 cedefalts=[tInt]は、デフォルト（Int）宣言の存在を反映するために、クラス環境 ce を変更した結果です。
 
 Further discussion of defaulting is deferred to Section 11.5.1.
 
@@ -71,7 +82,7 @@ Further discussion of defaulting is deferred to Section 11.5.1.
 
 In the remainder of this section, we will show how to build an appropriate class environment for a given program, starting from an (almost) empty class environment, and extending it as necessary to reflect the effect of each class or instance declaration in the program.
 
-このセクションの残りで私たちを （ほぼ） 空のクラス環境から開始と各プログラム内のクラスまたはインスタンス宣言の効果を反映するために必要に応じて拡張する与えられたプログラムのための適切なクラス環境を構築する方法が表示されます。
+このセクションの残りで我々は（ほぼ）空のクラス環境から開始して各プログラム内のクラスまたはインスタンス宣言の効果を反映するために必要に応じて拡張する与えられたプログラムのための適切なクラス環境を構築する方法を見ます。
 
 The initial class environment is defined as follows:
 
@@ -81,9 +92,11 @@ The initial class environment is defined as follows:
 	  initialEnv  = ClassEnv { classes  = \i -> fail "class not defined",
 	                           defaults = [tInteger, tDouble] }
 
+#### EnvTransformer
+
 As we process each class or instance declaration in a program, we transform the initial class environment to add entries, either for a new class, or for a new instance, respectively.
 
-我々 処理プログラムで各クラスまたはインスタンスの宣言方法は、我々 はエントリを追加する、新しいクラスや新しいインスタンスそれぞれ初期クラス環境を変換します。
+我々の処理プログラムで各クラスまたはインスタンスの宣言方法は、我々 はエントリを追加する、新しいクラスや新しいインスタンスそれぞれ初期クラス環境を変換します。
 
 In either case, there is a possibility that the new declaration might be incompatible with the previous declarations, attempting, for example, to redefine an existing class or instance.
 
@@ -93,15 +106,20 @@ For this reason, we will describe transformations of a class environment as func
 
 このような理由から、述べるクラス環境の変換エラーの可能性を許可するようにおそらくタイプを使用して、EnvTransformer 型の関数として。
 
-  type EnvTransformer = ClassEnv -> Maybe ClassEnv
+	  type EnvTransformer = ClassEnv -> Maybe ClassEnv
+
+#### (<:>)
+
 The sequencing of multiple transformers can be described by a (forward) composition operator (<:>):
 
-複数変圧器のシーケンスは、次の (前方) 構成の演算子 (&lt;: &gt;) で表現できます。
+複数変圧器のシーケンスは、次の (前方) 構成の演算子 (<:>) で表現できます。
 
 	  infixr 5 <:>
 	  (<:>)       :: EnvTransformer -> EnvTransformer -> EnvTransformer
 	  (f <:> g) ce = do ce' <- f ce
 	                    g ce'
+
+#### addClass
 
 Some readers will recognize this as a special case of the more general Kleisli composition operator; without the type declaration, the definition given here would work for any monad and for any element types, not just for Maybe and ClassEnv.
 
@@ -125,9 +143,11 @@ Of course, in practice, it will be necessary to topologically sort the set of cl
 	   | any (not . defined . classes ce) is = fail "superclass not defined"
 	   | otherwise                           = return (modify ce i (is, []))
 
+#### addPreludeClasses, addCoreClasses, addNumClasses 関数
+
 For example, we can describe the effect of the class declarations in the Haskell prelude using the following transformer:
 
-たとえば、次のトランスを用いた Haskell プレリュードでクラス宣言の効果について述べることができます。
+たとえば、次のトランスを用いた Haskell プレリュードでクラス宣言の効果について述べることができます:
 
 	  addPreludeClasses :: EnvTransformer
 	  addPreludeClasses  = addCoreClasses <:> addNumClasses
@@ -138,7 +158,7 @@ This definition breaks down the set of standard Haskell classes into two separat
 
 The core classes are described as follows:
 
-コア クラスは次のとおりです。
+コアクラスは次のとおりです:
 
 	  addCoreClasses ::   EnvTransformer
 	  addCoreClasses  =   addClass "Eq" []
@@ -152,7 +172,7 @@ The core classes are described as follows:
 
 The hierarchy of numeric classes is captured separately in the following definition:
 
-数値クラスの階層構造は次の定義で個別にキャプチャされます。
+数値クラスの階層構造は次の定義で個別にキャプチャされます:
 
 	  addNumClasses  ::   EnvTransformer
 	  addNumClasses   =   addClass "Num" ["Eq", "Show"]
@@ -163,9 +183,11 @@ The hierarchy of numeric classes is captured separately in the following definit
 	                  <:> addClass "Floating" ["Fractional"]
 	                  <:> addClass "RealFloat" ["RealFrac", "Floating"]
 
+#### addInst関数
+
 To add a new instance to a class, we must check that the class to which the instance applies is defined, and that the new instance does not overlap with any previously declared instance:
 
-クラスに新しいインスタンスを追加するには、インスタンスが適用されるクラスが定義されていることと、新しいインスタンスが宣言済みのインスタンスと重複しないをチェックする必要があります：
+クラスに新しいインスタンスを追加するには、インスタンスが適用されるクラスが定義されていることと、新しいインスタンスが宣言済みのインスタンスと重複しないをチェックする必要があります:
 
 	  addInst                        :: [Pred] -> Pred -> EnvTransformer
 	  addInst ps p@(IsIn i _) ce
@@ -178,11 +200,13 @@ To add a new instance to a class, we must check that the class to which the inst
 
 Two instances for a class are said to overlap if there is some predicate that is a substitution instance of the heads of both instance declarations.
 
+#### overlap関数
+
 クラスの 2 つのインスタンスはインスタンスの宣言は両方の頭の置換インスタンスですいくつかの述語がある場合に重複と言われます。
 
 It is easy to test for overlapping predicates using the functions that we have defined previously:
 
-私たちが以前に定義した関数を使用して述語の重複のテストに簡単です：
+私たちが以前に定義した関数を使用して述語の重複のテストに簡単です:
 
 	  overlap       :: Pred -> Pred -> Bool
 	  overlap p q    = defined (mguPred p q)
@@ -207,9 +231,11 @@ We will not consider such issues further in this paper.
 
 さらに本稿ではそのような問題は考慮されません。
 
+#### exampleInsts関数
+
 To illustrate how the addInst function might be used, the following definition shows how the standard prelude class environment can be extended to include the four instances for Ord from the example in Section 7.1:
 
-AddInst 関数の使い方を説明するために次の定義は ord セクション 7.1 の例から 4 つのインスタンスを含めるための標準的なプレリュード クラス環境の拡張方法について示しています。
+AddInst 関数の使い方を説明するために次の定義は ord セクション 7.1 の例から 4 つのインスタンスを含めるための標準的なプレリュード クラス環境の拡張方法について示しています:
 
 	  exampleInsts ::  EnvTransformer
 	  exampleInsts =   addPreludeClasses
@@ -227,9 +253,9 @@ Haskell report addClass と addInst の定義によって強制されないク�
 
 For example, the superclasses of a class should have the same kind as the class itself; the parameters of any predicates in an instance context should be type variables, each of which should appear in the head of the instance; and the type appearing in the head of an instance should consist of a type constructor applied to a sequence of distinct type variable arguments.
 
-たとえば、クラスのスーパークラス化必要は、同じようなクラス自体;インスタンスのコンテキストで任意の述語のパラメーター型の変数は、それぞれのインスタンス; の頭の中で表示する必要がある。 必要があります。インスタンスの頭の中に表示される型の型可変個の引数のシーケンスに適用される型のコンス トラクターに成るべきであります。
+たとえば、クラスのスーパークラス化必要は、同じようなクラス自体;インスタンスのコンテキストで任意の述語のパラメーター型の変数は、それぞれのインスタンス; の頭の中で表示する必要があります: 必要があります。インスタンスの頭の中に表示される型の型可変個の引数のシーケンスに適用される型のコンス トラクターに成るべきであります。
 
 Because these conditions have no direct impact on type checking, and because they are straightforward but tedious to verify, we have chosen not to include tests for them here, and instead assume that they have been checked during static analysis prior to type checking.
 
-これらの条件は型チェックに直接影響を有しないし、彼らはので簡単ですが退屈を確認する、含めない分野であるのでそれらのためのテストここと代わりに想定する型チェックの前に静的分析中に、彼らがチェックされたこと。
+これらの条件は型チェックに直接影響を有しないし、彼らはので簡単ですが退屈を確認する、含めない分野であるのでそれらのためのテストここと代わりに想定する型チェックの前に静的分析中に、彼らがチェックされたことです。
 

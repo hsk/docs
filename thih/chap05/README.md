@@ -1,8 +1,11 @@
-# 5  Substitutions 代入操作
+# 5  Substitutions 置換
 
 Substitutions-finite functions, mapping type variables to types-play a major role in type inference.
 
-置換-有限関数へのマッピング型の変数型推論において主要な役割を型が演じます。
+置換有限関数、型変数から型へのマッピング が型推論において主要な役割を果たします。
+
+
+#### Subst
 
 In this paper, we represent substitutions using association lists:
 
@@ -12,14 +15,18 @@ In this paper, we represent substitutions using association lists:
 
 To ensure that we work only with well-formed type expressions, we will be careful to construct only kind-preserving substitutions in which variables are mapped only to types of the same kind.
 
-我々が唯一の整形型の式で動作することを保証するために、私たちは変数が、同じ種類の型にマップされている唯一の種類·保存置換を構築するために慎重になります。
+我々が唯一の整形型の式で動作することを保証するために、私たちは変数が、同じkindの型にマップされている唯一の種類·保存置換を構築するために慎重になります。
 
 The simplest substitution is the null substitution, represented by the empty list, which is obviously kind-preserving:
+
+#### nullSubst
 
 最も単純な置換は、空のリストで表わされるnull代入で、次のとおりに明らかにカインドは保持されます:
 
 	  nullSubst  :: Subst
 	  nullSubst   = []
+
+#### (+->)
 
 Almost as simple are the substitutions (u +-> t)3 that map a single variable u to a type t of the same kind:
 
@@ -30,12 +37,13 @@ Almost as simple are the substitutions (u +-> t)3 that map a single variable u t
 
 This is kind-preserving if, and only if, kind u = kind t.
 
-これがあればカインド保持されており、唯一、もし種類のu= tのカインド。
+これは kind u = kind t の場合のみカインドは保持されます。
 
+#### Typesクラス apply, tv
 
 Substitutions can be applied to types-and, in fact, to any other value with type components-in a natural way.
 
-置換は、型コンポーネントのある自然な方法で他の値に、実際にタイプ·アンドに適用することができる。
+置換は、自然な方法で型に(そして、実際には、型コンポーネントを有する任意の他の値に)適用することができる。
 
 This suggests that we overload the operation to apply a substitution so that it can work on different types of object:
 
@@ -52,12 +60,13 @@ In each case, the purpose of applying a substitution is the same: To replace eve
 
 We also include a function tv that returns the set of type variables (i.e., Tyvars) appearing in its argument, listed in order of first occurrence (from left to right), with no duplicates.
 
-また、重複なし​​で（左から右）最初に出現する順にリストを引数に現れる型変数の集合（すなわち、Tyvars）を返す関数テレビが含まれる。
+また、重複なし​​で（左から右）最初に出現する順にリストを引数に現れる型変数の集合（すなわち、Tyvars）を返す関数tvが含まれる。
+
+#### TypeのTypesインスタンス apply tv
 
 The definitions of these operations for Type are as follows:
 
-次のようにタイプのため、これらの操作の定義は次のとおりです:
-
+次のように型のため、これらの操作の定義は次のとおりです:
 
 	  instance Types Type where
 	    apply s (TVar u)  = case lookup u s of
@@ -70,6 +79,8 @@ The definitions of these operations for Type are as follows:
 	    tv (TAp l r) = tv l `union` tv r
 	    tv t         = []
 
+#### Types[a]のTypesインスタンス apply tv
+
 It is straightforward (and useful!) to extend these operations to work on lists:
 
 それは簡単ですリスト上で動作するようにこれらの操作を拡張するために（そして便利！）：
@@ -81,11 +92,13 @@ It is straightforward (and useful!) to extend these operations to work on lists:
 
 The apply function can be used to build more complex substitutions.
 
-関数適用はより複雑な置換を生成するために使う事が出来ます。
+apply関数はより複雑な置換を生成するために使う事が出来ます。
+
+#### 使用例
 
 For example, composition of substitutions, satisfying apply (s1 @@ s2) = apply s1 . apply s2, can be defined using:
 
-例えば、置換の組成物は、`apply (s1 @@ s2) = apply s1 . apply s2` を用いて定義することができる。
+例えば、置換の合成物は、`apply (s1 @@ s2) = apply s1 . apply s2` を用いて定義することができます。
 
 
 	  infixr 4 @@
@@ -94,11 +107,13 @@ For example, composition of substitutions, satisfying apply (s1 @@ s2) = apply s
 
 We can also form a 'parallel' composition s1++s2 of two substitutions s1 and s2, but the result is left-biased because bindings in s1 take precedence over any bindings for the same variables in s2.
 
-また、「パラレル」合成s1とs2が+ +2つの置換S1、S2のを形成することができますが、S1でバインディングがS2の同じ変数のための任意のバインディングよりも優先されるため、結果は左にバイアスされる。
+また、「パラレル」合成s1++s2が2つの置換S1、S2を形成することができますが、s1 でのバインディングが s2 の同じ変数のための任意のバインディングよりも優先されるため、結果は左にバイアスされます。
+
+#### merge
 
 For a more symmetric version of this operation, we use a merge function, which checks that the two substitutions agree at every variable in the domain of both and hence guarantees that apply (s1++s2) = apply (s2++s1).
 
-この操作のより対称バージョンについては、我々はその `apply (s1++s2) = apply (s2++s1)` を2つの置換は、その両方のドメイン内のすべての変数に同意することを確認し、それ故に保証するマージ機能を使用します。
+この操作のより対称バージョンについては、我々はその `apply (s1++s2) = apply (s2++s1)` を2つの置換は、その両方のドメイン内のすべての変数に同意することを確認し、それ故に保証するmerge関数を使用します。
 
 Clearly, this is a partial function, which we reflect by arranging for merge to return its result in a monad, using the standard fail function to provide a string diagnostic in cases where the function is undefined.
 

@@ -10,11 +10,13 @@ More generally, we consider the treatment of entailment: given a predicate p and
 
 In the special case where p = IsIn i t and ps = [], this amounts to determining whether t is an instance of the class i.
 
-特殊なケースでどこで p = IsIn は t と ps = t がクラスのインスタンスかどうかを決定するのには、この金額私は。
+特殊なケース p = IsIn i t と ps = [] でクラス i のインスタンスかどうかを決定するのには、この金額。
 
 In the theory of qualified types [ Jones, 1992], assertions like this are captured using judgements of the form ps ||- p; we use a different notation here-the entail function that is defined at the end of this section-to make the dependence on a class environment explicit.
 
 修飾型 [ジョーンズ、1992年] の理論的には、このようなアサーションがキャプチャされますフォーム ps の判断を使用して繁体 | |-p;我々 はこのようにセクションに明示的なクラス環境依存の終わりに定義されている別の表記法ここに伴う関数を使用します。
+
+#### bySuper関数
 
 As a first step, we can ask how information about superclasses and instances can be used independently to help reason about entailments.
 
@@ -35,6 +37,8 @@ Hence, using only superclass information, we can be sure that, if a given predic
 The list bySuper ce p may contain duplicates, but it will always be finite because of the restriction that the superclass hierarchy is acyclic.
 
 リスト bySuper ce p は、重複するファイルを含めることができますがそれは常に有限スーパークラス階層が非環式制限があるため。
+
+#### byInst関数
 
 Next we consider how information about instances can be used.
 
@@ -72,6 +76,8 @@ The msum function used here comes from the standard Monad library, and returns t
 Because Haskell prevents overlapping instances, there is at most one applicable instance for any given p, and we can be sure that the first defined element will actually be the only defined element in this list.
 
 Haskell は重複するインスタンスを防ぎます、任意の与えられた p, 1 つの該当するインスタンスが多くて、私たちすることができることを確認します定義の最初の要素は、実際にありますこのリストの唯一の定義された要素。
+
+#### entail関数
 
 The bySuper and byInst functions can be used in combination to define a general entailment operator, entail.
 

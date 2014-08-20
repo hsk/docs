@@ -4,6 +4,8 @@ The next step is to define a representation for types.
 
 次のステップでは型を作って説明します。
 
+#### data Type
+
 Stripping away syntactic sugar, Haskell type expressions are either type variables or constants (each of which has an associated kind), or applications of one type to another: applying a type of kind k1 -> k2 to a type of kind k1 produces a type of kind k2:
 
 シンタックスシュガーをとりはずした、Haskellの型の式は型変数か、(それぞれが関連する種類を有する)定数か、１つの型から違う型への評価applyです: カインドk1->k2の評価は カインドk1からk2カインドを生成します:
@@ -28,6 +30,8 @@ The only place where TGen values are used is in the representation of type schem
 
 TGen変数は型スキームの中でのみ使われ、セクション8で説明します。
 
+#### プリミティブデータ
+
 The following examples show how standard primitive datatypes are represented as type constants:
 
 例えば、標準的なプリミティブデータの型は以下のような型定数を含んで表されます:
@@ -47,6 +51,8 @@ A full Haskell compiler or interpreter might store additional information with e
 
 フルセットのHaskellコンパイラやインタプリタは、定数など型チェックの際に必要とされない代数的データ型のような詳細をコンストラクター関数のリストとして、各タイプの追加情報を保存する可能性があります。
 
+#### TAp
+
 More complex types are built up from constants and variables using the TAp constructor.
 
 さらに複雑な型は定数と変数を使ったTApコンストラクタで構築します。
@@ -60,6 +66,8 @@ For example, the representation for the type Int -> [a] is as follows:
 We do not provide a representation for type synonyms, assuming instead that they have been fully expanded before typechecking.
 
 我々は、型シノニムを持っていないため、型チェックをする前に完全にこれらは展開してしまいます。
+
+#### tString
 
 For example, the String type-a synonym for [Char]-is represented as:
 
@@ -84,6 +92,8 @@ We end this section with the definition of a few helper functions.
 
 我々は残りのヘルパー関数の定義でこのセクションを終わらせます。
 
+#### infixr fn list pair
+
 The first three provide simple ways to construct function, list, and pair types, respectively:
 
 最初の３つは以下のように関数、リスト、ペア型のシンプルなコンストラクタです：
@@ -96,6 +106,8 @@ The first three provide simple ways to construct function, list, and pair types,
 	  list t      = TAp tList t
 	  pair       :: Type -> Type -> Type
 	  pair a b    = TAp (TAp tTuple2 a) b
+
+#### HasKind
 
 We also define an overloaded function, kind, that can be used to determine the kind of a type variable, type constant, or type expression:
 

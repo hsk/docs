@@ -6,11 +6,11 @@ One of the most unusual features of the Haskell type system, at least in compari
 
 Described by Wadler and Blott [ Wadler & Blott, 1989] as a general mechanism that subsumes several ad-hoc forms of overloading, type classes have found many uses (and, sometimes, abuses!) in the ten years since they were introduced.
 
-それらが導入されて以来のオーバーロードのいくつかのアドホックな形を包摂する一般的な機構としてWadlerとBlott[Wadler＆Blott、1989]で説明した、型クラスは（そして、時には、乱用され！）10年間での多くの用途が見出されている。
+それらが導入されて以来のオーバーロードのいくつかのアドホックな形を包摂する一般的な機構としてWadlerとBlott[Wadler＆Blott、1989]で説明された、型クラスは（そして、時には、乱用され！）10年間での多くの用途が見出されています。
 
 A significant portion of the code presented in this paper, particularly in this section, is needed to describe the handling of type classes in Haskell.
 
-特に、このセクションで、本論文で示したコードの大部分は、Haskellで型クラスの処理を記述するために必要とされる。
+特に、このセクションで、本論文で示したコードの大部分は、Haskellで型クラスの処理を記述するために必要とされます。
 
 (
 

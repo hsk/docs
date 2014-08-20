@@ -12,6 +12,8 @@ As a result, expressions with ambiguous types are considered ill-typed in Haskel
 
 この結果、あいまいな型を持つ式 Haskell で病気に型指定されたと見なされます、静的エラーが発生します。
 
+#### stringInc
+
 The following definition shows a fairly typical example illustrating how ambiguity problems can occur:
 
 次の定義はあいまいさの問題がどのように発生するかを示す典型的な例を示しています。

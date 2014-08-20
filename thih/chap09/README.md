@@ -1,10 +1,15 @@
 # 9 Assumptions 前提条件
 
+
+#### data Assump
+
 Assumptions about the type of a variable are represented by values of the Assump datatype, each of which pairs a variable name with a type scheme:
 
 変数の型についての仮定はペアの各変数の名前に型方式 Assump データ型の値によって表されます。
 
 	  data Assump = Id :>: Scheme
+
+#### AssumpのTypesインスタンス apply, tv
 
 Once again, we can extend the Types class to allow the application of a substitution to an assumption:
 
@@ -17,6 +22,8 @@ Once again, we can extend the Types class to allow the application of a substitu
 Thanks to the instance definition for Types on lists (Section 5), we can also use the apply and tv operators on the lists of assumptions that are used to record the type of each program variable during type inference.
 
 インスタンス上の定義、型のリスト (セクション 5) のおかげで我々 演算子も使用できます、適用、テレビ型の推定中の各プログラム変数の型を記録するために使用の前提条件のリストに。
+
+#### find関数
 
 We will also use the following function to find the type of a particular variable in a given set of assumptions:
 

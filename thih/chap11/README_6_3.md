@@ -48,6 +48,9 @@ Instead, we can use the declared type of f to infer a type:
 and then use this to check the body of f, ensuring that its declared type is correct.
 
 これを使用して宣言された型が正しいことを確保する f のボディ チェックを。
+
+#### type BindGroup
+
 Motivated by these observations, we will represent Haskell binding groups using the following datatype:
 
 これらの観測によって動機付けられて、私たちは Haskell バインディング グループの次のデータ型を使用してを表します。
@@ -134,7 +137,7 @@ can be rewritten as:
 
 where nv is a new variable.
 
-ネバダ州は、新しい変数です。
+nvは、新しい変数です。
 
 The precise definition of the monomorphism restriction in Haskell makes specific reference to pattern bindings, treating any binding group that includes one as restricted.
 
@@ -146,7 +149,10 @@ So it may seem that the definition of restricted binding groups in this paper is
 
 However, if we use translations as suggested here, then it turns out to be equivalent: even if the programmer supplies explicit type signatures for x and y in the original program, the translation will still contain an implicitly typed binding for the new variable nv.
 
-ただし、ここで提案された翻訳を使用、し、それが判明相当する: プログラマ提供 x に対して明示的な型署名元プログラム、翻訳で y が含まれていても、暗黙的に型指定されたバインド新しい変数ネバダ州の場合でも。
+ただし、ここで提案された翻訳を使用、し、それが判明相当する: プログラマ提供 x に対して明示的な型署名元プログラム、翻訳で y が含まれていても、暗黙的に型指定されたバインド新しい変数nvの場合でも。
+
+#### tiBindGroup
+
 Now, at last, we are ready to present the algorithm for type inference of a complete binding group, as implemented by the following function:
 
 今、最後に、我々 は完全なバインド グループの型の推論のアルゴリズムを提示する準備ができて次の関数によって実装されます。
@@ -169,6 +175,8 @@ First we form a list of assumptions as' for each of the explicitly typed binding
 Next, we use this to check each group of implicitly typed bindings, extending the assumption set further at each stage.
 
 次に、我々 を暗黙的に型指定されたバインディングは、拡張セットを各段階でさらに仮定の各グループを確認するこれを使用してください。
+
+#### tiSeq
 
 Finally, we return to the explicitly typed bindings to verify that each of the declared types is acceptable.
 

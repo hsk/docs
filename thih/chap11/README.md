@@ -2,17 +2,22 @@
 
 With this section we have reached the heart of the paper, detailing our algorithm for type inference.
 
-このセクションで我々 は達しての紙のハート型の推定アルゴリズムを詳述しました。
+我々は論文の中心に達しましたので、このセクションでは、型の推定のためのアルゴリズムを詳述しています。
 
 It is here that we finally see how the machinery that has been built up in earlier sections is actually put to use.
 
 それはここで我々 は最後に使用しては以前のセクションで建て込んできた機械を配置する実際に見ることです。
+
+ここで、私たちは、初期のセクションに構築された機械類が使用するためにどのように実際に置かれるか最後に分かります。
+
 
 We develop the complete algorithm in stages, working through the abstract syntax of the input language from the simplest part (literals) to the most complex (binding groups).
 
 アルゴリズムを開発して完全な段階では、最も簡単な部分 (リテラル) から入力言語の抽象構文を介しての作業に最も複雑な (バインド グループ)。
 
 Most of the typing rules are expressed by functions whose types are simple variants of the following synonym:
+
+#### type Infer
 
 入力規則のほとんどは関数の型が次のシノニムの単純な変形によって表されます。
 

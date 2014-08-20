@@ -1,5 +1,8 @@
 ## 11.3 Expressions 式
 
+
+#### data Expr
+
 Next we describe type inference for expressions, represented by the Expr datatype:
 
 次に式の場合、Expr のデータ型によって表される型の推論を記述します。
@@ -29,6 +32,8 @@ Function application is represented using the Ap constructor, while Let is used 
 For example, a l-expression like \x->e can be rewritten using a local definition as let f x = e in f, where f is a new variable.
 
 たとえば、l 式ように \x->e としてローカル定義を使用して書き換えることができますように f x = e、f、f は、新しい変数の。
+
+#### tiExpr
 
 Type inference for expressions is quite straightforward:
 

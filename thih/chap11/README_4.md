@@ -1,5 +1,8 @@
 ## 11.4 Alternatives 選択肢
 
+
+#### type Alt
+
 The representation of function bindings in following sections uses alternatives, represented by values of type Alt:
 
 以下のセクションで関数の束縛の表現型 alt キーの値によって表される選択肢を使用してください。
@@ -18,6 +21,8 @@ For type inference, we begin by using tiPats to infer a type for each of the pat
 
 型の推定、我々 は、パターンの各型を推論し、新しいリストを作成する tiPats を使用して開始の仮定で説明されているセクション 11.2 として、バインド変数のとして。
 
+#### tiAlt
+
 Next, we calculate the type of the body in the scope of the bound variables, and combine this with the types of each pattern to obtain a single (function) type for the whole Alt:
 
 次に、バインド先の変数のスコープに体の種類を計算し、各全体の Alt の単一 (機能) 型を取得するパターンの種類でこれを組み合わせる：
@@ -26,6 +31,8 @@ Next, we calculate the type of the body in the scope of the bound variables, and
 	  tiAlt ce as (pats, e) = do (ps, as', ts) <- tiPats pats
 	                             (qs,t)  <- tiExpr ce (as'++as) e
 	                             return (ps++qs, foldr fn t ts)
+
+#### tiAlts
 
 In practice, we will often run the typechecker over a list of alternatives, alts, and check that the returned type in each case agrees with some known type t.
 

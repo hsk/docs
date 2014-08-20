@@ -1,5 +1,8 @@
 # 8 Type Schemes 型スキーム
 
+
+#### data Scheme
+
 Type schemes are used to describe polymorphic types, and are represented using a list of kinds and a qualified type:
 
 型スキーマのポリモーフィックな型を記述するために使用し、種類と修飾された型の一覧を使用して表されます。
@@ -31,6 +34,8 @@ Unfortunately, we have not yet found a satisfactory way to enforce this, and, af
 
 残念ながら、まだは、これを強制する満足のいく方法を見つけていないと、いくつかの選択肢を考慮した後我々 の平等と置換の単純な実装できるため、ここに示す表現の定住しています。
 
+#### SchemeのTypesクラスのインスタンス apply, tv
+
 For example, the implementation of apply on Type values ignores TGen values, so we can be sure that there will be no variable capture problems in the following definition:
 
 たとえば、型の実装の適用という問題があるない変数のキャプチャ、次の定義にことを必ずすることができますので、値は、TGen 値は無視されます。
@@ -38,6 +43,8 @@ For example, the implementation of apply on Type values ignores TGen values, so 
 	  instance Types Scheme where
 	    apply s (Forall ks qt) = Forall ks (apply s qt)
 	    tv (Forall ks qt)      = tv qt
+
+#### quantify 関数
 
 Type schemes are constructed by quantifying a qualified type qt with respect to a list of type variables vs:
 
@@ -68,6 +75,8 @@ This is important because it means that we can test whether two type schemes are
 In practice, we sometimes need to convert a Type into a Scheme without adding any qualifying predicates or quantified variables.
 
 実習では、我々 は時々 予選述語を追加することがなく型スキームに変換する必要があります。 または変数を定量化しました。
+
+#### toScheme 関数
 
 For this special case, we can use the following function instead of quantify:
 

@@ -8,24 +8,32 @@ pre {
 code { font-family: monospace; font-size: 0.5em; }
 
 h1 {
-	margin-bottom:2em;
+	margin-bottom:1em;
 	font-size: 0.8em;
 	border-bottom: 0.4em solid #888899;
 }
 
 h2 {
-	margin-bottom:2em;
+	margin-bottom:1em;
 	font-size: 0.7em;
 	border-bottom: 0.3em solid #888899;
 }
 h3 {
 	font-size: 0.6em;
-	margin-bottom:2em;
+	margin-bottom:1em;
 	border-bottom: 0.2em solid #888899;
 }
 h4,h5,h6 {
-	margin-bottom:2em;
-	border-bottom: none;
+	border-radius: 5px;        /* CSS3草案 */  
+    -webkit-border-radius: 5px;    /* Safari,Google Chrome用 */  
+    -moz-border-radius: 5px;   /* Firefox用 */ 
+
+	display: inline-block;
+	background: #eeeeee;
+	padding: 0.1em 0.8em 0.0em 0.8em;
+	margin-bottom:1em;
+	border-right: 0.3em solid #888899;
+	border-bottom: 0.3em solid #888899;
 	font-size: 0.5em;
 }
 

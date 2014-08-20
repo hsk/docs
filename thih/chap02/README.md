@@ -7,6 +7,8 @@ For simplicity, we present the code for our typechecker as a single Haskell modu
 
 The program uses only a handful of standard prelude functions, like map, concat, all, any, mapM, etc., and a few operations from the List and Monad libraries:
 
+#### import List Monad
+
 プログラムはプレリュードのmap,concat,all,mapM等の関数と、ListとMonadライブラリの操作のみを使用していてます。
 
 	module TypingHaskellInHaskell where
@@ -14,6 +16,8 @@ The program uses only a handful of standard prelude functions, like map, concat,
 	import Monad(msum)
 
 For the most part, our choice of variable names follows the notational conventions set out in Figure 1.
+
+#### 記法変換表
 
 他のパートの為に、我々は変換の型と変数名の記法変換表を図1に示します。
 
@@ -68,6 +72,7 @@ The types and terms appearing in the table are described more fully in later sec
 表にある型(type)や項(term)は後のセクションで詳しく記述します。
 
 
+#### Id
 
 To distinguish the code for the typechecker from program fragments that are used to discuss its behavior, we typeset the former in an italic font, and the latter in a typewriter font.
 

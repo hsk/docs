@@ -11,6 +11,8 @@ For example, the standard list, Maybe and IO constructors all have kind * -> *.
 
 例えば、標準的なリスト、MaybeとIOのコンストラクタはすべてカインド* -> *を持ちます。
 
+#### data Kind
+
 Here, we will represent kinds as values of the following datatype:
 
 カインドのデータタイプを以下に示します。

@@ -8,7 +8,9 @@ The types in each class (known as instances) are specified by a collection of in
 
 （インスタンスとして知られている）各クラスの型はインスタンス宣言の集合によって指定されます。
 
-Haskell types can be qualified by adding a (possibly empty) list of predicates, or class constraints, to restrict the ways in which type variables are instantiated4:
+Haskell types can be qualified by adding a (possibly empty) list of predicates, or class constraints, to restrict the ways in which type variables are instantiated [4] :
+
+#### data Qual
 
 Haskellの型は型変数がインスタンス化される方法を制限する述部は、クラスの制約の（空）のリストを追加することで修飾することができます:
 
@@ -17,30 +19,34 @@ Haskellの型は型変数がインスタンス化される方法を制限する�
 
 In a value of the form ps :=> t, we refer to ps as the context and to t as the head.
 
-ps :=> tの形の値では、コンテキストとして、psを参照し、ヘッドとしてtに。
+ps :=> t の形の値は、コンテキストとしてpsを、ヘッドとしてtを参照します。
+
+#### data Pred
 
 Predicates themselves consist of a class identifier and a type; a predicate of the form IsIn i t asserts that t is a member of the class named i:
 
-述語自身はクラスIDとタイプで構成され; IsIn i t 形式の述部は、tは名前iのクラスのメンバーであることを主張する。
+述語自身はクラスIDとタイプで構成され; IsIn i t 形式の述部は、 t は名前 i のクラスのメンバーであることを表します。
 
 	  data Pred   = IsIn Id Type
 	                deriving Eq
 
 For example, using the Qual and Pred datatypes, the type (Num a) => a -> Int can be represented by:
 
-例えば、QualとPredデータ型を使用して、型 `(Num a) => a -> Int` は次式で表すことができます:
-
+例えば、 Qual と Pred データ型を使用して、型 `(Num a) => a -> Int` は次式で表すことができます:
 
 	  [IsIn "Num" (TVar (Tyvar "a" Star))] :=> (TVar (Tyvar "a" Star) `fn` tInt)
 
 It would be easy to extend the Pred datatype to allow other forms of predicate, as is done with Trex records in Hugs [ Jones & Peterson, 1999].
 
-Hugs[ジョーンズ＆ピーターソン、1999]でトレックス·レコードと行われているように、述語の他の形態を可能にするためにPREDデータ型を拡張するのは簡単でしょう。
+Hugs[ Jones & Peterson, 1999]のTrecレコードで行われているように、述語の他の形態を可能にするためにPredデータ型を拡張するのは簡単でしょう。
 
 
 Another frequently requested extension is to allow classes to accept multiple parameters, which would require a list of Types rather than the single Type in the definition above.
 
 もう一つの頻繁に要求される拡張は、クラスは型のリストではなく、上記の定義内の単一のタイプを必要とする複数のパラメータを受け入れるようにすることです。
+
+#### Qual, PredのTypesクラスのインスタンス apply, tv
+
 
 The extension of Types to the Qual and Pred datatypes is straightforward:
 
@@ -54,9 +60,11 @@ QualとPredデータ型への型の拡張は簡単です:
 	    apply s (IsIn i t) = IsIn i (apply s t)
 	    tv (IsIn i t)      = tv t
 
+#### mguPred matchPred
+
 The tasks of calculating most general unifiers and matching substitutions on types also extend naturally to predicates:
 
-最も一般的なユニファイアを計算し、タイプに関する置換はまた、述部に自然に拡張するマッチングのタスク：
+最も一般的なユニファイアの計算のタスクとマッチングのタイプに関する置換は、述部を自然に拡張します:
 
 	  mguPred, matchPred :: Pred -> Pred -> Maybe Subst
 	  mguPred             = lift mgu
@@ -66,16 +74,20 @@ The tasks of calculating most general unifiers and matching substitutions on typ
 	           | i == i'   = m t t'
 	           | otherwise = fail "classes differ"
 
+#### type Class, Inst
+
 We will represent each class by a pair of lists, one containing the name of each superclass, and another containing an entry for each instance declaration:
 
-私たちは、リストのペアで各クラスを表しますが、各スーパークラスの名前を含む1、各インスタンス宣言のエントリを含む別：
+我々は、リストのペアで各クラスを表し、一つ目のリストは各スーパークラスの名前を含み、二つ目のリストは各インスタンス宣言のエントリを含みます:
 
 	  type Class    = ([Id], [Inst])
 	  type Inst     = Qual Pred
 
 For example, a simplified version of the standard Haskell class Ord might be described by the following value of type Class:
 
-たとえば、標準Haskellのクラス Ord の簡易版は、Class型の次の値によって記述されることがあります。
+#### exampleInsts
+
+たとえば、標準的なHaskellのクラス Ord の簡易版は、Class型の次の値によって記述されることがあります:
 
 	  (["Eq"], [[] :=> IsIn "Ord" tUnit,
 	            [] :=> IsIn "Ord" tChar,
@@ -87,11 +99,11 @@ For example, a simplified version of the standard Haskell class Ord might be des
 
 This structure captures the fact that Eq is a superclass of Ord (the only one in fact), and lists four instance declarations for the unit, character, integer, and pair types (if a and b are in Ord, then (a,b) is also in Ord).
 
-この構造は、式がオード（実際には一つだけ）のスーパークラスであるという事実をキャプチャして、aとbが、その後、オードに（A、Bである場合（単位、文字、整数、ペアタイプの4インスタンス宣言を一覧表示します））オードにもあります。
+この構造は、式がオードのスーパークラスであるという事実（実際には一つだけ）を取り込み、そしてunit、文字、整数、ペアタイプのための4つのインスタンス宣言を示しています（aとbがOrdにある場合、(a,b)もOrdにあります)。
 
 Of course, this is only a fraction of the list of Ord instances that are defined in the full Haskell prelude.
 
-もちろん、これは完全なHaskellのプレリュードで定義されているオード·インスタンスのリストの一部のみである。
+もちろん、これは完全なHaskellのプレリュードで定義されているOrd·インスタンスのリストの一部のみです。
 
 Only the details that are needed for type inference are included in these representations.
 

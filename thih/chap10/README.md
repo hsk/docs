@@ -16,6 +16,8 @@ In a more realistic implementation, we might also want to add error reporting fa
 
 実装より現実的なまたエラー報告施設、追加したい場合がありますがここでは、Haskell から関数を単純な失敗が原油プレリュードすべてのことが必要です。
 
+#### newtype TI TIモナド、runTI
+
 It follows that we need a simple state monad with only a substitution and an integer (from which we can generate new type variables) as its state:
 
 状態としてのみ置換と （そこから生成できる新しい型の変数) の整数の単純な state モナド必要があるそれ次の：
@@ -31,6 +33,8 @@ It follows that we need a simple state monad with only a substitution and an int
 	  runTI       :: TI a -> a
 	  runTI (TI f) = x where (s,n,x) = f nullSubst 0
 
+#### getSubst unify
+
 The getSubst operation returns the current substitution, while unify extends it with a most general unifier of its arguments:
 
 GetSubst 操作統一その引数の最も一般的な単一化とそれを拡張しながら、現在の置換が返されます。
@@ -42,6 +46,8 @@ GetSubst 操作統一その引数の最も一般的な単一化とそれを拡�
 	  unify t1 t2 = do s <- getSubst
 	                   u <- mgu (apply s t1) (apply s t2)
 	                   extSubst u
+
+#### extSubst
 
 For clarity, we define the operation that extends the substitution as a separate function, even though it is used only here in the definition of unify:
 
@@ -60,6 +66,8 @@ In particular, it avoids heavy use of apply every time an extension is (or might
 
 There is only one primitive that deals with the integer portion of the state, using it in combination with enumId to generate a new type variable of a specified kind:
 
+#### newTVar
+
 指定した種類の新しい型の変数を生成する enumId との組み合わせでを使用して、状態の整数部分を扱うのみ 1 つのプリミティブがあります。
 
 	  newTVar    :: Kind -> TI Type
@@ -67,6 +75,8 @@ There is only one primitive that deals with the integer portion of the state, us
 	                            in  (s, n+1, TVar v))
 
 One place where newTVar is useful is in instantiating a type scheme with new type variables of appropriate kinds:
+
+#### freshInst
 
 NewTVar は便利な 1 つの場所の適切な種類の新しい型の変数を持つ型方式をインスタンス化するのには。
 
@@ -81,6 +91,8 @@ Ts が正確、適切な数型の変数とそれぞれ ks を一致するよう�
 Hence, if the type scheme is well-formed, then the qualified type returned by freshInst will not contain any unbound generics of the form TGen n.
 
 したがって、型方式が整形場合、freshInst によって返される修飾型は、バインドされていないジェネリック フォーム TGen n を含まれません。
+
+#### Instantiateクラスと Type, [a], Qual, Predの実装
 
 The definition relies on an auxiliary function inst, which is a variation of apply that works on generic variables.
 

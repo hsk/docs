@@ -67,6 +67,8 @@ The predicates in rs will be used to form an inferred type (rs :=> t) for h, whi
 
 Rs の述語推論型を形成する使用される (rs:=> t) h、ds で述語に渡されるの制約として、外側のスコープ中の。
 
+#### split関数
+
 We use the following definition for split:
 
 我々 の分割次の定義を使用します。
