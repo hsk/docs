@@ -1,0 +1,6 @@
+---
+title: C++ ARC ライブラリ
+author: 櫻井洋志
+language: ja-JP
+---
+
