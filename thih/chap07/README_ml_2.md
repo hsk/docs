@@ -13,6 +13,8 @@
 
 instはpredのqualです。
 
+todo:説明がよくわからない。
+
 ### type class_
 
 	  type class_ = Id.id list * inst list
@@ -28,6 +30,8 @@ class_はidリストとinstリストの対です。
 	             IsIn "Ord" (TVar (Tyvar "b" Star))]
 	               :=> IsIn "Ord" (pair (TVar (Tyvar "a" Star))
 	                                    (TVar (Tyvar "b" Star)))])
+
+todo:haskellのコードなので、ocamlにして実行してみる。
 
 ### type classEnv
 

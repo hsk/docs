@@ -19,22 +19,32 @@
 
 ### type ti
 
+todo:説明を書く
+
 	  type ti = subst ref * int ref
 
 ### runTI 関数
+
+todo:説明を書く
 
 	  let runTI (f : ti -> 'a):'a =
 	    f (ref nullSubst, ref 0)
 
 ### getSubst 関数
 
+todo:説明を書く
+
 	  let getSubst ((s, _) : ti):subst = !s
 
 ### extSubst 関数
 
+todo:説明を書く
+
 	  let extSubst ((s, _) : ti) (u:subst) :unit = s := u @@ !s
 
 ### unify 関数
+
+todo:説明を書く
 
 	  let unify (ti:ti) (t1:type_) (t2:type_) :unit=
 	    let s:subst = getSubst ti in
@@ -43,12 +53,16 @@
 
 ### newTVar 関数
 
+todo:説明を書く
+
 	  let newTVar ((_, n) : ti) k : type_ =
 	    let v = Tyvar(Id.enumId !n, k) in
 	    incr n;
 	    TVar v
 
 ### typeInst 関数
+
+todo:説明を書く
 
 	  let rec typeInst (ts:type_ list) (t:type_):type_ = 
 	    begin match t with
@@ -59,16 +73,22 @@
 
 ### listInst 関数
 
+todo:説明を書く
+
 	  let listInst (inst: type_ list -> 'a -> 'a)
 	    (ts : type_ list) (xs : 'a list) : 'a list =
 	    map (inst ts) xs
 
 ### predInst 関数
 
+todo:説明を書く
+
 	  let predInst (ts: type_ list) (IsIn(c, t): pred):pred =
 	    IsIn(c, typeInst ts t)
 
 ### qualTypeInst 関数
+
+todo:説明を書く
 
 	  let qualTypeInst (ts:type_ list)
 	    (Qual(ps, t):type_ qual):type_ qual =
@@ -76,6 +96,10 @@
 
 ### freshInst 関数
 
+todo:説明を書く
+
 	  let freshInst (ti:ti) (Forall(ks, qt):scheme) : type_ qual =
 	    let ts = map (newTVar ti) ks in
 	    qualTypeInst ts qt
+
+todo:使用例を書く

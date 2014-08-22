@@ -17,13 +17,19 @@
 
 	  type subst = (tyvar * type_) list
 
+todo:説明を書く
+
 ### nullSubst
 
 	  let nullSubst : subst = []
 
+todo:説明を書く
+
 ### (+->) 関数
 
 	  let (+->) u t : subst = [(u, t)]
+
+todo:説明を書く
 
 ### typeApply関数
 
@@ -40,6 +46,8 @@
 	      | t -> t
 	    end
 
+todo:説明を書く
+
 ### typeTv関数
 
 	  let rec typeTv (t:type_):tyvar list =
@@ -49,15 +57,21 @@
 	      | _ -> []
 	    end
 
+todo:説明を書く
+
 ### listApply関数
 
 	  let listApply (apply : subst -> 'a -> 'b) (s : subst) (xs:'a list):'b list =
 	    List.map (apply s) xs
 
+todo:説明を書く
+
 ### listTv関数
 
 	  let listTv (tv:'a -> tyvar list) (xs:'a list) : tyvar list =
 	    Pre.nub (List.concat (List.map tv xs))
+
+todo:説明を書く
 
 ### (@@) 関数
 
@@ -65,6 +79,8 @@
 	    List.map begin fun (u, t) ->
 	      (u, typeApply s1 t)
 	    end s2 @ s1
+
+todo:説明を書く
 
 ### merge関数
 
@@ -79,6 +95,8 @@
 	    then s1 @ s2
 	    else failwith "substitutions do not agree"
 
+todo:説明を書く
+
 ### show 関数
 
 	  let show (subst:subst):string =
@@ -86,12 +104,16 @@
 	      Printf.sprintf "Tyvar(%s,%s),%s" id (Kind.show kind) (Type.show type_)
 	    end "; " subst
 
+todo:説明を書く
+
 ### show_tyvar_list 関数
 
 	  let show_tyvar_list xs :string =
 	    Pre.show_list begin fun (Tyvar(id,kind)) ->
 	      Printf.sprintf "Tyvar(%s,%s)" id (Kind.show kind)
 	    end "; " xs
+
+todo:説明を書く
 
 #### 使用例
 
@@ -137,4 +159,7 @@
 	    (* merge *)
 
 	end
+
+todo:細かく分ける。
+todo:listApply以降も例を書く
 

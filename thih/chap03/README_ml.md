@@ -38,3 +38,5 @@
 	  Printf.printf "kfun3 = %s\n" (Kind.show kfun3);
 	  Printf.printf "kfun4 = %s\n" (Kind.show kfun4);
 	  Printf.printf "kfun5 = %s\n" (Kind.show kfun5);
+
+todo:結果をかく

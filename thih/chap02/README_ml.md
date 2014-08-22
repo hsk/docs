@@ -46,6 +46,8 @@ OCamlのモジュールはC++のネームスペースのような物で、名前
 	  let ab = Pre.union a b in
 	  Printf.printf "union a b = %s\n" (Pre.show_int_list ab);
 
+todo:結果をかく
+
 ### intersect 関数
 
 	  (* 積集合 *)
@@ -61,6 +63,8 @@ OCamlのモジュールはC++のネームスペースのような物で、名前
 	  let b = [4;5;6;7] in
 	  let ab = Pre.intersect a b in
 	  Printf.printf "intersect a b = %s\n" (Pre.show_int_list ab);
+
+todo:結果をかく
 
 ### nub 関数
 
@@ -78,6 +82,8 @@ OCamlのモジュールはC++のネームスペースのような物で、名前
 	  let a = [1;1;2;2;3;4;5;1] in
 	  let a = Pre.nub a in
 	  Printf.printf "nub a b = %s\n" (Pre.show_int_list a);
+
+todo:結果をかく
 
 ### isEmpty 関数
 
@@ -99,6 +105,8 @@ OCamlのモジュールはC++のネームスペースのような物で、名前
 	  let a = Pre.isEmpty a in
 	  Printf.printf "isEmpty = %b\n" a;
 
+todo:結果をかく
+
 ### fold_left1 関数
 
 	  (* たぶんこれは、reduceじゃないのかな *)
@@ -118,6 +126,8 @@ OCamlのモジュールはC++のネームスペースのような物で、名前
 	  end a in
 	  Printf.printf "fold_left1 = %d\n" a;
 
+todo:結果をかく
+
 ### deleteFirst 関数
 
 	  (* リスト内の最初の1個目のxを削除する *)
@@ -136,6 +146,7 @@ OCamlのモジュールはC++のネームスペースのような物で、名前
 	  let a = Pre.deleteFirst 3 a in
 	  Printf.printf "deleteFirst = %s\n" (Pre.show_int_list a);
 
+todo:結果をかく
 
 ### diff 関数
 
@@ -158,6 +169,8 @@ OCamlのモジュールはC++のネームスペースのような物で、名前
 	  let b = [3;4;5;6;4] in
 	  let a = Pre.diff a b in
 	  Printf.printf "diff = %s\n" (Pre.show_int_list a);
+
+todo:結果をかく
 
 ### split3 関数
 
@@ -200,6 +213,8 @@ OCamlのモジュールはC++のネームスペースのような物で、名前
 	    (Pre.show_int_list b)
 	    (Pre.show_int_list c);
 
+todo:結果をかく
+
 ## Idモジュール
 
 	module Id = struct
@@ -223,3 +238,5 @@ OCamlのモジュールはC++のネームスペースのような物で、名前
 
 	let _ =
 	  Printf.printf "%s\n" (Id.enumId 1)
+
+todo:結果をかく

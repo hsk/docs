@@ -17,10 +17,14 @@
 	  (* 型変数 *)
 	  type tyvar = Tyvar of Id.id * kind
 
+todo:説明を書く
+
 ### type tycon
 
 	  (* 型コンストラクタ *)
 	  type tycon = Tycon of Id.id * kind
+
+todo:説明を書く
 
 ### type type_
 
@@ -30,6 +34,8 @@
 	    | TCon of tycon
 	    | TAp of type_ * type_
 	    | TGen of int
+
+todo:説明を書く
 
 ### show 関数
 
@@ -41,6 +47,8 @@
 	      | TGen(i)              -> Printf.sprintf "TGen(%d)" i
 	    end
 
+todo:説明を書く
+
 ### プリミティブ 変数
 
 	  let tUnit :type_ = TCon(Tycon("()", Star))
@@ -50,35 +58,51 @@
 	  let tFloat :type_ = TCon(Tycon("Float", Star))
 	  let tDouble :type_ = TCon(Tycon("Double", Star))
 
+todo:説明を書く
+
 ### リスト、関数、タプル 変数
 
 	  let tList :type_ = TCon(Tycon("[]", Kfun(Star, Star)))
 	  let tArrow :type_ = TCon(Tycon("(->)", Kfun(Star, Kfun(Star, Star))))
 	  let tTuple2 :type_ = TCon(Tycon("(,)", Kfun(Star, Kfun(Star, Star))))
 
+todo:説明を書く
+
 ### fn 関数
 
 	  let fn (a:type_) (b:type_) :type_ = TAp(TAp(tArrow, a), b)
+
+todo:説明を書く
 
 ### list 関数
 
 	  let list t :type_ = TAp(tList, t)
 
+todo:説明を書く
+
 ### tString 変数
 
 	  let tString :type_ = list tChar
+
+todo:説明を書く
 
 ### pair 関数
 
 	  let pair a b :type_ = TAp(TAp(tTuple2, a), b)
 
+todo:説明を書く
+
 ### tvarKind 関数
 
 	  let tyvarKind (Tyvar(_, k)) :kind = k
 
+todo:説明を書く
+
 ### tyconKind 関数
 
 	  let tyconKind (Tycon(_, k)) :kind = k
+
+todo:説明を書く
 
 ### typeKind 関数
 
@@ -92,6 +116,8 @@
 	        | _ -> failwith "inconsistent type"
 	      end
 	    | TGen _ -> failwith "generic type variables have no kind"
+
+todo:説明を書く
 
 ### 使用例
 
@@ -120,3 +146,5 @@
 
 	  let pair_int_char = Type.pair Type.tInt Type.tChar in
 	  show "pair_int_char" pair_int_char;
+
+todo:使用例を細かく分ける

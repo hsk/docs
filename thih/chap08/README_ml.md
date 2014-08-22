@@ -21,17 +21,24 @@
 
 #### 例
 
+todo:例を書く
 
 ### schemeApply 関数
+
+todo:説明を書く
 
 	  let schemeApply (s:Subst.subst) (Forall(ks, qt):scheme):scheme =
 	    Forall(ks, qualTypeApply s qt)
 
 ### schemeTv 関数
 
+todo:説明を書く
+
 	  let schemeTv (Forall(_, qt):scheme):tyvar list = qualTypeTv qt
 
 ### quantify 関数
+
+todo:説明を書く
 
 	  let quantify(vs:tyvar list) (qt:type_ qual):scheme =
 	    let vs' = filter (fun v -> mem v vs) (qualTypeTv qt) in
@@ -47,3 +54,7 @@
 ### toScheme 関数
 
 	  let toScheme (t:type_) :scheme = Forall([], (Qual([], t)))
+
+todo:説明を書く
+
+todo:使用例を書く

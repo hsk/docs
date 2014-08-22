@@ -16,6 +16,8 @@
 
 ### mgu関数
 
+todo:mguの説明を書く。
+
 mguはvarBind関数とペアで計算します。
 
 	  let rec mgu (t1:type_) (t2:type_):subst =
@@ -32,6 +34,8 @@ TVarのマッチングの箇所でvarBindは使われています。
 
 	    | TVar u, t | t, TVar u -> varBind u t
 
+todo:mguは逆方向にもマッチするはずなのでそれが分かると嬉しい。
+
 ### varBind関数
 
 	  and varBind (u:tyvar) (t:type_):subst =
@@ -39,6 +43,8 @@ TVarのマッチングの箇所でvarBindは使われています。
 	    else if mem u (typeTv t) then failwith "occurs check fails"
 	    else if tyvarKind u <> typeKind t then failwith "kinds do not match"
 	    else u +-> t
+
+todo:説明がないので書く。
 
 ### match_関数
 
@@ -54,6 +60,8 @@ match関数はmguに似ていますが、varBindを使わず、@@の代わりに
 	    | TCon tc1, TCon tc2 when tc1 = tc2 -> nullSubst
 	    | _ -> failwith "types do not match"
 
+todo:例がないと分からないよ。
+
 ### 使用例
 
 	let _ =
@@ -61,3 +69,5 @@ match関数はmguに似ていますが、varBindを使わず、@@の代わりに
 	  (* varBind *)
 	  (* match_ *)
 	  ()
+
+todo:例を追加する

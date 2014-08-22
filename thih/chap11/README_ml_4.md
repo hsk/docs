@@ -299,3 +299,7 @@ bindGroupに対する型推論で、tiProgramとtiExprから使われていま�
 esからassumpを作り、
 issをtiImplsで型推論し、
 esをtiExplで型推論して、結果をまとめて返しています。
+
+
+
+todo:使用例を書く

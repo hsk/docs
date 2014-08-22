@@ -8,6 +8,8 @@
 	  (* 7.1 Basic definitions *)
 	  type pred = IsIn of Id.id * type_
 
+todo:説明を書く。
+
 #### 使用例
 
 	let _ =
@@ -18,6 +20,8 @@
 ### type qual
 
 	  type 't qual = Qual of pred list * 't
+
+todo:説明を書く。
 
 #### 使用例
 
@@ -41,11 +45,15 @@
 	      | IsIn(i, t) -> IsIn(i, Subst.typeApply s t)
 	    end
 
+todo:説明を書く。
+
 ### predsApply 関数
 
 
 	  let predsApply (s:subst) (xs:pred list):pred list =
 	    Subst.listApply predApply s xs
+
+todo:説明を書く。
 
 ### qualTypeApply 関数
 
@@ -54,6 +62,8 @@
 	      | Qual(ps, t) -> Qual(predsApply s ps, Subst.typeApply s t)
 	    end
 
+todo:説明を書く。
+
 ### predTv 関数
 
 	  let predTv (pred:pred):tyvar list =
@@ -61,10 +71,14 @@
 	      | IsIn(_, t) -> Subst.typeTv t
 	    end
 
+todo:説明を書く。
+
 ### predsTv 関数
 
 	  let predsTv (xs:'a list) : tyvar list =
 	    Subst.listTv predTv xs
+
+todo:説明を書く。
 
 ### qualTypeTv 関数
 
@@ -73,6 +87,8 @@
 	      | Qual(ps, t) ->
 	        Pre.union (predsTv ps) (Subst.typeTv t)
 	    end
+
+todo:説明を書く。
 
 ### lift 関数
 
@@ -92,7 +108,6 @@ iが同じなら、predのtを受け取った関数に渡して結果を返し�
 	  let mguPred = lift Unify.mgu
 
 Unify.mguをliftしてるだけです。
-
 
 ### matchPred 関数
 

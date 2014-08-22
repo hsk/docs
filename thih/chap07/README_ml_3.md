@@ -45,3 +45,5 @@ bySuper関数はクラス環境とpredを受け取って、superからpred list�
 	      | None -> false
 	      | Some qs -> for_all (entail ce ps) qs
 	    end
+
+todo:使用例を書く

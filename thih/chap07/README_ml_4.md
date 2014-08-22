@@ -66,3 +66,6 @@ psにbySuperした結果のリストにpが含まれているかをチェック�
 
 	  let scEntail (ce:classEnv) ps p =
 	    exists (mem p) (map (bySuper ce) ps)
+
+todo:使用例を書く
+

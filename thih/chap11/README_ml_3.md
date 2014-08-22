@@ -103,3 +103,5 @@ Num関連のクラスのIdのリストです。
 	      end ps' in
 	    let rs' = defaultedPreds ce (fs @ gs) rs in
 	    (ds, Pre.diff rs rs')
+
+todo:使用例を書く
