@@ -1,0 +1,6 @@
+---
+title: Typing Haskell In OCaml
+author: 櫻井洋志
+language: ja-JP
+---
+
