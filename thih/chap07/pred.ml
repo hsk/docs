@@ -193,7 +193,7 @@ module Unify = struct
     | _ -> failwith "types do not unify"
 
   and varBind (u:tyvar) (t:type_):subst =
-    match a with
+    match t with
     | _ when t = TVar u                -> nullSubst
     | _ when mem u (typeTv t)          -> failwith "occurs check fails"
     | _ when tyvarKind u <> typeKind t -> failwith "kinds do not match"
@@ -398,15 +398,51 @@ module Pred = struct
 
   let scEntail (ce:classEnv) ps p =
     exists (mem p) (map (bySuper ce) ps)
+
+  let p (IsIn(s, t)) =
+    s  ^ " " ^ (Type.show t)
+
+  let p_qual q =
+    begin match q with
+      | Qual(ps,ty) -> Pre.show_list p ", " ps ^ " => " ^ Type.show ty
+    end
+
 end
 
+open Kind
+open Type
+open Pred
 (* 7.1 Basic definitions *)
 let _ =
-  (* IsIn *)
+
+  (* (Num a) => a -> Int *)
+
+  let ty = TVar(Tyvar("a", Star)) in
+  (* Pred *)
+  let pred = IsIn("Num", ty) in
+  Printf.printf "pred %s\n" (Pred.p pred);
+
   (* Qual *)
+  let q = Qual([pred], fn ty tInt) in
+  Printf.printf "qual = %s\n" (p_qual q);
 
   (* predApply *)
+  let pred2 = predApply Subst.nullSubst pred in
+  Printf.printf "pred2 %s\n" (Pred.p pred2)
 
+module T = struct
+  open Subst
+  let _ =
+    let ty = TVar(Tyvar("a", Star)) in
+    let pred = IsIn("Num", ty) in
+    let pred2 = predApply Subst.nullSubst pred in
+    Printf.printf "pred2 %s\n" (Pred.p pred2);
+
+    let pred2 = predApply ((Tyvar("a", Star)) +-> tInt) pred in
+    Printf.printf "pred2 %s\n" (Pred.p pred2)
+end
+
+let _ =
   (* predsApply *)
 
   (* qualTypeApply *)

@@ -88,6 +88,7 @@ namespace arc {
 
 			stack = _stack;
 		}
+		template<class T> T* operator()(T* t) { add(t); return t; }
 	};
 
 

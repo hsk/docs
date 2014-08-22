@@ -185,6 +185,11 @@ module TEST = struct
   open Subst
 
   let _ =
+
+    (* nullSubst *)
+    Printf.printf "nullSubst = %s\n" (Subst.show nullSubst);
+
+    (* +-> *)
     let subst = Tyvar("a", Star) +-> tInt in
     Printf.printf "a * +-> tInt = %s\n" (Subst.show subst);
     let subst = subst @ Tyvar("b", Star) +-> tChar in

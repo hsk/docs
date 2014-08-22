@@ -8,11 +8,11 @@ The types in each class (known as instances) are specified by a collection of in
 
 （インスタンスとして知られている）各クラスの型はインスタンス宣言の集合によって指定されます。
 
-#### data Qual
+#### data Qual 限定型
 
 Haskell types can be qualified by adding a (possibly empty) list of predicates, or class constraints, to restrict the ways in which type variables are instantiated [4] :
 
-Haskellの型は型変数がインスタンス化される方法を制限する述部は、クラスの制約の（空）のリストを追加することで修飾することができます [4]:
+Haskellの型は型変数がインスタンス化される方法を制限する述部は、クラスの制約の（空）のリストを追加することで限定することができます [4]:
 
 	  data Qual t = [Pred] :=> t
 	                deriving Eq
@@ -21,7 +21,7 @@ In a value of the form ps :=> t, we refer to ps as the context and to t as the h
 
 ps :=> t の形の値は、コンテキストとしてpsを、ヘッドとしてtを参照します。
 
-#### data Pred
+#### data Pred 述語
 
 Predicates themselves consist of a class identifier and a type; a predicate of the form IsIn i t asserts that t is a member of the class named i:
 
@@ -29,6 +29,8 @@ Predicates themselves consist of a class identifier and a type; a predicate of t
 
 	  data Pred   = IsIn Id Type
 	                deriving Eq
+
+#### 例
 
 For example, using the Qual and Pred datatypes, the type (Num a) => a -> Int can be represented by:
 
@@ -59,7 +61,7 @@ QualとPredデータ型への型の拡張は簡単です:
 	    apply s (IsIn i t) = IsIn i (apply s t)
 	    tv (IsIn i t)      = tv t
 
-#### mguPred matchPred
+#### mguPred matchPred lift
 
 The tasks of calculating most general unifiers and matching substitutions on types also extend naturally to predicates:
 
