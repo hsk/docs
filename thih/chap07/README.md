@@ -1,4 +1,4 @@
-# 7 Type Classes, Predicates and Qualified Types 型クラス, 述語と限定型
+# 7 Type Classes, Predicates and Qualified Types 型クラス, 述語と制限型
 
 One of the most unusual features of the Haskell type system, at least in comparison to those of other polymorphically typed languages like ML, is the support that it provides for type classes.
 

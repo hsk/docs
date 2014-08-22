@@ -1,6 +1,6 @@
 # 2 前提知識
 
-この章では、module Preを見ていきます。
+この章では、PreモジュールとIdモジュールの２つを見ていきます。
 
 OCamlでは以下のような形でモジュールを作成出来ます。
 
@@ -23,15 +23,14 @@ OCamlのモジュールはC++のネームスペースのような物で、名前
 
 ## Preモジュール
 
-2章の前提となる関数をPreモジュールとして記述します。
-
 	module Pre = struct
 	...
 	end
 
-このようなモジュールを作って、中に色々な関数を作っていきましょう。
+このようなモジュールを作って、中に色々な関数を作っていきます。
+ここでは、8つの関数union,intersect,nub,isEmpty,fold_left1,deleteFirst,diff,split3を説明します。
 
-### union
+### union 関数
 
 	  (* 和集合 *)
 	  let union (xs: 'a list) (ys: 'a list):'a list =
@@ -47,7 +46,7 @@ OCamlのモジュールはC++のネームスペースのような物で、名前
 	  let ab = Pre.union a b in
 	  Printf.printf "union a b = %s\n" (Pre.show_int_list ab);
 
-### intersect
+### intersect 関数
 
 	  (* 積集合 *)
 	  let intersect (xs: 'a list) (ys: 'a list): 'a list =
@@ -63,7 +62,7 @@ OCamlのモジュールはC++のネームスペースのような物で、名前
 	  let ab = Pre.intersect a b in
 	  Printf.printf "intersect a b = %s\n" (Pre.show_int_list ab);
 
-### nub
+### nub 関数
 
 	  (* リストをセットにする。要素が１つずつにまとめる *)
 	  let nub (xs : 'a list): 'a list =
@@ -80,7 +79,7 @@ OCamlのモジュールはC++のネームスペースのような物で、名前
 	  let a = Pre.nub a in
 	  Printf.printf "nub a b = %s\n" (Pre.show_int_list a);
 
-### isEmpty
+### isEmpty 関数
 
 	  (* 空チェック *)
 	  let isEmpty(xs: 'a list):bool =
@@ -100,7 +99,7 @@ OCamlのモジュールはC++のネームスペースのような物で、名前
 	  let a = Pre.isEmpty a in
 	  Printf.printf "isEmpty = %b\n" a;
 
-### fold_left1
+### fold_left1 関数
 
 	  (* たぶんこれは、reduceじゃないのかな *)
 	  let fold_left1 (f:'a -> 'a -> 'a) (xs:'a list): 'a = 
@@ -119,7 +118,7 @@ OCamlのモジュールはC++のネームスペースのような物で、名前
 	  end a in
 	  Printf.printf "fold_left1 = %d\n" a;
 
-### deleteFirst
+### deleteFirst 関数
 
 	  (* リスト内の最初の1個目のxを削除する *)
 	  let rec deleteFirst (x:'a) (ys:'a list): 'a list = 
@@ -138,7 +137,7 @@ OCamlのモジュールはC++のネームスペースのような物で、名前
 	  Printf.printf "deleteFirst = %s\n" (Pre.show_int_list a);
 
 
-### diff
+### diff 関数
 
 	  (* 最初のリストから2番目のリストの要素を消す *)
 	  let rec diff (xs:'a list) (ys:'a list): 'a list =
@@ -160,7 +159,7 @@ OCamlのモジュールはC++のネームスペースのような物で、名前
 	  let a = Pre.diff a b in
 	  Printf.printf "diff = %s\n" (Pre.show_int_list a);
 
-### split3
+### split3 関数
 
 	  (*3つの多値を持っているリストを３つのリストに分割する *)
 	  let split3 (xs:('a * 'b * 'c)list):('a list * 'b list * 'c list) =
@@ -206,6 +205,9 @@ OCamlのモジュールはC++のネームスペースのような物で、名前
 	module Id = struct
 		...
 	end
+
+ここでは、1つのid型と、
+1つの関数enumIdを説明します。
 
 ### type id
 

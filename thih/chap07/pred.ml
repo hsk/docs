@@ -225,19 +225,19 @@ module Pred = struct
     match pred with
     | IsIn(i, t) -> IsIn(i, Subst.typeApply s t)
 
-  let predsApply (s:subst) (xs:pred list):pred list =
-    Subst.listApply predApply s xs
-
-  let qualTypeApply (s:subst) (qual:type_ qual):type_ qual =
-    match qual with
-    | Qual(ps, t) -> Qual(predsApply s ps, Subst.typeApply s t)
-
   let predTv (pred:pred):tyvar list =
     match pred with
     | IsIn(_, t) -> Subst.typeTv t
 
+  let predsApply (s:subst) (xs:pred list):pred list =
+    Subst.listApply predApply s xs
+
   let predsTv (xs:'a list) : tyvar list =
     Subst.listTv predTv xs
+
+  let qualTypeApply (s:subst) (qual:type_ qual):type_ qual =
+    match qual with
+    | Qual(ps, t) -> Qual(predsApply s ps, Subst.typeApply s t)
 
   let qualTypeTv qual =
     match qual with
@@ -402,15 +402,19 @@ module Pred = struct
   let p (IsIn(s, t)) =
     s  ^ " " ^ (Type.show t)
 
+  let ps pred =
+    Pre.show_list p ", " pred
+
   let p_qual q =
     begin match q with
-      | Qual(ps,ty) -> Pre.show_list p ", " ps ^ " => " ^ Type.show ty
+      | Qual(preds,ty) -> ps preds ^ " => " ^ Type.show ty
     end
 
 end
 
 open Kind
 open Type
+open Subst
 open Pred
 (* 7.1 Basic definitions *)
 let _ =
@@ -428,24 +432,30 @@ let _ =
 
   (* predApply *)
   let pred2 = predApply Subst.nullSubst pred in
-  Printf.printf "pred2 %s\n" (Pred.p pred2)
+  Printf.printf "pred2 %s\n" (Pred.p pred2);
 
-module T = struct
-  open Subst
-  let _ =
-    let ty = TVar(Tyvar("a", Star)) in
-    let pred = IsIn("Num", ty) in
-    let pred2 = predApply Subst.nullSubst pred in
-    Printf.printf "pred2 %s\n" (Pred.p pred2);
+  let ty = TVar(Tyvar("a", Star)) in
+  let pred = IsIn("Num", ty) in
+  let pred2 = predApply Subst.nullSubst pred in
+  Printf.printf "pred2 %s\n" (Pred.p pred2);
 
-    let pred2 = predApply ((Tyvar("a", Star)) +-> tInt) pred in
-    Printf.printf "pred2 %s\n" (Pred.p pred2)
-end
+  let pred2 = predApply ((Tyvar("a", Star)) +-> tInt) pred in
+  Printf.printf "pred2 %s\n" (Pred.p pred2);
 
-let _ =
   (* predsApply *)
+  let ty = TVar(Tyvar("a", Star)) in
+  let pred = IsIn("Num", ty) in
+  let pred3 = IsIn("FFF", ty) in
+  let preds2 = predsApply ((Tyvar("a", Star)) +-> tInt) [pred;pred3] in
+  Printf.printf "preds2 %s\n" (Pred.ps preds2);
 
   (* qualTypeApply *)
+  let ty = TVar(Tyvar("a", Star)) in
+  let pred = IsIn("Num", ty) in
+  let q = Qual([pred], fn ty tInt) in
+  Printf.printf "qual = %s\n" (p_qual q);
+  let qual2 = qualTypeApply ((Tyvar("a", Star)) +-> tInt) q in
+  Printf.printf "qual2 = %s\n" (p_qual qual2);
 
   (* predTv *)
 

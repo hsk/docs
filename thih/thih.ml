@@ -200,6 +200,7 @@ module Subst = struct
       | TAp(l, r) -> Pre.union (typeTv l) (typeTv r)
       | _ -> []
     end
+
   let listApply (apply : subst -> 'a -> 'b) (s : subst) (xs:'a list):'b list =
     map (apply s) xs
 
@@ -232,7 +233,8 @@ module Unify = struct
         let s1 = mgu l l' in
         let s2 = mgu (typeApply s1 r) (typeApply s1 r') in
         s2 @@ s1
-      | TVar u, t | t, TVar u -> varBind u t
+      | TVar u, t
+      | t, TVar u -> varBind u t
       | TCon tc1, TCon tc2 when tc1 = tc2 -> nullSubst
       | _ -> failwith "types do not unify"
     end
@@ -407,30 +409,31 @@ module Pred = struct
 
   (* 7.3 Entailment *)
 
-  let rec bySuper (ce:classEnv) (IsIn(i, t) as p) =
-    p :: concat begin map begin fun i' ->
-        bySuper ce (IsIn(i', t))) (super ce i)
-      end
-    end
+  let rec bySuper (ce:classEnv) (IsIn(i, t) as p):pred list =
+    let pss = map begin fun i' ->
+      bySuper ce (IsIn(i', t))
+    end (super ce i) in
+    p :: concat pss
 
-
-  let byInst (ce:classEnv) (IsIn(i, t) as p) =
+  let byInst (ce: classEnv) (IsIn(i, t) as p): pred list option =
     let tryInst (Qual(ps, h)) =
       begin try
        let u = matchPred h p in
        Some (map (predApply u) ps)
       with
-        _ -> None in
+        _ -> None
       end
-    let rec msum = begin function
-      | [] -> None
-      | None :: xs -> msum xs
-      | x :: _ -> x
-    end
+    in
+    let rec msum =
+      begin function
+        | [] -> None
+        | None :: xs -> msum xs
+        | x :: _ -> x
+      end
     in
     msum (map tryInst (insts ce i))
 
-  let rec entail (ce:classEnv) ps p =
+  let rec entail (ce:classEnv) (ps:pred list) (p:pred):bool =
     exists (mem p) (map (bySuper ce) ps) ||
     begin match byInst ce p with
       | None -> false
@@ -734,11 +737,7 @@ module TIMain = struct
     let rs' = defaultedPreds ce (fs @ gs) rs in
     (ds, Pre.diff rs rs')
 
-  type alt = pat list * expr
-  and expl = Id.id * scheme * alt list
-  and impl = Id.id * alt list
-  and bindGroup = expl list * impl list list
-  and expr =
+  type expr =
     | Var of Id.id
     | Lit of literal
     | Const of assump
@@ -747,7 +746,10 @@ module TIMain = struct
     (*| Lam of alt*)
     (*| If of expr * expr * expr*)
     (*| Case of expr * (Pat * Expr) list*)
-
+  and alt = pat list * expr
+  and expl = Id.id * scheme * alt list
+  and impl = Id.id * alt list
+  and bindGroup = expl list * impl list list
   let restricted (bs : impl list):bool =
     let simple (i, alts) = exists begin fun alt ->
       Pre.isEmpty (fst alt)
@@ -763,6 +765,7 @@ module TIMain = struct
           let (qs, as'') = tiSeq f ti ce (as' @ as_) bss in
           (ps @ qs, as'' @ as')
       end
+
   let rec tiExpr (ti:ti)(ce:classEnv)(as_:assump list)(expr: expr): pred list * type_ =
     begin match expr with
       | Var i ->
@@ -831,18 +834,24 @@ module TIMain = struct
     else ds
   and tiImpls : (impl list, assump list) infer =
     begin fun ti ce as_ bs ->
-      let ts = map (fun _ -> newTVar ti Star) bs in
-      let (is, altss) = List.split bs in
-      let scs = map toScheme ts in
-      let as' = map2 (fun i sc -> Assump(i, sc)) is scs @ as_ in
-      let pss = map2 (tiAlts ti ce as') altss ts in
-      let s = getSubst ti in
-      let ps' = map (predApply s) (concat pss) in
-      let ts' = map (typeApply s) ts in
-      let fs = assumpsTv (assumpsApply s as_) in
-      let vss = map typeTv ts' in
-      let gs = Pre.diff (Pre.fold_left1 Pre.union vss) fs in
-      let (ds, rs) = split ce fs (Pre.fold_left1 Pre.intersect vss) ps' in
+      let ((bs),is,ts',gs,ds,rs) =
+        let ((ce, bs), is, ps',ts',fs) =
+          let ts = map (fun _ -> newTVar ti Star) bs in
+          let (is, altss) = List.split bs in
+          let scs = map toScheme ts in
+          let as' = map2 (fun i sc -> Assump(i, sc)) is scs @ as_ in
+          let pss = map2 (tiAlts ti ce as') altss ts in
+          let s = getSubst ti in
+          let ps' = map (predApply s) (concat pss) in
+          let ts' = map (typeApply s) ts in
+          let fs = assumpsTv (assumpsApply s as_) in
+          ((ce, bs), is, ps',ts',fs)
+        in
+        let vss = map typeTv ts' in
+        let gs = Pre.diff (Pre.fold_left1 Pre.union vss) fs in
+        let (ds, rs) = split ce fs (Pre.fold_left1 Pre.intersect vss) ps' in
+        ((bs), is, ts',gs,ds,rs)
+      in
       if restricted bs then
         let gs' = Pre.diff gs (predsTv rs) in
         let scs' = map (fun t -> quantify gs' (Qual([], t))) ts' in
@@ -858,15 +867,16 @@ module TIMain = struct
       let qss = map (tiExpl ti ce (as'' @ as' @ as_)) es in
       (ps @ concat qss, as'' @ as')
     end
+
   type program = bindGroup list
 
   let tiProgram (ce:classEnv) (as_:assump list) (bgs : program):assump list =
     runTI begin fun ti ->
-      let (ps, as') = tiSeq tiBindGroup ti ce as_ bgs in
+      let (ps, as2) = tiSeq tiBindGroup ti ce as_ bgs in
       let s = getSubst ti in
       let rs = reduce ce (predsApply s ps) in
       let s' = defaultSubst ce [] rs in
-      assumpsApply (s' @@ s) as'
+      assumpsApply (s' @@ s) as2
     end
 end
 

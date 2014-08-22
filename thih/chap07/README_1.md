@@ -8,11 +8,11 @@ The types in each class (known as instances) are specified by a collection of in
 
 （インスタンスとして知られている）各クラスの型はインスタンス宣言の集合によって指定されます。
 
-#### data Qual 限定型
+#### data Qual 制約
 
 Haskell types can be qualified by adding a (possibly empty) list of predicates, or class constraints, to restrict the ways in which type variables are instantiated [4] :
 
-Haskellの型は型変数がインスタンス化される方法を制限する述部は、クラスの制約の（空）のリストを追加することで限定することができます [4]:
+Haskellの型は、述語、またはクラスの制約「空の場合もある」のリストを追加することによって制限することができ、型変数がインスタンス化される方法を制限します。
 
 	  data Qual t = [Pred] :=> t
 	                deriving Eq
@@ -41,7 +41,6 @@ For example, using the Qual and Pred datatypes, the type (Num a) => a -> Int can
 It would be easy to extend the Pred datatype to allow other forms of predicate, as is done with Trex records in Hugs [ Jones & Peterson, 1999].
 
 Hugs[ Jones & Peterson, 1999]のTrecレコードで行われているように、述語の他の形態を可能にするためにPredデータ型を拡張するのは簡単でしょう。
-
 
 Another frequently requested extension is to allow classes to accept multiple parameters, which would require a list of Types rather than the single Type in the definition above.
 
@@ -100,7 +99,7 @@ For example, a simplified version of the standard Haskell class Ord might be des
 
 This structure captures the fact that Eq is a superclass of Ord (the only one in fact), and lists four instance declarations for the unit, character, integer, and pair types (if a and b are in Ord, then (a,b) is also in Ord).
 
-この構造は、式がオードのスーパークラスであるという事実（実際には一つだけ）を取り込み、そしてunit、文字、整数、ペアタイプのための4つのインスタンス宣言を示しています（aとbがOrdにある場合、(a,b)もOrdにあります)。
+この構造は、式がOrdのスーパークラスであるという事実（実際には一つだけ）を取り込み、そしてunit、文字、整数、ペアタイプのための4つのインスタンス宣言を示しています（aとbがOrdにある場合、(a,b)もOrdにあります)。
 
 Of course, this is only a fraction of the list of Ord instances that are defined in the full Haskell prelude.
 

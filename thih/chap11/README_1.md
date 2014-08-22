@@ -27,7 +27,7 @@ For characters, we just return tChar.
 
 For integers, we return a new type variable v together with a predicate to indicate that v must be an instance of the Num class.
 
-整数は、新しい変数 v 型 Num クラスのインスタンスでなければなりませんが v することを示すために述語と共にを返します。
+整数は、新しい変数 v 型 Num クラスのインスタンスでなければなりませんが v であることを示すために述語と共に返します。
 
 The cases for String and floating point literals follow similar patterns:
 

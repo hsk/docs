@@ -3,8 +3,10 @@
 ## Kindモジュール
 
 	module Kind = struct
-	...
+	  ...
 	end
+
+ここでは、1つの型kindと1つの関数showについて説明します。
 
 ### type kind
 

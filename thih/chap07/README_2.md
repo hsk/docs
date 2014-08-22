@@ -47,9 +47,10 @@ The function defined used here is defined as follows [5]:
 	  defined (Just x) = True
 	  defined Nothing  = False
 
-We will also define a helper function, modify, to describe how a class environment can be updated to reflect a new binding of a Class value to a given identifier:
 
 #### modify 関数
+
+We will also define a helper function, modify, to describe how a class environment can be updated to reflect a new binding of a Class value to a given identifier:
 
 我々は、特定の識別子にクラス値の新しいバインドを反映するようにクラス環境の更新方法が記述してある、ヘルパー関数modifyも定義します。
 
@@ -230,7 +231,7 @@ We will not consider such issues further in this paper.
 
 さらに本稿ではそのような問題は考慮されません。
 
-#### exampleInsts関数
+#### exampleInsts
 
 To illustrate how the addInst function might be used, the following definition shows how the standard prelude class environment can be extended to include the four instances for Ord from the example in Section 7.1:
 

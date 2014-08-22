@@ -1,5 +1,5 @@
 ---
-title: Typing Haskell In OCaml
+title: Typing Haskell In OCaml Reading
 author: 櫻井洋志
 language: ja-JP
 ---

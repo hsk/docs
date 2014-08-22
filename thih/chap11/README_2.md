@@ -9,7 +9,7 @@ Patterns are used to inspect and deconstruct data values in lambda abstractions,
 
 We will represent patterns using values of the Pat datatype:
 
-パターン Pat データ型の値を使用して表現してみます。
+パターン Pat データ型の値を使用して表現しています。
 
 	  data Pat        = PVar Id
 	                  | PWildcard
@@ -66,11 +66,12 @@ This is not difficult, but adds some complexity, which we prefer to avoid in thi
 
 Type inference for patterns has two goals: To calculate a type for each bound variable, and to determine what type of values the whole pattern might match.
 
-型の推論のパターンは 2 つの目標： 各バインド変数の型を計算して全体のパターンに一致可能性がありますどのような値の型を決定します。
+パターンの型推論は2つの目標があります：
+各バインド変数の型を計算する事と、パターン全体が一致する可能性のある値の種類を決定する事です。
 
 This leads us to look for a function:
 
-これは、関数を探しに私たちをリード：
+関数の型を見ればtiPatが何をする物なのかを理解する助けとなるでしょう：
 
 	  tiPat :: Pat -> TI ([Pred], [Assump], Type)
 
