@@ -15,12 +15,11 @@ bySuper関数はクラス環境とpredを受け取って、superからpred list�
 
 #### 使用例
 
-	let ps = bySuper (exampleInsts initialEnv) (IsIn("Num", TVar(Tyvar("a", Star)))) in
-	Printf.printf "ps = %s" show_ps ps;
+	  let _ =
+	    let preds = bySuper (exampleInsts initialEnv) (IsIn("Num", TVar(Tyvar("a", Star)))) in
+	    Printf.printf "ps = %s\n" (ps preds)
 
-とかが動けばOKかな。
-
-todo: ちゃんとやってみる。
+todo:実行結果
 
 ### byInst 関数
 
@@ -46,12 +45,11 @@ todo: ちゃんとやってみる。
 
 #### 使用例
 
-	let ps = byInst (exampleInsts initialEnv) (IsIn("Num", TVar(Tyvar("a", Star)))) in
-	Printf.printf "ps = %s" show_ps ps;
-
-とかが動けばOKかな。
-
-todo: ちゃんとやってみる。
+	  let _ =
+	    let preds = byInst (exampleInsts initialEnv) (IsIn("Num", TVar(Tyvar("a", Star)))) in
+	    match preds with
+	    | Some(preds) -> Printf.printf "ps = some(%s)\n" (ps preds)
+	    | None -> Printf.printf "ps = none\n"
 
 ### entail 関数
 
@@ -66,9 +64,8 @@ todo: ちゃんとやってみる。
 
 #### 使用例
 
-	let ps = entail (exampleInsts initialEnv) (IsIn("Num", TVar(Tyvar("a", Star)))) in
-	Printf.printf "ps = %s" show_ps ps;
-
-とかが動けばOKかな。
-
-todo: ちゃんとやってみる。
+	  let _ =
+	    let p = IsIn("Num", TVar(Tyvar("a", Star))) in
+	    let ps = [p] in
+	    let result = entail (exampleInsts initialEnv) ps p in
+	    Printf.printf "result = %b\n" result

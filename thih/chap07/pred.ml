@@ -473,8 +473,8 @@ module Pred = struct
   let _ =
     let pred1 = IsIn("Ord", tUnit) in
     let pred2 = IsIn("Ord", tChar) in
-    Printf.printf "%b\n" (overlap pred1 pred2);
-    Printf.printf "%b\n" (overlap pred1 pred1)
+    Printf.printf "overlap pred1 pred2 %b\n" (overlap pred1 pred2);
+    Printf.printf "overlap pred1 pred1 %b\n" (overlap pred1 pred1)
 
   let addInst ps (IsIn(i, _) as p) : envTransformer =
     fun (ce:classEnv) ->
@@ -500,6 +500,10 @@ module Pred = struct
   let rec bySuper (ce:classEnv) (IsIn(i, t) as p) =
     p :: concat (map (fun i' -> bySuper ce (IsIn(i', t))) (super ce i))
 
+  let _ =
+    let preds = bySuper (exampleInsts initialEnv) (IsIn("Num", TVar(Tyvar("a", Star)))) in
+    Printf.printf "ps = %s\n" (ps preds)
+
   let byInst (ce:classEnv) (IsIn(i, t) as p) =
     let tryInst (Qual(ps, h)) =
       try
@@ -512,11 +516,23 @@ module Pred = struct
       | x :: _ -> x in
     msum (map tryInst (insts ce i))
 
+  let _ =
+    let preds = byInst (exampleInsts initialEnv) (IsIn("Num", TVar(Tyvar("a", Star)))) in
+    match preds with
+    | Some(preds) -> Printf.printf "ps = some(%s)\n" (ps preds)
+    | None -> Printf.printf "ps = none\n"
+
   let rec entail (ce:classEnv) ps p =
     exists (mem p) (map (bySuper ce) ps) ||
     match byInst ce p with
     | None -> false
     | Some qs -> for_all (entail ce ps) qs
+
+  let _ =
+    let p = IsIn("Num", TVar(Tyvar("a", Star))) in
+    let ps = [p] in
+    let result = entail (exampleInsts initialEnv) ps p in
+    Printf.printf "result = %b\n" result
 
   (* 7.4 Context Reduction *)
 
@@ -531,6 +547,12 @@ module Pred = struct
       in
       hnf t
 
+  let _ =
+    let r = inHnf (IsIn("Num",TVar(Tyvar("a", Star)))) in
+    Printf.printf "inHnf %b\n" r; (* true *)
+    let r = inHnf (IsIn("Num",tInt)) in
+    Printf.printf "inHnf %b\n" r (* false *)
+
   let rec toHnfs (ce:classEnv) ps = concat (map (toHnf ce) ps)
   and toHnf (ce:classEnv) p =
     if inHnf p then [p]
@@ -538,6 +560,16 @@ module Pred = struct
       match byInst ce p with
       | None -> failwith "context reduction"
       | Some ps -> toHnfs ce ps
+
+  let _ =
+    let preds = [IsIn("Num",TVar(Tyvar("a", Star)))] in
+    let preds = toHnfs initialEnv preds in
+    Printf.printf "toHnf %s\n" (ps preds)
+
+  let _ =
+    let pred = IsIn("Num",TVar(Tyvar("a", Star))) in
+    let preds = toHnf initialEnv pred in
+    Printf.printf "toHnf %s\n" (ps preds)
 
   let simplify (ce:classEnv) ps =
     let rec loop rs = function
@@ -547,11 +579,30 @@ module Pred = struct
         else loop (p :: rs) ps in
     loop [] ps
 
+
+  let _ =
+    let pred = IsIn("Num", TVar(Tyvar("a", Star))) in
+    let preds = [pred] in
+    let preds = simplify (exampleInsts initialEnv) preds in
+    Printf.printf "simplify = %s\n" (ps preds)
+
   let reduce (ce:classEnv) ps =
     simplify ce (toHnfs ce ps)
 
+  let _ =
+    let pred = IsIn("Num", TVar(Tyvar("a", Star))) in
+    let preds = [pred] in
+    let preds = reduce (exampleInsts initialEnv) preds in
+    Printf.printf "reduce = %s\n" (ps preds)
+
   let scEntail (ce:classEnv) ps p =
     exists (mem p) (map (bySuper ce) ps)
+
+  let _ =
+    let pred = IsIn("Num", TVar(Tyvar("a", Star))) in
+    let preds = [pred] in
+    let result = scEntail (exampleInsts initialEnv) preds pred in
+    Printf.printf "scEntail = %b\n" result
 
 end
 

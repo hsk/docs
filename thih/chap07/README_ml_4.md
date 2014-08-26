@@ -21,10 +21,16 @@ TVarがpredに含まれているかどうかを返します。TGenがあった�
 
 #### 使用例
 
-todo:使用例を試してみる
+	  let _ =
+	    let r = inHnf (IsIn("Num",TVar(Tyvar("a", Star)))) in
+	    Printf.printf "inHnf %b\n" r; (* true *)
+	    let r = inHnf (IsIn("Num",tInt)) in
+	    Printf.printf "inHnf %b\n" r (* false *)
 
-	Printf.printf "inHnf %b" (inHnf (IsIn("Num",TVar(Tyvar("a", Star))))); (* true *)
-	Printf.printf "inHnf %b" (inHnf (IsIn("Num",tInt))); (* false *)
+#### 結果
+
+	inHnf true
+	inHnf false
 
 ### inHnfs 関数
 
@@ -35,7 +41,14 @@ TConがpsに含まれているかどうかの結果をまとめて返します�
 
 #### 使用例
 
-todo:使用例を書く
+	  let _ =
+	    let preds = [IsIn("Num",TVar(Tyvar("a", Star)))] in
+	    let preds = toHnfs initialEnv preds in
+	    Printf.printf "toHnf %s\n" (ps preds)
+
+#### 結果
+
+	toHnf [Num TVar(Tyvar(a,*))]
 
 ### toHnf 関数
 
@@ -52,7 +65,14 @@ TConがpsに含まれているかどうかを調べて、あったらリスト�
 
 #### 使用例
 
-todo:使用例を書く
+	  let _ =
+	    let pred = IsIn("Num",TVar(Tyvar("a", Star))) in
+	    let preds = toHnf initialEnv pred in
+	    Printf.printf "toHnf %s\n" (ps preds)
+
+#### 結果
+
+	toHnf [Num TVar(Tyvar(a,*))]
 
 ### simplify 関数
 
@@ -70,7 +90,15 @@ entailがfalseになるpredのみを返します。
 
 #### 使用例
 
-todo:使用例を書く
+	  let _ =
+	    let pred = IsIn("Num", TVar(Tyvar("a", Star))) in
+	    let preds = [pred] in
+	    let preds = simplify (exampleInsts initialEnv) preds in
+	    Printf.printf "simplify = %s\n" (ps preds)
+
+#### 結果
+
+	simplify = [Num TVar(Tyvar(a,*))]
 
 ### reduce 関数
 
@@ -81,7 +109,15 @@ psをtoHnfsしたあとsimplifyして返します。
 
 #### 使用例
 
-todo:使用例を書く
+	  let _ =
+	    let pred = IsIn("Num", TVar(Tyvar("a", Star))) in
+	    let preds = [pred] in
+	    let preds = reduce (exampleInsts initialEnv) preds in
+	    Printf.printf "reduce = %s\n" (ps preds)
+
+#### 結果
+
+	reduce = [Num TVar(Tyvar(a,*))]
 
 ### scEntail 関数
 
@@ -92,4 +128,12 @@ psにbySuperした結果のリストにpが含まれているかをチェック�
 
 #### 使用例
 
-todo:使用例を書く
+	  let _ =
+	    let pred = IsIn("Num", TVar(Tyvar("a", Star))) in
+	    let preds = [pred] in
+	    let result = scEntail (exampleInsts initialEnv) preds pred in
+	    Printf.printf "scEntail = %b\n" result
+
+#### 結果
+
+	scEntail = true
