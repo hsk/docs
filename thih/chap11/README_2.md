@@ -18,7 +18,7 @@ We will represent patterns using values of the Pat datatype:
 	                  | PNpk Id Integer
 	                  | PCon Assump [Pat]
 
-- A PVari pattern matches any value and binds the result to the variablei.
+- A PVari pattern matches any value and binds the result to the variable i.
 
 	PVar i パターンは任意の値と一致し、結果を変数 i にバインドします。
 

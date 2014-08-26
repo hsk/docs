@@ -16,7 +16,9 @@
 
 ### mgu関数
 
-todo:mguの説明を書く。
+todo:mguの説明これでいいのか？
+
+mguとはmost general unifyの略で、unifyをちゃんとやるくらいの意味。
 
 mguはvarBind関数とペアで計算します。
 
@@ -26,17 +28,33 @@ mguはvarBind関数とペアで計算します。
 	      let s1 = mgu l l' in
 	      let s2 = mgu (typeApply s1 r) (typeApply s1 r') in
 	      s2 @@ s1
+
+TAp同士なら、左側のmguを再帰的に計算し、substを求め、右側の型で代入を実行した後、mguを呼び出してさらに代入を求めます。
+最後に、 @@で代入をまとめて返します。
+
 	    | TVar u, t | t, TVar u -> varBind u t
+
+TVarのマッチングの箇所でvarBindは使って、新しい代入を作ります。
+
 	    | TCon tc1, TCon tc2 when tc1 = tc2 -> nullSubst
+
+TConなら、既に型は決まっているので、同じなら代入はありません。
+
 	    | _ -> failwith "types do not unify"
 
-TVarのマッチングの箇所でvarBindは使われています。
 
-	    | TVar u, t | t, TVar u -> varBind u t
+それ以外なら、unifyに失敗なのでエラーです。
 
-todo:mguは逆方向にもマッチするはずなのでそれが分かると嬉しい。
+
+todo: @@の処理とmergeの処理を比べて考える。
+
+#### 使用例
+
+todo:使用例を書く
 
 ### varBind関数
+
+mguから呼ばれる関数で、２つの型を１つにまとめる。
 
 	  and varBind (u:tyvar) (t:type_):subst =
 	    if t = TVar u then nullSubst
@@ -44,7 +62,10 @@ todo:mguは逆方向にもマッチするはずなのでそれが分かると嬉
 	    else if tyvarKind u <> typeKind t then failwith "kinds do not match"
 	    else u +-> t
 
-todo:説明がないので書く。
+tがTVar uだったら、既に同じ型であるから、新たな代入は産まれない。
+typeTv tに uが含まれてたら、おかしいのでエラーである。occurs checkという。
+tyvarKind uと typeKind tが違う場合は、ダメであるのでエラーである。同じ種類でないと行けない。
+それ以外なら、u は tであるので、代入を作って返す。
 
 ### match_関数
 
@@ -56,11 +77,23 @@ match関数はmguに似ていますが、varBindを使わず、@@の代わりに
 	      let sl = match_ l l' in
 	      let sr = match_ r r' in
 	      merge sl sr
+
+左のマッチをして、右のマッチをして、両方の代入をmergeでまとめて返します。
+
 	    | TVar u, t when tyvarKind u = typeKind t -> u +-> t
+
+左側がTVarなら、右側の型とのkindが同じなら、代入を作って返します。
+
 	    | TCon tc1, TCon tc2 when tc1 = tc2 -> nullSubst
+
+両方がTConで、中の値が同じなら代入なしです。
+
 	    | _ -> failwith "types do not match"
 
-todo:例がないと分からないよ。
+それ以外はエラーとなります。左側がTVarの時は代入があり得るけど、右側がTVarならエラーです。
+
+todo: mergeの処理を調べる。
+
 
 ### 使用例
 

@@ -74,6 +74,11 @@ module Type = struct
       | TAp(t1,t2)           -> Printf.sprintf "TAp(%s,%s)" (show t1) (show t2)
       | TGen(i)              -> Printf.sprintf "TGen(%d)" i
     end
+
+  let rec show_tv(tv:tyvar): string = 
+    begin match tv with
+      | Tyvar(id,kind) -> Printf.sprintf "Tyvar(%s,%s)" id (Kind.show kind)
+    end
 end
 
 

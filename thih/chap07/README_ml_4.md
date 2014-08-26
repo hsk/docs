@@ -4,7 +4,7 @@
 
 ### inHnf 関数
 
-TConがpredに含まれているかどうかを返します。
+TVarがpredに含まれているかどうかを返します。TGenがあったら例外です。
 
 	  let inHnf (p:pred):bool =
 	    begin match p with
@@ -19,12 +19,23 @@ TConがpredに含まれているかどうかを返します。
 	        hnf t
 	    end
 
+#### 使用例
+
+todo:使用例を試してみる
+
+	Printf.printf "inHnf %b" (inHnf (IsIn("Num",TVar(Tyvar("a", Star))))); (* true *)
+	Printf.printf "inHnf %b" (inHnf (IsIn("Num",tInt))); (* false *)
+
 ### inHnfs 関数
 
 TConがpsに含まれているかどうかの結果をまとめて返します。
 含まれていない場合は、byInstの結果の値を返します。
 
 	  let rec toHnfs (ce:classEnv) ps = concat (map (toHnf ce) ps)
+
+#### 使用例
+
+todo:使用例を書く
 
 ### toHnf 関数
 
@@ -38,6 +49,10 @@ TConがpsに含まれているかどうかを調べて、あったらリスト�
 	        | None -> failwith "context reduction"
 	        | Some ps -> toHnfs ce ps
 	      end
+
+#### 使用例
+
+todo:使用例を書く
 
 ### simplify 関数
 
@@ -53,12 +68,20 @@ entailがfalseになるpredのみを返します。
 	    in
 	    loop [] ps
 
+#### 使用例
+
+todo:使用例を書く
+
 ### reduce 関数
 
 psをtoHnfsしたあとsimplifyして返します。
 
 	  let reduce (ce:classEnv) ps =
 	    simplify ce (toHnfs ce ps)
+
+#### 使用例
+
+todo:使用例を書く
 
 ### scEntail 関数
 
@@ -67,5 +90,6 @@ psにbySuperした結果のリストにpが含まれているかをチェック�
 	  let scEntail (ce:classEnv) ps p =
 	    exists (mem p) (map (bySuper ce) ps)
 
-todo:使用例を書く
+#### 使用例
 
+todo:使用例を書く

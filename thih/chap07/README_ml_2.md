@@ -13,7 +13,34 @@
 
 instはpredのqualです。
 
-todo:説明がよくわからない。
+良くわからなくなりますね。もう一度、qualの定義を見てみましょう。
+
+	type 't qual = Qual of pred list * 't
+
+'tにpredを代入してみましょう。
+
+	type pred qual = Qual of pred list * pred
+
+ということは、instの型はpredのリストとpredを持つ、Qualだということになります。
+
+	type inst = Qual of pred list * pred
+
+### p_inst関数
+
+instの印字関数を作りましょう。
+
+	  let p_inst i =
+	    begin match i with
+	    | Qual(preds,pred) -> Printf.sprintf "Qual(%s,%s)" (ps preds) (p pred)
+	    end
+
+#### 使用例
+
+	  let _ =
+	    let inst = Qual([IsIn("Ord",tUnit);IsIn("Ord",tChar)],IsIn("Ord",tChar)) in
+	    Printf.printf "inst=%s\n" (p_inst inst)
+
+instは、PredリストとPredを持っている型という事が明らかですね。
 
 ### type class_
 
@@ -23,15 +50,25 @@ class_はidリストとinstリストの対です。
 
 #### 例
 
-	  (["Eq"], [[] :=> IsIn "Ord" tUnit;
-	            [] :=> IsIn "Ord" tChar;
-	            [] :=> IsIn "Ord" tInt;
-	            [IsIn "Ord" (TVar (Tyvar "a" Star));
-	             IsIn "Ord" (TVar (Tyvar "b" Star))]
-	               :=> IsIn "Ord" (pair (TVar (Tyvar "a" Star))
-	                                    (TVar (Tyvar "b" Star)))])
+	  let (==>) ps p = Qual(ps, p)
 
-todo:haskellのコードなので、ocamlにして実行してみる。
+Qualを作成する演算子を(:=>はOCamlでは使えないので)、==>として以下のようにclassを定義出来ます。
+
+	  let _ =
+	    let (cls:class_) = (
+	      ["Eq"],
+	      [
+	        [] ==> IsIn("Ord", tUnit);
+	        [] ==> IsIn("Ord", tChar);
+	        [] ==> IsIn("Ord",tInt);
+	        [
+	          IsIn("Ord",TVar(Tyvar("a", Star)));
+	          IsIn("Ord",TVar(Tyvar("b", Star)))
+	        ] ==>
+	        IsIn("Ord", (pair (TVar(Tyvar("a",Star))) (TVar(Tyvar("b",Star)))))
+	        
+	      ]
+	    ) in ()
 
 ### type classEnv
 
@@ -45,29 +82,19 @@ todo:haskellのコードなので、ocamlにして実行してみる。
 classesはidからクラスを求める関数です。
 defaultsは型のリストです。
 
-### super 関数
+### initialEnv 関数
 
-	  let super (ce:classEnv) i = fst (ce.classes i)
+classEnvの初期値です。
 
-classEnvのclassesを呼び出して、class_を取得して、Id.id listを取得します。
+	  let initialEnv :classEnv = {
+	    classes = begin fun i ->
+	      raise Not_found
+	    end ;
+	    defaults = [tInteger; tDouble]
+	  }
 
-### insts 関数
-
-	  let insts (ce:classEnv) i = snd (ce.classes i)
-
-classEnvのclassesを呼び出して、class_を取得して、inst listを取得します。
-
-### defined 関数
-
-	  let defined (ce:classEnv) i =
-	    begin try
-	      ignore (ce.classes i);
-	      true
-	    with
-	      Not_found -> false
-	    end
-
-classEnv内を調べて、値があればtrueをなければfalseを返します。
+classes関数が例外を投げます。
+defaultsはintegerとdoubleの型が入っています。
 
 ### modify 関数
 
@@ -84,35 +111,65 @@ classEnvを更新を更新し返します。
 内部実装は、classes関数は元のclasses関数を置き換えて、i=jならその値を返す関数を設定します。
 要するに関数のリストになっているわけです。
 
-### initialEnv 関数
+#### 使用例
 
-classEnvの初期値です。
+	  let _ =
+	    let b = modify initialEnv "ABC" (["A"],[[] ==> IsIn("Ord",tUnit)]) in
+	    ()
 
-	  let initialEnv :classEnv = {
-	    classes = begin fun i ->
-	      raise Not_found
-	    end ;
-	    defaults = [tInteger; tDouble]
-	  }
 
-classes関数が例外を投げます。
-defaultsはintegerとdoubleの型が入っています。
+### super 関数
+
+	  let super (ce:classEnv) i = fst (ce.classes i)
+
+classEnvのclassesを呼び出して、class_を取得して、Id.id listを取得します。
+
+#### 使用例
+
+	  let _ =
+	    let b = modify initialEnv "ABC" (["A"],[[] ==> IsIn("Ord",tUnit)]) in
+	    let s = super b "ABC" in
+	    ()
+
+### insts 関数
+
+	  let insts (ce:classEnv) i = snd (ce.classes i)
+
+classEnvのclassesを呼び出して、class_を取得して、inst listを取得します。
+
+#### 使用例
+
+	  let _ =
+	    let b = modify initialEnv "ABC" (["A"],[[] ==> IsIn("Ord",tUnit)]) in
+	    let s = insts b "ABC" in
+	    ()
+
+### defined 関数
+
+	  let defined (ce:classEnv) i =
+	    begin try
+	      ignore (ce.classes i);
+	      true
+	    with
+	      Not_found -> false
+	    end
+
+classEnv内を調べて、値があればtrueをなければfalseを返します。
+
+#### 使用例
+
+	  let _ =
+	    let b = modify initialEnv "ABC" (["A"],[[] ==> IsIn("Ord",tUnit)]) in
+	    let s = defined b "ABC" in
+	    ()
+
 
 ### type envTransformer
 
 	  type envTransformer = classEnv -> classEnv
 
 classEnvを受け取って、classEnvを返す関数をenvTransformerという型であるとします。
-
-### (<:>)演算子
-
-環境トランスフォーマーを合成する演算子です
-
-	  let (<:>) (f : envTransformer) (g : envTransformer) : envTransformer =
-	    fun (ce:classEnv) -> g (f ce)
-
-環境トランスフォーマーを2つ受け取って環境トランスフォーマーを返す関数で、
-実装は、環境を受け取って、fを実行した後gを実行して返します。
+例えば、addClass関数や、addInst関数で生成します。(<:>)演算子を使うと合成が出来ます。
 
 ### addClass関数
 
@@ -131,6 +188,32 @@ ceにiが定義されてたらエラーを発生させます。
 isはスーパークラスのリストで、スーパークラスはceにすべて含まれているかをチェックします。
 スーパークラスが１つでもなければエラーです。
 エラーがなければ、環境を更新し返却します。
+
+#### 使用例
+
+	  let _ =
+	    let c1 :envTransformer = addClass "Eq" [] in
+	    let c1s = c1 initialEnv in
+	    ()
+
+クラス環境を渡して c1 initialEnv とすることでクラス環境を得る事が出来ます。
+
+### (<:>)演算子
+
+環境トランスフォーマーを合成する演算子です。
+
+	  let (<:>) (f : envTransformer) (g : envTransformer) : envTransformer =
+	    fun (ce:classEnv) -> g (f ce)
+
+環境トランスフォーマーを2つ受け取って環境トランスフォーマーを返す関数で、
+実装は、環境を受け取って、fを実行した後gを実行して返します。
+
+	  let _ =
+	    let c1 :envTransformer = addClass "Eq" [] in
+	    let c2 :envTransformer = addClass "Eq2" [] in
+	    let c3 :envTransformer = c1 <:> c2 in
+	    let c4 :envTransformer = addClass "Eq" [] <:> addClass "Eq2" [] in
+	    ()
 
 ### addCoreClasses 環境トランスフォーマー
 
@@ -181,6 +264,14 @@ addPreludeClassesはコアのクラスと数値に関するクラスを追加す
 	    with
 	      _ -> false
 	    end
+
+#### 使用例
+
+	  let _ =
+	    let pred1 = IsIn("Ord", tUnit) in
+	    let pred2 = IsIn("Ord", tChar) in
+	    Printf.printf "overlap pred1 pred2 %b\n" (overlap pred1 pred2);
+	    Printf.printf "overlap pred1 pred1 %b\n" (overlap pred1 pred1)
 
 ### addInst 関数
 

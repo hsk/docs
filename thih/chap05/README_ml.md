@@ -17,7 +17,12 @@
 
 	  type subst = (tyvar * type_) list
 
-todo:説明を書く
+substは tyvarとtype_の対のリストなので、substは
+
+	[Tyvar("v1", Star),tInt; Tyvar("v2", Star),tChar]
+
+のような値を取ります。
+
 
 ### nullSubst
 
@@ -75,12 +80,14 @@ todo:説明を書く
 
 ### (@@) 関数
 
+2つのsubstを１つにまとめる処理です。
+
 	  let (@@) (s1:subst) (s2 : subst) : subst =
 	    List.map begin fun (u, t) ->
 	      (u, typeApply s1 t)
 	    end s2 @ s1
 
-todo:説明を書く
+s2のtにmapでtypeApply s1を実行し、s1とs2を@で結合します。例外は投げられません。
 
 ### merge関数
 
@@ -95,7 +102,9 @@ todo:説明を書く
 	    then s1 @ s2
 	    else failwith "substitutions do not agree"
 
-todo:説明を書く
+こちらは、s1とs2を @で繋げるだけです。s1とs2の左辺の積集合を求めて、重なる箇所の型をs1とs2から求めて同じならokですが、違う時はエラーです。
+
+2つのsubstを１つにまとめる処理です。 @@も2つのsubstをまとめる処理ですが、動きが違います。
 
 ### show 関数
 

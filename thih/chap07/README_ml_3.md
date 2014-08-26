@@ -4,7 +4,6 @@
 
 ### bySuper 関数
 
-
 bySuper関数はクラス環境とpredを受け取って、superからpred listを取得し返します。
 
 	  let rec bySuper (ce:classEnv) (IsIn(i, t) as p):pred list =
@@ -12,6 +11,16 @@ bySuper関数はクラス環境とpredを受け取って、superからpred list�
 	      bySuper ce (IsIn(i', t))
 	    end (super ce i) in
 	    p :: concat pss
+
+
+#### 使用例
+
+	let ps = bySuper (exampleInsts initialEnv) (IsIn("Num", TVar(Tyvar("a", Star)))) in
+	Printf.printf "ps = %s" show_ps ps;
+
+とかが動けばOKかな。
+
+todo: ちゃんとやってみる。
 
 ### byInst 関数
 
@@ -35,6 +44,15 @@ bySuper関数はクラス環境とpredを受け取って、superからpred list�
 	    in
 	    msum (map tryInst (insts ce i))
 
+#### 使用例
+
+	let ps = byInst (exampleInsts initialEnv) (IsIn("Num", TVar(Tyvar("a", Star)))) in
+	Printf.printf "ps = %s" show_ps ps;
+
+とかが動けばOKかな。
+
+todo: ちゃんとやってみる。
+
 ### entail 関数
 
 クラス環境とpred listとpredを受け取ってpredがインスタンスなのかどうかを判定して返します。
@@ -46,4 +64,11 @@ bySuper関数はクラス環境とpredを受け取って、superからpred list�
 	      | Some qs -> for_all (entail ce ps) qs
 	    end
 
-todo:使用例を書く
+#### 使用例
+
+	let ps = entail (exampleInsts initialEnv) (IsIn("Num", TVar(Tyvar("a", Star)))) in
+	Printf.printf "ps = %s" show_ps ps;
+
+とかが動けばOKかな。
+
+todo: ちゃんとやってみる。
