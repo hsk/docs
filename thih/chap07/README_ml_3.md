@@ -1,6 +1,6 @@
 ## 7.3 Entailment
 
-ここでは、3つの関数bySuper,byInst,entailについて説明します。
+ここでは、3つの関数bySuper,byInst,entailを読みます。
 
 ### bySuper 関数
 

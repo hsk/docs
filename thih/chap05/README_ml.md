@@ -10,7 +10,7 @@
 
 ここでは、1つの型substと
 1つの値nullSubstと
-9つの関数(+->), typeApply, typeTv, listApply, listTv, (@@), merge, show, show_tyvar_listを説明します。
+9つの関数(+->), typeApply, typeTv, listApply, listTv, (@@), merge, show, show_tyvar_listを読みます。
 
 
 ### type subst

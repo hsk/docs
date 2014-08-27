@@ -14,7 +14,7 @@
 	  ...
 	end
 
-ここでは、1つの型tiと10個の関数runTI,getSubst,extSubst,unify,newTVar,typeInst,listInst,predInst,qualTypeInst,freshInstについて説明します。
+ここでは、1つの型tiと10個の関数runTI,getSubst,extSubst,unify,newTVar,typeInst,listInst,predInst,qualTypeInst,freshInstを読みます。
 
 ### type ti
 

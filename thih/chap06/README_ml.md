@@ -12,7 +12,7 @@
 	  ...
 	end
 
-ここでは、mgu,varBind,match_の３つの関数を説明します。
+ここでは、mgu,varBind,match_の３つの関数を読みます。
 
 ### mgu関数
 

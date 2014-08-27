@@ -1,6 +1,6 @@
 ## 7.4 Context Reduction
 
-ここでは5つの関数inHnf,inHnfs,toHnf,simplify,reduceを説明します。
+ここでは5つの関数inHnf,inHnfs,toHnf,simplify,reduceを読みます。
 
 ### inHnf 関数
 

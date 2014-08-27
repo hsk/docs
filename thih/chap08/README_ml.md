@@ -11,7 +11,7 @@
 	  ...
 	end
 
-ここでは、1つの型schemeと4つの関数schemeApply,schemeTv,quantify,toSchemeについて説明します。
+ここでは、1つの型schemeと4つの関数schemeApply,schemeTv,quantify,toSchemeを読みます。
 
 
 ### type scheme

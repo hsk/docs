@@ -10,7 +10,7 @@
   	  ...
 	end
 
-ここでは、1つの型assumpと5つの関数assumpApply,assumpTv,assumpsApply,assumpsTv,findについて説明します。
+ここでは、1つの型assumpと5つの関数assumpApply,assumpTv,assumpsApply,assumpsTv,findを読みます。
 
 
 ### type assump
@@ -29,6 +29,17 @@
 	    let assump = Assump("ABC", Forall([],Pred.Qual([],t))) in
 	    Printf.printf "show %s\n" (show assump)
 
+### show_list 関数
+
+	  let show_list (assumps: assump list) : string =
+	    Pre.show_list show ";" assumps
+
+#### 使用例
+
+	  let _ =
+	    let t = TVar(Tyvar("a", Star)) in
+	    let assump = Assump("ABC", Forall([],Pred.Qual([],t))) in
+	    Printf.printf "show_list %s\n" (show_list [assump])
 
 ### assumpApply 関数
 

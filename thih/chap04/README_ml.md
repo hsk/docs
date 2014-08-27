@@ -10,7 +10,7 @@
 
 ここでは、3つの型 tyvar, tycon, type_、
 ７つの関数show,fn,list,pair,tvarKind,tyconKind,typeKind、
-10個の変数tUnit,tChar,tInt,tInteger,tFloat,tDouble,tList,tArrow,tTuple2,tStringについて説明します。
+10個の変数tUnit,tChar,tInt,tInteger,tFloat,tDouble,tList,tArrow,tTuple2,tStringを読みます。
 
 ### type tyvar
 

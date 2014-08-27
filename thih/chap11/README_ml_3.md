@@ -20,7 +20,7 @@
 
 ここでは、1つの型ambiguityと、
 ２つの変数numClasses,stdClasses,
-５つの関数ambiguities,withDefaults,defaultedPreds,defaultSubst,splitについて説明します。
+５つの関数ambiguities,withDefaults,defaultedPreds,defaultSubst,splitを読みます。
 
 
 このモジュールは、Typing Haskell In Haskellではいくつかに別れています。
@@ -34,6 +34,8 @@
 
 ### ambiguities 関数
 
+withDefaultsで使用しています。
+
 	  let ambiguities (vs:tyvar list) (ps:pred list) : ambiguity list =
 	    let vs' = Pre.diff (predsTv ps) vs in
 	    map begin fun v ->
@@ -41,6 +43,10 @@
 	        mem v (predTv p)
 	      end ps)
 	    end vs'
+
+
+
+#### 使用例
 
 ### numClasses 変数
 
@@ -50,6 +56,8 @@ Num関連のクラスのIdのリストです。
 	    "Num"; "Integral"; "Floating"; "Fractional"; "Real"; "RealFloat";
 	    "RealFrac"]
 
+#### 使用例
+
 ### stdClasses 変数
 
 標準的なクラスのIdのリストです。numClassesも含まれています。
@@ -57,6 +65,8 @@ Num関連のクラスのIdのリストです。
 	  let stdClasses : Id.id list = [
 	    "Eq"; "Ord"; "Show"; "Read"; "Bounded"; "Enum"; "Ix"; "Functor"; "Monad";
 	    "MonadPlus"] @ numClasses
+
+#### 使用例
 
 ### candidates 関数
 
@@ -71,6 +81,8 @@ Num関連のクラスのIdのリストです。
 	      filter isCandidate ce.defaults
 	    else []
 
+#### 使用例
+
 ### withDefaults 関数
 
 	  let withDefaults (f:ambiguity list -> type_ list -> 'a)
@@ -80,15 +92,21 @@ Num関連のクラスのIdのリストです。
 	    if exists Pre.isEmpty tss then failwith "cannot resolve ambiguity"
 	    else f vps (map hd tss)
 
+#### 使用例
+
 ### defaultedPreds 関数
 
 	  let defaultedPreds (ce:classEnv) (vs:tyvar list) (ps:pred list):pred list =
 	    withDefaults (fun vps ts -> concat (map snd vps)) ce vs ps
 
+#### 使用例
+
 ### defaultSubst 関数
 
 	  let defaultSubst (ce:classEnv) (vs:tyvar list) (ps:pred list): subst =
 	    withDefaults (fun vps ts -> combine (map fst vps) ts) ce vs ps
+
+#### 使用例
 
 ### split 関数
 
@@ -104,4 +122,4 @@ Num関連のクラスのIdのリストです。
 	    let rs' = defaultedPreds ce (fs @ gs) rs in
 	    (ds, Pre.diff rs rs')
 
-todo:使用例を書く
+#### 使用例

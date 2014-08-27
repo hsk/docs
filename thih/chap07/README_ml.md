@@ -10,8 +10,8 @@
 	  ...
 	end
 
-この章では6つの型と、30個の関数に付いて説明します。
-分量が多いので、4つの説に分けてPredモジュールを説明します。
+この章では6つの型と、30個の関数に付いて読みます。
+分量が多いので、4つの説に分けてPredモジュールを読みます。
 
 - 7.1では2つの型pred,qualと9つの関数をpredApply,predsApply,qualTypeApply,predTv,predsTv,qualTypeTv,lift,mguPred,matchPredを説明します。
 - 7.2では4つの型inst, class_, classEnv, envTransformerと9つの関数super,insts,defined,modify,initialEnv,(<:>),addClass,overlap,addInst、4つの環境トランスフォーマーaddCoreClasses,addNumClasses,addPreludeClasses,exampleInstsを説明します。

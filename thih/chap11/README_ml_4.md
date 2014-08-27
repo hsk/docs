@@ -1,7 +1,7 @@
 ## 11.4 alt,expl,impl,bindGroup,expr
 
 ここでは、6つの型alt,expr,impl,bindGroup,exprと
-8つの関数restricted,tiSeq,tiExpr,tiAlt,tiAlts,tiExpl,tiImpls,tiBindGroupについて説明します。
+8つの関数restricted,tiSeq,tiExpr,tiAlt,tiAlts,tiExpl,tiImpls,tiBindGroupを読みます。
 
 ### type alt
 

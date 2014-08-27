@@ -3,7 +3,7 @@
 ここでは、4つの型inst, class_, classEnv, envTransformerと
 9つの関数super,insts,defined,modify,initialEnv,(<:>),addClass,overlap,addInst、
 4つの環境トランスフォーマーaddCoreClasses,addNumClasses,addPreludeClasses,exampleInsts
-を説明します。
+を読みます。
 
 環境トランスフォーマーは実は只のclassEnvを受け取ってclassEnvを返す関数です。
 

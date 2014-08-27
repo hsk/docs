@@ -1,6 +1,6 @@
 ## 11.5 program
 
-ここでは1つの型programと1つの関数tiProgramについて説明します。
+ここでは1つの型programと1つの関数tiProgramを読みます。
 
 ### type program
 

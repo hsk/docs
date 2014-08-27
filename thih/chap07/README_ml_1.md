@@ -1,7 +1,7 @@
 ## 7.1 基本的な定義
 
 ここでは、2つの型pred,qualと
-9つの関数をpredApply,predsApply,qualTypeApply,predTv,predsTv,qualTypeTv,lift,mguPred,matchPredを説明します。
+9つの関数をpredApply,predsApply,qualTypeApply,predTv,predsTv,qualTypeTv,lift,mguPred,matchPredを読みます。
 
 ### type pred
 

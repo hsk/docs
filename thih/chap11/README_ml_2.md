@@ -4,6 +4,8 @@
 
 	(* 11.2 Patterns *)
 	module Pat = struct
+	  open Big_int
+	  open List
 	  open Kind
 	  open Type
 	  open Pred
@@ -15,7 +17,7 @@
 	  ...
 	end
 
-ここでは、1つの型patと2つの関数tiPat,tiPatsについて説明します。
+ここでは、1つの型patと2つの関数tiPat,tiPatsを読みます。
 
 ### type pat
 
@@ -64,4 +66,11 @@
 
 パターンリストの型推論関数です。
 
-todo:使用例を書く
+#### 使用例
+
+	  let _ =
+	    runTI begin fun ti ->
+	      let pat = PWildcard in
+	      let (preds, assumps, ty) = tiPat ti pat in
+	      Printf.printf "tiPat %s %s %s\n" (Pred.ps preds) (Assump.show_list assumps) (Type.show ty)
+	    end

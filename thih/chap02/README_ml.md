@@ -28,7 +28,7 @@ OCamlのモジュールはC++のネームスペースのような物で、名前
 	end
 
 このようなモジュールを作って、中に色々な関数を作っていきます。
-ここでは、8つの関数union,intersect,nub,isEmpty,fold_left1,deleteFirst,diff,split3を説明します。
+ここでは、8つの関数union,intersect,nub,isEmpty,fold_left1,deleteFirst,diff,split3を読みます。
 
 ### union 関数
 

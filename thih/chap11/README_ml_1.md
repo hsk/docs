@@ -3,16 +3,19 @@
 リテラルの型推論をするモジュールです。
 
 	(* 11.1 Literals *)
+	#load "nums.cma"
 	module Lit = struct
 	  open Kind
 	  open Type
 	  open Pred
 	  open TIMonad
 	  open Infer
+	  open Big_int
+	  open Num
 	  ...
 	end
 
-ここでは、1つの型literalと1つの関数tiLitについて説明します。
+ここでは、1つの型literalと1つの関数tiLitを読みます。
 
 ### type literal
 
@@ -46,4 +49,11 @@ tiから新しい型変数をLitInt,LitRatのときは作成しています。
 
 浮動小数点も整数と同様に推論します。
 
-todo:使用例を書く
+#### 使用例
+
+	  let _ =
+	    runTI begin fun ti ->
+	      let lit = LitInt (big_int_of_string "123") in
+	      let (preds,ty) = tiLit ti lit in
+	      Printf.printf "preds = %s ty = %s\n" (Pred.ps preds) (Type.show ty)
+	    end
