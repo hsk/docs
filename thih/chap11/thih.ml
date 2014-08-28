@@ -717,6 +717,12 @@ module TIMain = struct
 
   type ambiguity = tyvar * pred list
 
+  let show_amb ((tv,preds):ambiguity) =
+    Printf.sprintf "ambibuity(%s, %s)" (Subst.show_tyvar tv) (Pred.ps preds)
+
+  let show_ambs ambs =
+    Pre.show_list show_amb ";" ambs
+
   let ambiguities (vs:tyvar list) (ps:pred list) : ambiguity list =
     let vs' = Pre.diff (predsTv ps) vs in
     map begin fun v ->
@@ -725,13 +731,32 @@ module TIMain = struct
       end ps)
     end vs'
 
+  let _ =
+    let tvs = [Tyvar("a", Star)] in
+    let preds = [IsIn("Num", tInt);IsIn("B", tInt)] in
+    let ambs = ambiguities tvs preds in
+    Printf.printf "ambs %s\n" (show_ambs ambs)
+
+
   let numClasses : Id.id list = [
     "Num"; "Integral"; "Floating"; "Fractional"; "Real"; "RealFloat";
     "RealFrac"]
 
+  let _ =
+    Printf.printf "numClasses = \n";
+    List.iter begin fun id ->
+      Printf.printf "  %s\n" id
+    end numClasses
+
   let stdClasses : Id.id list = [
     "Eq"; "Ord"; "Show"; "Read"; "Bounded"; "Enum"; "Ix"; "Functor"; "Monad";
     "MonadPlus"] @ numClasses
+
+  let _ =
+    Printf.printf "stdClasses = \n";
+    List.iter begin fun id ->
+      Printf.printf "  %s\n" id
+    end stdClasses
 
   let candidates (ce:classEnv) ((v, qs) : ambiguity): type_ list =
     let is = map (fun (IsIn(i, _)) -> i) qs in

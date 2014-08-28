@@ -2,11 +2,13 @@
 
 In the terminology of Haskell [ Peyton Jones & Hughes, 1999,Section 4.3.4], a type scheme ps => t is ambiguous if ps contains generic variables that do not also appear in t.
 
-Haskell [ペイトン ・ ジョーンズ & ヒューズ、1999 年、セクション 5.4.3]、ps => 型方式の用語 t は ps t にも表示されないジェネリック変数が含まれている場合は、あいまいです。
+psはまたは、tに表示されない汎用的な変数が含まれる場合はHaskell[ペイトン·ジョーンズ＆ヒューズ、1999、セクション4.3.4]の用語での型スキーム ps => t はあいまいです。
 
 This condition is important because theoretical studies [ Blott, 1991, Jones, 1992]have shown that, in the general case, we can only guarantee a well-defined semantics for a term if its most general type is not ambiguous.
 
-この条件は重要であるので理論的研究 [Blott、1991 年に、ジョーンズ、1992年]、一般的なケースで保証することだけセマンティクスが明確に定義された用語の最も一般的な型があいまいな場合を示しています。
+この条件は重要であるので理論的研究 [ Blott, 1991, Jones, 1992]、一般的なケースで保証することだけセマンティクスが明確に定義された用語の最も一般的な型があいまいな場合を示しています。
+
+理論的研究[ Blott, 1991, Jones, 1992]は、その最も一般的なタイプがあいまいでない場合、一般的なケースでは、私たちが唯一の任期で明確に定義されたセマンティクスを保証することができることを示しているので、この条件は重要です。
 
 As a result, expressions with ambiguous types are considered ill-typed in Haskell and will result in a static error.
 
@@ -92,7 +94,7 @@ The type t must be chosen so that all of the predicates in ps that involve v wil
 
 The following function calculates the list of ambiguous variables and pairs each one with the list of predicates that must be satisfied by any choice of a default:
 
-次の関数のあいまいな変数の一覧を計算し、デフォルトの任意の選択で満たす必要のある述語のリストと各 1 つのペアします。
+以下の関数は、あいまいな変数とペアのデフォルトのいずれかの選択によって満たされなければならない述語の一覧とそれぞれのリストを計算します:
 
 	  type Ambiguity       = (Tyvar, [Pred])
  
@@ -101,7 +103,7 @@ The following function calculates the list of ambiguous variables and pairs each
 
 Given one of these pairs (v,qs), and as specified by the Haskell report [ Peyton Jones & Hughes, 1999,Section 4.3.4], defaulting is permitted if, and only if, all of the following conditions are satisfied:
 
-Haskell report [ペイトン ・ ジョーンズ & ヒューズ、1999 年、セクション 5.4.3] で指定された v （qs）、これらのペアの 1 つを与えられた不履行は許可され、次の条件すべてが満たされている場合にのみ。
+これらの対（V、適量）の一つを考えると、Haskellのレポートで指定されている場合は、[ Peyton Jones & Hughes, 1999, Section 4.3.4] は、許可されているが、デフォルトで、以下の条件をすべて満たす場合のみ：
 
 - All of the predicates in qs are of the form IsIn c (TVar v) for some class c.
 
@@ -190,8 +192,8 @@ In a similar way, the defaulting substitution can be obtained by zipping the lis
 
 同様の方法で不履行置換ビュンと既定値の一覧と共に変数のリストを取得できます。
 
-	  defaultSubst   :: Monad m => ClassEnv -> [Tyvar] -> [Pred] -> m Subst
-	  defaultSubst    = withDefaults (\vps ts -> zip (map fst vps) ts)
+	  defaultSubst :: Monad m => ClassEnv -> [Tyvar] -> [Pred] -> m Subst
+	  defaultSubst = withDefaults (\vps ts -> zip (map fst vps) ts)
 
 One might wonder why the defaulting substitution is useful to us here; if the ambiguous variables don't appear anywhere in the assumptions or in the inferred types, then applying this substitution to those components would have no effect.
 

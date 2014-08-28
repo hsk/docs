@@ -32,6 +32,18 @@
 
 	  type ambiguity = tyvar * pred list
 
+ambiguityは曖昧性という意味なのだけど、非決定性計算のAMBと関連づけて覚えて置くと覚えやすいのかも。
+
+### show_amb 関数
+
+	  let show_amb ((tv,preds):ambiguity) =
+	    Printf.sprintf "ambibuity(%s, %s)" (Subst.show_tyvar tv) (Pred.ps preds)
+
+### show_ambs 関数
+
+	  let show_ambs ambs =
+	    Pre.show_list show_amb ";" ambs
+
 ### ambiguities 関数
 
 withDefaultsで使用しています。
@@ -44,9 +56,13 @@ withDefaultsで使用しています。
 	      end ps)
 	    end vs'
 
-
-
 #### 使用例
+
+	  let _ =
+	    let tvs = [Tyvar("a", Star)] in
+	    let preds = [IsIn("Num", tInt);IsIn("B", tInt)] in
+	    let ambs = ambiguities tvs preds in
+	    Printf.printf "ambs %s\n" (show_ambs ambs)
 
 ### numClasses 変数
 
@@ -58,6 +74,12 @@ Num関連のクラスのIdのリストです。
 
 #### 使用例
 
+	  let _ =
+	    Printf.printf "numClasses = \n";
+	    List.iter begin fun id ->
+	      Printf.printf "  %s\n" id
+	    end numClasses
+
 ### stdClasses 変数
 
 標準的なクラスのIdのリストです。numClassesも含まれています。
@@ -67,6 +89,12 @@ Num関連のクラスのIdのリストです。
 	    "MonadPlus"] @ numClasses
 
 #### 使用例
+
+	  let _ =
+	    Printf.printf "stdClasses = \n";
+	    List.iter begin fun id ->
+	      Printf.printf "  %s\n" id
+	    end stdClasses
 
 ### candidates 関数
 

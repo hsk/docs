@@ -43,7 +43,6 @@ tiPatもtype inferではない。
 
 	  let rec tiPat (ti:ti) (pat:pat):pred list * assump list * type_
 
-
 tiExprは、'eがexprで'tがtype_のtype inferです。
 
 	  let rec tiExpr (ti:ti)(ce:classEnv)(as_:assump list)(expr: expr): pred list * type_ =
