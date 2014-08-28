@@ -1,3 +1,15 @@
+(*
+
+pritty printing
+refs:
+
+https://gist.github.com/ytomino/d3cff860d30d894dca1b
+https://github.com/bobzhang/ocaml-book/blob/master/compiler/pipeline.org
+
+usages:
+ocaml -I `ocamlc -where`/compiler-libs ocamlcommon.cma ocamlbytecomp.cma a2.ml
+
+*)
 let read_type_exp src_string =
   let env = !Toploop.toplevel_env in
   let lb = Lexing.from_string src_string in
@@ -10,10 +22,10 @@ let read_type_exp src_string =
   | _ -> failwith "Only expressions are expected"
 
 type e2 = A2
-
+  | AInt of int
 let _ =
   let te = read_type_exp "A2" in
-  let value = A2 in
+  let value = AInt(2) in
   Printf.printf "--------\n";
   let env = !Toploop.toplevel_env in
         Toploop.print_value
