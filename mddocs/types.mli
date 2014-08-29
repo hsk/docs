@@ -71,25 +71,25 @@ and type_desc =
                      | Cunknown
                      | Clink of commutable ref
 
-                  let f g = g ~x:1 ~y:true in   f (fun ~y:_ ~x:_ -> ());;
+                   let f g = g ~x:1 ~y:true in   f (fun ~y:_ ~x:_ -> ());;
 
                は型エラーになるのだが、これは g の Tarrow が Cunknown だから。
                現在の OCaml では外からくる型不明の関数にかんして引数順入れ替えのコンパイルを
                おこなわない、つまり
 
-                  let f g = g ~x:1 ~y:true in f (fun ~x ~y -> (fun ~y:_ ~x:_ -> ()) ~y ~x);;
+                   let f g = g ~x:1 ~y:true in f (fun ~x ~y -> (fun ~y:_ ~x:_ -> ()) ~y ~x);;
 
                というコードに変換しない。 多分これをやると abstraction が入るので
                一般的には副作用のタイミングがおかしくなってしまう
 
-                  let g = fun ~y:_ ~x:_ -> () in
-                  let f = g ~x:1 ~y:true in f
+                   let g = fun ~y:_ ~x:_ -> () in
+                   let f = g ~x:1 ~y:true in f
 
                これは前もって順序がわかっており、 Cok なので型エラーにならない。
                順序の入れ替えは g の定義ではなく g の呼び出し側で行われる:
 
-                  let g = fun ~y:_ ~x:_ -> () in
-                  let f = g ~y:true ~x:1 in f
+                   let g = fun ~y:_ ~x:_ -> () in
+                   let f = g ~y:true ~x:1 in f
 
                こんな感じだと思われる(仔細未確認)。OCaml は引数の評価順は未定義なので
                問題ないはず
