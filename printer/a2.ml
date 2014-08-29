@@ -10,6 +10,7 @@ usages:
 ocaml -I `ocamlc -where`/compiler-libs ocamlcommon.cma ocamlbytecomp.cma a2.ml
 
 *)
+
 let read_type_exp src_string =
   let env = !Toploop.toplevel_env in
   let lb = Lexing.from_string src_string in
@@ -24,10 +25,12 @@ let read_type_exp src_string =
 type e2 = A2
   | AInt of int
 let _ =
-  let te = read_type_exp "A2" in
+  let a = A2 in
+  let te = read_type_exp "a" in
   let value = AInt(2) in
-  Printf.printf "--------\n";
   let env = !Toploop.toplevel_env in
+out_value value Format.std_formatter;
+  Printf.printf "--------\n";
         Toploop.print_value
                 env
                 (Obj.repr value)
