@@ -111,6 +111,13 @@ Num関連のクラスのIdのリストです。
 
 #### 使用例
 
+	  let _ =
+	    let tv = Tyvar("a", Star) in
+	    let subst = [tv,tInt] in
+	    let amb = (tv,subst) in
+	    let ts = map (candidates ce) amb in
+	    Printf.printf "ts = %s\n" (Type.show_list ts)
+	    
 ### withDefaults 関数
 
 	  let withDefaults (f:ambiguity list -> type_ list -> 'a)
@@ -122,6 +129,8 @@ Num関連のクラスのIdのリストです。
 
 #### 使用例
 
+	  
+
 ### defaultedPreds 関数
 
 	  let defaultedPreds (ce:classEnv) (vs:tyvar list) (ps:pred list):pred list =
@@ -129,12 +138,16 @@ Num関連のクラスのIdのリストです。
 
 #### 使用例
 
+	  
+
 ### defaultSubst 関数
 
 	  let defaultSubst (ce:classEnv) (vs:tyvar list) (ps:pred list): subst =
 	    withDefaults (fun vps ts -> combine (map fst vps) ts) ce vs ps
 
 #### 使用例
+
+	  
 
 ### split 関数
 
@@ -151,3 +164,5 @@ Num関連のクラスのIdのリストです。
 	    (ds, Pre.diff rs rs')
 
 #### 使用例
+
+	  

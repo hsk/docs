@@ -54,7 +54,6 @@ module Kind = struct
       | Kfun(Kfun _ as k1,k2) -> Printf.sprintf "(%s) -> %s" (show k1) (show k2) 
       | Kfun(k1,k2) -> Printf.sprintf "%s -> %s" (show k1) (show k2) 
     end
-
 end
 
 (* 4 Types *)
@@ -417,7 +416,6 @@ module Pred = struct
     let s = defined b "ABC" in
     ()
 
-
   type envTransformer = classEnv -> classEnv
 
   let addClass i is : envTransformer =
@@ -443,7 +441,7 @@ module Pred = struct
     ()
 
   let addCoreClasses :envTransformer =
-        addClass "Eq" []
+    addClass "Eq" []
     <:> addClass "Ord" ["Eq"]
     <:> addClass "Show" []
     <:> addClass "Read" []
@@ -453,7 +451,7 @@ module Pred = struct
     <:> addClass "Monad" []
 
   let addNumClasses :envTransformer =
-        addClass "Num" ["Eq"; "Show"]
+    addClass "Num" ["Eq"; "Show"]
     <:> addClass "Real" ["Num"; "Ord"]
     <:> addClass "Fractional" ["Num"]
     <:> addClass "Integral" ["Real"; "Enum"]
@@ -486,7 +484,7 @@ module Pred = struct
       modify ce i c
 
   let exampleInsts : envTransformer =
-        addPreludeClasses
+    addPreludeClasses
     <:> addInst [] (IsIn("Ord", tUnit))
     <:> addInst [] (IsIn("Ord", tChar))
     <:> addInst [] (IsIn("Ord", tInt))
@@ -579,7 +577,6 @@ module Pred = struct
         else loop (p :: rs) ps in
     loop [] ps
 
-
   let _ =
     let pred = IsIn("Num", TVar(Tyvar("a", Star))) in
     let preds = [pred] in
@@ -603,7 +600,6 @@ module Pred = struct
     let preds = [pred] in
     let result = scEntail (exampleInsts initialEnv) preds pred in
     Printf.printf "scEntail = %b\n" result
-
 end
 
 open Kind

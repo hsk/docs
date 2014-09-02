@@ -152,6 +152,7 @@ module Type = struct
       | TAp(t1,t2)           -> Printf.sprintf "TAp(%s,%s)" (show t1) (show t2)
       | TGen(i)              -> Printf.sprintf "TGen(%d)" i
     end
+  let show_list = Pre.show_list show ";"
 end
 
 (* 5 Substitutions *)
@@ -768,6 +769,17 @@ module TIMain = struct
         for_all (entail ce []) (map (fun i -> IsIn(i, t')) is) in
       filter isCandidate ce.defaults
     else []
+
+  let _ =
+    let tv = Tyvar("a", Star) in
+    let preds = [IsIn("Num", tInt);IsIn("B", tInt)] in
+    Printf.printf "a ----\n";
+    let amb = (tv, preds) in
+    Printf.printf "b ----\n";
+    let ce = addNumClasses initialEnv in
+    Printf.printf "c ----\n";
+    let ts = candidates ce amb in
+    Printf.printf "ts = %s\n" (Type.show_list ts)
 
   let withDefaults (f:ambiguity list -> type_ list -> 'a)
     (ce:classEnv) (vs:tyvar list) (ps:pred list):'a =

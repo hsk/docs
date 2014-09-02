@@ -60,7 +60,7 @@ Qualを作成する演算子を(:=>はOCamlでは使えないので)、==>とし
 	      [
 	        [] ==> IsIn("Ord", tUnit);
 	        [] ==> IsIn("Ord", tChar);
-	        [] ==> IsIn("Ord",tInt);
+	        [] ==> IsIn("Ord", tInt);
 	        [
 	          IsIn("Ord",TVar(Tyvar("a", Star)));
 	          IsIn("Ord",TVar(Tyvar("b", Star)))
