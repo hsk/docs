@@ -117,7 +117,7 @@ Num関連のクラスのIdのリストです。
 	    let amb = (tv,subst) in
 	    let ts = map (candidates ce) amb in
 	    Printf.printf "ts = %s\n" (Type.show_list ts)
-	    
+
 ### withDefaults 関数
 
 	  let withDefaults (f:ambiguity list -> type_ list -> 'a)

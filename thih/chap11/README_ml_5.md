@@ -35,7 +35,7 @@ runTIはTIMonadで定義された関数です。実行すると、型推論の�
 そして、tiSeqで型推論します。
 
 tiSeqで推論した結果、psとas'を受け取ります。
-getSubst tiで文脈から代入を取り出し、 代入 sをpsのなかから取り出したのがrsで
+getSubst tiで文脈から代入を取り出し、代入 sをpsのなかから取り出したのがrsで
 s'はdefaultSubstを使ってrsから取り出したsubstです。最後に、assumpsApplyでassump listを取得して返します。
 
 要するに、tiProgramではprogramと環境を受け取って、TIMonad.runTIで環境を作ってtiSeqで型推論し、結果をassump listに変換して返します。
