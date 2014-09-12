@@ -9,25 +9,25 @@ http://itpro.nikkeibp.co.jp/article/COLUMN/20070612/274231/
 
 ## ファイル一覧
 
-- pi.scala
+- [pi.scala](pi.scala)
     - Scalaに途中まで移植して力つきたもの(fibの型を書くのが面倒になったw)
-- pi.php
+- [pi.php](pi.php)
     - Scala版をPHPに移植
-- pi2.php
+- [pi2.php](pi2.php)
     - send,recv関数をオブジェクト化
-- pi3.php
+- [pi3.php](pi3.php)
     - CActor,ServActor,XActor,FibActorクラスを作成
-- pi4.php
+- [pi4.php](pi4.php)
     - SendersとReceiversのsend,recvをメソッドの多態性を使うようにした
-- pi5.php
+- [pi5.php](pi5.php)
     - act,reactで書けるようにした
-- pi.rb
+- [pi.rb](pi.rb)
     - PHP版をrbに移植
-- pi2.rb
+- [pi2.rb](pi2.rb)
     - send,recv関数をオブジェクト化
-- pi3.rb
+- [pi3.rb](pi3.rb)
     - CActor,ServActor,XActor,FibActorクラスを作成
-- pi4.rb
+- [pi4.rb](pi4.rb)
     - SendersとReceiversのsend,recvをメソッドの多態性を使うようにした
-- pi5.rb
+- [pi5.rb](pi5.rb)
     - act,reactで書けるようにした
