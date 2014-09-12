@@ -46,6 +46,28 @@ explのリストとimplのリストのリストをまとめたものです。
 	    (*| If of expr * expr * expr*)
 	    (*| Case of expr * (Pat * Expr) list*)
 
+### show_alt
+
+#### 使用例
+
+### show_expl
+
+#### 使用例
+
+### show_impl
+
+#### 使用例
+
+### show_bindGroup
+
+#### 使用例
+
+### show_expr
+
+#### 使用例
+
+
+
 ### restricted 関数
 
 	  let restricted (bs : impl list):bool =
@@ -53,6 +75,8 @@ explのリストとimplのリストのリストをまとめたものです。
 	      Pre.isEmpty (fst alt)
 	    end alts in
 	    exists simple bs
+
+#### 使用例
 
 ### tiSeq 関数
 
@@ -76,6 +100,8 @@ explのリストとimplのリストのリストをまとめたものです。
 しかし、OCamlでは前方参照ができません。
 この関数をtiExpr等と並べてandで書くと、tiProgramから呼び出したときにエラーになってしまいます。
 andで結合した関数群は１つの型のグループとして扱われるのです。
+
+#### 使用例
 
 ### tiExpr 関数
 
@@ -161,6 +187,9 @@ tiExprで式を型推論し、返します。
 
 これら３つはコメントアウトされています。
 
+#### 使用例
+
+
 ### tiAlt 関数
 
 altに対する型推論で、tiAltsで使われています。
@@ -174,6 +203,8 @@ altに対する型推論で、tiAltsで使われています。
 
 これは１つの関数で、パターンと式に対して型推論をして、型をまとめるときにはfnを使っています。
 
+#### 使用例
+
 ### tiAlts 関数
 
 alt listに対する型推論でtiExplとtiImplsから使われています。
@@ -186,6 +217,8 @@ alt listに対する型推論でtiExplとtiImplsから使われています。
 mapでtiAltを呼び出し、List.splitで２つのリストに結果を分割します。
 tsにはさらに、unifyしてます。
 最後にリストのリストであるpsをconcatでまとめて返します。
+
+#### 使用例
 
 ### tiExpl 関数
 
@@ -213,6 +246,8 @@ predsApplyでqsに型を適用し、
 typeApplyで型も適用し、
 制約をassumpsApplyとassumpsTvで適用、
 t'とfsの差分から、制約スキームを取り出し、うんぬん。これ以降理解してないので後で書く。
+
+#### 使用例
 
 ### tiImpls 関数
 
@@ -283,6 +318,7 @@ quantiyしてassumpして返します。
 
 rsの扱いが違うわけです。
 
+#### 使用例
 
 ### tiBindGroup 関数
 
@@ -302,4 +338,4 @@ esをtiExplで型推論して、結果をまとめて返しています。
 
 
 
-todo:使用例を書く
+#### 使用例

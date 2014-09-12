@@ -10,6 +10,12 @@
 
 プログラムは変数束縛グループのリストに過ぎないわけです。
 
+### show関数
+
+
+#### 使用例
+
+
 ### tiProgram 関数
 
 	  let tiProgram (ce:classEnv) (as_:assump list) (bgs : program):assump list =
@@ -40,5 +46,7 @@ s'はdefaultSubstを使ってrsから取り出したsubstです。最後に、as
 
 要するに、tiProgramではprogramと環境を受け取って、TIMonad.runTIで環境を作ってtiSeqで型推論し、結果をassump listに変換して返します。
 
-todo:使用例を書く
+#### 使用例
+
+
 todo:参考文献を書く
