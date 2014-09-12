@@ -21,16 +21,14 @@ class Actor {
   function send($x) {
     switch(true) {
     case $this->ref instanceof Senders: // 受信プロセスがない
-    case $this->ref instanceof Receivers && count($this->ref->a) == 0: // 同上
       // キューの後に値を付け加える
-      $a = $this->ref->a;
-      $a[] = $x;
-      $this->ref = new Senders($a);
+      $this->ref->a[] = $x;
+      break; 
+    case count($this->ref->a) == 0: // 同上
+      $this->ref = new Senders(array($x));
       break;
     default: // 受信プロセスがある
-      $a = $this->ref->a;
-      $f = array_shift($a); // １つ取り出す。
-      $this->ref = new Receivers($a);
+      $f = array_shift($this->ref->a); // １つ取り出す。
       $f($x);
     }
   }
@@ -43,15 +41,14 @@ class Actor {
   function recv($f) {
     switch(true) {
     case $this->ref instanceof Receivers: // 値がない
-    case count($this->ref->a) == 0:
       $this->ref->a[] = $f;
-      $this->ref = new Receivers($this->ref->a);
+      break;
+    case count($this->ref->a) == 0:
+      $this->ref = new Receivers(array($f));
       break;
     default: // 値がある
-      $ss = $this->ref->a;
-      $x = array_shift($ss);
+      $x = array_shift($this->ref->a);
       // 一つだけ(x)を取り出して残り(ss)は戻す
-      $this->ref = new Senders($ss);
       // 取り出した値を受信プロセスに渡す
       $f($x);
     }

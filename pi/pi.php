@@ -29,16 +29,14 @@ function newc() {
 function send($y, $x) {
   switch(true) {
     case $y->ref instanceof Senders: // 受信プロセスがない
-    case $y->ref instanceof Receivers && count($y->ref->a) == 0: // 同上
+      $y->ref->a[] = $x;
+      break;
+    case count($y->ref->a) == 0: // 同上
       // キューの後に値を付け加える
-      $a = $y->ref->a;
-      $a[] = $x;
-      $y->ref = new Senders($a);
+      $y->ref = new Senders(array($x));
       break;
     default: // 受信プロセスがある
-      $a = $y->ref->a;
-      $f = array_shift($a); // １つ取り出す。
-      $y->ref = new Receivers($a);
+      $f = array_shift($y->ref->a); // １つ取り出す。
       $f($x);
   }
 }
@@ -52,15 +50,15 @@ function send($y, $x) {
 function recv($y, $f) {
   switch(true) {
     case $y->ref instanceof Receivers: // 値がない
-    case count($y->ref->a) == 0:
       $y->ref->a[] = $f;
-      $y->ref = new Receivers($y->ref->a);
+      break;
+    case count($y->ref->a) == 0:
+      $y->ref = new Receivers(array($f));
       break;
     default: // 値がある
-      $ss = $y->ref->a;
-      $x = array_shift($ss);
+      $x = array_shift($y->ref->a);
       // 一つだけ(x)を取り出して残り(ss)は戻す
-      $y->ref = new Senders($ss);
+      $y->ref = new Senders($y->ref->a);
       // 取り出した値を受信プロセスに渡す
       $f($x);
   }

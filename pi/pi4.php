@@ -3,34 +3,11 @@ class Senders {
   function __construct($a) {
     $this->a = $a;
   }
-}
-class Receivers {
-  function __construct($a) {
-    $this->a = $a;
-  }
-}
-class Actor {
-  function __construct() {
-    $this->ref = new Senders(array());
-  }
-  /**
-   * 通信チャンネルyに値xを送る
-   * @param Ref(Chan) y
-   * @param A x
-   */
+
   function send($x) {
-    switch(true) {
-    case $this->ref instanceof Senders: // 受信プロセスがない
-      // キューの後に値を付け加える
-      $this->ref->a[] = $x;
-      break;
-    case $this->ref instanceof Receivers && count($this->ref->a) == 0: // 同上
-      $this->ref = new Senders(array($x));
-      break;
-    default: // 受信プロセスがある
-      $f = array_shift($this->ref->a); // １つ取り出す。
-      $f($x);
-    }
+    // キューの後に値を付け加える
+    $this->a[] = $x;
+    return $this;
   }
 
   /**
@@ -39,19 +16,62 @@ class Actor {
    * @param function $f
    */
   function recv($f) {
-    switch(true) {
-    case $this->ref instanceof Receivers: // 値がない
-      $this->ref->a[] = $f;
-      break;
-    case count($this->ref->a) == 0:
-      $this->ref = new Receivers(array($f));
-      break;
-    default: // 値がある
-      // 一つだけ(x)を取り出す
-      $x = array_shift($this->ref->a);
-      // 取り出した値を受信プロセスに渡す
-      $f($x);
-    }
+    if(count($this->a) == 0)
+      return new Receivers(array($f));
+
+    // 値がある
+    // 一つだけ(x)を取り出す
+    $x = array_shift($this->a);
+    // 取り出した値を受信プロセスに渡す
+    $f($x);
+    return $this;
+  }
+}
+
+class Receivers {
+  function __construct($a) {
+    $this->a = $a;
+  }
+
+  function send($x) {
+    if (count($this->a) == 0)
+      return new Senders(array($x));
+    
+    // 受信プロセスがある
+    $f = array_shift($this->a); // １つ取り出す。
+    $f($x);
+    return $this;
+  }
+
+  /**
+   * 通信チャンネルyから値を受信し，関数fを適用する
+   * @param Ref(Chan) $y
+   * @param function $f
+   */
+  function recv($f) {
+    $this->a[] = $f;
+    return $this;
+  }
+}
+
+class Actor {
+  function __construct() {
+    $this->ref = new Senders(array());
+  }
+  /**
+   * 通信チャンネルyに値xを送る
+   * @param A x
+   */
+  function send($x) {
+    $this->ref = $this->ref->send($x);
+  }
+
+  /**
+   * 通信チャンネルyから値を受信し，関数fを適用する
+   * @param function $f
+   */
+  function recv($f) {
+    $this->ref = $this->ref->recv($f);
   }
 }  
 $x = new Actor();
