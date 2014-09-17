@@ -120,71 +120,6 @@ object Pre extends App{
     }    
     loop(List(), List(), List())(xs)
   }
-
-  {
-    val a = List(5,4,3,2,1)
-    val b = List(4,5,6,7)
-
-    {
-      val ab = Pre.union(a)(b)
-      printf("union a b = %s\n", ab)
-    }
-
-    val ab = Pre.intersect(a)(b)
-    printf("intersect a b = %s\n", ab)
-  }
-
-  {
-    val a = List(1,1,2,2,3,4,5,1)
-    val b = Pre.nub(a)
-    printf("nub a = %s\n", b)
-  }
-
-  {
-    val a = List()
-    val b = Pre.isEmpty(a)
-    printf("isEmpty = %b\n", b)
-  }
-  {
-    val a = List(1)
-    val b = Pre.isEmpty(a)
-    printf("isEmpty = %b\n", a)
-  }
-
-  {
-    val a = List(1,2,3,4,5,6,7,8,9,10)
-    val b = Pre.fold_left1[Int]{case(a, b) =>
-      a + b
-    }(a)
-
-    printf("fold_left1 = %d\n", b)
-  }
-
-
-  {
-    val a = List(1,2,3,4,3,4,5)
-    val b = Pre.deleteFirst(3)(a)
-    printf("deleteFirst = %s\n", b)
-  }
-  {
-    val a = List(1,2,3,4)
-    val b = List(3,4,5,6)
-    val r = Pre.diff(a)(b)
-    printf("diff = %s\n", r)
-  }
-  {
-    val a = List(1,2,3,4,3,4)
-    val b = List(3,4,5,6,4)
-    val r = Pre.diff(a)(b)
-    printf("diff = %s\n", r)
-  }
-
-
-  {
-    val a1 = List((1,10,100),(2,20,200),(3,30,300))
-    val (a,b,c) = Pre.split3(a1)
-    printf("split3 = %s;%s;%s\n", a, b, c)
-  }
 }
 
 object Id extends App {
@@ -193,10 +128,6 @@ object Id extends App {
   // 数値に対するidを取得する
   def enumId (n:Int) : Id = {
     "v" + n
-  }
-
-  {
-    printf("id=%s\n", enumId(33))
   }
 }
 
@@ -285,7 +216,7 @@ object Subst {
   def nullSubst : Subst = List()
 
   // 型変数を展開する
-  def typeApply(s : Subst)(t:Type_):Type_ = {
+  def typeApply(s: Subst)(t: Type_): Type_ = {
     t match {
       case TVar(u) =>
         s.find{case (k,v) => k == u} match {
@@ -305,18 +236,16 @@ object Subst {
     }
   }
 
-
-  def listApply[A,B] (apply : Subst => A => B) (s : Subst) (xs:List[A]):List[B] = {
+  def listApply[A,B](apply: Subst => A => B)(s : Subst)(xs:List[A]):List[B] = {
     xs.map(apply(s))
   }
 
-
-  def listTv[A] (tv:A => List[Tyvar]) (xs:List[A]) : List[Tyvar] = {
+  def listTv[A](tv: A => List[Tyvar])(xs:List[A]) : List[Tyvar] = {
     Pre.nub(xs.map(tv).flatten)
   }
 
   implicit class SSubst(val s1: Subst) {
-    def @@ (s2 : Subst) : Subst = {
+    def @@(s2 : Subst) : Subst = {
       s2.map {case (u, t) =>
         (u, typeApply(s1)(t))
       } ::: s1
@@ -447,6 +376,12 @@ object Pred {
     classes : Id.Id => Class_,
     defaults : List[Type_]
   )
+
+  implicit class SQual[T](val a:List[Pred]) {
+    def :=>(t:T) : Qual[T] = {
+      Qual(a, t)
+    }
+  }
 
 
   def super_ (ce:ClassEnv)(i:Id.Id) = {
@@ -996,8 +931,6 @@ object TIMain {
     }
   }
 
-  //type  Infer[E, T] = Ti => ClassEnv => List[Assump] => E => (List[Pred], T)
-
   def tiSeq[BG] (f : Infer[BG, List[Assump.Assump]]) : Infer[List[BG], List[Assump.Assump]] = {
     def f2(ti:Ti)(ce:ClassEnv)(as_ :List[Assump.Assump])(ls:List[BG]):(List[Pred],List[Assump.Assump]) = {
       ls match {
@@ -1055,7 +988,6 @@ object TIMain {
       */
     }
 
-//type  Infer[E, T] = Ti => ClassEnv => List[Assump.Assump] => E => (List[Pred], T)
   def tiAlt : Infer[Alt, Type_] = {
 
     def f(ti:Ti)(ce:ClassEnv)(as_ :List[Assump.Assump])(alt:Alt):
@@ -1067,7 +999,7 @@ object TIMain {
     }
     f
   }
-//type  Infer[E, T] = Ti => ClassEnv => List[Assump.Assump] => E => (List[Pred], T)
+
   def tiAlts(ti:Ti)(ce:ClassEnv)(as_ :List[Assump.Assump])(alts:List[Alt])(t:Type_):
     List[Pred] = {
 
@@ -1075,7 +1007,7 @@ object TIMain {
     ts.foreach{ unify(ti)(t) }
     ps.flatten
   }
-//type  Infer[E, T] = Ti => ClassEnv => List[Assump.Assump] => E => (List[Pred], T)
+
   def tiExpl (ti:Ti)(ce:ClassEnv)(as_ :List[Assump.Assump])
     (expl : Expl):List[Pred] = {
   
@@ -1095,7 +1027,6 @@ object TIMain {
     ds
   }
 
-//type  Infer[E, T] = Ti => ClassEnv => List[Assump.Assump] => E => (List[Pred], T)
   def tiImpls : Infer[List[Impl], List[Assump.Assump]] = {
   
     def f(ti:Ti)(ce:ClassEnv)(as_ :List[Assump.Assump])(bs:List[Impl]):
@@ -1158,4 +1089,3 @@ object TIMain {
     }
   }
 }
-

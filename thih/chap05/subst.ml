@@ -110,6 +110,10 @@ module Type = struct
       | TAp(t1,t2)           -> Printf.sprintf "TAp(%s,%s)" (show t1) (show t2)
       | TGen(i)              -> Printf.sprintf "TGen(%d)" i
     end
+
+  let show_list xs :string =
+    Pre.show_list show "; " xs
+
 end
 
 (* 5 Substitutions *)
@@ -190,9 +194,10 @@ module TEST = struct
     Printf.printf "nullSubst = %s\n" (Subst.show nullSubst);
 
     (* +-> *)
-    let subst = Tyvar("a", Star) +-> tInt in
-    Printf.printf "a * +-> tInt = %s\n" (Subst.show subst);
-    let subst = subst @ Tyvar("b", Star) +-> tChar in
+    let subst1 = Tyvar("a", Star) +-> tInt in
+    Printf.printf "a * +-> tInt = %s\n" (Subst.show subst1);
+    let subst2 = Tyvar("b", Star) +-> tChar in
+    let subst = subst1 @ subst2 in
     Printf.printf "subst = %s\n" (Subst.show subst);
 
     let showApply t1 =  
@@ -210,12 +215,20 @@ module TEST = struct
     Printf.printf "tap typeTv = %s\n" (show_tyvar_list (typeTv tap));
 
     (* listApply *)
+    let ls = listApply typeApply subst [tva;tvb] in
+    Printf.printf "tap listApply = %s\n" (Type.show_list ls);
 
     (* listTv *)
+    let ls = listTv typeTv [tva;tvb] in
+    Printf.printf "listTv = %s\n" (show_tyvar_list ls);
 
     (* (@@) *)
+    let subst = subst1 @@ subst2 in
+    Printf.printf "@@ = %s\n" (Subst.show subst);
 
     (* merge *)
+    let subst = merge subst1 subst2 in
+    Printf.printf "merge = %s\n" (Subst.show subst);
 
 end
 

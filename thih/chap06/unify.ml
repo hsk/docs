@@ -207,10 +207,20 @@ module Unify = struct
     | TVar u, t when tyvarKind u = typeKind t -> u +-> t
     | TCon tc1, TCon tc2 when tc1 = tc2 -> nullSubst
     | _ -> failwith "types do not match"
+
+  let _ =
+    (* mgu *)
+    let t1 = TVar(Tyvar("a", Star)) in
+    let t2 = TVar(Tyvar("b", Star)) in
+    let subst = mgu t1 t2 in
+    Printf.printf "mgu subst=%s\n" (Subst.show subst);
+    (* varBind *)
+    let tv1 = Tyvar("a", Star) in
+    let subst = varBind tv1 t1 in
+    Printf.printf "varBind subst=%s\n" (Subst.show subst);
+    (* match_ *)
+    let subst = match_ t1 t2 in
+    Printf.printf "match subst=%s\n" (Subst.show subst);
+    ()
 end
 
-let _ =
-  (* mgu *)
-  (* varBind *)
-  (* match_ *)
-  ()
