@@ -7,7 +7,7 @@ class PatSpec extends FlatSpec {
   import TIMonad._
   import Pat._
 
-  it should "test" in {
+  it should "tiPat" in {
     runTI { ti =>
       val pat = PWildcard
       val (preds, assumps, ty) = tiPat(ti)(pat)
