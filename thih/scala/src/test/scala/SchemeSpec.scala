@@ -14,26 +14,34 @@ class SchemeSpec extends FlatSpec {
 
     val ty = TVar(Tyvar("a", Star))
     val pred = IsIn("Num", ty)
-    val sc = Forall(List(),Qual(List(pred),ty))
-    printf("scheme = %s\n", sc)
+    val sc = Forall(List(), Qual(List(pred), ty))
+
+    sc shouldBe
+      Forall(List(), Qual(List(IsIn("Num", TVar(Tyvar("a", Star)))), TVar(Tyvar("a", Star))))
+
   }
 
   it should "schemeApply" in {
     val ty = TVar(Tyvar("a", Star))
     val pred = IsIn("Num", ty)
-    val sc = Forall(List(),Qual(List(pred),ty))
+    val sc = Forall(List(), Qual(List(pred), ty))
     val subst = List((Tyvar("a", Star), tInt))
     val sc1 = schemeApply(subst)(sc)
-    printf("scheme = %s\n", sc1)
+
+    sc1 shouldBe
+      Forall(List(), Qual(List(IsIn("Num", TCon(Tycon("Int", Star)))), TCon(Tycon("Int", Star))))
 
   }
 
   it should "schemeTv" in {
     val ty = TVar(Tyvar("a", Star))
     val pred = IsIn("Num", ty)
-    val sc = Forall(List(),Qual(List(pred),ty))
+    val sc = Forall(List(), Qual(List(pred), ty))
     val tvs = schemeTv(sc)
-    printf("tvs = %s\n", tvs)
+
+    tvs shouldBe
+      List(Tyvar("a", Star))
+
   }
 
   it should "quantify" in {
@@ -42,13 +50,19 @@ class SchemeSpec extends FlatSpec {
     val pred = IsIn("Num", ty)
     val qual = Qual(List(pred), fn(ty)(tInt))
     val sc = quantify(List(tyvar))(qual)
-    printf("scheme = %s\n", sc)
 
+    sc shouldBe
+      Forall(List(Star),
+        Qual(List(IsIn("Num", TGen(0))),
+          TAp(TAp(TCon(Tycon("(=>)", Kfun(Star, Kfun(Star, Star)))), TGen(0)), TCon(Tycon("Int", Star)))))
   }
 
   it should "toScheme" in {
     val ty = TVar(Tyvar("a", Star))
     val sc = toScheme(ty)
-    printf("scheme = %s\n", sc)
+
+    sc shouldBe
+      Forall(List(), Qual(List(), TVar(Tyvar("a", Star))))
+
   }
 }

@@ -4,13 +4,15 @@ import org.scalatest.Matchers._
 import thih._
 
 class KindSpec extends FlatSpec {
-  import thih.Kind._
-  it should "test" in {
-    val star = Kind.Star
-    val kfun1 = Kind.Kfun(Kind.Star, Kind.Star)
-    val kfun2 = Kind.Kfun(Kind.Star, Kind.Kfun(Kind.Star, Kind.Star))
-    val kfun3 = Kind.Kfun(Kind.Star, Kind.Kfun(Kind.Star, Kind.Kfun(Kind.Star, Kind.Star)))
-    val kfun4 = Kind.Kfun(Kind.Kfun(Kind.Star, Star), Kind.Kfun(Kind.Star, Star))
-    val kfun5 = Kind.Kfun(Kind.Star,Kind.Kfun(Kind.Kfun(Kind.Star, Star), Star))
+
+  import Kind._
+
+  it should "kind" in {
+    val star = Star
+    val kfun1 = Kfun(Star, Star)
+    val kfun2 = Kfun(Star, Kfun(Star, Star))
+    val kfun3 = Kfun(Star, Kfun(Star, Kfun(Star, Star)))
+    val kfun4 = Kfun(Kfun(Star, Star), Kfun(Star, Star))
+    val kfun5 = Kfun(Star, Kfun(Kfun(Star, Star), Star))
   }
 }

@@ -26,23 +26,26 @@ class TIMainSpec extends FlatSpec {
 
   it should "ambiguities" in {
     val tvs = List(Tyvar("a", Star))
-    val preds = List(IsIn("Num", tInt),IsIn("B", tInt))
+    val preds = List(IsIn("Num", tInt), IsIn("B", tInt))
     val ambs = ambiguities(tvs)(preds)
-    printf("ambs %s\n", ambs)
+
+    ambs shouldBe List()
   }
 
   it should "numClasses" in {
-    printf("numClasses = \n")
-    numClasses.foreach { id =>
-      printf("  %s\n", id)
-    }
+    numClasses shouldBe
+      List("Num", "Integral", "Floating", "Fractional", "Real", "RealFloat", "RealFrac")
+
+    numClasses.length shouldBe 7
   }
 
   it should "stdClasses" in {
-    printf("stdClasses = \n")
-    stdClasses.foreach { id =>
-      printf("  %s\n", id)
-    }
+    stdClasses shouldBe
+      List("Eq", "Ord", "Show", "Read", "Bounded", "Enum",
+        "Ix", "Functor", "Monad", "MonadPlus", "Num", "Integral",
+        "Floating", "Fractional", "Real", "RealFloat", "RealFrac")
+
+    stdClasses.length shouldBe 17
   }
 
   it should "test" in {
@@ -51,9 +54,9 @@ class TIMainSpec extends FlatSpec {
     printf("a ----\n")
     val amb = (tv, preds)
     printf("b ----\n")
-//    val ce = addNumClasses(initialEnv)
-//    printf("c ----\n")
-//    val ts = candidates(ce)(amb)
-//    printf("ts = %s\n", ts)
+    //    val ce = addNumClasses(initialEnv)
+    //    printf("c ----\n")
+    //    val ts = candidates(ce)(amb)
+    //    printf("ts = %s\n", ts)
   }
 }

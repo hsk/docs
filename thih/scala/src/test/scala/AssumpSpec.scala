@@ -9,48 +9,62 @@ class AssumpSpec extends FlatSpec {
   import Type._
   import Kind._
   import Assump._
+  import Pred._
+  import Subst._
 
   it should "assump" in {
     val t = TVar(Tyvar("a", Star))
-    val assump = Assump("ABC", Forall(List(),Pred.Qual(List(),t)))
-    printf("show %s\n", assump)
+    val assump = Assump("ABC", Forall(List(), Qual(List(), t)))
+
+    assump shouldBe
+      Assump("ABC", Forall(List(), Qual(List(), TVar(Tyvar("a", Star)))))
   }
 
   it should "assumpApply" in {
     val t = TVar(Tyvar("a", Star))
-    val assump = Assump("ABC", Forall(List(),Pred.Qual(List(),t)))
-    val subst:Subst.Subst = List((Tyvar("a", Star), tInt))
+    val assump = Assump("ABC", Forall(List(), Qual(List(), t)))
+    val subst: Subst = List((Tyvar("a", Star), tInt))
     val assump2 = assumpApply(subst)(assump)
-    printf("assumpApply %s\n", assump2)
+
+    assump2 shouldBe
+      Assump("ABC", Forall(List(), Qual(List(), TCon(Tycon("Int", Star)))))
   }
 
   it should "assumpTv" in {
     val t = TVar(Tyvar("a", Star))
-    val assump = Assump("ABC", Forall(List(),Pred.Qual(List(),t)))
+    val assump = Assump("ABC", Forall(List(), Qual(List(), t)))
     val tvs = assumpTv(assump)
-    printf("assumpTv %s\n", tvs)
+
+    tvs shouldBe
+      List(Tyvar("a", Star))
   }
-  
+
   it should "assumpsApply" in {
     val t = TVar(Tyvar("a", Star))
-    val assump = Assump("ABC", Forall(List(),Pred.Qual(List(),t)))
+    val assump = Assump("ABC", Forall(List(), Qual(List(), t)))
     val subst = List((Tyvar("a", Star), tInt))
     val assumps = assumpsApply(subst)(List(assump))
-    printf("show %s\n", assumps)
+
+    assumps shouldBe
+      List(Assump("ABC", Forall(List(), Qual(List(), TCon(Tycon("Int", Star))))))
   }
 
   it should "assumpsTv" in {
     val t = TVar(Tyvar("a", Star))
-    val assump = Assump("ABC", Forall(List(),Pred.Qual(List(),t)))
+    val assump = Assump("ABC", Forall(List(), Qual(List(), t)))
     val tvs = assumpsTv(List(assump))
-    printf("assumpsTv %s\n", tvs)
+
+    tvs shouldBe
+      List(Tyvar("a", Star))
   }
 
   it should "find" in {
     val t = TVar(Tyvar("a", Star))
-    val assump = Assump("ABC", Forall(List(),Pred.Qual(List(),t)))
+    val assump = Assump("ABC", Forall(List(), Qual(List(), t)))
     val sc = find("ABC")(List(assump))
-    printf("find %s\n", sc)
+
+    sc shouldBe
+      Forall(List(), Qual(List(), TVar(Tyvar("a", Star))))
   }
 
 }

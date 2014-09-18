@@ -6,12 +6,17 @@ import thih._
 class PatSpec extends FlatSpec {
   import TIMonad._
   import Pat._
+  import Type._
+  import Kind._
 
   it should "tiPat" in {
     runTI { ti =>
       val pat = PWildcard
       val (preds, assumps, ty) = tiPat(ti)(pat)
-      printf("tiPat %s %s %s\n", preds, assumps, ty)
+
+      preds shouldBe List()
+      assumps shouldBe List()
+      ty shouldBe TVar(Tyvar("v0", Star))
     }
   }
 }

@@ -3,56 +3,73 @@ package thih
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers._
 
-
 import thih._
 
 class TypeSpec extends FlatSpec {
-  import thih.Type._
+  import Type._
+  import Kind._
 
   it should "test" in {
 
-    def tes(t:Type.Type_, k:Kind.Kind,t2:Type.Type_) {
-      Type.typeKind(t) shouldBe k
+    def tes(t: Type_, k: Kind, t2: Type_) {
+      typeKind(t) shouldBe k
       t shouldBe t2
     }
-    tes(Type.tUnit, Kind.Star, TCon(Tycon("()",Kind.Star)))
-    tes(Type.tChar, Kind.Star, TCon(Tycon("Char",Kind.Star)))
-    tes(Type.tInt, Kind.Star, TCon(Tycon("Int", Kind.Star)))
-    tes(Type.tInteger, Kind.Star, TCon(Tycon("Integer", Kind.Star)))
-    tes(Type.tFloat, Kind.Star, TCon(Tycon("Float", Kind.Star)))
-    tes(Type.tDouble, Kind.Star, TCon(Tycon("Double", Kind.Star)))
-    tes(Type.tList, Kind.Kfun(Kind.Star, Kind.Star),
-      TCon(Tycon("List()",Kind.Kfun(Kind.Star,Kind.Star))))
+    // パラメータのない型
+    tes(tUnit, Star, TCon(Tycon("()", Star)))
+    tes(tChar, Star, TCon(Tycon("Char", Star)))
+    tes(tInt, Star, TCon(Tycon("Int", Star)))
+    tes(tInteger, Star, TCon(Tycon("Integer", Star)))
+    tes(tFloat, Star, TCon(Tycon("Float", Star)))
+    tes(tDouble, Star, TCon(Tycon("Double", Star)))
 
-    tes(Type.tArrow, Kind.Kfun(Kind.Star, Kind.Kfun(Kind.Star, Kind.Star)),
-      TCon(Tycon("(=>)",Kind.Kfun(Kind.Star,Kind.Kfun(Kind.Star, Kind.Star)))))
+    // List[T] のようなパラメータが１つある型
+    tes(tList, Kfun(Star, Star),
+      TCon(Tycon("List()", Kfun(Star, Star))))
 
-    tes(Type.tTuple2, Kind.Kfun(Kind.Star,Kind.Kfun(Kind.Star,Kind.Star)),
-      TCon(Tycon("(,)",Kind.Kfun(Kind.Star,Kind.Kfun(Kind.Star,Kind.Star)))))
+    // T=>F のようなパラメータが２つある型
+    tes(tArrow, Kfun(Star, Kfun(Star, Star)),
+      TCon(Tycon("(=>)", Kfun(Star, Kfun(Star, Star)))))
 
-    val fn_int_int = Type.fn(Type.tInt)(Type.tInt)
+    // カンマもT,Fみたいに２つのパラメータが必要
+    tes(tTuple2, Kfun(Star, Kfun(Star, Star)),
+      TCon(Tycon("(,)", Kfun(Star, Kfun(Star, Star)))))
 
-    tes(fn_int_int, Kind.Star,
+    // fn関数で２つの型をしていして関数の型を生成出来る
+    val fn_int_int = fn(tInt)(tInt)
+
+    // TApが2つある。
+    tes(fn_int_int, Star,
       TAp(TAp(TCon(Tycon("(=>)",
-        Kind.Kfun(Kind.Star,Kind.Kfun(Kind.Star,Kind.Star)))),
-      TCon(Tycon("Int",Kind.Star))),TCon(Tycon("Int",Kind.Star))))
+        Kfun(Star, Kfun(Star, Star)))),
+        TCon(Tycon("Int", Star))), TCon(Tycon("Int", Star))))
 
-    val list_int = Type.list(Type.tInt)
+    // １つの型を指定してリスト型を生成できる
+    val list_int = list(tInt)
 
-    tes(list_int, Kind.Star,
-      TAp(TCon(Tycon("List()",Kind.Kfun(Kind.Star,Kind.Star))),
-        TCon(Tycon("Int",Kind.Star))))
-    
-    tes(Type.tString,
-      Kind.Star,
-      TAp(TCon(Tycon("List()",Kind.Kfun(Kind.Star,Kind.Star))),
-        TCon(Tycon("Char",Kind.Star)))
-    )
+    // TApが1つある。
+    tes(list_int, Star,
+      TAp(TCon(Tycon("List()", Kfun(Star, Star))),
+        TCon(Tycon("Int", Star))))
 
-    val pair_int_char = Type.pair(Type.tInt)(Type.tChar)
-    tes(pair_int_char, Kind.Star,
-      TAp(TAp(TCon(Tycon("(,)",Kind.Kfun(Kind.Star,Kind.Kfun(Kind.Star,Kind.Star)))),
-        TCon(Tycon("Int",Kind.Star))),TCon(Tycon("Char",Kind.Star))))
+    // tStringはCharのリスト型だ。
+    // TApが1つある。
+    tes(tString,
+      Star,
+      TAp(TCon(Tycon("List()", Kfun(Star, Star))),
+        TCon(Tycon("Char", Star))))
+
+    // ペアは2つの型をもつのでTApが２つあると。
+    val pair_int_char = pair(tInt)(tChar)
+    tes(pair_int_char, Star,
+      TAp(TAp(TCon(Tycon("(,)", Kfun(Star, Kfun(Star, Star)))),
+        TCon(Tycon("Int", Star))), TCon(Tycon("Char", Star))))
+
+    val pair_int = TAp(TCon(Tycon("(,)", Kfun(Star, Kfun(Star, Star)))), TCon(Tycon("Int", Star)))
+
+    tes(pair_int, Kfun(Star, Star),
+      TAp(TCon(Tycon("(,)", Kfun(Star, Kfun(Star, Star)))),
+        TCon(Tycon("Int", Star))))
 
   }
 

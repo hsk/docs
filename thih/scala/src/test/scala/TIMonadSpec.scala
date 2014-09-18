@@ -16,21 +16,24 @@ class TIMonadSpec extends FlatSpec {
   it should "ti" in {
     val subst = List((Tyvar("a", Star), tInt))
     val ti = Ti(subst, 1)
-    printf("ti = %s\n", ti)
+
+    ti shouldBe Ti(List((Tyvar("a", Star), TCon(Tycon("Int", Star)))), 1)
   }
 
   it should "runTI" in {
-    val n = runTI {ti =>
+    val n = runTI { ti =>
       ti.n += 1
       ti.n
     }
-    printf("n = %d\n", n)
+
+    n shouldBe 1
   }
 
   it should "getSubst" in {
     runTI { ti =>
       val subst = getSubst(ti)
-      printf("subst=%s\n", subst)
+
+      subst shouldBe List()
     }
   }
   it should "extSubst" in {
@@ -38,7 +41,8 @@ class TIMonadSpec extends FlatSpec {
       val subst = List((Tyvar("a", Star), tInt))
       extSubst(ti)(subst)
       val subst2 = getSubst(ti)
-      printf("subst2=%s\n", subst2)
+
+      subst2 shouldBe List((Tyvar("a", Star), TCon(Tycon("Int", Star))))
     }
   }
 
@@ -46,14 +50,16 @@ class TIMonadSpec extends FlatSpec {
     runTI { ti =>
       val t1 = TVar(Tyvar("a", Star))
       unify(ti)(t1)(tInt)
-      printf("t1=%s\n", t1)
+
+      t1 shouldBe TVar(Tyvar("a", Star))
     }
   }
   it should "newTVar" in {
     runTI { ti =>
       val t1 = newTVar(ti)(Star)
       unify(ti)(t1)(tInt)
-      printf("t1=%s\n", t1)
+
+      t1 shouldBe TVar(Tyvar("v0", Star))
     }
 
   }
@@ -61,9 +67,11 @@ class TIMonadSpec extends FlatSpec {
     runTI { ti =>
       val ty = TVar(Tyvar("a", Star))
       val sc = toScheme(ty)
-      printf("scheme = %s\n", sc)
+
       val tq = freshInst(ti)(sc)
-      printf("freshInst = %s\n", tq)
+
+      sc shouldBe Forall(List(), Qual(List(), TVar(Tyvar("a", Star))))
+      tq shouldBe Qual(List(), TVar(Tyvar("a", Star)))
     }
   }
 }
