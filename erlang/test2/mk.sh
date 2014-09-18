@@ -1,3 +1,3 @@
-erlc server.erl
-erl -noshell -s server start
+erlc test2.erl
+erl -noshell -s test2 main -s init stop
 

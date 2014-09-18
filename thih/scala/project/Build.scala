@@ -16,11 +16,11 @@ object GitCommandTest extends Build{
     settings = Defaults.defaultSettings ++ Seq(
       commands ++= Seq(
         Command("git")(_ => gitCommandParser) {case (state, ( cmd , params ) ) =>
+          println(Seq("git",cmd,params.mkString).mkString(" "))
           Seq("git",cmd,params.mkString).mkString(" ") ! ;
           state
         }
       )
     )
   )
- 
 }
