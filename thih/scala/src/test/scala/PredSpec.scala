@@ -67,7 +67,6 @@ class PredSpec extends FlatSpec {
 
     val preds = List(IsIn("Num", TVar(Tyvar("a", Star))))
     val tvs = predsTv(preds)
-    printf("tvs = %s\n", tvs)
     tvs shouldBe List(Tyvar("a",Star))
   }
   it should "qualTypeApply" in {
@@ -75,9 +74,8 @@ class PredSpec extends FlatSpec {
     val ty = TVar(Tyvar("a", Star))
     val pred = IsIn("Num", ty)
     val q = Qual(List(pred), fn(ty)(tInt))
-    printf("qual = %s\n", q)
     val qual2 = qualTypeApply(Tyvar("a", Star) +-> tInt)(q)
-    printf("qual2 = %s\n", qual2)
+
     q shouldBe Qual(
       List(
         IsIn("Num",TVar(Tyvar("a",Star)))
@@ -152,20 +150,21 @@ class PredSpec extends FlatSpec {
   it should "modify" in {
     val b = modify(initialEnv)("ABC")(List("A"),
       List(List() :=> IsIn("Ord",tUnit)))
-    printf("modify b=%s\n",b)
-    //b.toString shouldBe "ClassEnv(<function1>,List(TCon(Tycon(Integer,Star)), TCon(Tycon(Double,Star))))"
+
+    b.defaults shouldBe
+    List(TCon(Tycon("Integer",Star)), TCon(Tycon("Double",Star)))
   }
   it should "super_" in {
     val b = modify(initialEnv)("ABC")(List("A"),
       List(List() :=> IsIn("Ord",tUnit)))
     val s = super_(b)("ABC")
-    printf("super_ s=%s\n",b)
-    //super_ s=ClassEnv(<function1>,List(TCon(Tycon(Integer,Star)), TCon(Tycon(Double,Star))))
+    s shouldBe List("A")
   }
   it should "insts" in {
     val b = modify(initialEnv)("ABC")(List("A"),
       List(List() :=> IsIn("Ord",tUnit)))
     val s = insts(b)("ABC")
+    s shouldBe List(Qual(List(),IsIn("Ord",TCon(Tycon("()",Star)))))
 
   }
   it should "defined" in {
@@ -177,10 +176,9 @@ class PredSpec extends FlatSpec {
   it should "addClass" in {
     val c1 :EnvTransformer = addClass("Eq")(List())
     val c1s = c1(initialEnv)
-    printf("addClass c1s %s\n", c1s)
 
-
-    // addClass c1s ClassEnv(<function1>,List(TCon(Tycon(Integer,Star)), TCon(Tycon(Double,Star))))
+    c1s.defaults shouldBe
+    List(TCon(Tycon("Integer",Star)), TCon(Tycon("Double",Star)))
 
   }
 
@@ -190,8 +188,9 @@ class PredSpec extends FlatSpec {
     val c3 :EnvTransformer = c1 <:> c2
     val c4 :EnvTransformer = addClass("Eq")(List()) <:>
                              addClass("Eq2")(List())
-    printf("<:> c4 %s\n", c4)
-    // <:> c4 <function1>
+
+    c4(initialEnv).defaults shouldBe
+    List(TCon(Tycon("Integer",Star)), TCon(Tycon("Double",Star)))
   }
 
   it should "overlap" in {
