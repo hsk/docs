@@ -109,11 +109,11 @@ Kindは型の種類を表すカインドを定義します。
 
 例)
 
-IntのKindは*です。
-CharのKindも*です。
-ListのKindは*->*で
-List[Char]のKindは*です。
-Function[A,B]a->b のKindは*->*->*で Int->IntのKindは*です。
+IntのKindは\*です。
+CharのKindも\*です。
+ListのKindは\*->\*で
+List\[Char\]のKindは\*です。
+Function\[A,B\]a->b のKindは\*->\*->\*で Int->IntのKindは\*です。
 
 ### Pred
 
