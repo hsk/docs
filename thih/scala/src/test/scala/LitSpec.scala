@@ -4,15 +4,14 @@ import org.scalatest.Matchers._
 import thih._
 
 class LitSpec extends FlatSpec {
-  it should "test" in {
-    "a" shouldBe "a"
-  }
+  import TIMonad._
+  import Lit._
 
-  it should "test1" in {
-    "a" shouldBe "a"
-  }
-
-  it should "test2" in {
-    "a" shouldBe "a"
+  it should "tiLit" in {
+    runTI { ti =>
+      val lit = LitInt(123)
+      val (preds,ty) = tiLit(ti)(lit)
+      printf("preds = %s ty = %s\n", preds, ty)
+    }
   }
 }
