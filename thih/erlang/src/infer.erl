@@ -1,4 +1,7 @@
-% // 11 Type Inference
+% 11 Type Inference
+-module(infer).
+-export([]).
+
 % object Infer {
 %   import Pred._
 %   import Assump._
