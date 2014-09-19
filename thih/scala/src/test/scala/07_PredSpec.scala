@@ -42,9 +42,9 @@ class PredSpec extends FlatSpec {
   }
 
   it should "predApply" in {
-    val s = List((Tyvar("a", Star), tInt))
+    val subst = List((Tyvar("a", Star), tInt))
     val pred = IsIn("Num", TVar(Tyvar("a", Star)))
-    val pred2 = predApply(s)(pred)
+    val pred2 = predApply(subst)(pred)
     pred2 shouldBe IsIn("Num", TCon(Tycon("Int", Star)))
 
   }
@@ -55,10 +55,11 @@ class PredSpec extends FlatSpec {
     tvs shouldBe List(Tyvar("a", Star))
 
   }
+
   it should "predsApply" in {
-    val s = List((Tyvar("a", Star), tInt))
+    val subst = List((Tyvar("a", Star), tInt))
     val preds = List(IsIn("Num", TVar(Tyvar("a", Star))))
-    val preds2 = predsApply(s)(preds)
+    val preds2 = predsApply(subst)(preds)
     preds2 shouldBe List(IsIn("Num", TCon(Tycon("Int", Star))))
 
   }
@@ -70,12 +71,13 @@ class PredSpec extends FlatSpec {
   }
   it should "qualTypeApply" in {
 
+    val subst = Tyvar("a", Star) +-> tInt
     val ty = TVar(Tyvar("a", Star))
     val pred = IsIn("Num", ty)
-    val q = Qual(List(pred), fn(ty)(tInt))
-    val qual2 = qualTypeApply(Tyvar("a", Star) +-> tInt)(q)
+    val qual = Qual(List(pred), fn(ty)(tInt))
+    val qual2 = qualTypeApply(subst)(qual)
 
-    q shouldBe Qual(
+    qual shouldBe Qual(
       List(
         IsIn("Num", TVar(Tyvar("a", Star)))),
       TAp(TAp(TCon(Tycon("(=>)", Kfun(Star, Kfun(Star, Star)))), TVar(Tyvar("a", Star))), TCon(Tycon("Int", Star))))
@@ -90,27 +92,41 @@ class PredSpec extends FlatSpec {
 
     val ty = TVar(Tyvar("a", Star))
     val pred = IsIn("Num", ty)
-    val q = Qual(List(pred), fn(ty)(tInt))
-    val tvs = qualTypeTv(q)
+    val qual = Qual(List(pred), fn(ty)(tInt))
+    val tvs = qualTypeTv(qual)
     tvs shouldBe List(Tyvar("a", Star))
 
   }
   it should "mguPred" in {
     val pred1 = IsIn("Num", TVar(Tyvar("a", Star)))
-    val pred2 = IsIn("Num", TVar(Tyvar("a", Star)))
-    val s = mguPred(pred1)(pred2)
-    s shouldBe List()
+    val pred2 = IsIn("Num", tInt)
+
+    val subst = mguPred(pred1)(pred2)
+    subst shouldBe
+      List((Tyvar("a",Star),TCon(Tycon("Int",Star))))
+
+    val subst2 = mguPred(pred1)(pred1)
+    subst2 shouldBe
+      List()
+
   }
   it should "matchPred" in {
     val pred1 = IsIn("Num", TVar(Tyvar("a", Star)))
-    val pred2 = IsIn("Num", TVar(Tyvar("a", Star)))
-    val s = matchPred(pred1)(pred2)
-    s shouldBe List((Tyvar("a", Star), TVar(Tyvar("a", Star))))
+    val pred2 = IsIn("Num", tInt)
+
+    val subst = matchPred(pred1)(pred2)
+    subst shouldBe List((Tyvar("a", Star), tInt))
+
+    val subst2 = matchPred(pred1)(pred1)
+    subst2 shouldBe List((Tyvar("a", Star), TVar(Tyvar("a", Star))))
   }
 
   it should "Inst" in {
     val inst = Qual(
-      List(IsIn("Ord", tUnit), IsIn("Ord", tChar)), IsIn("Ord", tChar))
+      List(
+        IsIn("Ord", tUnit),
+        IsIn("Ord", tChar)),
+      IsIn("Ord", tChar))
 
     inst shouldBe Qual(
       List(
@@ -137,52 +153,52 @@ class PredSpec extends FlatSpec {
   // 7.2 Class Environments
 
   it should "modify" in {
-    val b = modify(initialEnv)("ABC")(List("A"),
+    val ce: ClassEnv = modify(initialEnv)("ABC")(List("A"),
       List(List() :=> IsIn("Ord", tUnit)))
 
-    b.defaults shouldBe
+    ce.defaults shouldBe
       List(TCon(Tycon("Integer", Star)), TCon(Tycon("Double", Star)))
   }
   it should "super_" in {
-    val b = modify(initialEnv)("ABC")(List("A"),
+    val ce = modify(initialEnv)("ABC")(List("A"),
       List(List() :=> IsIn("Ord", tUnit)))
-    val s = super_(b)("ABC")
+    val s = super_(ce)("ABC")
     s shouldBe List("A")
   }
   it should "insts" in {
-    val b = modify(initialEnv)("ABC")(List("A"),
+    val ce = modify(initialEnv)("ABC")(List("A"),
       List(List() :=> IsIn("Ord", tUnit)))
-    val s = insts(b)("ABC")
+    val s = insts(ce)("ABC")
     s shouldBe List(Qual(List(), IsIn("Ord", TCon(Tycon("()", Star)))))
 
   }
   it should "defined" in {
-    val b = modify(initialEnv)("ABC")(List("A"),
+    val ce = modify(initialEnv)("ABC")(List("A"),
       List(List() :=> IsIn("Ord", tUnit)))
-    val s = defined(b)("ABC")
+    val s = defined(ce)("ABC")
     s shouldBe true
   }
   it should "addClass" in {
-    val c1: EnvTransformer = addClass("Eq")(List())
-    val c1s = c1(initialEnv)
+    val et: EnvTransformer = addClass("Eq")(List())
+    val ce = et(initialEnv)
 
-    c1s.defaults shouldBe
+    ce.defaults shouldBe
       List(TCon(Tycon("Integer", Star)), TCon(Tycon("Double", Star)))
 
   }
 
   it should "<:>" in {
-    val c1: EnvTransformer = addClass("Eq")(List())
-    val c2: EnvTransformer = addClass("Eq2")(List())
-    val c3: EnvTransformer = c1 <:> c2
+    val et1: EnvTransformer = addClass("Eq")(List())
+    val et2: EnvTransformer = addClass("Eq2")(List())
+    val et3: EnvTransformer = et1 <:> et2
 
-    c3(initialEnv).defaults shouldBe
+    et3(initialEnv).defaults shouldBe
       List(TCon(Tycon("Integer", Star)), TCon(Tycon("Double", Star)))
 
-    val c4: EnvTransformer = addClass("Eq")(List()) <:>
+    val et4: EnvTransformer = addClass("Eq")(List()) <:>
       addClass("Eq2")(List())
 
-    c4(initialEnv).defaults shouldBe
+    et4(initialEnv).defaults shouldBe
       List(TCon(Tycon("Integer", Star)), TCon(Tycon("Double", Star)))
   }
 

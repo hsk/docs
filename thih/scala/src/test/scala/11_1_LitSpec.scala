@@ -20,6 +20,14 @@ class LitSpec extends FlatSpec {
 
       ty shouldBe
         TVar(Tyvar("v0", Star))
+
+      val subst = getSubst(ti)
+      val ty2 = Subst.typeApply(subst)(ty)
+
+      ty2 shouldBe ty
+
+      subst shouldBe List()
+
     }
   }
 }

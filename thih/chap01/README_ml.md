@@ -147,6 +147,10 @@ todo:もっとかく
 
 Assumpでは前提条件とその操作
 
+AssumpはSchemeに名前を付けた物です。
+Schemeは1つしかなくて、名前もついていません。
+AssumpのリストとしてSchemeのリストを作る事で、複数のSchemeを名前から引く事が出来るようになります。
+
 todo:もっとかく
 
 ### TIMonad

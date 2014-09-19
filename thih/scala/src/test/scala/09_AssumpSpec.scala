@@ -46,7 +46,9 @@ class AssumpSpec extends FlatSpec {
     val assumps = assumpsApply(subst)(List(assump))
 
     assumps shouldBe
-      List(Assump("ABC", Forall(List(), Qual(List(), TCon(Tycon("Int", Star))))))
+      List(
+        Assump("ABC",
+          Forall(List(), Qual(List(), TCon(Tycon("Int", Star))))))
   }
 
   it should "assumpsTv" in {
@@ -61,7 +63,8 @@ class AssumpSpec extends FlatSpec {
   it should "find" in {
     val t = TVar(Tyvar("a", Star))
     val assump = Assump("ABC", Forall(List(), Qual(List(), t)))
-    val sc = find("ABC")(List(assump))
+    val assump2 = Assump("ABC2", Forall(List(), Qual(List(), tInt)))
+    val sc = find("ABC")(List(assump,assump2))
 
     sc shouldBe
       Forall(List(), Qual(List(), TVar(Tyvar("a", Star))))
