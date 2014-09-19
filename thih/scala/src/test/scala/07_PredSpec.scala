@@ -159,12 +159,14 @@ class PredSpec extends FlatSpec {
     ce.defaults shouldBe
       List(TCon(Tycon("Integer", Star)), TCon(Tycon("Double", Star)))
   }
+
   it should "super_" in {
     val ce = modify(initialEnv)("ABC")(List("A"),
       List(List() :=> IsIn("Ord", tUnit)))
     val s = super_(ce)("ABC")
     s shouldBe List("A")
   }
+
   it should "insts" in {
     val ce = modify(initialEnv)("ABC")(List("A"),
       List(List() :=> IsIn("Ord", tUnit)))
@@ -172,19 +174,20 @@ class PredSpec extends FlatSpec {
     s shouldBe List(Qual(List(), IsIn("Ord", TCon(Tycon("()", Star)))))
 
   }
+
   it should "defined" in {
     val ce = modify(initialEnv)("ABC")(List("A"),
       List(List() :=> IsIn("Ord", tUnit)))
     val s = defined(ce)("ABC")
     s shouldBe true
   }
+
   it should "addClass" in {
     val et: EnvTransformer = addClass("Eq")(List())
     val ce = et(initialEnv)
 
     ce.defaults shouldBe
       List(TCon(Tycon("Integer", Star)), TCon(Tycon("Double", Star)))
-
   }
 
   it should "<:>" in {

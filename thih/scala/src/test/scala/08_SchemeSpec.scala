@@ -17,7 +17,10 @@ class SchemeSpec extends FlatSpec {
     val sc = Forall(List(), Qual(List(pred), ty))
 
     sc shouldBe
-      Forall(List(), Qual(List(IsIn("Num", TVar(Tyvar("a", Star)))), TVar(Tyvar("a", Star))))
+      Forall(List(),
+        Qual(
+          List(IsIn("Num", TVar(Tyvar("a", Star)))),
+          TVar(Tyvar("a", Star))))
 
   }
 
@@ -29,7 +32,10 @@ class SchemeSpec extends FlatSpec {
     val sc1 = schemeApply(subst)(sc)
 
     sc1 shouldBe
-      Forall(List(), Qual(List(IsIn("Num", TCon(Tycon("Int", Star)))), TCon(Tycon("Int", Star))))
+      Forall(List(),
+        Qual(
+          List(IsIn("Num", TCon(Tycon("Int", Star)))),
+          TCon(Tycon("Int", Star))))
 
   }
 
@@ -54,7 +60,11 @@ class SchemeSpec extends FlatSpec {
     sc shouldBe
       Forall(List(Star),
         Qual(List(IsIn("Num", TGen(0))),
-          TAp(TAp(TCon(Tycon("(=>)", Kfun(Star, Kfun(Star, Star)))), TGen(0)), TCon(Tycon("Int", Star)))))
+          TAp(
+            TAp(
+              TCon(Tycon("(=>)", Kfun(Star, Kfun(Star, Star)))),
+              TGen(0)),
+            TCon(Tycon("Int", Star)))))
   }
 
   it should "toScheme" in {

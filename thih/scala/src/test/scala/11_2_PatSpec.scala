@@ -49,8 +49,6 @@ class PatSpec extends FlatSpec {
           Assump("a",Forall(List(),Qual(List(),TVar(Tyvar("v0",Star))))))
 
       ty shouldBe TVar(Tyvar("v0", Star))
-
-
     }
   }
 
