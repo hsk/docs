@@ -6,7 +6,7 @@
   typeTv/1,
   listApply/3,
   listTv/2,
-  atat/2,
+  '@@'/2,
   merge/2
 ]).
 
@@ -34,7 +34,7 @@ listApply(Apply, Subst, Xs) ->
 listTv(F, Xs) ->
   pre:nub(lists:flatten(lists:map(F, Xs))).
 
-atat(Subst1,Subst2) ->
+'@@'(Subst1,Subst2) ->
   lists:append(
     lists:map(fun(U,T) -> {U, typeApply(Subst1,T)} end,Subst2),
     Subst1).

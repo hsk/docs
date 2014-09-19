@@ -13,11 +13,11 @@ litChar(Char) -> {litInt, Char}.
 litRat(Double) -> {litInt, Double}.
 litStr(String) -> {litInt, String}.
 
-tiLit(Ti, {litChar, _}) -> {[],type:tChar()};
+tiLit(_, {litChar, _}) -> {[],type:tChar()};
 tiLit(Ti, {litInt, _}) ->
   V = type:newTVar(Ti, kind:star()),
   {[pred:isIn("Num", V)], V};
-tiLit(Ti, {litStr,_}) -> {[], type:tString()};
+tiLit(_, {litStr,_}) -> {[], type:tString()};
 tiLit(Ti, {litRat,_}) ->
   V = type:newTVar(Ti, kind:star()),
   {[pred:isIn("Fractional", V)], V}.

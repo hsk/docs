@@ -20,24 +20,24 @@ pcon(Assump, Pats) -> {pcon, Assump, Pats}.
 
 tiPat(Ti, {pvar, I}) ->
   T = timonad:newTVar(Ti,kind:star()),
-  {[], [assump:assump(I, toScheme(T))], T};
-tiPat(Ti, pwildcard) -> ([], [], timonad:newTVar(Ti,kind:star()));
+  {[], [assump:assump(I, scheme:toScheme(T))], T};
+tiPat(Ti, pwildcard) -> {[], [], timonad:newTVar(Ti,kind:star())};
 tiPat(Ti, {pas, I, Pat}) ->
   {Ps, As_, T} = tiPat(Ti, Pat),
   {Ps, [assump:assump(I, scheme:toScheme(T)) | As_], T};
 tiPat(Ti, {plit, L}) ->
   {Ps, T} = lit:tiLit(Ti, L),
   {Ps, [], T};
-tiPat(Ti, {pnpk, i, k}) ->
+tiPat(Ti, {pnpk, I, _}) ->
   T = type:newTVar(Ti, kind:star()),
   {[pred:isIn("Integral", T)], [assump:assump(I, scheme:toScheme(T))], T};
-tiPat(Ti, {pcon, {assump, I, Sc}, Pats}) ->
+tiPat(Ti, {pcon, {assump, _, Sc}, Pats}) ->
   {Ps, As_, Ts} = tiPats(Ti, Pats),
   T_ = timonad:newTVar(Ti, kind:star()),
   {qual, Qs, T} = timonad:freshInst(Ti, Sc),
-  timonad:unify(Ti, T, lists:foldr(fun(A, B)-> type:fn(A,B) end, T_, TS)),
+  timonad:unify(Ti, T, lists:foldr(fun(A, B)-> type:fn(A,B) end, T_, Ts)),
   {lists:append(Ps,Qs), As_, T_}.
 
 tiPats(Ti, Pats) ->
-  (Pss, Ass, Ts) = pre:split3(lists:map(fun(Pat)->tiPat(Ti,Pat)end,Pats)),
-  {lists:concat(Pss), lists:concat(Ass), Ts}
+  {Pss, Ass, Ts} = pre:split3(lists:map(fun(Pat)->tiPat(Ti,Pat)end,Pats)),
+  {lists:concat(Pss), lists:concat(Ass), Ts}.

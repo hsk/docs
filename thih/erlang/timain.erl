@@ -1,6 +1,27 @@
 -module(timain).
 -export([
-
+  ambiguities/2,
+  numClasses/0,
+  stdClasses/0,
+  candidates/2,
+  withDefaults/4,
+  defaultedPreds/3,
+  defaultSubst/3,
+  split/4,
+  var/1,
+  lit/1,
+  const/1,
+  ap/2,
+  let_/2,
+  restricted/1,
+  tiSeq/5,
+  tiExpr/4,
+  tiAlt/4,
+  tiAlts/5,
+  tiExpl/4,
+  tiImpls/4,
+  tiBindGroup/4,
+  tiProgram/3
 ]).
 % // 11.3 Expressions
 % // 11.4 Alternatives
@@ -24,7 +45,7 @@ ambiguities(Tyvars, Preds) ->
   Tyvars_ = pre:diff(pred:predsTv(Preds), Tyvars),
   lists:map(
     fun(V) ->
-      {V, lists:filter(fun(P)-> lists:member(V, predTv(P)) end, Preds) }
+      {V, lists:filter(fun(P)-> lists:member(V, pred:predTv(P)) end, Preds) }
     end,
     Tyvars_).
 
@@ -49,7 +70,7 @@ candidates(ClassEnv, Ambiguity) ->
       lists:filter(
         fun(T_)->
           lists:forall(
-            fun(I)-> entail(ClassEnv,[],I)end,
+            fun(I)-> pred:entail(ClassEnv,[],I)end,
             lists:map(fun(I)->pred:isin(I, T_)end, Is)
           )
         end,
@@ -61,14 +82,14 @@ candidates(ClassEnv, Ambiguity) ->
 withDefaults(F, ClassEnv, Tyvars, Preds) ->
   Vps = ambiguities(Tyvars, Preds),
   Tss = lists:map(fun(Vp)->candidates(ClassEnv,Vp)end, Vps),
-  case (Tss.exists(fun pre:isEmpty/1)) of
+  case lists:any(fun pre:isEmpty/1, Tss) of
     true -> throw("cannot resolve ambiguity");
-    false -> F(Vps, lists:map(fun lists:hd/1, Tss)
+    false -> F(Vps, lists:map(fun lists:hd/1, Tss))
   end.
 
 defaultedPreds(ClassEnv, Tyvars, Preds) ->
   withDefaults(
-    fun(Vps,Ts)->
+    fun(Vps,_)->
       lists:map(
         fun(Vp)->lists:concat(element(2,Vp))end,
         Vps
@@ -77,21 +98,28 @@ defaultedPreds(ClassEnv, Tyvars, Preds) ->
     ClassEnv, Tyvars, Preds
   ).
 
-defaultSubst(ClassEnv, Tyvars Preds) ->
+defaultSubst(ClassEnv, Tyvars, Preds) ->
   withDefaults(
     fun(Vps,Ts) ->
-      vps.map { _._1 }.zip(Ts)
+      lists:zip(
+        lists:map(
+          fun(Vp)->element(1,Vp) end,
+          Vps
+        ),
+        Ts
+      )
     end,
     ClassEnv, Tyvars, Preds
   ).
 
 split(ClassEnv, Tyvars, Tyvars2, Preds) ->
-  Ps_ = reduce(ClassEnv, Preds),
+  Ps_ = pred:reduce(ClassEnv, Preds),
   {Ds, Rs} =
-    Ps_.partition(
+    lists:partition(
       fun(P)->
-        lists:forall(fun(I)-> lists:member(I,Tyvars) end, predTv(P))
-      end
+        lists:forall(fun(I)-> lists:member(I,Tyvars) end, pred:predTv(P))
+      end,
+      Ps_
     ),
   Rs_ = defaultedPreds(ClassEnv, lists:append(Tyvars, Tyvars2), Rs),
   {Ds, pre:diff(Rs, Rs_)}.
@@ -129,7 +157,7 @@ tiSeq(F, Ti, ClassEnv, Assumps, BGs) ->
   case BGs of
     [] -> {[], []};
     [Bs | Bss] ->
-      {Ps, Assumps2} = f(Ti, ClassEnv, Assumps, Bs),
+      {Ps, Assumps2} = F(Ti, ClassEnv, Assumps, Bs),
       {Qs, Assumps_} =
         tiSeq(F, Ti, ClassEnv, lists:append(Assumps2, Assumps), Bss),
       {lists:append(Ps, Qs), lists:append(Assumps_, Assumps2)}
@@ -139,18 +167,18 @@ tiExpr(Ti, ClassEnv, Assumps, Expr) ->
   case Expr of
     {var,I} ->
       Sc = assump:find(I, Assumps),
-      {qual, Ps, T} = freshInst(Ti, Sc),
+      {qual, Ps, T} = timonad:freshInst(Ti, Sc),
       {Ps, T};
     {const,{assump, _, Sc}} ->
-      {qual, Ps, T} = freshInst(Ti, Sc),
+      {qual, Ps, T} = timonad:freshInst(Ti, Sc),
       {Ps, T};
-    {lit, L} -> tiLit(Ti, L);
+    {lit, L} -> lit:tiLit(Ti, L);
     {ap, E, F} ->
       {Ps, Te} = tiExpr(Ti, ClassEnv, Assumps, E),
       {Qs, Tf} = tiExpr(Ti, ClassEnv, Assumps, F),
       T = type:newTVar(Ti, kind:star()),
-      unify(Ti, type:fn(Tf, T), Te),
-      {lists:append(Ps, Qs), T}
+      timonad:unify(Ti, type:fn(Tf, T), Te),
+      {lists:append(Ps, Qs), T};
     {let_,Bg, E} ->
       {Ps, As2} = tiBindGroup(Ti, ClassEnv, Assumps, Bg),
       {Qs, T} = tiExpr(Ti, ClassEnv, lists:append(As2, Assumps), E),
@@ -159,19 +187,19 @@ tiExpr(Ti, ClassEnv, Assumps, Expr) ->
     % case Lam(alt) => tiAlt(ti, ClassEnv, as_)alt
     % case If(e, e1, e2) =>
     %   def (ps,t) = tiExpr(ti, ClassEnv, as_)e in
-    %   unify(ti)t tBool;
+    %   timonad:unify(ti)t tBool;
     %   def (ps1,t1) = tiExpr(ti, ClassEnv, as_)e1 in
     %   def (ps2,t2) = tiExpr(ti, ClassEnv, as_)e2 in
-    %   unify(ti)t1 t2;
+    %   timonad:unify(ti)t1 t2;
     %   (ps @ ps1 @ ps2, t1)
     % case Case(e, branches) =>
     % def (ps, t) = tiExpr(ti, ClassEnv, as_)e in
     % def v = newTVar Star in
     % def tiBr (pat, f) =
     %   def (ps, _as',t') = tiPat pat in
-    %   unify t t';
+    %   timonad:unify t t';
     %   def (qs, t'') = tiExpr (ClassEnv, _as' @ _as) f in
-    %   unify v t'';
+    %   timonad:unify v t'';
     %   (ps @ qs)
     % in
     % def pss = mapM tiBr branches in
@@ -179,9 +207,9 @@ tiExpr(Ti, ClassEnv, Assumps, Expr) ->
     
   end.
 
-tiAlt(Ti, ClassEnv: ClassEnv, Assumps, Alt) ->
+tiAlt(Ti, ClassEnv, Assumps, Alt) ->
   {Pats, E} = Alt,
-  {Ps, As1, Ts} = tiPats(Ti, Pats),
+  {Ps, As1, Ts} = pat:tiPats(Ti, Pats),
   {Qs, T} = tiExpr(Ti, ClassEnv, lists:append(As1, Assumps), E),
   {
     lists:append(Ps, Qs),
@@ -192,34 +220,44 @@ tiAlt(Ti, ClassEnv: ClassEnv, Assumps, Alt) ->
     )
   }.
 
-tiAlts(Ti, ce: ClassEnv, as_ : Assumps, Alts, t: Type) ->
-  {Ps, Ts} = lists:map(
-    fun(Alt)->tiAlt(Ti, ClassEnv, Assumps,Alt) end,
-    Alts).unzip,
-  Ts.foreach { unify(Ti, T) },
+tiAlts(Ti, ClassEnv, Assumps, Alts, Type) ->
+  {Ps, Ts} = 
+    lists:unzip(
+      lists:map(
+        fun(Alt)->tiAlt(Ti, ClassEnv, Assumps,Alt) end,
+        Alts
+      )
+    ),
+  lists:foreach(
+    fun(T)->timonad:unify(Ti,Type,T)end,
+    Ts
+  ),
   lists:concat(Ps).
 
 tiExpl(Ti, ClassEnv, Assumps, Expl) ->
  
-  {i, sc, alts} = Expl,
-  Qual(qs, t) = freshInst(ti, sc),
-  ps = tiAlts(ti, ClassEnv, Assumps, alts, t),
-  s = getSubst(ti),
-  qs2 = predsApply(s, qs),
-  t2 = typeApply(s, t),
-  fs = assump:assumpsTv(assump:assumpsApply(s, Assumps)),
-  gs = Pre.diff(typeTv(t2), fs),
-  sc2 = quantify(gs, Qual(qs2, t2)),
-  Ps_ = predsApply(s, ps).filter { p => not entail(ClassEnv, qs2, p) },
-  {Ds, Rs} = split(ClassEnv, fs, gs, ps_),
-  if (Sc /= Sc2) throw("signature too general") end,
+  {_, Sc, Alts} = Expl,
+  {qual, Qs, T} = timonad:freshInst(Ti, Sc),
+  Ps = tiAlts(Ti, ClassEnv, Assumps, Alts, T),
+  S = timonad:getSubst(Ti),
+  Qs2 = pred:predsApply(S, Qs),
+  T2 = subst:typeApply(S, T),
+  Fs = assump:assumpsTv(assump:assumpsApply(S, Assumps)),
+  Gs = pre:diff(subst:typeTv(T2), Fs),
+  Sc2 = scheme:quantify(Gs, pred:qual(Qs2, T2)),
+  Ps_ = lists:filter(
+    fun(P)-> not pred:entail(ClassEnv, Qs2, P) end,
+    pred:predsApply(S, Ps)
+  ),
+  {Ds, Rs} = split(ClassEnv, Fs, Gs, Ps_),
+  if (Sc /= Sc2) -> throw("signature too general") end,
   case (not pre:isEmpty(Rs)) of
     true -> throw("context too weak");
     _ -> Ds
   end.
  
 tiImpls(Ti, ClassEnv, Assumps, Impls) ->
-  Ts = lists:map(fun(I) -> type:newTVar(ti, Star, I) end, Impls),
+  Ts = lists:map(fun(I) -> type:newTVar(Ti, kind:star(), I) end, Impls),
   {Is, Altss} = lists:unzip(Impls),
   Scs = lists:map(fun scheme:toScheme/1, Ts),
   As1 = lists:append(
@@ -233,11 +271,11 @@ tiImpls(Ti, ClassEnv, Assumps, Impls) ->
     fun({A, B}) -> tiAlts(Ti, ClassEnv, As1, A, B) end,
     lists:zip(Altss, Ts)
   ),
-  S = getSubst(Ti),
-  Ps_ = lists:map(fun(I)->predApply(S,I)end ,lists:concat(Pss)),
-  Ts2 = lists:map(fun(I)->typeApply(S,I) end, Ts),
+  S = timonad:getSubst(Ti),
+  Ps_ = lists:map(fun(I)->pred:predApply(S,I)end ,lists:concat(Pss)),
+  Ts2 = lists:map(fun(I)->subst:typeApply(S,I) end, Ts),
   Fs = assump:assumpsTv(assump:assumpsApply(S, Assumps)),
-  Vss = lists:map(fun typeTv/1, Ts2),
+  Vss = lists:map(fun subst:typeTv/1, Ts2),
   Vss2 = pre:fold_left1(
     fun(A, B) -> pre:union(A, B) end,
     Vss
@@ -253,36 +291,53 @@ tiImpls(Ti, ClassEnv, Assumps, Impls) ->
 
   case restricted(Impls) of
     true ->
-      gs2 = Pre.diff(gs, predsTv(rs)),
-      scs2 = ts2.map { t => quantify(gs2, Qual(List(), t)) },
+      Gs2 = pre:diff(Gs, pred:predsTv(Rs)),
+      Scs2 = lists:map(fun(T)-> scheme:quantify(Gs2, pred:qual([], T)) end, Ts2),
       {
-        ds ::: rs,
-        is.zip(scs2).map { case (i, sc) => Assump.Assump(i, sc) }
+        lists:append(Ds, Rs),
+        lists:map(
+          fun(I, Sc) -> assump:assump(I, Sc) end,
+          lists:zip(Is, Scs2)
+        )
       };
     false ->
-      scs1 = ts2.map { t => quantify(gs, Qual(rs, t)) },
+      Scs1 = lists:map(
+        fun(T)->scheme:quantify(Gs, pred:qual(Rs, T)) end,
+        Ts2
+      ),
       {
-        ds,
-        is.zip(scs1).map { case (i, sc) => Assump.Assump(i, sc) }
+        Ds,
+        list:map(
+         fun(I, Sc) -> assump:assump(I, Sc) end,
+         list:zip(Is,Scs1)
+        )
       }
   end.
  
 tiBindGroup(Ti, ClassEnv, Assumps, BindGroup) ->
     {Es, Iss} = BindGroup,
-    As1 = Es.map { case (V, Sc, _) => assump:assump(V, Sc) },
-    {Ps, As2} = tiSeq(fun tiImpls/2, Ti, ClassEnv, As1 ::: Assumps, Iss),
-    Qss = Es.map { tiExpl(Ti, ClassEnv, As2 ::: As1 ::: Assumps) },
-    {Ps ::: (Qss.flatten), As2 ::: As1}
+    As1 = lists:map(
+      fun(V, Sc, _) -> assump:assump(V, Sc) end,
+      Es
+    ),
+    {Ps, As2} = tiSeq(
+      fun tiImpls/4, Ti, ClassEnv, lists:append(As1, Assumps), Iss
+    ),
+    Qss = lists:map(
+      fun(I)-> tiExpl(Ti, ClassEnv, lists:append([As2, As1, Assumps]), I) end,
+      Es
+    ),
+    {lists:append(Ps, lists:concat(Qss)), lists:append(As2, As1)}.
 
 %   type Program = List[BindGroup]
  
 tiProgram(ClassEnv, Assumps, Program) ->
-  runTI(
+  timonad:runTI(
     fun(Ti)->
-      {Ps, As2} = tiSeq(fun tiBindGroup/5, Ti, ClassEnv, Assumps, Program),
-      S = getSubst(Ti),
-      Rs = reduce(ClassEnv, predsApply(S, Ps)),
+      {Ps, As2} = tiSeq(fun tiBindGroup/4, Ti, ClassEnv, Assumps, Program),
+      S = timonad:getSubst(Ti),
+      Rs = pred:reduce(ClassEnv, pred:predsApply(S, Ps)),
       S2 = defaultSubst(ClassEnv, [], Rs),
-      assump:assumpsApply(atat(S2, S), As2)
+      assump:assumpsApply(subst:'@@'(S2, S), As2)
     end
   ).

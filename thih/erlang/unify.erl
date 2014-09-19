@@ -5,7 +5,7 @@
 mgu({tap,L,R}, {tap,L_,R_}) ->
   S1 = mgu(L, L_),
   S2 = mgu(subst:typeApply(S1, R), subst:typeApply(S1, R_)),
-  subst:atat(S2, S1);
+  subst:'@@'(S2, S1);
 mgu({tvar,U}, Type) -> varBind(U, Type);
 mgu(Type, {tvar,U}) -> varBind(U, Type);
 mgu({tcon,Tc1}, {tcon,Tc2}) when Tc1 == Tc2 -> subst:nullSubst();
@@ -17,7 +17,7 @@ varBind(Tyvar, Type) ->
     true -> {ng}
   end,
 
-  Occurs = lists:member(Tyvar, type:typeTv(Type)),
+  Occurs = lists:member(Tyvar, subst:typeTv(Type)),
   if Occurs -> throw("occurs check fails") end,
   KindCheck = (type:tyvarKind(Tyvar) /= type:typeKind(Type)),
   if KindCheck -> throw("kinds do not match") end,
