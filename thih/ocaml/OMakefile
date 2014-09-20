@@ -1,0 +1,26 @@
+.PHONY: all install clean test
+
+USE_OCAMLFIND = true
+
+OCAMLPACKS[] =
+    oUnit
+
+# OCamlGeneratedFiles(parser.ml lexer.ml)
+
+FILES[] =
+    thih
+PROGRAM = thih
+
+.DEFAULT: $(OCamlProgram $(PROGRAM), $(FILES))
+  ./$(PROGRAM)
+
+PROGRAM2 = test
+FILES2[] =
+    test01_pre
+    test02_id
+
+test: $(OCamlProgram $(PROGRAM2), $(FILES2) $(FILES))
+  ./$(PROGRAM2)
+
+clean:
+  rm -rf .omakedb* *.cache *.omc *.o *.cm* $(PROGRAM) $(PROGRAM2) *.opt
