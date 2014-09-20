@@ -33,12 +33,12 @@ fold_left1_test() ->
     end,
     A
   ),
-  55 = B.
+  B = 55.
 
 deleteFirst_test() ->
   A = [1, 2, 3, 4, 3, 4, 5],
   B = pre:deleteFirst(3, A),
-  [1, 2, 4, 3, 4, 5] = B.
+  B = [1, 2, 4, 3, 4, 5].
 
 diff_test() ->
   A = [1, 2, 3, 4],

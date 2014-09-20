@@ -19,5 +19,5 @@ tiLit(Ti, {litInt, _}) ->
   {[pred:isin("Num", V)], V};
 tiLit(_, {litStr,_}) -> {[], type:tString()};
 tiLit(Ti, {litRat,_}) ->
-  V = type:newTVar(Ti, kind:star()),
+  V = timonad:newTVar(Ti, kind:star()),
   {[pred:isin("Fractional", V)], V}.

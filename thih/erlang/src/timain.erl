@@ -61,15 +61,15 @@ candidates(ClassEnv, Ambiguity) ->
   {V, Qs} = Ambiguity,
   Is = lists:map(fun({isin,I,_}) -> I end, Qs),
   Ts = lists:map(fun({isin,_,T}) -> T end, Qs),
-  case lists:forall(fun(T)-> T == type:tvar(V) end, Ts) and
+  case lists:all(fun(T)-> T == type:tvar(V) end, Ts) and
     lists:any(fun(I)-> lists:member(I, numClasses) end, Is) and
-    lists:forall(fun(I)-> lists:member(I, stdClasses) end, Is) of
+    lists:all(fun(I)-> lists:member(I, stdClasses) end, Is) of
 
     true ->
       {classEnv, _, Defaults} = ClassEnv,
       lists:filter(
         fun(T_)->
-          lists:forall(
+          lists:all(
             fun(I)-> pred:entail(ClassEnv,[],I)end,
             lists:map(fun(I)->pred:isin(I, T_)end, Is)
           )
@@ -84,7 +84,7 @@ withDefaults(F, ClassEnv, Tyvars, Preds) ->
   Tss = lists:map(fun(Vp)->candidates(ClassEnv,Vp)end, Vps),
   case lists:any(fun pre:isEmpty/1, Tss) of
     true -> throw("cannot resolve ambiguity");
-    false -> F(Vps, lists:map(fun lists:hd/1, Tss))
+    false -> F(Vps, lists:map(fun hd/1, Tss))
   end.
 
 defaultedPreds(ClassEnv, Tyvars, Preds) ->
@@ -117,7 +117,7 @@ split(ClassEnv, Tyvars, Tyvars2, Preds) ->
   {Ds, Rs} =
     lists:partition(
       fun(P)->
-        lists:forall(fun(I)-> lists:member(I,Tyvars) end, pred:predTv(P))
+        lists:all(fun(I)-> lists:member(I,Tyvars) end, pred:predTv(P))
       end,
       Ps_
     ),
@@ -176,7 +176,7 @@ tiExpr(Ti, ClassEnv, Assumps, Expr) ->
     {ap, E, F} ->
       {Ps, Te} = tiExpr(Ti, ClassEnv, Assumps, E),
       {Qs, Tf} = tiExpr(Ti, ClassEnv, Assumps, F),
-      T = type:newTVar(Ti, kind:star()),
+      T = timonad:newTVar(Ti, kind:star()),
       timonad:unify(Ti, type:fn(Tf, T), Te),
       {lists:append(Ps, Qs), T};
     {let_,Bg, E} ->
@@ -257,7 +257,7 @@ tiExpl(Ti, ClassEnv, Assumps, Expl) ->
   end.
  
 tiImpls(Ti, ClassEnv, Assumps, Impls) ->
-  Ts = lists:map(fun(I) -> type:newTVar(Ti, kind:star(), I) end, Impls),
+  Ts = lists:map(fun(_) -> timonad:newTVar(Ti, kind:star()) end, Impls),
   {Is, Altss} = lists:unzip(Impls),
   Scs = lists:map(fun scheme:toScheme/1, Ts),
   As1 = lists:append(
@@ -307,9 +307,9 @@ tiImpls(Ti, ClassEnv, Assumps, Impls) ->
       ),
       {
         Ds,
-        list:map(
+        lists:map(
          fun(I, Sc) -> assump:assump(I, Sc) end,
-         list:zip(Is,Scs1)
+         lists:zip(Is,Scs1)
         )
       }
   end.

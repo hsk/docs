@@ -249,7 +249,7 @@ entail(ClassEnv, Preds, Pred) ->
   lists:any(fun(L) -> lists:member(Pred, L) end, Preds2) or
     case byInst(ClassEnv, Pred) of
       {ok, QS} ->
-        lists:forall(fun(P) -> entail(ClassEnv, Preds, P) end, QS);
+        lists:all(fun(P) -> entail(ClassEnv, Preds, P) end, QS);
       _ -> false
     end.
 
