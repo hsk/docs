@@ -28,7 +28,7 @@ quantify(Tyvars,QualType) ->
     pred:qualTypeTv(QualType)),
   Ks = lists:map(fun type:tyvarKind/1,Tyvars_),
   {S,_} = lists:foldl(
-    fun ({Gens,Count}, Tyvar) ->
+    fun (Tyvar, {Gens,Count}) ->
       T = type:tgen(Count),
       {[{Tyvar, T}|Gens], Count + 1}
     end,

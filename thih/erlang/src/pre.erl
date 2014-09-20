@@ -4,6 +4,7 @@
   intersect/2,
   nub/1,
   isEmpty/1,
+  fold_left/3,
   fold_left1/2,
   deleteFirst/2,
   diff/2,
@@ -40,10 +41,13 @@ nub(Xs) -> lists:foldl(fun(X,Ys) ->
 isEmpty([]) -> true;
 isEmpty(_) -> false.
 
+fold_left(_,A,[]) -> A;
+fold_left(F,A,[X|Xs]) -> fold_left(F,F(A,X),Xs).
+
 % reduceじゃないのかな
 fold_left1(_, []) -> throw("empty list");
 fold_left1(_, [X]) -> X;
-fold_left1(F, [X|Xs]) -> lists:foldl(F,X,Xs).
+fold_left1(F, [X|Xs]) -> fold_left(F,X,Xs).
 
 % リスト内の最初の1個目のxを削除する
 deleteFirst(_,[]) -> [];

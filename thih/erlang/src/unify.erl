@@ -12,30 +12,25 @@ mgu({tcon,Tc1}, {tcon,Tc2}) when Tc1 == Tc2 -> subst:nullSubst();
 mgu(_, _) -> throw("types do not unify").
 
 varBind(Tyvar, Type) ->
-  Subst = if
-    Type == {tvar,Tyvar} -> {ok,subst:nullSubst()};
-    true -> {ng}
-  end,
-
-  Occurs = lists:member(Tyvar, subst:typeTv(Type)),
-  if Occurs -> throw("occurs check fails") end,
-  KindCheck = (type:tyvarKind(Tyvar) /= type:typeKind(Type)),
-  if KindCheck -> throw("kinds do not match") end,
-  case Subst of
-  	{ok,V} -> V;
-  	{ng} -> type:tyvar_append(Tyvar, Type)
-  end
-  .
+  case Type == {tvar,Tyvar} of
+    true -> subst:nullSubst();
+    false ->
+      case lists:member(Tyvar, subst:typeTv(Type)) of
+        true -> throw("occurs check fails");
+        false -> o
+      end,
+      case type:tyvarKind(Tyvar) /= type:typeKind(Type) of
+        true -> throw("kinds do not match");
+        false -> type:tyvar_append(Tyvar, Type)
+      end
+  end.
 
 match({tap, L, R}, {tap, L_, R_}) ->
-  Sl = match(L,L_),
-  Sr = match(R,R_),
-  subst:merge(Sl, Sr);
+  subst:merge(match(L,L_), match(R,R_));
 match({tvar,U}, T) ->
-  Ck = (type:tyvarKind(U) == type:typeKind(T)),
-  if
-  	Ck -> type:tyvar_append(U,T);
-  	true -> throw("types do not match")
+  case type:tyvarKind(U) == type:typeKind(T) of
+  	true -> type:tyvar_append(U,T);
+  	false -> throw("types do not match")
   end;
 match({tcon,Tc1}, {tcon,Tc2}) when(Tc1 == Tc2) -> subst:nullSubst();
 match(_,_) -> throw("types do not match").

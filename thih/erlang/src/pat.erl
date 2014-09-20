@@ -29,8 +29,8 @@ tiPat(Ti, {plit, L}) ->
   {Ps, T} = lit:tiLit(Ti, L),
   {Ps, [], T};
 tiPat(Ti, {pnpk, I, _}) ->
-  T = type:newTVar(Ti, kind:star()),
-  {[pred:isIn("Integral", T)], [assump:assump(I, scheme:toScheme(T))], T};
+  T = timonad:newTVar(Ti, kind:star()),
+  {[pred:isin("Integral", T)], [assump:assump(I, scheme:toScheme(T))], T};
 tiPat(Ti, {pcon, {assump, _, Sc}, Pats}) ->
   {Ps, As_, Ts} = tiPats(Ti, Pats),
   T_ = timonad:newTVar(Ti, kind:star()),

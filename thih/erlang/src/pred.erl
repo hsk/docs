@@ -13,12 +13,14 @@
   mguPred/2,
   matchPred/2,
   classEnv/2,
+  ':=>'/2,
   arrow/2,
   super/2,
   insts/2,
   defined/2,
   modify/3,
   initialEnv/0,
+  '<:>'/2,
   addEnv/2,
   addClass/2,
   addCoreClasses/0,
@@ -86,6 +88,7 @@ matchPred(Pred, Pred2) ->
 classEnv(Id2Class,Types) -> {classEnv, Id2Class, Types}.
 
 % :=>
+':=>'(Preds, T) -> qual(Preds, T).
 arrow(Preds, T) -> qual(Preds, T).
 
 super({classEnv,Classes,_}, Id) -> element(1, Classes(Id)).
@@ -120,6 +123,8 @@ initialEnv() ->
 %  type EnvTransformer = ClassEnv => ClassEnv
 
 % <:>
+'<:>'(F,G) -> addEnv(F,G).
+
 addEnv(F,G) ->
   fun (ClassEnv) -> 
     G(F(ClassEnv))
@@ -127,22 +132,21 @@ addEnv(F,G) ->
 
 addClass(Id, Ids) ->
   fun (ClassEnv) ->
-    Ck = defined(ClassEnv, Id),  
-    if
-    	Ck -> throw("class already defined")
-    end,
-    Ck2 = lists:any(
-      fun(I) -> not defined(ClassEnv, I) end,
-    	Ids
-    ),
-    if
-    	Ck2 -> throw("superclass not defined")
-    end,
-    modify(ClassEnv, Id, {Ids, []})
+    case defined(ClassEnv, Id) of
+    	true -> throw("class already defined");
+      false ->
+        case lists:any(
+          fun(I) -> not defined(ClassEnv, I) end,
+          Ids
+        ) of
+          true -> throw("superclass not defined");
+          false -> modify(ClassEnv, Id, {Ids, []})
+        end
+    end
   end.
 
 addCoreClasses() ->
-  pre:fold_left1(addEnv, [
+  pre:fold_left1(fun addEnv/2, [
     addClass("Eq", []),
     addClass("Ord",["Eq"]),
     addClass("Show",[]),
@@ -154,7 +158,7 @@ addCoreClasses() ->
   ]).
 
 addNumClasses() ->
-  pre:fold_left1(addEnv, [
+  pre:fold_left1(fun addEnv/2, [
     addClass("Num",["Eq", "Show"]),
     addClass("Real",["Num", "Ord"]),
     addClass("Fractional",["Num"]),
@@ -165,7 +169,7 @@ addNumClasses() ->
   ]).
 
 addPreludeClasses() ->
-  addEnv(addCoreClasses, addNumClasses).
+  addEnv(addCoreClasses(), addNumClasses()).
 
 overlap(Pred1, Pred2) ->
   try mguPred(Pred1, Pred2) of
@@ -193,21 +197,24 @@ addInst(Preds, Pred) ->
   end.
 
 exampleInsts() ->
-  pre:fold_left1([
-    addPreludeClasses(),
-    addInst([],{isin, "Ord", type:tUnit()}),
-    addInst([],{isin, "Ord", type:tChar()}),
-    addInst([],{isin, "Ord", type:tInt()}),
-    addInst(
-      [
-        {isin, "Ord", type:tvar(type:tyvar("a", kind:star()))},
-        {isin, "Ord", type:tvar(type:tyvar("b", kind:star()))}
-      ],
-      {isin, "Ord",
-        type:pair(
-        	type:tvar(type:tyvar("a", kind:star())),
-          type:tvar(type:tyvar("b", kind:star())))})
-  ]).
+  pre:fold_left1(
+    fun '<:>'/2,
+    [
+      addPreludeClasses(),
+      addInst([],{isin, "Ord", type:tUnit()}),
+      addInst([],{isin, "Ord", type:tChar()}),
+      addInst([],{isin, "Ord", type:tInt()}),
+      addInst(
+        [
+          {isin, "Ord", type:tvar(type:tyvar("a", kind:star()))},
+          {isin, "Ord", type:tvar(type:tyvar("b", kind:star()))}
+        ],
+        {isin, "Ord",
+          type:pair(
+          	type:tvar(type:tyvar("a", kind:star())),
+            type:tvar(type:tyvar("b", kind:star())))})
+    ]
+  ).
 
 % 7.3 Entailment
 
@@ -290,6 +297,6 @@ scEntail(ClassEnv, Preds, Pred) ->
     Preds
   ),
   lists:any(
-    fun (P1)-> list:member(Pred, P1) end,
+    fun (P1)-> lists:member(Pred, P1) end,
     Ls
   ).

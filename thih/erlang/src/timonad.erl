@@ -11,7 +11,9 @@
   listInst/3,
   predInst/2,
   qualTypeInst/2,
-  freshInst/2
+  freshInst/2,
+  get/2,
+  set/3
 ]).
 
 % import Kind._
@@ -21,7 +23,9 @@
 % import Scheme._
 
 set(Ti,K,V) -> ets:insert(Ti, {K, V}).
-get(Ti,K) -> ets:lookup(Ti, K).
+get(Ti,K) ->
+  [{K,V}] = ets:lookup(Ti, K),
+  V.
 
 ti(Subst,N) ->
   Ti = ets:new(ti, [ set ]),
@@ -54,7 +58,7 @@ typeInst(Types, {tgen, N}) -> Types(N);
 typeInst(_, Type) -> Type.
 
 listInst(Inst, Types, Xs) ->
-  lists:map(Inst(Types), Xs).
+  lists:map(fun(X)->Inst(Types,X) end, Xs).
 
 predInst(Types, Pred) ->
   {isin, C, T} = Pred,

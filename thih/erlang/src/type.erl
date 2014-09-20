@@ -2,6 +2,7 @@
 -module(type).
 -export([
   tyvar/2,
+  '+->'/2,
   tyvar_append/2,
   tycon/2,
   tvar/1,
@@ -32,6 +33,7 @@
 
 tyvar(Id,Kind) -> {tyvar,Id,Kind}.
 
+'+->'(Tyvar,T) -> [{Tyvar,T}].
 % +->
 tyvar_append(Tyvar,T) -> [{Tyvar,T}].
 

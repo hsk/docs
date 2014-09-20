@@ -250,7 +250,7 @@ tiExpl(Ti, ClassEnv, Assumps, Expl) ->
     pred:predsApply(S, Ps)
   ),
   {Ds, Rs} = split(ClassEnv, Fs, Gs, Ps_),
-  if (Sc /= Sc2) -> throw("signature too general") end,
+  if (Sc /= Sc2) -> throw("signature too general"); true -> o end,
   case (not pre:isEmpty(Rs)) of
     true -> throw("context too weak");
     _ -> Ds

@@ -1,8 +1,25 @@
 -module(t11_3_timain_tests).
 -include_lib("eunit/include/eunit.hrl").
 
-enumId1_test() ->
-  "v1" = id:enumId(1).
+ambiguities_test() ->
+  Tvs = [type:tyvar("a", star)],
+  Preds = [pred:isin("Num", type:tInt()), pred:isin("B", type:tInt())],
+  Ambs = timain:ambiguities(Tvs, Preds),
 
-enumId33_test() ->
-  "v33" = id:enumId(33).
+  Ambs = [].
+
+numClasses_test() ->
+  ["Num", "Integral", "Floating", "Fractional", "Real", "RealFloat", "RealFrac"]
+  = timain:numClasses().
+
+stdClasses_test() ->
+  ["Eq", "Ord", "Show", "Read", "Bounded", "Enum",
+    "Ix", "Functor", "Monad", "MonadPlus", "Num", "Integral",
+    "Floating", "Fractional", "Real", "RealFloat", "RealFrac"]
+  = timain:stdClasses().
+  
+test_test() ->
+  Tv = type:tyvar("a", star),
+  Preds = [pred:isin("Num", type:tInt()), pred:isin("B", type:tInt())],
+  Amb = {Tv, Preds},
+  Amb = {Tv, Preds}.

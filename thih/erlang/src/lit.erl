@@ -15,9 +15,9 @@ litStr(String) -> {litInt, String}.
 
 tiLit(_, {litChar, _}) -> {[],type:tChar()};
 tiLit(Ti, {litInt, _}) ->
-  V = type:newTVar(Ti, kind:star()),
-  {[pred:isIn("Num", V)], V};
+  V = timonad:newTVar(Ti, kind:star()),
+  {[pred:isin("Num", V)], V};
 tiLit(_, {litStr,_}) -> {[], type:tString()};
 tiLit(Ti, {litRat,_}) ->
   V = type:newTVar(Ti, kind:star()),
-  {[pred:isIn("Fractional", V)], V}.
+  {[pred:isin("Fractional", V)], V}.

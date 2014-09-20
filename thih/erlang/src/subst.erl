@@ -16,9 +16,9 @@ nullSubst() -> [].
 
 % 型変数を展開する
 typeApply(Subst, {tvar,U}) ->
-  case lists:find(fun(K,_) -> K == U end, Subst) of
-    {ok, {_,Type}} -> Type;
-    _ -> {tvar, U}
+  case lists:keyfind(U, 1, Subst) of
+    false -> {tvar, U};
+    {_,Type} -> Type
   end;
 typeApply(Subst, {tap,L,R}) ->
   type:tap(typeApply(Subst, L), typeApply(Subst,R));
@@ -36,21 +36,21 @@ listTv(F, Xs) ->
 
 '@@'(Subst1,Subst2) ->
   lists:append(
-    lists:map(fun(U,T) -> {U, typeApply(Subst1,T)} end,Subst2),
+    lists:map(fun({U,T}) -> {U, typeApply(Subst1,T)} end,Subst2),
     Subst1).
 
 merge(Subst1, Subst2) ->
   Agree =
-   pre:intersect(
-    lists:map(fun(V)->element(1,V) end, Subst1),
-    lists:forall(
+    lists:all(
       fun(V) ->
         typeApply(Subst1,type:tvar(V)) ==
         typeApply(Subst2,type:tvar(V))
       end,
-      lists:map(fun(V)->element(1,V) end, Subst2)
-    )
-  ),
+      pre:intersect(
+        lists:map(fun(V)->element(1,V) end, Subst1),
+        lists:map(fun(V)->element(1,V) end, Subst2)
+      )
+    ),
   if
     Agree -> lists:append(Subst1,Subst2);
     true -> throw("substitutions do not agree") 
