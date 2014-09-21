@@ -7,6 +7,8 @@ OCAMLPACKS[] =
 
 # OCamlGeneratedFiles(parser.ml lexer.ml)
 
+OCAML_OTHER_LIBS += nums
+
 FILES[] =
     thih
 PROGRAM = thih
@@ -18,9 +20,21 @@ PROGRAM2 = test
 FILES2[] =
     test01_pre
     test02_id
-
+    test03_kind
+    test04_type
+    test05_subst
+    test06_unify
+    test07_pred
+    test08_scheme
+    test09_assump
+    test10_timonad
+    test11_0_infer
+    test11_1_lit
+    test11_2_pat
+    test11_3_timain
+    
 test: $(OCamlProgram $(PROGRAM2), $(FILES2) $(FILES))
-  ./$(PROGRAM2)
+  ./$(PROGRAM2) -verbose
 
 clean:
   rm -rf .omakedb* *.cache *.omc *.o *.cm* $(PROGRAM) $(PROGRAM2) *.opt

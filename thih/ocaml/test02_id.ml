@@ -1,7 +1,7 @@
 open OUnit
 open Thih
 let _ =
-  run_test_tt_main ("suite">:::[
+  run_test_tt_main ("id">:::[
 
     "enumId 1">:: begin fun() ->
       assert_equal (Id.enumId 1) "v1";

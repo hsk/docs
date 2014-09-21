@@ -1,7 +1,7 @@
 open OUnit
 open Thih
 let _ =
-  run_test_tt_main ("suite">:::[
+  run_test_tt_main ("pre">:::[
 
     "union">:: begin fun() ->
       assert_equal (Pre.union [1;2] [2; 3]) [1; 2; 3];
