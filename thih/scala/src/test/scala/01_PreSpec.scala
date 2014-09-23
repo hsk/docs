@@ -29,7 +29,7 @@ class PreSpec extends FlatSpec {
   it should "nub" in {
     val a = List(1, 1, 2, 2, 3, 4, 5, 1)
     Pre.nub(a) shouldBe
-      List(5, 4, 3, 2, 1)
+      List(1, 2, 3, 4, 5)
   }
 
   it should "is empty 1" in {

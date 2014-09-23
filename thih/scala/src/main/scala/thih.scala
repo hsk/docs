@@ -71,7 +71,7 @@ object Pre extends App {
       case (ys, y) =>
         if (ys.contains(y)) ys
         else y :: ys
-    }
+    }.reverse
   }
 
   // 空チェック

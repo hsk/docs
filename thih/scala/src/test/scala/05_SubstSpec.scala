@@ -69,8 +69,8 @@ class SubstSpec extends FlatSpec {
     //}
     listTv(typeTv)(List(tva, tap)) shouldBe
       List(
-        Tyvar("b", Star),
-        Tyvar("a", Star))
+        Tyvar("a", Star),
+        Tyvar("b", Star))
 
     // (@@)
     //implicit class SSubst(val s1: Subst) {
