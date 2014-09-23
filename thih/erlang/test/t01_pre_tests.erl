@@ -15,7 +15,7 @@ union_and_intersect_test() ->
 
 nub_test() ->
   A = [1, 1, 2, 2, 3, 4, 5, 1],
-  [5, 4, 3, 2, 1] = pre:nub(A).
+  [1, 2, 3, 4, 5] = pre:nub(A).
 
 isEmpty1_test() ->
   A = [],

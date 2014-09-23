@@ -26,16 +26,15 @@ intersect(Xs, Ys) ->
   lists:filter(fun(X) -> lists:member(X, Ys) end, Xs).
 
 % リストをセットにする。要素が１つずつにまとめる
-nub(Xs) -> lists:foldl(fun(X,Ys) ->
-  	Mem = lists:member(X, Ys),
-    if
-      Mem -> Ys;
-      true -> [X | Ys]
+nub(Xs) -> lists:reverse(lists:foldl(fun(X,Ys) ->
+    case lists:member(X, Ys) of
+      true -> Ys;
+      false -> [X | Ys]
     end
   end,
   [],
   Xs
-).
+)).
 
 % 空チェック
 isEmpty([]) -> true;

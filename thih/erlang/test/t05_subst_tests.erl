@@ -65,8 +65,8 @@ nullSubst_test() ->
   %  Pre.nub(xs.map(tv).flatten)
   %}
   [
-    {tyvar, "b", star},
-    {tyvar, "a", star}
+    {tyvar, "a", star},
+    {tyvar, "b", star}
   ]
   = subst:listTv(fun subst:typeTv/1, [Tva, Tap]).
 
