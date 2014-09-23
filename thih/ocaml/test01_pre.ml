@@ -23,7 +23,7 @@ let _ =
     "nub">:: begin fun() ->
       let a = [1;1;2;2;3;4;5;1] in
       let a = Pre.nub a in
-      assert_equal [5;4;3;2;1] a;
+      assert_equal [1;2;3;4;5] a;
     end;
 
     "is empty 1">:: begin fun() ->

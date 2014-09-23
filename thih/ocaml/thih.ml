@@ -65,11 +65,14 @@ module Pre = struct
 
   (* リストをセットにする。要素が１つずつにまとめる *)
   let nub (xs : 'a list): 'a list =
-    List.fold_left begin fun ys y ->
-      if List.mem y ys
-      then ys
-      else y :: ys
-    end [] xs
+    
+    let ls =  List.fold_left begin fun ys x ->
+        if List.mem x ys
+        then ys
+        else x :: ys
+      end [] xs
+    in
+    List.rev ls
 
   let show_list show sep xs =
     begin

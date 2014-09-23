@@ -7,7 +7,7 @@ open Thih.Kind
 let (=:=) = assert_equal
 
 let _ =
-  run_test_tt_main ("id">:::[
+  run_test_tt_main ("subst">:::[
 
     "nullSubst">:: begin fun() ->
       assert_equal Subst.nullSubst Subst.nullSubst
@@ -69,11 +69,19 @@ let _ =
         Pre.nub(xs.map(tv).flatten)
       }
       *)
+    end;
+
+    "+-> 2">:: begin fun() ->
+
+      let tva = TVar(Tyvar("a", Star)) in
+      let tvb = TVar(Tyvar("b", Star)) in
+      (* TApの中身も置き換わる *)
+      let tap = TAp(tva, tvb) in
 
       listTv(typeTv)([tva; tap]) =:=
         [
-          Tyvar("b", Star);
-          Tyvar("a", Star)]
+          Tyvar("a", Star);
+          Tyvar("b", Star)]
 
       (* (@@)
       implicit class SSubst(let s1: Subst) {
