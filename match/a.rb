@@ -15,8 +15,16 @@ end
 
 a1 = A.new(1)
 a2 = A.new(-1)
-b = if (a=A.unapply(a1)) != nil then a[0] else -a1.a end
-b2 = if (a=A.unapply(a2)) != nil then a[0] else -a1.a end
+b =
+  if (a=A.unapply(a1)) != nil
+  then (lambda{|a| a}).call(a[0])
+  else (lambda{|k| -k.a}).call(a1)
+  end
+b2 =
+  if (a=A.unapply(a2)) != nil
+  then (lambda{|a| a}).call(a[0])
+  else (lambda{|k| -k.a}).call(a1)
+  end
 
 printf("b=%d\n",b)
 printf("b2=%d\n",b2)
