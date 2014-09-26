@@ -48,6 +48,8 @@ http://fsharpintro.net/activePattern.html
 
 ## a.ruby
 
+RubyでScalaのunapplyを書いてみたもの。
+
 ```
 class A
   attr :a
@@ -56,7 +58,7 @@ class A
   end
   def self.unapply(a)
     print("unapply\n")
-    if (a.a > 0) then
+    if a.kind_of A && (a.a > 0) then
       [a.a]
     else
       nil
@@ -89,13 +91,39 @@ b=1
 b2=-1
 ```
 
+Scalaのunapplyの問題点は、ifの連続になるので、タグによるテーブルジャンプが行われない為に
+高速化が難しそうな点です。
+
 ### 参考
+
+ライブラリ化した例
 
 http://www.callcc.net/diary/20120204.html
 
 ## fsharp
 
+F#のアクティブパターンはまた別のアプローチです。
+
 http://fsharpintro.net/activePattern.html
+
+```
+let (|ODD|EVEN|) (x:int) =
+	if x%2=0 then EVEN else ODD;;
+let (|POSITIVE|NEGATIVE|) (x:int) =
+	if x>=0 then POSITIVE else NEGATIVE;;
+
+match 10 with
+	| POSITIVE -> print_endline "positive"
+	| NEGATIVE -> print_endline "negative";;
+
+match 10 with
+	| ODD -> print_endline "odd"
+	| EVEN -> print_endline "even";;
+```
+
+パターンマッチ出来る内容で関数を作成して受け取った値で値が帰ります。
+この例ではパターンマッチの変数バインディングがないのですが、
+バインディングも可能です。
 
 ## 
 
@@ -132,3 +160,12 @@ def e
   when |a| then a
 end
 ```
+
+## パターンマッチのコンパイルの最適化についての論文
+
+表示的意味論に基づくパターンマッチング
+コンパイル方式の構築と実装 堀江淳, Satoshi OSAKA
+
+https://www.jstage.jst.go.jp/article/jssst/24/2/24_2_2_113/_pdf
+
+
