@@ -2,6 +2,9 @@
 
 ## a.scala
 
+ScalaのExtractor Patternsがunapplyメソッドを使ってパターンマッチを自由に拡張出来ます。
+
+
 ```
 package mat
 
@@ -26,6 +29,8 @@ object Main extends App {
 }
 ```
 
+実行例
+
 ```
 $ scalac a.scala
 $ scala mat.Main
@@ -41,6 +46,10 @@ b2=1
 
 http://yuroyoro.hatenablog.com/entry/20100709/1278657400
 
+Chapter 8 Pattern Matching The Scala Language Specification Version 2.9
+
+
+http://www.scala-lang.org/files/archive/nightly/pdfs/ScalaReference.pdf
 
 ## F#のアクティブパターン
 
@@ -83,6 +92,8 @@ printf("b=%d\n",b)
 printf("b2=%d\n",b2)
 ```
 
+実行例
+
 ```
 ruby a.rb
 unapply
@@ -124,8 +135,6 @@ match 10 with
 パターンマッチ出来る内容で関数を作成して受け取った値で値が帰ります。
 この例ではパターンマッチの変数バインディングがないのですが、
 バインディングも可能です。
-
-## 
 
 ## ブロック文法の案
 
