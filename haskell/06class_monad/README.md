@@ -52,10 +52,11 @@ Lsのテスト
     Ls [10,20]
 
     >>> :{
+      do
+        let ls = [1,2,3]
         do
-           let ls = [1,2,3]
-           x <- Ls ls
-           return (x * 10)
+          x <- Ls ls
+          return (x * 10)
     :}
     Ls [10,20,30]
 
@@ -91,9 +92,10 @@ Listのテスト
     
     >>> :{
         do
-                   let ls = [1,2,3]
-                   x <- ls
-                   return (x * 10)
+          let ls = [1,2,3]
+          do
+            x <- ls
+            return (x * 10)
     :}
     [10,20,30]
 
