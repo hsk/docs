@@ -11,6 +11,7 @@ ok: ok.hs
 	ghc -o ok ok.hs
 md: ok.hs
 	./hmddoc ok.hs ls.hs
+	cat ok.hs ls.hs > README.md
 
 doctest:
 	doctest ok.hs
