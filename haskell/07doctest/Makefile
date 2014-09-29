@@ -1,0 +1,3 @@
+all:
+	doctest a.hs
+
