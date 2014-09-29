@@ -12,6 +12,9 @@
 
 ここでは、1つの型assumpと5つの関数assumpApply,assumpTv,assumpsApply,assumpsTv,findを読みます。
 
+Assumpはschemeに名前を付けたものです。
+findを使ってリストから検索出来ます。
+assumpApply,assumpTvはschemeApply,schemeTvを呼ぶだけです。
 
 ### type assump
 

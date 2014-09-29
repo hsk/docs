@@ -358,11 +358,14 @@ module Pred = struct
 
   let _ =
     let (cls:class_) = (
-      ["Eq"],
+      ["Eq"], (* クラス名 *)
       [
+      (* インスタンスの列挙 型の実装の列挙 *)
         [] ==> IsIn("Ord", tUnit);
         [] ==> IsIn("Ord", tChar);
-        [] ==> IsIn("Ord",tInt);
+        (* int *)
+        [] ==> IsIn("Ord", tInt);
+        (* Ord a, Ord b => pair a b *)
         [
           IsIn("Ord",TVar(Tyvar("a", Star)));
           IsIn("Ord",TVar(Tyvar("b", Star)))
@@ -441,23 +444,23 @@ module Pred = struct
     ()
 
   let addCoreClasses :envTransformer =
-    addClass "Eq" []
-    <:> addClass "Ord" ["Eq"]
-    <:> addClass "Show" []
-    <:> addClass "Read" []
+    addClass "Eq" [] (* Eqは == /=で同値判定できる *)
+    <:> addClass "Ord" ["Eq"] (* Ord は比較出来るクラスで、Eqを継承し < > <= >= *)
+    <:> addClass "Show" [] (* Show 文字列化できる *)
+    <:> addClass "Read" [] 
     <:> addClass "Bounded" []
     <:> addClass "Enum" []
     <:> addClass "Functor" []
     <:> addClass "Monad" []
 
   let addNumClasses :envTransformer =
-    addClass "Num" ["Eq"; "Show"]
-    <:> addClass "Real" ["Num"; "Ord"]
-    <:> addClass "Fractional" ["Num"]
-    <:> addClass "Integral" ["Real"; "Enum"]
-    <:> addClass "RealFrac" ["Real"; "Fractional"]
-    <:> addClass "Floating" ["Fractional"]
-    <:> addClass "RealFloat" ["RealFrac"; "Floating"]
+    addClass "Num" ["Eq"; "Show"] (* Numは数字で、同値判定出来て、表示出来る *)
+    <:> addClass "Real" ["Num"; "Ord"] (* Realは数字で比較も出来る *)
+    <:> addClass "Fractional" ["Num"] (* 大小関係はない *)
+    <:> addClass "Integral" ["Real"; "Enum"] (* 列挙可能 *)
+    <:> addClass "RealFrac" ["Real"; "Fractional"] (*大小関係ありのFractional*)
+    <:> addClass "Floating" ["Fractional"] (* 大小関係はない *)
+    <:> addClass "RealFloat" ["RealFrac"; "Floating"] (* 大小関係がある *)
 
   let addPreludeClasses :envTransformer =
     addCoreClasses <:> addNumClasses

@@ -947,6 +947,7 @@ module TIMain = struct
       let s' = defaultSubst ce [] rs in
       assumpsApply (s' @@ s) as2
     end
+
 end
 
 

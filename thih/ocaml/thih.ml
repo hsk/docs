@@ -917,9 +917,13 @@ module TIMain = struct
           let fs = assumpsTv (assumpsApply s as_) in
           ((ce, bs), is, ps',ts',fs)
         in
+          Printf.printf "kore1\n";
         let vss = map typeTv ts' in
+          Printf.printf "kore2\n";
         let gs = Pre.diff (Pre.fold_left1 Pre.union vss) fs in
+          Printf.printf "kore3\n";
         let (ds, rs) = split ce fs (Pre.fold_left1 Pre.intersect vss) ps' in
+          Printf.printf "kore4\n";
         ((bs), is, ts',gs,ds,rs)
       in
       if restricted bs then

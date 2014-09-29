@@ -16,6 +16,8 @@
 
 ここでは、1つの型tiと10個の関数runTI,getSubst,extSubst,unify,newTVar,typeInst,listInst,predInst,qualTypeInst,freshInstを読みます。
 
+モナドを作って実行し、Substを取得更新し、型変数を作成し、新しいインスタンスを作ります。
+
 ### type ti
 
 todo:説明を書く
@@ -36,7 +38,7 @@ todo:説明を書く
 
 ### runTI 関数
 
-	OCamlでわざわざモナド作っているけど、中身は一意制約なかんじの只のref変数２つで、ユーザー関数には見せないとか面白い
+	OCamlでわざわざモナド作っているけど、中身は一意制約なかんじの只のref変数２つで、ユーザー関数には見せない
 
 	  let runTI (f : ti -> 'a):'a =
 	    f (ref nullSubst, ref 0)
@@ -52,7 +54,7 @@ todo:説明を書く
 
 ### getSubst 関数
 
-todo:説明を書く
+モナド内のsubstを取り出して返します。
 
 	  let getSubst ((s, _) : ti):subst = !s
 
@@ -65,6 +67,8 @@ todo:説明を書く
 	    end
 
 ### extSubst 関数
+
+モナド内のsubstを@@で更新します。
 
 	  let extSubst ((s, _) : ti) (u:subst) :unit = s := u @@ !s
 
@@ -79,6 +83,8 @@ todo:説明を書く
 	    end
 
 ### unify 関数
+
+モナド内のsubstを使って、Unify.mguを呼び出し、モナド内のsubstを更新します。
 
 	  let unify (ti:ti) (t1:type_) (t2:type_) :unit=
 	    let s:subst = getSubst ti in
@@ -95,6 +101,9 @@ todo:説明を書く
 	    end
 
 ### newTVar 関数
+
+
+型変数を作成し、モナド内のカウンタを１つ進めます。
 
 	  let newTVar ((_, n) : ti) k : type_ =
 	    let v = Tyvar(Id.enumId !n, k) in
