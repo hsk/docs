@@ -6,7 +6,7 @@ data Ok a = Ok a | Ng String deriving(Eq,Show)
 
 {- |
 
-# Monad OkNg
+# Monad Ok
 
 test1
 

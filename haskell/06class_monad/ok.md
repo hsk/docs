@@ -1,4 +1,4 @@
-# Monad OkNg
+# Monad Ok
 
 test1
 
