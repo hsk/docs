@@ -42,4 +42,6 @@ haddock -h a.hs -o doc
 
 ## 参照
 
+[HaskellのJavadoc, Haddockを使う](http://succzero.hatenablog.com/entry/2014/02/25/021357)
+
 [Haskellの単体テスト最前線](https://github.com/kazu-yamamoto/unit-test-example/blob/master/markdown/ja/tutorial.md)
