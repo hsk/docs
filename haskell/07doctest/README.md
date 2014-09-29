@@ -9,13 +9,39 @@ cabal install doctest
 ## ソース
 
 ```
+{- |
+# A.hs
+
+ここにモジュールの詳細な記述を書く．
+
+-}
+
 module A where
--- |
--- Id.
---
--- >>> id1 "a"
--- "a"
+
+{- |
+## id1
+
+渡された値をそのまま返します。
+
+	>>> id1 "a"
+	"a"
+-}
+
 id1 a = a 
+
+{- |
+
+## id2 
+
+こんな感じで動きます。
+
+	>>> id2 "b"
+	"b"
+	>>> id2 "c"
+	"c"
+
+-}
+id2 a = a
 ```
 a.hs
 
@@ -23,7 +49,7 @@ a.hs
 
 ```
 doctest a.hs
-Examples: 1  Tried: 1  Errors: 0  Failures: 0
+Examples: 3  Tried: 3  Errors: 0  Failures: 0
 ```
 
 ## ドキュメント作成
@@ -40,6 +66,16 @@ cabal install haddock
 mkdir doc
 haddock -h a.hs -o doc
 ```
+
+## Markdown生成
+
+```
+php hmddoc.php a.hs
+```
+
+で、`a.md`が生成されます。
+
+
 
 ## 参照
 
