@@ -1,0 +1,119 @@
+#!/usr/local/bin/php
+<?php
+
+ob_start();
+  system("ocamldep ".$argv[1]);
+$f = ob_get_contents();
+ob_end_clean();
+
+$s = array();
+preg_replace_callback("/([^ ]+)\\.cmo/",
+  function($m) use(&$s) {
+    $s[$m[1].".ml"] = $m[1].".cmo";
+    return "";
+  },
+  $f
+);
+$ss = array_keys($s);
+$cmd = implode(" ", $ss)."\n";
+ob_start();
+system("ocamldep -sort $cmd");
+
+$f = ob_get_contents();
+ob_end_clean();
+
+system("ocamlc $f");
+
+$fs = array();
+$opens = array();
+foreach(preg_split("/ +/", $f) as $v) {
+  if(preg_match("/^\\s*\$/", $v) > 0) continue;
+  $fs[] = $v;
+  $v = preg_replace("/\\.ml\$/", ".cmo", $v);
+  $opens[] = "#load \"$v\";;\n";
+}
+
+$descriptorspec = array(
+   0 => array("pipe", "r"),  // stdin は、子プロセスが読み込むパイプです。
+   1 => array("pipe", "w"),  // stdout は、子プロセスが書き込むパイプです。
+);
+
+$process = proc_open('ocaml', $descriptorspec, $pipes);
+function ppwait(&$pipes, $echo = true) {
+    while (($buffer = fread($pipes[1], 4096)) !== false) {
+        if($echo) echo $buffer;
+        if(preg_match("/# \$/s", $buffer) > 0) break;
+    }
+    if($echo) echo "\n";
+}
+function ppread(&$pipes) {
+    $rc = "";
+    while (($buffer = fread($pipes[1], 4096)) !== false) {
+        $rc .= $buffer;
+        if(preg_match("/# \$/s", $rc) > 0) break;
+    }
+    $rc = preg_replace("/\n?# \$/s", "", $rc);
+    return $rc;
+}
+
+function ppwrite(&$pipes, $data) {
+    fwrite($pipes[0], $data);
+    fflush($pipes[0]);
+}
+$test = 0;
+$ok = 0;
+
+if (is_resource($process)) {
+    ppwait($pipes,false);
+    foreach($opens as $open) {
+      // echo $open;
+      ppwrite($pipes, $open);
+      ppwait($pipes,false);
+    }
+    $debug = false;
+    foreach($argv as $file) {
+	if ($file == "-d") $debug = true;
+    }
+    foreach($fs as $file) {
+        if (preg_match("/\\.ml\$/", $file) < 1) continue;
+        $src = file_get_contents($file);
+        $a = array();
+        $line = 0;
+        $src = preg_replace_callback("/^/m", function($m)use(&$line) {
+          $line++;
+          return $line.": ";
+        }, $src);
+        preg_replace_callback("/\\(\\*\\|(.*?)\\*\\)/s",
+            function($m)use(&$a,$debug) {
+                // if($debug) echo $m[1];
+                preg_replace_callback(
+                    "/^([0-9]+):[ \t]*>>>[ \t]*(.*?;;)[ \t]*\\n[ \t]*[0-9]+:[ \t]*([^\\n]*?)[ \t]*\n/m",
+                    function($m)use(&$a) {
+                        $a[] = array($m[1],$m[2],$m[3]);
+                        // echo "# [".$m[2]."] result: [".$m[3]."]\n";
+                    },
+                    $m[1]
+                );
+                return "";
+            },
+            $src
+        );
+        foreach($a as $i) {
+            if($debug) echo "# ".$i[1]."\n";
+            ppwrite($pipes, $i[1]."\n");
+            $test++;
+            $rc = ppread($pipes);
+            if($debug) echo $rc."\n";
+            if($rc == $i[2])$ok++;
+            else echo "test fail line: ".$i[0]."\nexpcted: ".$i[2]."\nbut found: ".$rc."\n";
+        }
+    }
+    ppwrite($pipes, "exit 0;;\n");
+    sleep(1);
+    fclose($pipes[0]);
+
+
+    $return_value = proc_close($process);
+}
+
+echo "test $test ok $ok ng ".($test-$ok)."\n";
