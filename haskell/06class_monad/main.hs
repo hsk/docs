@@ -2,7 +2,6 @@
 import Control.Monad
 
 data OkNg a = Ok a | Ng String
-
 instance  Monad OkNg  where
     (Ok x) >>= k   =  k x
     (Ng x) >>= k   =  Ng x
