@@ -70,7 +70,7 @@ haddock -h a.hs -o doc
 ## Markdown生成
 
 ```
-php hmddoc.php a.hs
+./hmddoc a.hs
 ```
 
 で、`a.md`が生成されます。
