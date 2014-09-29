@@ -7,7 +7,7 @@ test1
 
 test2
 
-    >>> Ok "a" >>= \a -> Ok (a ++ "b") >>= \ab -> Ok (ab++"2")
+    >>> (Ok "a") >>= \a -> Ok (a ++ "b") >>= \ab -> Ok (ab++"2")
     Ok "ab2"
 
 test3
@@ -54,6 +54,15 @@ Lsのテスト
     >>> :{
         do
            let ls = [1,2,3]
+           x <- Ls ls
+           return (x * 10)
+    :}
+    Ls [10,20,30]
+
+    >>> :{
+      do
+        let ls = [1,2,3]
+        do
            x <- Ls ls
            return (x * 10)
     :}

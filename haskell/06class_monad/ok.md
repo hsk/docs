@@ -7,7 +7,7 @@ test1
 
 test2
 
-    >>> Ok "a" >>= \a -> Ok (a ++ "b") >>= \ab -> Ok (ab++"2")
+    >>> (Ok "a") >>= \a -> Ok (a ++ "b") >>= \ab -> Ok (ab++"2")
     Ok "ab2"
 
 test3

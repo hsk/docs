@@ -1,9 +1,9 @@
+import Control.Monad
+import Test.HUnit
+
 {- |
 # Ls Module
 -}
-
-import Control.Monad
-import Test.HUnit
 
 data Ls a = Ls [a] deriving (Show, Eq)
 
@@ -24,6 +24,15 @@ Lsのテスト
     >>> :{
         do
            let ls = [1,2,3]
+           x <- Ls ls
+           return (x * 10)
+    :}
+    Ls [10,20,30]
+
+    >>> :{
+      do
+        let ls = [1,2,3]
+        do
            x <- Ls ls
            return (x * 10)
     :}
