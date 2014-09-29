@@ -25,6 +25,21 @@ a.hs
 doctest a.hs
 ```
 
+## ドキュメント作成
+
+## Haddockのインストール
+
+```
+cabal install haddock
+```
+
+## 実行
+
+```
+mkdir doc
+haddock -h a.hs -o doc
+```
+
 ## 参照
 
 [Haskellの単体テスト最前線](https://github.com/kazu-yamamoto/unit-test-example/blob/master/markdown/ja/tutorial.md)
