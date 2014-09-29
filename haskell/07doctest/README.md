@@ -23,6 +23,7 @@ a.hs
 
 ```
 doctest a.hs
+Examples: 1  Tried: 1  Errors: 0  Failures: 0
 ```
 
 ## ドキュメント作成
