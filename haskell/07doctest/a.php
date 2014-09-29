@@ -1,0 +1,18 @@
+<?php
+
+foreach($argv as $file) {
+  $m = array();
+  if (preg_match("/\\.hs\$/", $file, $m) == 0) {
+    continue;
+  }
+  $src = file_get_contents($file);
+  $srcs = "";
+
+  preg_replace_callback("/\\{- \\|\\s*(.*?)-\\}/s",
+    function($m)use(&$srcs){
+      $srcs .= $m[1];
+      return "";
+    }, $src);
+  $md = preg_replace("/\\.hs\$/",".md", $file);
+  file_put_contents($md, $srcs);
+}
