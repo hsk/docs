@@ -3,6 +3,6 @@ all:
 dock:
 	haddock -o doc -h a.hs
 md:
-	php a.php a.hs
+	php hmddoc.php a.hs
 
 
