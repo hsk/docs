@@ -29,9 +29,7 @@ foreach(preg_split("/ +/", $f) as $v) {
   $fs[] = $v;
 }
 
-var_export($fs);
 
-$all = "";
 $debug = false;
     foreach($fs as $file) {
         if (preg_match("/\\.ml\$/", $file) < 1) continue;
@@ -45,12 +43,11 @@ $debug = false;
             },
             $src
         );
+	$a = preg_replace("/^\\s+/s", "", $a);
         if($debug) {
             echo $md."\n";
             echo $a."\n";
         }
         file_put_contents($md, $a);
-        $all .= $a;
     }
 
-file_put_contents("README.md", $all);

@@ -2,9 +2,40 @@
 
 # a.ml
 
-とりあえずopen
-
 	>>> open A;;
+
+*)
+
+open B
+
+(*|
+
+## type e
+
+### 1
+
+	>>> V 1;;
+	- : A.e = V 1
+
+### 1 + 2
+
+	>>> (Add ((V 1),(V 2)));;
+	- : A.e = Add (V 1, V 2) 
+
+### 1 - 2
+
+	>>> Sub (V 1, V 2);;
+	- : A.e = Sub (V 1, V 2) 
+
+*)
+type e =
+  | V of int
+  | Add of e * e
+  | Sub of e * e
+
+(*|
+
+# eval
 
 ## eval 1
 
@@ -16,29 +47,12 @@
 	>>> eval (Add ((V 1),(V 2)));;
         - : int = 3
 
-## 1 + 2
-
-	>>> (Add ((V 1),(V 2)));;
-	- : A.e = Add (V 1, V 2) 
-
-## 1 - 2
-
-	>>> Sub (V 1, V 2);;
-	- : A.e = Sub (V 1, V 2) 
-
 ## eval 1 - 2
 
 	>>> eval (Sub (V 1, V 2));;
 	- : int = -1
 
-
 *)
-open B
-
-type e =
-  | V of int
-  | Add of e * e
-  | Sub of e * e
 
 let rec eval = function
   | V i -> i
