@@ -128,6 +128,123 @@ module Pre = struct
     loop ([], [], []) xs
 end
 
+(*|
+
+    >>> open Thih;;
+    
+## union
+
+    >>> (Pre.union [1;2] [2; 3]);;
+    - : int list = [1; 2; 3]
+
+## intersect
+
+    >>> (Pre.intersect [1;2] [2; 3])
+    [2]
+
+## union and intersect
+
+    >>> let a = [5;4;3;2;1];;
+    val a : int list = [5; 4; 3; 2; 1]
+
+    >>> let b = [4;5;6;7];;
+    val b : int list = [4; 5; 6; 7]
+
+    >>> let ab = Pre.union a b;;
+    val ab : int list = [3; 2; 1; 4; 5; 6; 7]
+    
+    >>> ab;;
+    - : int list = [3; 2; 1; 4; 5; 6; 7]
+
+    >>> let ab = Pre.intersect a b;;
+    val ab : int list = [5; 4]
+
+## nub
+
+    >>> let a = [1;1;2;2;3;4;5;1];;
+    val a : int list = [1; 1; 2; 2; 3; 4; 5; 1]
+
+    >>> let a2 = Pre.nub a;;
+    val a2 : int list = [1; 2; 3; 4; 5]
+
+## is empty 1
+
+    >>> let a = [];;
+    val a : 'a list = []
+
+    >>> Pre.isEmpty a;;
+    - : bool = true
+
+## is empty 2
+
+    >>> let a = [1];;
+    val a : int list = [1]
+
+    >>> Pre.isEmpty a;;
+    - : bool = false
+
+## fold_left1
+
+    >>> let a = [1;2;3;4;5;6;7;8;9;10];;
+    val a : int list = [1; 2; 3; 4; 5; 6; 7; 8; 9; 10]
+    >>> let a = Pre.fold_left1 begin fun a b -> a + b end a;;
+    val a : int = 55
+
+## deleteFirst
+
+    >>> let a = [1;2;3;4;3;4;5] ;;
+    val a : int list = [1; 2; 3; 4; 3; 4; 5]
+
+    >>> let a = Pre.deleteFirst 3 a ;;
+    val a : int list = [1; 2; 4; 3; 4; 5]
+
+## diff
+
+    >>> let a = [1;2;3;4];;
+    val a : int list = [1; 2; 3; 4]
+
+    >>> let b = [3;4;5;6];;
+    val b : int list = [3; 4; 5; 6]
+
+    >>> let a = Pre.diff a b;;
+    val a : int list = [1; 2]
+
+## diff 2
+
+    >>> let a = [1;2;3;4;3;4];;
+    val a : int list = [1; 2; 3; 4; 3; 4]
+
+    >>> let b = [3;4;5;6;4];;
+    val b : int list = [3; 4; 5; 6; 4]
+
+    >>> let a = Pre.diff a b;;
+    val a : int list = [1; 2; 3]
+
+## split3
+
+    >>> let a1 = [1,10,100;2,20,200;3,30,300];;
+    val a1 : (int * int * int) list = [(1, 10, 100); (2, 20, 200); (3, 30, 300)]
+
+    >>> let (a,_,_) = Pre.split3 a1;;
+    val a : int list = [1; 2; 3]
+
+    >>> let (_,b,_) = Pre.split3 a1;;
+    val b : int list = [10; 20; 30]
+
+    >>> let (_,_,c) = Pre.split3 a1;;
+    val c : int list = [100; 200; 300]
+
+    >>> a ;;
+    - : int list = [1; 2; 3]
+
+    >>> b;;
+    - : int list = [10; 20; 30]
+
+    >>> c;;
+    - : int list = [100; 200; 300]
+
+*)
+
 module Id = struct
   type id = string
 
@@ -135,6 +252,19 @@ module Id = struct
   let enumId (n:int) : id =
     "v" ^ string_of_int n
 end
+
+(*|
+
+## enumId 1
+
+    >>> Id.enumId 1;;
+    - : Thih.Id.id = "v1"
+
+## enumId 33
+    >>> Id.enumId 33;;
+    - : Thih.Id.id = "v33"
+
+*)
 
 (* 3 Kinds *)
 module Kind = struct
@@ -152,6 +282,30 @@ module Kind = struct
   let rec show_list (ks:kind list):string =
     Pre.show_list show ";" ks
 end
+
+(*|
+
+    >>> open Thih.Kind;;
+    
+    >>> Star ;;
+    - : Thih.Kind.kind = Star
+
+    >>> Kfun(Star, Star) ;;
+    - : Thih.Kind.kind = Kfun (Star, Star)
+
+    >>> Kfun(Star, Kfun(Star, Star)) ;;
+    - : Thih.Kind.kind = Kfun (Star, Kfun (Star, Star))
+
+    >>> Kfun(Star, Kfun(Star, Kfun(Star, Star))) ;;
+    - : Thih.Kind.kind = Kfun (Star, Kfun (Star, Kfun (Star, Star)))
+
+    >>> Kfun(Kfun(Star, Star), Kfun(Star, Star)) ;;
+    - : Thih.Kind.kind = Kfun (Kfun (Star, Star), Kfun (Star, Star))
+
+    >>> Kfun(Star,Kfun(Kfun(Star, Star), Star)) ;;
+    - : Thih.Kind.kind = Kfun (Star, Kfun (Kfun (Star, Star), Star))
+
+*)
 
 (* 4 Types *)
 module Type = struct
@@ -209,6 +363,91 @@ module Type = struct
   let show_list = Pre.show_list show ";"
 end
 
+(*|
+
+    >>> open Thih.Type;;
+
+
+テスト用の関数tesを作っておく。
+
+    >>> let tes(t: type_) = (typeKind(t), t);;
+    val tes : Thih.Type.type_ -> Thih.Kind.kind * Thih.Type.type_ = <fun>
+
+## パラメータのない型
+
+    >>> tes(tUnit);;
+    - : Thih.Kind.kind * Thih.Type.type_ = (Star, TCon (Tycon ("()", Star)))
+
+    >>> tes(tChar);;
+    - : Thih.Kind.kind * Thih.Type.type_ = (Star, TCon (Tycon ("Char", Star)))
+    >>> tes(tInt);;
+    - : Thih.Kind.kind * Thih.Type.type_ = (Star, TCon (Tycon ("Int", Star)))
+    >>> tes(tInteger);;
+    - : Thih.Kind.kind * Thih.Type.type_ = (Star, TCon (Tycon ("Integer", Star)))
+    >>> tes(tFloat);;
+    - : Thih.Kind.kind * Thih.Type.type_ = (Star, TCon (Tycon ("Float", Star)))
+    >>> tes(tDouble);;
+    - : Thih.Kind.kind * Thih.Type.type_ = (Star, TCon (Tycon ("Double", Star)))
+
+## List[T] のようなパラメータが１つある型
+
+    >>> tes(tList);;
+    - : Thih.Kind.kind * Thih.Type.type_ = (Kfun (Star, Star), TCon (Tycon ("[]", Kfun (Star, Star))))
+
+## T=>F のようなパラメータが２つある型
+
+    >>> tes(tArrow);;
+    - : Thih.Kind.kind * Thih.Type.type_ = (Kfun (Star, Kfun (Star, Star)), TCon (Tycon ("(->)", Kfun (Star, Kfun (Star, Star)))))
+
+## カンマもT,Fみたいに２つのパラメータが必要
+
+    >>> tes(tTuple2);;
+    - : Thih.Kind.kind * Thih.Type.type_ = (Kfun (Star, Kfun (Star, Star)), TCon (Tycon ("(,)", Kfun (Star, Kfun (Star, Star)))))
+
+
+## fn関数で２つの型をしていして関数の型を生成出来る
+
+    >>> let fn_int_int = fn(tInt)(tInt);;
+    val fn_int_int : Thih.Type.type_ =  TAp   (TAp (TCon (Tycon ("(->)", Kfun (Star, Kfun (Star, Star)))),     TCon (Tycon ("Int", Star))),   TCon (Tycon ("Int", Star)))
+
+TApが2つある。
+    
+    >>> tes(fn_int_int);;
+    - : Thih.Kind.kind * Thih.Type.type_ = (Star, TAp  (TAp (TCon (Tycon ("(->)", Kfun (Star, Kfun (Star, Star)))),    TCon (Tycon ("Int", Star))),  TCon (Tycon ("Int", Star))))
+
+## １つの型を指定してリスト型を生成できる
+
+    >>> let list_int = list(tInt);;
+    val list_int : Thih.Type.type_ =  TAp (TCon (Tycon ("[]", Kfun (Star, Star))), TCon (Tycon ("Int", Star)))
+
+TApが1つある。
+
+    >>> tes(list_int);;
+    - : Thih.Kind.kind * Thih.Type.type_ = (Star, TAp (TCon (Tycon ("[]", Kfun (Star, Star))), TCon (Tycon ("Int", Star))))
+
+## tStringはCharのリスト型だ。
+
+TApが1つある。
+
+    >>> tes(tString);;
+    - : Thih.Kind.kind * Thih.Type.type_ = (Star, TAp (TCon (Tycon ("[]", Kfun (Star, Star))), TCon (Tycon ("Char", Star))))
+
+## ペアは2つの型をもつのでTApが２つある
+
+    >>> let pair_int_char = pair(tInt)(tChar);;
+    val pair_int_char : Thih.Type.type_ =  TAp   (TAp (TCon (Tycon ("(,)", Kfun (Star, Kfun (Star, Star)))),     TCon (Tycon ("Int", Star))),   TCon (Tycon ("Char", Star)))
+
+    >>> tes(pair_int_char);;
+    - : Thih.Kind.kind * Thih.Type.type_ = (Star, TAp  (TAp (TCon (Tycon ("(,)", Kfun (Star, Kfun (Star, Star)))),    TCon (Tycon ("Int", Star))),  TCon (Tycon ("Char", Star))))
+
+    >>> let pair_int = TAp(TCon(Tycon("(,)", Kfun(Star, Kfun(Star, Star)))), TCon(Tycon("Int", Star))) ;;
+    val pair_int : Thih.Type.type_ =  TAp (TCon (Tycon ("(,)", Kfun (Star, Kfun (Star, Star)))),   TCon (Tycon ("Int", Star)))
+
+    >>> tes(pair_int);;
+    - : Thih.Kind.kind * Thih.Type.type_ = (Kfun (Star, Star), TAp (TCon (Tycon ("(,)", Kfun (Star, Kfun (Star, Star)))),  TCon (Tycon ("Int", Star))))
+
+
+*)
 (* 5 Substitutions *)
 module Subst = struct
   open Type
@@ -276,6 +515,131 @@ module Subst = struct
       Printf.sprintf "Tyvar(%s,%s)" id (Kind.show kind)
     end "; " xs
 end
+(*|
+
+    >>> open Thih.Subst;;
+    
+## nullSubst
+    
+    >>> Subst.nullSubst;;
+    - : Thih.Subst.subst = []
+
+## +->
+
+substは+->演算子で作れる
+
+    >>> let subst = Tyvar("a", Star) +-> tInt;;
+    val subst : Thih.Subst.subst =  [(Tyvar ("a", Star), TCon (Tycon ("Int", Star)))]
+
+
+    >>> let subst1 = Tyvar("b", Star) +-> tChar ;;
+    val subst1 : Thih.Subst.subst =  [(Tyvar ("b", Star), TCon (Tycon ("Char", Star)))]
+
+substはリストなので ::: で結ß合出来る
+
+    >>> let subst2 = subst @ subst1 ;;
+    val subst2 : (Thih.Type.tyvar * Thih.Type.type_) list =  [(Tyvar ("a", Star), TCon (Tycon ("Int", Star)));   (Tyvar ("b", Star), TCon (Tycon ("Char", Star)))]
+
+## typeApply
+
+typeApplyはsubstを元に型変数がsubstにあれば置き換える。
+
+    >>> let tva = TVar(Tyvar("a", Star)) ;;
+    val tva : Thih.Type.type_ = TVar (Tyvar ("a", Star))
+    >>> let tvb = TVar(Tyvar("b", Star)) ;;
+    val tvb : Thih.Type.type_ = TVar (Tyvar ("b", Star))
+    >>> (typeApply(subst)(tva));;
+    - : Thih.Type.type_ = TCon (Tycon ("Int", Star))
+
+    >>> (typeApply(subst)(tvb));;
+    - : Thih.Type.type_ = TVar (Tyvar ("b", Star))
+
+TApの中身も置き換わる
+
+    >>> let tap = TAp(tva, tvb) ;;
+    val tap : Thih.Type.type_ =  TAp (TVar (Tyvar ("a", Star)), TVar (Tyvar ("b", Star)))
+
+    >>> typeApply(subst)(tap) ;;
+    - : Thih.Type.type_ = TAp (TCon (Tycon ("Int", Star)), TVar (Tyvar ("b", Star)))
+
+    >>> let tap2 = TAp(tva, tva) ;;
+    val tap2 : Thih.Type.type_ =  TAp (TVar (Tyvar ("a", Star)), TVar (Tyvar ("a", Star)))
+    >>> typeApply(subst)(tap2) ;;
+    - : Thih.Type.type_ = TAp (TCon (Tycon ("Int", Star)), TCon (Tycon ("Int", Star)))
+
+
+## typeTv
+
+typeTvでは内部で使っている型変数のリストを返す
+
+    >>> typeTv(tva) ;;
+    - : Thih.Type.tyvar list = [Tyvar ("a", Star)]
+
+    >>> typeTv(tvb) ;;
+    - : Thih.Type.tyvar list = [Tyvar ("b", Star)]
+
+tapは2つの型を使っているのでaとbが返る
+
+    >>> typeTv(tap) ;;
+    - : Thih.Type.tyvar list = [Tyvar ("a", Star); Tyvar ("b", Star)]
+
+## listApply
+
+listApplyは複数の型を受け取って、展開する
+
+    >>> listApply(typeApply)(subst)([tva; tvb]);;
+    - : Thih.Type.type_ list = [TCon (Tycon ("Int", Star)); TVar (Tyvar ("b", Star))]
+
+## listTv
+
+listTvはlist全体の内部で使っている型変数を求める
+
+## +-> 2
+
+    >>> let tva = TVar(Tyvar("a", Star)) ;;
+    val tva : Thih.Type.type_ = TVar (Tyvar ("a", Star))
+
+    >>> let tvb = TVar(Tyvar("b", Star)) ;;
+    val tvb : Thih.Type.type_ = TVar (Tyvar ("b", Star))
+
+TApの中身も置き換わる
+
+    >>> let tap = TAp(tva, tvb) ;;
+    val tap : Thih.Type.type_ =  TAp (TVar (Tyvar ("a", Star)), TVar (Tyvar ("b", Star)))
+
+    >>> listTv(typeTv)([tva; tap]) ;;
+    - : Thih.Type.tyvar list = [Tyvar ("a", Star); Tyvar ("b", Star)]
+
+## @@
+
+    >>> let subst = Tyvar("a", Star) +-> tInt ;;
+    val subst : Thih.Subst.subst =  [(Tyvar ("a", Star), TCon (Tycon ("Int", Star)))]
+
+    >>> let subst1 = Tyvar("b", Star) +-> TVar(Tyvar("a", Star)) @ Tyvar("a", Star) +-> tChar ;;
+    val subst1 : (Thih.Type.tyvar * Thih.Type.type_) list =  [(Tyvar ("b", Star), TVar (Tyvar ("a", Star)));   (Tyvar ("a", Star), TCon (Tycon ("Char", Star)))]
+
+    >>> let subst2 = Tyvar("b", Star) +-> TVar(Tyvar("a", Star)) @ Tyvar("a", Star) +-> tInt ;;
+    val subst2 : (Thih.Type.tyvar * Thih.Type.type_) list =  [(Tyvar ("b", Star), TVar (Tyvar ("a", Star)));   (Tyvar ("a", Star), TCon (Tycon ("Int", Star)))]
+
+@@演算子で2つのsubstを結合出来る。最初のsubstをs2に実行して結合する
+
+    >>> (subst @@ subst1) ;;
+    - : Thih.Subst.subst = [(Tyvar ("b", Star), TCon (Tycon ("Int", Star))); (Tyvar ("a", Star), TCon (Tycon ("Char", Star))); (Tyvar ("a", Star), TCon (Tycon ("Int", Star)))]
+
+    >>> (subst @@ subst2) ;;
+    - : Thih.Subst.subst = [(Tyvar ("b", Star), TCon (Tycon ("Int", Star))); (Tyvar ("a", Star), TCon (Tycon ("Int", Star))); (Tyvar ("a", Star), TCon (Tycon ("Int", Star)))]
+
+## merge
+
+@@と似ているのだけど、s1とs2でおかしいものがあったらエラーにする
+
+    >>> merge(subst)(subst1) ;;
+    Exception: Failure "substitutions do not agree".
+
+    >>> merge(subst)(subst2) ;;
+    - : Thih.Subst.subst = [(Tyvar ("a", Star), TCon (Tycon ("Int", Star))); (Tyvar ("b", Star), TVar (Tyvar ("a", Star))); (Tyvar ("a", Star), TCon (Tycon ("Int", Star)))]
+
+*)
 
 (* 6 Unification and Matching *)
 module Unify = struct
@@ -680,6 +1044,7 @@ module Lit = struct
         ([IsIn("Fractional", v)], v)
     end
 end
+
 
 (* 11.2 Patterns *)
 module Pat = struct
