@@ -33,7 +33,7 @@
 ## eval 1 + 2
 
 	>>> eval (Add ((V 1),(V 2)));;
-        - : int = 3
+	- : int = 3
 
 ## eval 1 - 2
 
