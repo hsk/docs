@@ -57,7 +57,6 @@ function getTests($src) {
       $m[3] = preg_replace("/^[0-9]+:[ \t]*/m", "", $m[3]);
       $tests[$m[2]] = array("line"=>$m[2], "test"=>$m[3],"expected"=> $m[4]);
       array_shift($m);
-      var_export($m);      
     },
     getMDSrc($src)
   );
