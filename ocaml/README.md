@@ -50,3 +50,12 @@ $ odoctest a.ml --rewrite=a,b
 ```
 $ odoctest a.ml --rewrite=all
 ```
+
+## ポーリング
+
+-Pオプションを使うと、ファイル監視状態になります。
+
+## -notab オプション
+
+-notab オプションを使うと結果を4つのスペースで上書きします。
+
