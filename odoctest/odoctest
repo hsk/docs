@@ -52,9 +52,12 @@ function getMDSrc($src) {
 function getTests($src) {
   $tests = array();
   preg_replace_callback(
-    "/^([0-9]+):[ \t]*>>>[ \t]*(.*?;;)[ \t]*\\n[ \t]*[0-9]+:[ \t]*([^\\n]*?)[ \t]*\n/m",
+    "/(\\n)([0-9]+):[ \t]*>>>[ \t]*(.*?;;)[ \t]*\\n[0-9]+:[ \t]*([^\n]*?)[ \t]*\n/s",
     function($m)use(&$tests) {
-      $tests[$m[1]] = array("line"=>$m[1], "test"=>$m[2],"expected"=> $m[3]);
+      $m[3] = preg_replace("/^[0-9]+:[ \t]*/m", "", $m[3]);
+      $tests[$m[2]] = array("line"=>$m[2], "test"=>$m[3],"expected"=> $m[4]);
+      array_shift($m);
+      var_export($m);      
     },
     getMDSrc($src)
   );
@@ -93,13 +96,13 @@ function rewriteTest($ml, $src, $tests, $rewrites, $argv) {
   $src = preg_replace_callback("/(\\(\\*\\|)(.*?)(\\*\\))/s",
     function($m)use($tests,$tab) {
       $m[2] = preg_replace_callback(
-        "/^([0-9]+)(:[ \t]*>>>[ \t]*)(.*?;;)([ \t]*\\n[ \t]*[0-9]+:)([ \t]*)([^\\n]*?)([ \t]*\n)/m",
+        "/(\\n)([0-9]+)(:[ \t]*>>>[ \t]*)(.*?;;)([ \t]*\\n[0-9]+:)([ \t]*)([^\\n]*?)([ \t]*\n)/s",
         function($m)use(&$tests,$tab) {
-          $m[6] = $tests[$m[1]]["expected"];
-          if(preg_match("/\t|$tab/", $m[5]) < 1) {
-            $m[5] = " ".$tab;
-            if($m[6] != "")
-              $m[6] .= "\n";
+          $m[7] = $tests[$m[2]]["expected"];
+          if(preg_match("/\t|$tab/", $m[6]) < 1) {
+            $m[6] = " ".$tab;
+            if($m[7] != "")
+              $m[7] .= "\n";
           }
           array_shift($m);
           return implode("", $m);
@@ -136,13 +139,14 @@ function tests(&$pipes, $argv, $mls) {
       ppwrite($pipes, $test["test"]."\n");
       $result = ppread($pipes);
 
+
+      $count++;
+      $result = preg_replace("/[\n\t ]+/s"," ", $result);
+      $result = preg_replace("/^\s+/s", "", $result);
       if (debug($argv)) {
         echo "# ".$test["test"]."\n";
         echo $result."\n";
       }
-
-      $count++;
-      $result = preg_replace("/\n ?/s"," ", $result);
       if ($result == $test["expected"]) {
         $ok++;
         continue;

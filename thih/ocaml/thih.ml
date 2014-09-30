@@ -366,7 +366,7 @@ end
 (*|
 
     >>> open Thih.Type;;
-
+    
 
 テスト用の関数tesを作っておく。
 
@@ -675,6 +675,64 @@ module Unify = struct
     | TCon tc1, TCon tc2 when tc1 = tc2 -> nullSubst
     | _ -> failwith "types do not match"
 end
+(*|
+
+    >>> open Thih.Unify;;
+    
+    >>> let t1 = TVar(Tyvar("a", Star)) ;;
+    val t1 : Thih.Type.type_ = TVar (Tyvar ("a", Star))
+
+    >>> let t2 = TVar(Tyvar("b", Star)) ;;
+    val t2 : Thih.Type.type_ = TVar (Tyvar ("b", Star))
+
+    >>> let tv1 = Tyvar("a", Star) ;;
+    val tv1 : Thih.Type.tyvar = Tyvar ("a", Star)
+
+    >>> let t3 = tInt ;;
+    val t3 : Thih.Type.type_ = TCon (Tycon ("Int", Star))
+
+## mgu
+
+    >>> let subst = mgu(t1)(t2);;
+    val subst : Thih.Subst.subst =  [(Tyvar ("a", Star), TVar (Tyvar ("b", Star)))]
+
+      subst =:=
+        [(Tyvar("a", Star), TVar(Tyvar("b", Star)))];
+
+    >>> let subst2 = mgu(t1)(t3);;
+    val subst2 : Thih.Subst.subst =  [(Tyvar ("a", Star), TCon (Tycon ("Int", Star)))]
+
+      subst2 =:=
+        [(Tyvar("a", Star), tInt)]
+
+## varBind
+
+    >>> let subst = varBind(tv1)(t1);;
+    val subst : Thih.Subst.subst = []
+
+      subst =:= [];
+
+    >>> let subst2 = varBind(tv1)(t3);;
+    val subst2 : Thih.Subst.subst =  [(Tyvar ("a", Star), TCon (Tycon ("Int", Star)))]
+
+      subst2 =:=
+        [(Tyvar("a", Star), tInt)]
+
+## match_
+
+    >>> let subst = match_(t1)(t2);;
+    val subst : Thih.Subst.subst =  [(Tyvar ("a", Star), TVar (Tyvar ("b", Star)))]
+
+      subst =:=
+        [(Tyvar("a", Star), TVar(Tyvar("b", Star)))];
+
+    >>> let subst2 = match_(t1)(t3);;
+    val subst2 : Thih.Subst.subst =  [(Tyvar ("a", Star), TCon (Tycon ("Int", Star)))]
+
+      subst2 =:=
+        [(Tyvar("a", Star), tInt)]
+
+*)
 
 (* 7 Type Classes, Predicates and Qualified Types *)
 module Pred = struct
@@ -886,8 +944,379 @@ module Pred = struct
   let scEntail (ce:classEnv) ps p =
     exists (mem p) (map (bySuper ce) ps)
 end
+(*|
+
+    >>> open Thih.Pred;;
+    
+## pred
+
+    >>> let ty = TVar(Tyvar("a", Star)) ;;
+    val ty : Thih.Type.type_ = TVar (Tyvar ("a", Star))
+
+    >>> let pred = IsIn("Num", ty) ;;
+    val pred : Thih.Pred.pred = IsIn ("Num", TVar (Tyvar ("a", Star)))
+
+    >>> pred = IsIn("Num", TVar(Tyvar("a", Star)));;
+    - : bool = true
+
+## pred list
+
+    >>> let ty = TVar(Tyvar("a", Star)) ;;
+    val ty : Thih.Type.type_ = TVar (Tyvar ("a", Star))
+
+    >>> let preds = [IsIn("Num", ty); IsIn("B", ty)] ;;
+    val preds : Thih.Pred.pred list =  [IsIn ("Num", TVar (Tyvar ("a", Star)));   IsIn ("B", TVar (Tyvar ("a", Star)))]
+
+    >>> preds =
+        [
+          IsIn("Num", TVar(Tyvar("a", Star)));
+          IsIn("B", TVar(Tyvar("a", Star)))
+        ];;
+
+## pred & qual
+
+(Num a) => a -> Int
+
+    >>> let ty = TVar(Tyvar("a", Star)) ;;
+    val ty : Thih.Type.type_ = TVar (Tyvar ("a", Star))
+
+    >>> let pred = IsIn("Num", ty) ;;
+    val pred : Thih.Pred.pred = IsIn ("Num", TVar (Tyvar ("a", Star)))
+
+## Qual
+
+    >>> let q = Qual([pred], fn(ty)(tInt)) ;;
+    val q : Thih.Type.type_ Thih.Pred.qual =  Qual ([IsIn ("Num", TVar (Tyvar ("a", Star)))],   TAp    (TAp (TCon (Tycon ("(->)", Kfun (Star, Kfun (Star, Star)))),      TVar (Tyvar ("a", Star))),    TCon (Tycon ("Int", Star))))
+
+    >>> q = TAp(TAp(TCon(Tycon("(->)", Kfun(Star, Kfun(Star, Star)))),
+          TVar(Tyvar("a", Star))), TCon(Tycon("Int", Star))));;
+
+## predApply
+
+    >>> let subst = [(Tyvar("a", Star), tInt)] ;;
+    val subst : (Thih.Type.tyvar * Thih.Type.type_) list =  [(Tyvar ("a", Star), TCon (Tycon ("Int", Star)))]
+
+    >>> let pred = IsIn("Num", TVar(Tyvar("a", Star))) ;;
+    val pred : Thih.Pred.pred = IsIn ("Num", TVar (Tyvar ("a", Star)))
+
+    >>> let pred2 = predApply(subst)(pred) ;;
+    val pred2 : Thih.Pred.pred = IsIn ("Num", TCon (Tycon ("Int", Star)))
+
+## predTv
+
+    >>> let pred = IsIn("Num", TVar(Tyvar("a", Star))) ;;
+    val pred : Thih.Pred.pred = IsIn ("Num", TVar (Tyvar ("a", Star)))
+
+    >>> let tvs = predTv(pred) ;;
+    val tvs : Thih.Type.tyvar list = [Tyvar ("a", Star)]
+
+## predsApply
+
+    >>> let subst = [(Tyvar("a", Star), tInt)] ;;
+    val subst : (Thih.Type.tyvar * Thih.Type.type_) list =  [(Tyvar ("a", Star), TCon (Tycon ("Int", Star)))]
+
+    >>> let preds = [IsIn("Num", TVar(Tyvar("a", Star)))] ;;
+    val preds : Thih.Pred.pred list = [IsIn ("Num", TVar (Tyvar ("a", Star)))]
+
+    >>> let preds2 = predsApply(subst)(preds) ;;
+    val preds2 : Thih.Pred.pred list = [IsIn ("Num", TCon (Tycon ("Int", Star)))]
+
+    >>> preds2 = [IsIn("Num", TCon(Tycon("Int", Star)))];;
+    - : bool = true
+
+## predsTv
+
+    >>> let preds = [IsIn("Num", TVar(Tyvar("a", Star)))] ;;
+    val preds : Thih.Pred.pred list = [IsIn ("Num", TVar (Tyvar ("a", Star)))]
+
+    >>> let tvs = predsTv(preds) ;;
+    val tvs : Thih.Type.tyvar list = [Tyvar ("a", Star)]
+
+    >>> tvs = [Tyvar("a", Star)];;
+    - : bool = true
+
+## qualTypeApply
+
+
+    >>> let subst = Tyvar("a", Star) +-> tInt ;;
+    val subst : Thih.Subst.subst =  [(Tyvar ("a", Star), TCon (Tycon ("Int", Star)))]
+
+    >>> let ty = TVar(Tyvar("a", Star)) ;;
+    val ty : Thih.Type.type_ = TVar (Tyvar ("a", Star))
+
+    >>> let pred = IsIn("Num", ty) ;;
+    val pred : Thih.Pred.pred = IsIn ("Num", TVar (Tyvar ("a", Star)))
+
+    >>> let qual = Qual([pred], fn(ty)(tInt)) ;;
+    val qual : Thih.Type.type_ Thih.Pred.qual =  Qual ([IsIn ("Num", TVar (Tyvar ("a", Star)))],   TAp    (TAp (TCon (Tycon ("(->)", Kfun (Star, Kfun (Star, Star)))),      TVar (Tyvar ("a", Star))),    TCon (Tycon ("Int", Star))))
+
+    >>> let qual2 = qualTypeApply(subst)(qual) ;;
+    val qual2 : Thih.Type.type_ Thih.Pred.qual =  Qual ([IsIn ("Num", TCon (Tycon ("Int", Star)))],   TAp    (TAp (TCon (Tycon ("(->)", Kfun (Star, Kfun (Star, Star)))),      TCon (Tycon ("Int", Star))),    TCon (Tycon ("Int", Star))))
+
+    >>> qual = Qual(
+        [
+          IsIn("Num", TVar(Tyvar("a", Star)))],
+        TAp(TAp(TCon(Tycon("(->)", Kfun(Star, Kfun(Star, Star)))),
+          TVar(Tyvar("a", Star))), TCon(Tycon("Int", Star))));;
+
+    >>> qual2 = Qual(
+        [
+          IsIn("Num", TCon(Tycon("Int", Star)))],
+        TAp(TAp(TCon(Tycon("(->)", Kfun(Star, Kfun(Star, Star)))),
+          TCon(Tycon("Int", Star))), TCon(Tycon("Int", Star))));;
+
+## qualTypeTv
+
+    >>> let ty = TVar(Tyvar("a", Star)) ;;
+    val ty : Thih.Type.type_ = TVar (Tyvar ("a", Star))
+
+    >>> let pred = IsIn("Num", ty) ;;
+    val pred : Thih.Pred.pred = IsIn ("Num", TVar (Tyvar ("a", Star)))
+
+    >>> let qual = Qual([pred], fn(ty)(tInt)) ;;
+    val qual : Thih.Type.type_ Thih.Pred.qual =  Qual ([IsIn ("Num", TVar (Tyvar ("a", Star)))],   TAp    (TAp (TCon (Tycon ("(->)", Kfun (Star, Kfun (Star, Star)))),      TVar (Tyvar ("a", Star))),    TCon (Tycon ("Int", Star))))
+
+    >>> let tvs = qualTypeTv(qual) ;;
+    val tvs : Thih.Type.tyvar list = [Tyvar ("a", Star)]
+
+    >>> tvs = [Tyvar("a", Star)] ;;
+    - : bool = true
+
+## mguPred
+
+    >>> let pred1 = IsIn("Num", TVar(Tyvar("a", Star))) ;;
+    val pred1 : Thih.Pred.pred = IsIn ("Num", TVar (Tyvar ("a", Star)))
+
+    >>> let pred2 = IsIn("Num", tInt) ;;
+    val pred2 : Thih.Pred.pred = IsIn ("Num", TCon (Tycon ("Int", Star)))
+
+    >>> let subst = mguPred(pred1)(pred2) ;;
+    val subst : Thih.Subst.subst =  [(Tyvar ("a", Star), TCon (Tycon ("Int", Star)))]
+
+    >>> subst = [(Tyvar("a",Star),TCon(Tycon("Int",Star)))];;
+    - : bool = true
+
+    >>> let subst2 = mguPred(pred1)(pred1) ;;
+    val subst2 : Thih.Subst.subst = []
+
+## matchPred
+
+    >>> let pred1 = IsIn("Num", TVar(Tyvar("a", Star))) ;;
+    val pred1 : Thih.Pred.pred = IsIn ("Num", TVar (Tyvar ("a", Star)))
+
+    >>> let pred2 = IsIn("Num", tInt) ;;
+    val pred2 : Thih.Pred.pred = IsIn ("Num", TCon (Tycon ("Int", Star)))
+
+    >>> let subst = matchPred(pred1)(pred2) ;;
+    val subst : Thih.Subst.subst =  [(Tyvar ("a", Star), TCon (Tycon ("Int", Star)))]
+
+    >>> subst = [(Tyvar("a", Star), tInt)];;
+    - : bool = true
+
+    >>> let subst2 = matchPred(pred1)(pred1) ;;
+    val subst2 : Thih.Subst.subst =  [(Tyvar ("a", Star), TVar (Tyvar ("a", Star)))]
+
+    >>> subst2 = [(Tyvar("a", Star), TVar(Tyvar("a", Star)))];;
+    - : bool = true
+
+## Inst
+
+    >>> let inst = Qual([ IsIn("Ord", tUnit); IsIn("Ord", tChar)], IsIn("Ord", tChar)) ;;
+    val inst : Thih.Pred.pred Thih.Pred.qual =  Qual   ([IsIn ("Ord", TCon (Tycon ("()", Star)));     IsIn ("Ord", TCon (Tycon ("Char", Star)))],   IsIn ("Ord", TCon (Tycon ("Char", Star))))
+
+    >>> inst = Qual(
+        [
+          IsIn("Ord", TCon(Tycon("()", Star)));
+          IsIn("Ord", TCon(Tycon("Char", Star)))],
+        IsIn("Ord", TCon(Tycon("Char", Star))));;
+
+## class_ ==>
+
+    >>> (
+        ["Eq"],
+        [
+          [] ==> IsIn("Ord", tUnit);
+          [] ==> IsIn("Ord", tChar);
+          [] ==> IsIn("Ord",tInt);
+          [
+            IsIn("Ord",TVar(Tyvar("a", Star)));
+            IsIn("Ord",TVar(Tyvar("b", Star)))
+          ] ==>
+          IsIn("Ord", (pair (TVar(Tyvar("a",Star))) (TVar(Tyvar("b",Star)))))
+          
+        ]
+      ) ;;
+
+# 7.2 Class Environments
+
+## modify
+
+    >>> let ce: classEnv = modify(initialEnv)("ABC")(["A"], [[] ==> IsIn("Ord", tUnit)]) ;;
+    val ce : Thih.Pred.classEnv =  {classes = <fun>;   defaults = [TCon (Tycon ("Integer", Star)); TCon (Tycon ("Double", Star))]}
+
+    >>> ce.defaults = [TCon(Tycon("Integer", Star)); TCon(Tycon("Double", Star))];;
+    - : bool = true
+
+## super
+
+    >>> let ce = modify(initialEnv)("ABC")(["A"], [[] ==> IsIn("Ord", tUnit)]) ;;
+    val ce : Thih.Pred.classEnv =  {classes = <fun>;   defaults = [TCon (Tycon ("Integer", Star)); TCon (Tycon ("Double", Star))]}
+
+    >>> let s = super(ce)("ABC") ;;
+    val s : Thih.Id.id list = ["A"]
+
+    >>> s = ["A"];;
+    - : bool = true
+
+## insts
+
+    >>> let ce = modify(initialEnv)("ABC")(["A"], [[] ==> IsIn("Ord", tUnit)]) ;;
+    val ce : Thih.Pred.classEnv =  {classes = <fun>;   defaults = [TCon (Tycon ("Integer", Star)); TCon (Tycon ("Double", Star))]}
+
+    >>> let s = insts(ce)("ABC") ;;
+    val s : Thih.Pred.inst list =  [Qual ([], IsIn ("Ord", TCon (Tycon ("()", Star))))]
+
+## defined
+
+    >>> let ce = modify(initialEnv)("ABC")(["A"], [[] ==> IsIn("Ord", tUnit)]) ;;
+    val ce : Thih.Pred.classEnv =  {classes = <fun>;   defaults = [TCon (Tycon ("Integer", Star)); TCon (Tycon ("Double", Star))]}
+
+    >>> let s = defined(ce)("ABC") ;;
+    val s : bool = true
+
+## addClass
+
+    >>> let et: envTransformer = addClass("Eq")([]) ;;
+    val et : Thih.Pred.envTransformer = <fun>
+
+    >>> let ce = et(initialEnv) ;;
+    val ce : Thih.Pred.classEnv =  {classes = <fun>;   defaults = [TCon (Tycon ("Integer", Star)); TCon (Tycon ("Double", Star))]}
+
+    >>> ce.defaults ;;
+    - : Thih.Type.type_ list = [TCon (Tycon ("Integer", Star)); TCon (Tycon ("Double", Star))]
+
+## <:>
+
+    >>> let et1: envTransformer = addClass("Eq")([]) ;;
+    val et1 : Thih.Pred.envTransformer = <fun>
+
+    >>> let et2: envTransformer = addClass("Eq2")([]) ;;
+    val et2 : Thih.Pred.envTransformer = <fun>
+
+    >>> let et3: envTransformer = et1 <:> et2 ;;
+    val et3 : Thih.Pred.envTransformer = <fun>
+
+    >>> (et3 initialEnv).defaults ;;
+    - : Thih.Type.type_ list = [TCon (Tycon ("Integer", Star)); TCon (Tycon ("Double", Star))]
+
+    >>> let et4: envTransformer = addClass("Eq")([]) <:> addClass("Eq2")([]) ;;
+    val et4 : Thih.Pred.envTransformer = <fun>
+
+    >>> (et4(initialEnv)).defaults ;;
+    - : Thih.Type.type_ list = [TCon (Tycon ("Integer", Star)); TCon (Tycon ("Double", Star))]
+
+## overlap
+
+    >>> let pred1 = IsIn("Ord", tUnit) ;;
+    val pred1 : Thih.Pred.pred = IsIn ("Ord", TCon (Tycon ("()", Star)))
+
+    >>> let pred2 = IsIn("Ord", tChar) ;;
+    val pred2 : Thih.Pred.pred = IsIn ("Ord", TCon (Tycon ("Char", Star)))
+
+    >>> overlap(pred1)(pred2) ;;
+    - : bool = false
+
+    >>> overlap(pred1)(pred1) ;;
+    - : bool = true
+
+# 7.3 Entailment
+
+## bySuper
+
+    >>> let preds = bySuper(exampleInsts(initialEnv))(IsIn("Num", TVar(Tyvar("a", Star)))) ;;
+    val preds : Thih.Pred.pred list =  [IsIn ("Num", TVar (Tyvar ("a", Star)));   IsIn ("Eq", TVar (Tyvar ("a", Star)));   IsIn ("Show", TVar (Tyvar ("a", Star)))]
+
+## byInst
+
+    >>> let preds = byInst(exampleInsts(initialEnv))(IsIn("Num", TVar(Tyvar("a", Star)))) ;;
+    val preds : Thih.Pred.pred list option = None
+
+## entail
+
+    >>> let p = IsIn("Num", TVar(Tyvar("a", Star))) ;;
+    val p : Thih.Pred.pred = IsIn ("Num", TVar (Tyvar ("a", Star)))
+
+    >>> let ps = [p] ;;
+    val ps : Thih.Pred.pred list = [IsIn ("Num", TVar (Tyvar ("a", Star)))]
+
+    >>> let result = entail(exampleInsts(initialEnv))(ps)(p) ;;
+    val result : bool = true
+
+# 7.4 Context Reduction
+
+## inHnf
+
+    >>> let r = inHnf(IsIn("Num", TVar(Tyvar("a", Star)))) ;;
+    val r : bool = true
+
+    >>> let r2 = inHnf(IsIn("Num", tInt)) ;;
+    val r2 : bool = false
+
+## toHnfs
+
+    >>> let preds = [IsIn("Num", TVar(Tyvar("a", Star)))] ;;
+    val preds : Thih.Pred.pred list = [IsIn ("Num", TVar (Tyvar ("a", Star)))]
+
+    >>> let preds2 = toHnfs(initialEnv)(preds) ;;
+    val preds2 : Thih.Pred.pred list = [IsIn ("Num", TVar (Tyvar ("a", Star)))]
+
+## toHnf
+
+    >>> let pred = IsIn("Num", TVar(Tyvar("a", Star))) ;;
+    val pred : Thih.Pred.pred = IsIn ("Num", TVar (Tyvar ("a", Star)))
+
+    >>> let preds = toHnf(initialEnv)(pred) ;;
+    val preds : Thih.Pred.pred list = [IsIn ("Num", TVar (Tyvar ("a", Star)))]
+
+## simplify
+
+    >>> let pred = IsIn("Num", TVar(Tyvar("a", Star))) ;;
+    val pred : Thih.Pred.pred = IsIn ("Num", TVar (Tyvar ("a", Star)))
+
+    >>> let preds = [pred] ;;
+    val preds : Thih.Pred.pred list = [IsIn ("Num", TVar (Tyvar ("a", Star)))]
+
+    >>> let preds2 = simplify(exampleInsts(initialEnv))(preds) ;;
+    val preds2 : Thih.Pred.pred list = [IsIn ("Num", TVar (Tyvar ("a", Star)))]
+
+## reduce
+
+    >>> let pred = IsIn("Num", TVar(Tyvar("a", Star))) ;;
+    val pred : Thih.Pred.pred = IsIn ("Num", TVar (Tyvar ("a", Star)))
+
+    >>> let preds = [pred] ;;
+    val preds : Thih.Pred.pred list = [IsIn ("Num", TVar (Tyvar ("a", Star)))]
+
+    >>> let preds2 = reduce(exampleInsts(initialEnv))(preds) ;;
+    val preds2 : Thih.Pred.pred list = [IsIn ("Num", TVar (Tyvar ("a", Star)))]
+
+## scEntail
+
+    >>> let pred = IsIn("Num", TVar(Tyvar("a", Star))) ;;
+    val pred : Thih.Pred.pred = IsIn ("Num", TVar (Tyvar ("a", Star)))
+
+    >>> let preds = [pred] ;;
+    val preds : Thih.Pred.pred list = [IsIn ("Num", TVar (Tyvar ("a", Star)))]
+
+    >>> let result = scEntail(exampleInsts(initialEnv))(preds)(pred) ;;
+    val result : bool = true
+
+*)
 
 (* 8 Type Schemes *)
+(*|
+    >>> open Thih.Scheme;;
+*)
 module Scheme = struct
 
   open List
@@ -918,8 +1347,107 @@ module Scheme = struct
 
   let toScheme (t:type_) :scheme = Forall([], (Qual([], t)))
 end
+(*|
 
+## scheme
+
+    >>> let ty = TVar(Tyvar("a", Star)) ;;
+    val ty : Thih.Type.type_ = TVar (Tyvar ("a", Star))
+
+    >>> let pred = IsIn("Num", ty) ;;
+    val pred : Thih.Pred.pred = IsIn ("Num", TVar (Tyvar ("a", Star)))
+
+    >>> let sc = Forall([], Qual([pred], ty)) ;;
+    val sc : Thih.Scheme.scheme =  Forall ([],   Qual ([IsIn ("Num", TVar (Tyvar ("a", Star)))], TVar (Tyvar ("a", Star))))
+
+    >>> sc =
+        Forall([],
+          Qual(
+            [IsIn("Num", TVar(Tyvar("a", Star)))],
+            TVar(Tyvar("a", Star))));;
+
+
+## schemeApply
+    >>> let ty = TVar(Tyvar("a", Star)) ;;
+    val ty : Thih.Type.type_ = TVar (Tyvar ("a", Star))
+
+    >>> let pred = IsIn("Num", ty) ;;
+    val pred : Thih.Pred.pred = IsIn ("Num", TVar (Tyvar ("a", Star)))
+
+    >>> let sc = Forall([], Qual([pred], ty)) ;;
+    val sc : Thih.Scheme.scheme =  Forall ([],   Qual ([IsIn ("Num", TVar (Tyvar ("a", Star)))], TVar (Tyvar ("a", Star))))
+
+    >>> let subst = [(Tyvar("a", Star), tInt)] ;;
+    val subst : (Thih.Type.tyvar * Thih.Type.type_) list =  [(Tyvar ("a", Star), TCon (Tycon ("Int", Star)))]
+
+    >>> let sc1 = schemeApply(subst)(sc) ;;
+    val sc1 : Thih.Scheme.scheme =  Forall ([],   Qual ([IsIn ("Num", TCon (Tycon ("Int", Star)))],    TCon (Tycon ("Int", Star))))
+
+
+    >>> sc1 =
+        Forall([],
+          Qual(
+            [IsIn("Num", TCon(Tycon("Int", Star)))],
+            TCon(Tycon("Int", Star))));;
+
+
+## schemeTv
+    >>> let ty = TVar(Tyvar("a", Star)) ;;
+    val ty : Thih.Type.type_ = TVar (Tyvar ("a", Star))
+
+    >>> let pred = IsIn("Num", ty) ;;
+    val pred : Thih.Pred.pred = IsIn ("Num", TVar (Tyvar ("a", Star)))
+
+    >>> let sc = Forall([], Qual([pred], ty)) ;;
+    val sc : Thih.Scheme.scheme =  Forall ([],   Qual ([IsIn ("Num", TVar (Tyvar ("a", Star)))], TVar (Tyvar ("a", Star))))
+
+    >>> let tvs = schemeTv(sc) ;;
+    val tvs : Thih.Type.tyvar list = [Tyvar ("a", Star)]
+
+    >>> tvs = [Tyvar("a", Star)];;
+    - : bool = true
+
+## quantify
+    >>> let tyvar = Tyvar("a", Star) ;;
+    val tyvar : Thih.Type.tyvar = Tyvar ("a", Star)
+
+    >>> let ty = TVar(Tyvar("a", Star)) ;;
+    val ty : Thih.Type.type_ = TVar (Tyvar ("a", Star))
+
+    >>> let pred = IsIn("Num", ty) ;;
+    val pred : Thih.Pred.pred = IsIn ("Num", TVar (Tyvar ("a", Star)))
+
+    >>> let qual = Qual([pred], fn(ty)(tInt)) ;;
+    val qual : Thih.Type.type_ Thih.Pred.qual =  Qual ([IsIn ("Num", TVar (Tyvar ("a", Star)))],   TAp    (TAp (TCon (Tycon ("(->)", Kfun (Star, Kfun (Star, Star)))),      TVar (Tyvar ("a", Star))),    TCon (Tycon ("Int", Star))))
+
+    >>> let sc = quantify([tyvar])(qual) ;;
+    val sc : Thih.Scheme.scheme =  Forall ([Star],   Qual ([IsIn ("Num", TGen 0)],    TAp (TAp (TCon (Tycon ("(->)", Kfun (Star, Kfun (Star, Star)))), TGen 0),     TCon (Tycon ("Int", Star)))))
+
+    >>> sc =
+        Forall([Star],
+          Qual([IsIn("Num", TGen(0))],
+            TAp(
+              TAp(
+                TCon(Tycon("(->)", Kfun(Star, Kfun(Star, Star)))),
+                TGen(0)),
+              TCon(Tycon("Int", Star)))));;
+
+## toScheme
+
+    >>> let ty = TVar(Tyvar("a", Star)) ;;
+    val ty : Thih.Type.type_ = TVar (Tyvar ("a", Star))
+
+    >>> let sc = toScheme(ty) ;;
+    val sc : Thih.Scheme.scheme =  Forall ([], Qual ([], TVar (Tyvar ("a", Star))))
+
+    >>> sc = Forall([], Qual([], TVar(Tyvar("a", Star))));;
+    - : bool = true
+
+*)
 (* 9 Assumptions *)
+(*|
+    >>> open Thih.Assump;;
+*)
 module Assump = struct
 
   open Scheme
@@ -952,8 +1480,104 @@ module Assump = struct
     end ass in
     sc
 end
+(*|
+## assump
+
+    >>> let t = TVar(Tyvar("a", Star)) ;;
+    val t : Thih.Type.type_ = TVar (Tyvar ("a", Star))
+
+    >>> let assump = Assump("ABC", Forall([], Qual([], t))) ;;
+    val assump : Thih.Assump.assump =  Assump ("ABC", Forall ([], Qual ([], TVar (Tyvar ("a", Star)))))
+
+    >>> assump = Assump("ABC", Forall([], Qual([], TVar(Tyvar("a", Star)))));;
+    - : bool = true
+
+## assumpApply
+
+    >>> let t = TVar(Tyvar("a", Star)) ;;
+    val t : Thih.Type.type_ = TVar (Tyvar ("a", Star))
+
+    >>> let assump = Assump("ABC", Forall([], Qual([], t))) ;;
+    val assump : Thih.Assump.assump =  Assump ("ABC", Forall ([], Qual ([], TVar (Tyvar ("a", Star)))))
+
+    >>> let subst: subst = [(Tyvar("a", Star), tInt)] ;;
+    val subst : Thih.Subst.subst =  [(Tyvar ("a", Star), TCon (Tycon ("Int", Star)))]
+
+    >>> let assump2 = assumpApply(subst)(assump) ;;
+    val assump2 : Thih.Assump.assump =  Assump ("ABC", Forall ([], Qual ([], TCon (Tycon ("Int", Star)))))
+
+    >>> assump2 = Assump("ABC", Forall([], Qual([], TCon(Tycon("Int", Star)))));;
+    - : bool = true
+
+## assumpTv
+
+    >>> let t = TVar(Tyvar("a", Star)) ;;
+    val t : Thih.Type.type_ = TVar (Tyvar ("a", Star))
+
+    >>> let assump = Assump("ABC", Forall([], Qual([], t))) ;;
+    val assump : Thih.Assump.assump =  Assump ("ABC", Forall ([], Qual ([], TVar (Tyvar ("a", Star)))))
+
+    >>> let tvs = assumpTv(assump) ;;
+    val tvs : Thih.Type.tyvar list = [Tyvar ("a", Star)]
+    >>> tvs = [Tyvar("a", Star)] ;;
+    - : bool = true
+
+## assumpsApply
+
+    >>> let t = TVar(Tyvar("a", Star)) ;;
+    val t : Thih.Type.type_ = TVar (Tyvar ("a", Star))
+
+    >>> let assump = Assump("ABC", Forall([], Qual([], t))) ;;
+    val assump : Thih.Assump.assump =  Assump ("ABC", Forall ([], Qual ([], TVar (Tyvar ("a", Star)))))
+
+    >>> let subst = [(Tyvar("a", Star), tInt)] ;;
+    val subst : (Thih.Type.tyvar * Thih.Type.type_) list =  [(Tyvar ("a", Star), TCon (Tycon ("Int", Star)))]
+
+    >>> let assumps = assumpsApply(subst)([assump]) ;;
+    val assumps : Thih.Assump.assump list =  [Assump ("ABC", Forall ([], Qual ([], TCon (Tycon ("Int", Star)))))]
+
+    >>> assumps =
+        [
+          Assump("ABC",
+            Forall([], Qual([], TCon(Tycon("Int", Star)))))];;
+
+## assumpsTv
+
+    >>> let t = TVar(Tyvar("a", Star)) ;;
+    val t : Thih.Type.type_ = TVar (Tyvar ("a", Star))
+
+    >>> let assump = Assump("ABC", Forall([], Qual([], t))) ;;
+    val assump : Thih.Assump.assump =  Assump ("ABC", Forall ([], Qual ([], TVar (Tyvar ("a", Star)))))
+
+    >>> let tvs = assumpsTv([assump]) ;;
+    val tvs : Thih.Type.tyvar list = [Tyvar ("a", Star)]
+
+    >>> tvs = [Tyvar("a", Star)] ;;
+    - : bool = true
+
+## find
+
+    >>> let t = TVar(Tyvar("a", Star)) ;;
+    val t : Thih.Type.type_ = TVar (Tyvar ("a", Star))
+
+    >>> let assump = Assump("ABC", Forall([], Qual([], t))) ;;
+    val assump : Thih.Assump.assump =  Assump ("ABC", Forall ([], Qual ([], TVar (Tyvar ("a", Star)))))
+
+    >>> let assump2 = Assump("ABC2", Forall([], Qual([], tInt))) ;;
+    val assump2 : Thih.Assump.assump =  Assump ("ABC2", Forall ([], Qual ([], TCon (Tycon ("Int", Star)))))
+
+    >>> let sc = find("ABC")([assump;assump2]) ;;
+    val sc : Thih.Scheme.scheme =  Forall ([], Qual ([], TVar (Tyvar ("a", Star))))
+
+    >>> sc = Forall([], Qual([], TVar(Tyvar("a", Star))));;
+    - : bool = true
+
+*)
 
 (* 10 A Type Inference Monad *)
+(*|
+    >>> open Thih.TIMonad;;
+*)
 module TIMonad = struct
 
   open Kind
@@ -1007,8 +1631,86 @@ module TIMonad = struct
     let ts = map (newTVar ti) ks in
     qualTypeInst ts qt
 end
+(*|
+
+## ti
+
+    >>> let subst = [(Tyvar("a", Star), tInt)] ;;
+    val subst : (Thih.Type.tyvar * Thih.Type.type_) list =  [(Tyvar ("a", Star), TCon (Tycon ("Int", Star)))]
+
+    >>> let ti = (ref subst, ref 1) ;;
+    val ti : (Thih.Type.tyvar * Thih.Type.type_) list ref * int ref =  ({contents = [(Tyvar ("a", Star), TCon (Tycon ("Int", Star)))]},   {contents = 1})
+
+    >>> ti =
+      ({contents=[(Tyvar("a", Star), TCon(Tycon("Int", Star)))]}, {contents=1});;
+
+## runTI
+
+    >>> let n = runTI begin fun (subst, n) ->
+      n := !n + 1;
+      !n
+    end ;;
+
+    >>> n = 1
+
+## getSubst
+
+    >>> runTI begin fun ti ->
+      let subst = getSubst(ti) in
+      subst = []
+    end;;
+
+## extSubst
+
+    >>> runTI begin fun ti ->
+        let subst = [(Tyvar("a", Star), tInt)] in
+        extSubst(ti)(subst);
+        let subst2 = getSubst(ti) in
+
+        subst2 = [(Tyvar("a", Star), TCon(Tycon("Int", Star)))]
+      end;;
+
+## unify
+
+    >>> runTI begin fun ti ->
+        let t1 = TVar(Tyvar("a", Star)) in
+        unify(ti)(t1)(tInt);
+
+        t1 = TVar(Tyvar("a", Star))
+      end;;
+
+## newTVar
+
+    >>> runTI begin fun ti ->
+        let t1 = newTVar(ti)(Star) in
+        t1 =:= TVar(Tyvar("v0", Star));
+
+        unify(ti)(t1)(tInt);
+
+        t1 =:= TVar(Tyvar("v0", Star));
+
+        let t2:type_ = typeApply(getSubst(ti))(t1) in
+        t2 = tInt
+      end ;;
+
+## freshInst
+
+    >>> runTI begin fun ti ->
+        let ty = TVar(Tyvar("a", Star)) in
+        let sc = toScheme(ty) in
+
+        let tq:type_ qual = freshInst(ti)(sc) in
+
+        (sc = Forall([], Qual([], TVar(Tyvar("a", Star)))),
+        tq = Qual([], TVar(Tyvar("a", Star))))
+      end ;;
+
+*)
 
 (* 11 Type Inference *)
+(*|
+    >>> open Thih.Infer;;
+*)
 module Infer = struct
   open Pred
   open Assump
@@ -1016,8 +1718,14 @@ module Infer = struct
 
   type ('e, 't) infer = ti -> classEnv -> assump list -> 'e -> pred list * 't
 end
+(*|
+
+*)
 
 (* 11.1 Literals *)
+(*|
+    >>> open Thih.Lit;;
+*)
 module Lit = struct
   open Kind
   open Type
@@ -1044,9 +1752,15 @@ module Lit = struct
         ([IsIn("Fractional", v)], v)
     end
 end
+(*|
+
+*)
 
 
 (* 11.2 Patterns *)
+(*|
+    >>> open Thih.Pat;;
+*)
 module Pat = struct
   open Big_int
   open List
@@ -1094,11 +1808,18 @@ module Pat = struct
     let (pss, ass, ts) = Pre.split3 (map (tiPat ti) pats) in
     (concat pss, concat ass, ts)
 end
+(*|
+
+*)
 
 (* 11.3 Expressions
  * 11.4 Alternatives
  * 11.5 From Types to Type Schemes
  * 11.6 Binding Groups *)
+(*|
+    >>> open Thih.TIMain;;
+    
+*)
 module TIMain = struct
   open List
   open Kind
@@ -1178,9 +1899,9 @@ module TIMain = struct
     | Const of assump
     | Ap of expr * expr
     | Let of bindGroup * expr
-    (*| Lam of alt*)
-    (*| If of expr * expr * expr*)
-    (*| Case of expr * (Pat * Expr) list*)
+    (* | Lam of alt*)
+    (* | If of expr * expr * expr*)
+    (* | Case of expr * (Pat * Expr) list*)
   and alt = pat list * expr
   and expl = Id.id * scheme * alt list
   and impl = Id.id * alt list
@@ -1221,15 +1942,15 @@ module TIMain = struct
         let (ps, as') = tiBindGroup ti ce as_ bg in
         let (qs, t) = tiExpr ti ce (as' @ as_) e in
         (ps @ qs, t)
-      (*| Lam(alt) -> tiAlt ti ce as_ alt *)
-      (*| If(e, e1, e2) ->
+      (* | Lam(alt) -> tiAlt ti ce as_ alt *)
+      (* | If(e, e1, e2) ->
         let (ps,t) = tiExpr ti ce as_ e in
         unify ti t tBool;
         let (ps1,t1) = tiExpr ti ce as_ e1 in
         let (ps2,t2) = tiExpr ti ce as_ e2 in
         unify ti t1 t2;
         (ps @ ps1 @ ps2, t1)*)
-      (*| Case(e, branches) ->
+      (* | Case(e, branches) ->
         let (ps, t) = tiExpr ti ce as_ e in
         let v = newTVar Star in
         let tiBr (pat, f) =
@@ -1318,5 +2039,8 @@ module TIMain = struct
       assumpsApply (s' @@ s) as2
     end
 end
+(*|
+
+*)
 
 
