@@ -3,4 +3,5 @@ all:
 test:
 	./odoctest -d a.ml
 clean:
-	rm *.cm* a.out
+	rm *.cm* a.out *.ml.bak
+

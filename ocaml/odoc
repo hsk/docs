@@ -1,53 +1,63 @@
 #!/usr/local/bin/php
 <?php
+function ppexec($cmd) {
+  ob_start();
+  system($cmd);
+  $f = ob_get_contents();
+  ob_end_clean();
+  return $f;
+}
+function getMLs($argv) {
+  $mls = array();
+  foreach ($argv as $ml) {
+    if (preg_match("/\\.ml\$/", $ml) < 1) continue;
+    $mls[] = $ml;    
+  }
+  return $mls;
+}
+function getML2CMO($mls) {
+  $ml2cmo = array();
+  preg_replace_callback("/([^ ]+)\\.cmo/",
+    function($m) use(&$ml2cmo) {
+      $ml2cmo[$m[1].".ml"] = $m[1].".cmo";
+      return "";
+    },
+    ppexec("ocamldep ".implode(" ", $mls))
+  );
+  return $ml2cmo;  
+}
+function getMLSorts($argv) {
+  $mls = getMLs($argv);
+  $ml2cmo = getML2CMO($mls);
 
-ob_start();
-  system("ocamldep ".$argv[1]);
-$f = ob_get_contents();
-ob_end_clean();
+  $mlsstr = ppexec("ocamldep -sort ".implode(" ", array_keys($ml2cmo)));
 
-$s = array();
-preg_replace_callback("/([^ ]+)\\.cmo/",
-  function($m) use(&$s) {
-    $s[$m[1].".ml"] = $m[1].".cmo";
-    return "";
-  },
-  $f
-);
-$ss = array_keys($s);
-$cmd = implode(" ", $ss)."\n";
-ob_start();
-system("ocamldep -sort $cmd");
-
-$f = ob_get_contents();
-ob_end_clean();
-
-$fs = array();
-foreach(preg_split("/ +/", $f) as $v) {
-  if(preg_match("/^\\s*\$/", $v) > 0) continue;
-  if(preg_match("/\\.ml\$/", $v) < 1) continue;
-  $fs[] = $v;
+  $mls = array();
+  foreach(preg_split("/ +/", $mlsstr) as $ml) {
+    if (preg_match("/\\.ml\$/", $ml) < 1) continue;
+    $mls[] = $ml;
+  }
+  return $mls;
+}
+function getMDSrc($src) {
+  $mdsrc = "";
+  preg_replace_callback("/\\(\\*\\|(.*?)\\*\\)/s",
+    function($m)use(&$mdsrc) {
+      $mdsrc .= $m[1];
+      return "";
+    },
+    $src
+  );
+  $mdsrc = preg_replace("/^\\s+/s", "", $mdsrc);
+  return $mdsrc;
+}
+function main($argv) {
+  $mls = getMLSorts($argv);
+  foreach($mls as $ml) {
+    $md = preg_replace("/\\.ml\$/", ".md", $ml);
+    $src = file_get_contents($ml);
+    file_put_contents($md, getMdSrc($src));
+  }
 }
 
-
-$debug = false;
-    foreach($fs as $file) {
-        if (preg_match("/\\.ml\$/", $file) < 1) continue;
-        $md = preg_replace("/\\.ml\$/", ".md", $file);
-        $src = file_get_contents($file);
-        $a = "";
-        preg_replace_callback("/\\(\\*\\|(.*?)\\*\\)/s",
-            function($m)use(&$a) {
-                $a .= $m[1];
-                return "";
-            },
-            $src
-        );
-	$a = preg_replace("/^\\s+/s", "", $a);
-        if($debug) {
-            echo $md."\n";
-            echo $a."\n";
-        }
-        file_put_contents($md, $a);
-    }
-
+main($argv);

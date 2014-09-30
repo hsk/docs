@@ -1,7 +1,7 @@
 # a.ml
 
 	>>> open A;;
-
+	
 
 
 ## type e
@@ -14,12 +14,12 @@
 ### 1 + 2
 
 	>>> (Add ((V 1),(V 2)));;
-	- : A.e = Add (V 1, V 2) 
+	- : A.e = Add (V 1, V 2)
 
 ### 1 - 2
 
 	>>> Sub (V 1, V 2);;
-	- : A.e = Sub (V 1, V 2) 
+	- : A.e = Sub (V 1, V 2)
 
 
 
