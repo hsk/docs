@@ -13,7 +13,7 @@ mlファイル内の`(*|`と`*)`の間のコメントをmdファイルに出力�
 例)
 
 ```
-$ odoctest a.ml -odoc
+$ ./odoctest a.ml -odoc
 ```
 
 ## 自動テスト結果書き換え
@@ -25,19 +25,19 @@ $ odoctest a.ml -odoc
 例) a.mlを書き換える
 
 ```
-$ odoctest a.ml --rewrite=a
+$ ./odoctest a.ml --rewrite=a
 ```
 
 例) b.mlを書き換える
 
 ```
-$ odoctest a.ml --rewrite=b
+$ ./odoctest a.ml --rewrite=b
 ```
 
 例) a.mlとb.mlを書き換える
 
 ```
-$ odoctest a.ml --rewrite=a,b
+$ ./odoctest a.ml --rewrite=a,b
 ```
 
 ## rewrite all
@@ -48,7 +48,7 @@ $ odoctest a.ml --rewrite=a,b
 例) a.mlのテストに関連する全てのmlファイルを書き換える。
 
 ```
-$ odoctest a.ml --rewrite=all
+$ ./odoctest a.ml --rewrite=all
 ```
 
 ## ポーリング
