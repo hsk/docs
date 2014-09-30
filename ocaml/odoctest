@@ -197,7 +197,27 @@ function getMLSorts($argv) {
   }
   return $mls;
 }
+function odocopt($argv) {
+  foreach($argv as $arg) {
+    if($arg == "-odoc") {
+      return true;
+    }
+  }
+  return false;
+}
+function odoc($argv) {
+  $mls = getMLSorts($argv);
+  foreach($mls as $ml) {
+    $md = preg_replace("/\\.ml\$/", ".md", $ml);
+    $src = file_get_contents($ml);
+    echo "generate $md\n";
+    file_put_contents($md, getMdSrc($src));
+  }
+}
 function main($argv) {
+  if(odocopt($argv)) {
+    return odoc($argv);
+  }
   $mls = getMLSorts($argv);
 
   ppexec("ocamlc ".implode(" ",$mls));

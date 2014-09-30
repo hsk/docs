@@ -1,5 +1,5 @@
 all:
-	./odoc a.ml
+	./odoctest -odoc a.ml
 test:
 	./odoctest -d a.ml
 clean:
