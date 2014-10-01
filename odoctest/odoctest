@@ -188,13 +188,27 @@ function getMLs() {
   $mls = array_filter($argv, function($ml){ return (preg_match("/\\.ml\$/", $ml) > 0); });
 
   $mls2 = array();
-  preg_replace_callback("/([^ ]+)\\.cmo/",
-    function($m) use(&$mls2) {
-      $mls2[] = $m[1].".ml";
-    },
-    Pipes::exec("ocamldep ".implode(" ", $mls))
-  );
-  
+
+  do {
+    $news1= array();
+    preg_replace_callback("/([^ \\s]+)\\.cmo/",
+      function($m) use($mls2, &$news1) {
+        $ml = $m[1].".ml";
+        if(!in_array($ml,$mls2))$news1[] = $ml;
+      },
+      Pipes::exec("ocamldep ".implode(" ", $mls))
+    );
+
+    $news = array();
+    foreach($news1 as $ml) {
+      if (!in_array($ml, $mls2)) {
+        $news[] = $ml;
+        $mls2[] = $ml;
+      }
+    }
+    $mls = $news;
+  } while(count($mls) > 0);  
+
   $mlsstr = Pipes::exec("ocamldep -sort ".implode(" ", $mls2));
   return array_filter(preg_split("/ +/", $mlsstr),function($ml){
     return (preg_match("/\\.ml\$/", $ml) > 0);});
@@ -210,6 +224,12 @@ function odoc() {
     echo "generate $md\n";
     file_put_contents($md, getMDSrc(file_get_contents($ml)));
   }
+}
+
+function clean() {
+  global $argv;
+  if (!in_array("-clean", $argv)) return;
+  system("rm -rf *.bak .omakedb* *.cache *.omc *.o *.cm* a.out *.opt");
 }
 
 function test() {
@@ -233,6 +253,8 @@ function test() {
   $pipes = null;
 
   odoc();
+
+  clean();
 }
 
 function main() {
