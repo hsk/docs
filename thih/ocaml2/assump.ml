@@ -12,6 +12,8 @@ open Kind
 
 type assump = Assump of Id.id * scheme
 
+let (=::) id t = Assump(id, toScheme t)
+
 let assumpApply (s:Subst_.subst) (Assump(i, sc):assump) : assump =
   Assump(i, schemeApply s sc)
 
@@ -40,6 +42,9 @@ let find (i:Id.id) (ass:assump list): scheme =
 
     >>> assump = Assump("ABC", Forall([], Qual([], TVar(Tyvar("a", Star)))));;
     - : bool = true
+
+    >>> "ABC" =:: tInt ;;
+    - : Assump.assump = Assump ("ABC", Forall ([], Qual ([], TCon (Tycon ("Int", Star)))))
 
 ## assumpApply
 

@@ -8,7 +8,6 @@
 
     >>> open TIMain;;
     
-
 *)
 
 open List
@@ -88,7 +87,6 @@ let split (ce:classEnv) (fs:tyvar list) (gs:tyvar list)
     ;;
     - : TIMain.ambiguity list = []
 
-
 ## numClasses
 
     >>> numClasses ;;
@@ -123,11 +121,11 @@ let split (ce:classEnv) (fs:tyvar list) (gs:tyvar list)
       let ce = addNumClasses(initialEnv) in
       Printf.printf("c ----\n");
       let amb = (Tyvar("B", Star),preds) in
-      let ts = candidates(ce)(amb) in
+      let _ = candidates(ce)(amb) in
       
       1 = 1
     ;;
-    [A[A[A[A[A[A[A[A[A[A[A[A[A# let tv = Tyvar("a", Star) in let preds = [IsIn("Num", tInt); IsIn("B", tInt)] in Printf.printf("a ----\n"); let _ = (tv, preds) in Printf.printf("b ----\n"); let ce = addNumClasses(initialEnv) in Printf.printf("c ----\n"); let amb = (Tyvar("B", Star),preds) in let [4mts[24m = candidates(ce)(amb) in 1 = 1 ;; [24ma ---- b ---- Exception: Failure "superclass not defined".
+    a ---- b ---- Exception: Failure "superclass not defined".
 
 
 
@@ -162,9 +160,9 @@ let split (ce:classEnv) (fs:tyvar list) (gs:tyvar list)
 ## restricted
 
     >>>
-      1 = 1
+      1 = 2
     ;;
-    - : bool = true
+    - : bool = false
 
 *)
 
@@ -172,11 +170,20 @@ let split (ce:classEnv) (fs:tyvar list) (gs:tyvar list)
 (*|
 ## expr
 
-
 var は変数ですね。
 
     >>> Var("test");;
     - : TIMain.expr = Var "test"
+
+型推論は色々あるんですけど、テスト用のtesTIExprを作ってテストしてみましょう。
+
+    >>> tesTIExpr (Var "test") ;;
+    Exception: Not_found.
+
+変数の環境はassumpのリストとして渡せばうまく行きます。
+
+    >>> tesTIExpr (Var "test") ~ass:[Assump("test", toScheme tInt)];;
+    - : Pred.pred list * Type.type_ = ([], TCon (Tycon ("Int", Star)))
 
 ### Const
 
@@ -189,10 +196,14 @@ toSchemeを使えば簡単な型からschemeを作ることができます。
     >>> toScheme tInt;;
     - : Scheme.scheme = Forall ([], Qual ([], TCon (Tycon ("Int", Star))))
 
+
 なので、単純なConstはAssumpとtoSchemeがあれば作れます。
 
-    >>> Const(Assump("int1", toScheme tInt));;
-    - : TIMain.expr = Const (Assump ("int1", Forall ([], Qual ([], TCon (Tycon ("Int", Star))))))
+    >>> let co = Const(Assump("int1", toScheme tInt));;
+    val co : TIMain.expr = Const (Assump ("int1", Forall ([], Qual ([], TCon (Tycon ("Int", Star))))))
+
+    >>> tesTIExpr co;;
+    - : Pred.pred list * Type.type_ = ([], TCon (Tycon ("Int", Star)))
 
 より複雑なschemeはquantify関数を使って作ります。
 
@@ -234,6 +245,9 @@ schemeは forall [*] Num gen 0 => gen 0 -> int
     >>> Const(Assump("ABC", sc)) ;;
     - : TIMain.expr = Const (Assump ("ABC", Forall ([Star], Qual ([IsIn ("Num", TGen 0)], TAp (TAp (TCon (Tycon ("(->)", Kfun (Star, Kfun (Star, Star)))), TGen 0), TCon (Tycon ("Int", Star)))))))
 
+    >>> tesTIExpr (Const(Assump("ABC", sc)));;
+    - : Pred.pred list * Type.type_ = ([IsIn ("Num", TVar (Tyvar ("v0", Star)))], TAp (TAp (TCon (Tycon ("(->)", Kfun (Star, Kfun (Star, Star)))), TVar (Tyvar ("v0", Star))), TCon (Tycon ("Int", Star))))
+
 大分複雑なConstが出来ました！
 
 ## Ap 関数適応
@@ -242,13 +256,36 @@ schemeは forall [*] Num gen 0 => gen 0 -> int
 
 f v1 という式は
 
-    >>> Ap(Var("f"),Var("v1")) ;;
-    - : TIMain.expr = Ap (Var "f", Var "v1")
+    >>> let apfv1 = Ap(Var("f"),Var("v1")) ;;
+    val apfv1 : TIMain.expr = Ap (Var "f", Var "v1")
+
+    >>> tesTIExpr apfv1 ~ass:[];;
+    Exception: Not_found.
+    
+    >>> tesTIExpr apfv1 ~ass:[Assump("f", toScheme(fn tInt tInt)); Assump("v1", toScheme(tInt))];;
+    - : Pred.pred list * Type.type_ = ([], TVar (Tyvar ("v0", Star)))
+
+Assumpは不便なので =::演算子でtoSchemeを無くても使えるようにしてみましょう。
+
+    >>> tesTIExpr apfv1 ~ass:["f" =:: (fn tInt tInt); "v1" =:: tInt];;
+    - : Pred.pred list * Type.type_ = ([], TVar (Tyvar ("v0", Star)))
+
+これで、分かりやすくなったかな？
 
 add 1 2 という式は
 
-    >>> Ap(Ap(Var("add"),Lit(LitInt 1)),Lit(LitInt 2)) ;;
-    - : TIMain.expr = Ap (Ap (Var "add", Lit (LitInt 1)), Lit (LitInt 2))
+    >>> let ap12 = Ap(Ap(Var("add"),Lit(LitInt 1)),Lit(LitInt 2)) ;;
+    val ap12 : TIMain.expr = Ap (Ap (Var "add", Lit (LitInt 1)), Lit (LitInt 2))
+
+
+    >>> tesTIExpr (Var "add");;
+    Exception: Not_found.
+
+    >>> tesTIExpr ap12;;
+    Exception: Not_found.
+
+    >>> tesTIExpr ap12 ~ass:["add" =:: (fn tInt (fn tInt tInt))];;
+    - : Pred.pred list * Type.type_ = ([IsIn ("Num", TVar (Tyvar ("v0", Star))); IsIn ("Num", TVar (Tyvar ("v2", Star)))], TVar (Tyvar ("v3", Star)))
 
 と書けます。
 
@@ -262,6 +299,7 @@ add 1 2 という式は
     - : TIMain.expr = Let (([], []), Var "a")
 
 1個ある場合はbinding groupを理解しないといけないので後でやりましょう。
+
 
 *)
 type expr =
@@ -296,19 +334,30 @@ altは パターンのリストと式を組み合わせたものです。
 
 ### 1 -> 10
 
-    >>> let (alt1:alt) = ([PVar "a"], Lit(LitInt 10)) ;;
-    val alt1 : TIMain.alt = ([PVar "a"], Lit (LitInt 10))
+    >>> let (alt1:alt) = ([PLit(LitInt 1)], Lit(LitInt 10)) ;;
+    val alt1 : TIMain.alt = ([PLit (LitInt 1)], Lit (LitInt 10))
+
+    >>> tesTIAlt alt1;;
+    - : Pred.pred list * Type.type_ = ([IsIn ("Num", TVar (Tyvar ("v0", Star))); IsIn ("Num", TVar (Tyvar ("v1", Star)))], TAp (TAp (TCon (Tycon ("(->)", Kfun (Star, Kfun (Star, Star)))), TVar (Tyvar ("v0", Star))), TVar (Tyvar ("v1", Star))))
 
 ### a -> a+10
 
     >>> let (alt2:alt) = ([PVar "a"], Ap( Ap(Var("(+)"), Var("a")), Lit(LitInt 10))) ;;
     val alt2 : TIMain.alt = ([PVar "a"], Ap (Ap (Var "(+)", Var "a"), Lit (LitInt 10)))
 
+    >>> tesTIAlt alt2 ~ass:["a" =:: tInt; "(+)" =:: fn tInt (fn tInt tInt)];;
+    - : Pred.pred list * Type.type_ = ([IsIn ("Num", TVar (Tyvar ("v2", Star)))], TAp (TAp (TCon (Tycon ("(->)", Kfun (Star, Kfun (Star, Star)))), TVar (Tyvar ("v0", Star))), TVar (Tyvar ("v3", Star))))
+
 ### a b -> a+b
 
     >>> let (alt3:alt) = ([PVar "a";PVar "b"],
       Ap( Ap(Var("(+)"), Var("a")), Var("b"))) ;;
     val alt3 : TIMain.alt = ([PVar "a"; PVar "b"], Ap (Ap (Var "(+)", Var "a"), Var "b"))
+
+    >>> tesTIAlt alt3;;
+    Exception: Not_found.
+
+
 
 *)
 and alt = pat list * expr
@@ -323,7 +372,7 @@ implは名前とaltのリストの対です。
 と言うような関数を表す事が出来ます。
 
     >>> let (impl:impl) = (("k":Id.id), [alt1; alt2]) ;;
-    val impl : TIMain.impl = ("k", [([PVar "a"], Lit (LitInt 10)); ([PVar "a"], Ap (Ap (Var "(+)", Var "a"), Lit (LitInt 10)))])
+    val impl : TIMain.impl = ("k", [([PLit (LitInt 1)], Lit (LitInt 10)); ([PVar "a"], Ap (Ap (Var "(+)", Var "a"), Lit (LitInt 10)))])
 
 以下のような式は
 
@@ -360,20 +409,18 @@ TODO:ちゃんと調べましょう。
     >>> let (bg_a1:bindGroup) = ([],[[impl_a1]]);;
     val bg_a1 : TIMain.bindGroup = ([], [[("a", [([], Lit (LitInt 1))])]])
 
-
     >>>
       runTI begin fun (ti:ti) ->
         let (ce:classEnv) = Pred.initialEnv in
         let (as_:assump list) = [] in
         let (bindGroup:bindGroup) = ([], [[impl_a1]]) in
-        let result:(pred list * assump list) =
+        let result =
           tiBindGroup (ti:ti)(ce:classEnv)(as_:assump list)(bindGroup)
         in
-        let expected = ([],[]) in
-        (expected = result, result)
+        result
       end
     ;;
-    kore1 kore2 kore3 Exception: Not_found.
+    kore1 kore2 1 kore3 1 Exception: Not_found.
 
 *)
 and bindGroup = expl list * impl list list
@@ -476,9 +523,9 @@ and tiImpls : (impl list, assump list) infer =
       in
         Printf.printf "kore1\n";
       let vss = map typeTv ts' in
-        Printf.printf "kore2\n";
+        Printf.printf "kore2 %d\n" (List.length vss);
       let gs = Pre.diff (Pre.fold_left1 Pre.union vss) fs in
-        Printf.printf "kore3\n";
+        Printf.printf "kore3 %d\n" (List.length vss);
       let (ds, rs) = split ce fs (Pre.fold_left1 Pre.intersect vss) ps' in
         Printf.printf "kore4\n";
       ((bs), is, ts',gs,ds,rs)
@@ -510,7 +557,26 @@ let tiProgram (ce:classEnv) (as_:assump list) (bgs : program):assump list =
     assumpsApply (s' @@ s) as2
   end
 
+let tesTIExpr ?(ass=[]) expr =
+      runTI begin fun (ti:ti) ->
+        let (ce:classEnv) = Pred.initialEnv in
+        let (as_:assump list) = ass in
+        let result:(pred list * type_) =
+          tiExpr (ti:ti)(ce:classEnv)(as_:assump list)(expr: expr)
+        in
+        result
+      end
+
+let tesTIAlt ?(ass=[]) alt =
+      runTI begin fun (ti:ti) ->
+        let (ce:classEnv) = Pred.initialEnv in
+        let (as_:assump list) = ass in
+        tiAlt (ti:ti)(ce:classEnv)(as_:assump list)(alt:alt)
+      end
+
+
 (*|
+
 ## tiSeq
 
     >>>
@@ -612,7 +678,7 @@ let tiProgram (ce:classEnv) (as_:assump list) (bgs : program):assump list =
         tiImpls (ti:ti)(ce:classEnv)(as_:assump list)(impls)
       end
     ;;
-    kore1 kore2 Exception: Invalid_argument "empty list".
+    kore1 kore2 0 Exception: Invalid_argument "empty list".
 
 
 ## tiBindingGroup
@@ -634,7 +700,7 @@ let tiProgram (ce:classEnv) (as_:assump list) (bgs : program):assump list =
         (expected = result, result)
       end
     ;;
-    kore1 kore2 Exception: Invalid_argument "empty list".
+    kore1 kore2 0 Exception: Invalid_argument "empty list".
 
 
 ## tiProgram
@@ -656,7 +722,7 @@ let tiProgram (ce:classEnv) (as_:assump list) (bgs : program):assump list =
       let expected = [] in
       expected = result
     ;;
-    kore1 kore2 Exception: Invalid_argument "empty list".
+    kore1 kore2 0 Exception: Invalid_argument "empty list".
 
 
 *)
