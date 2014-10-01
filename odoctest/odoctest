@@ -131,7 +131,10 @@ function rewriteML($ml, $src, $tests) {
     }, $src
   );
   file_put_contents($ml.".bak", file_get_contents($ml));
+  
   file_put_contents($ml, preg_replace("/^[0-9]+: /m","", $src));
+  if(in_array("-subl", $argv)
+    system("subl --command revert");
 }
 
 function testMLs($pipes, $mls) {

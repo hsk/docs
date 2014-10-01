@@ -3,6 +3,8 @@
 
     >>> open Lit;;
     
+    >>> 1;;
+    - : int = 1
 *)
 
   open Kind
