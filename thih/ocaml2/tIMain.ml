@@ -639,6 +639,7 @@ let tiProgram (ce:classEnv) (as_:assump list) (bgs : program):assump list =
 
 ## tiProgram
 
+
     >>>
       let (ce:classEnv) = Pred.initialEnv in
       let (as_:assump list) = [] in
