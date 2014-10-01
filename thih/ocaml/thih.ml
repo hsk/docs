@@ -2051,6 +2051,125 @@ module TIMain = struct
     let rs' = defaultedPreds ce (fs @ gs) rs in
     (ds, Pre.diff rs rs')
 
+(*|
+
+## mbiguities
+
+    >>>
+      let tvs = [Tyvar("a", Star)] in
+      let preds = [IsIn("Num", tInt); IsIn("B", tInt)] in
+      ambiguities(tvs)(preds)
+    ;;
+    - : Thih.TIMain.ambiguity list = []
+
+## numClasses
+
+    >>> numClasses ;;
+    - : Thih.Id.id list = ["Num"; "Integral"; "Floating"; "Fractional"; "Real"; "RealFloat"; "RealFrac"]
+
+    >>> List.length numClasses ;;
+    - : int = 7
+
+## stdClasses
+
+    >>>
+      stdClasses =
+        ["Eq"; "Ord"; "Show"; "Read"; "Bounded"; "Enum";
+          "Ix"; "Functor"; "Monad"; "MonadPlus"; "Num"; "Integral";
+          "Floating"; "Fractional"; "Real"; "RealFloat"; "RealFrac"];
+    ;;
+    - : bool = true
+
+    >>>
+      List.length stdClasses = 17
+    ;;
+    - : bool = true
+
+## candidates
+
+    >>>
+      let tv = Tyvar("a", Star) in
+      let preds = [IsIn("Num", tInt); IsIn("B", tInt)] in
+      Printf.printf("a ----\n");
+      let _ = (tv, preds) in
+      Printf.printf("b ----\n");
+      let ce = addNumClasses(initialEnv) in
+      Printf.printf("c ----\n");
+      let amb = (Tyvar("B", Star),preds) in
+      let ts = candidates(ce)(amb) in
+      Printf.printf "ts = %s\n" (Type.show_list ts);
+      
+      1 = 1
+    ;;
+    a ---- b ---- Exception: Failure "superclass not defined".
+
+## withDefaults
+
+    >>>
+      1 = 1
+    ;;
+    - : bool = true
+
+## defaultedPreds
+
+    >>>
+      1 = 1
+    ;;
+    - : bool = true
+
+## defaultSubst
+
+    >>>
+      1 = 1
+    ;;
+    - : bool = true
+
+## split
+
+    >>>
+      1 = 1
+    ;;
+    - : bool = true
+
+## restricted
+
+    >>>
+      1 = 1
+    ;;
+    - : bool = true
+*)
+
+
+(*|
+## expr
+
+
+var は変数ですね。
+
+    >>> Var("test");;
+    - : Thih.TIMain.expr = Var "test"
+
+assumpはschemeに名前がついている物です。
+schemeは型の元になるものです。
+
+    >>> let ty = Tyvar ("a", Star);;
+    val ty : Thih.Type.tyvar = Tyvar ("a", Star)
+
+    >>> let t = TVar (ty) ;;
+    val t : Thih.Type.type_ = TVar (Tyvar ("a", Star))
+
+    >>> let assump = Assump("ABC", Forall([], [ty] ==> t)) ;;
+    [A# let assump = Assump("ABC", Forall([], [[4mty[24m] ==> t)) ;; [24mError: This expression has type Thih.Type.tyvar but an expression was expected of type Thih.Pred.pred
+
+    >>> Const(Assump("ABC", Forall([], Qual([], t)))) ;;
+    - : Thih.TIMain.expr = Const (Assump ("ABC", Forall ([], Qual ([], TVar (Tyvar ("a", Star))))))
+
+    >>> Ap(Var("test"),Var("test2")) ;;
+    - : Thih.TIMain.expr = Ap (Var "test", Var "test2")
+
+    >>> Let(([],[]), Var("test")) ;;
+    - : Thih.TIMain.expr = Let (([], []), Var "test")
+*)
   type expr =
     | Var of Id.id
     | Lit of literal
@@ -2060,6 +2179,14 @@ module TIMain = struct
     (* | Lam of alt*)
     (* | If of expr * expr * expr*)
     (* | Case of expr * (Pat * Expr) list*)
+
+(*|
+## alt
+
+altは パターンのリストと式を組み合わせたものです。
+
+
+*)
   and alt = pat list * expr
   and expl = Id.id * scheme * alt list
   and impl = Id.id * alt list
@@ -2197,93 +2324,8 @@ module TIMain = struct
       assumpsApply (s' @@ s) as2
     end
 end
+
 (*|
-
-## mbiguities
-
-    >>>
-      let tvs = [Tyvar("a", Star)] in
-      let preds = [IsIn("Num", tInt); IsIn("B", tInt)] in
-      ambiguities(tvs)(preds)
-    ;;
-    - : Thih.TIMain.ambiguity list = []
-
-## numClasses
-
-    >>> numClasses ;;
-    - : Thih.Id.id list = ["Num"; "Integral"; "Floating"; "Fractional"; "Real"; "RealFloat"; "RealFrac"]
-
-    >>> List.length numClasses ;;
-    - : int = 7
-
-## stdClasses
-
-    >>>
-      stdClasses =
-        ["Eq"; "Ord"; "Show"; "Read"; "Bounded"; "Enum";
-          "Ix"; "Functor"; "Monad"; "MonadPlus"; "Num"; "Integral";
-          "Floating"; "Fractional"; "Real"; "RealFloat"; "RealFrac"];
-    ;;
-    - : bool = true
-
-    >>>
-      List.length stdClasses = 17
-    ;;
-    - : bool = true
-
-## candidates
-
-    >>>
-      let tv = Tyvar("a", Star) in
-      let preds = [IsIn("Num", tInt); IsIn("B", tInt)] in
-      Printf.printf("a ----\n");
-      let _ = (tv, preds) in
-      Printf.printf("b ----\n");
-      let ce = addNumClasses(initialEnv) in
-      Printf.printf("c ----\n");
-      let amb = (Tyvar("B", Star),preds) in
-      let ts = candidates(ce)(amb) in
-      Printf.printf "ts = %s\n" (Type.show_list ts);
-      
-      1 = 1
-    ;;
-    a ---- b ---- Exception: Failure "superclass not defined".
-
-## withDefaults
-
-    >>>
-      1 = 1
-    ;;
-    - : bool = true
-
-## defaultedPreds
-
-    >>>
-      1 = 1
-    ;;
-    - : bool = true
-
-## defaultSubst
-
-    >>>
-      1 = 1
-    ;;
-    - : bool = true
-
-## split
-
-    >>>
-      1 = 1
-    ;;
-    - : bool = true
-
-## restricted
-
-    >>>
-      1 = 1
-    ;;
-    - : bool = true
-
 ## tiSeq
 
     >>>
