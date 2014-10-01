@@ -1,170 +1,179 @@
 #!/usr/local/bin/php
 <?php
-function ppexec($cmd) {
-  ob_start();
-  system($cmd);
-  $f = ob_get_contents();
-  ob_end_clean();
-  return $f;
+
+function addMonitor($f) {
+  $olds = null;
+  while(true) {
+    $news = array();
+    clearstatcache(true);
+    foreach(glob($f) as $file)
+      $news[$file] = filemtime($file);
+    
+    if($olds === null) $olds = $news;
+    foreach($news as $file=>$data)
+      if (!isset($olds[$file]) || $olds[$file] != $data)
+          notify($f, $file);
+    $olds = $news;
+    usleep(1000*300);
+  }
 }
 
-function ppread(&$pipes) {
-  $rc = "";
-  while (($buffer = fread($pipes[1], 4096)) !== false) {
-    $rc .= $buffer;
-    if(preg_match("/# \$/s", $rc) > 0) break;
-  }
-  $rc = preg_replace("/\n?# \$/s", "", $rc);
-  return $rc;
+function notify($a,$b) {
+  echo "\n========================\n";
+  var_export($a);
+  var_export($b);
+  test();
 }
 
-function ppwrite(&$pipes, $data) {
-  fwrite($pipes[0], $data);
-  fflush($pipes[0]);
-}
-function debug($argv) {
-  $debug = false;
-  foreach($argv as $arg) {
-    if ($arg == "-d") $debug = true;
+class Pipes {
+  function __construct() {
+    $this->pipes = array();
+    $this->process = proc_open('ocaml',
+      array(array("pipe", "r"), array("pipe", "w")), $this->pipes);
+    if (!is_resource($this->process)) throw new Exception("error pipes");
   }
-  return $debug;
+  static function exec($cmd) {
+    ob_start();
+    system($cmd);
+    $f = ob_get_contents();
+    ob_end_clean();
+    return $f;
+  }
+  function read() {
+    $rc = "";
+    while (($buffer = fread($this->pipes[1], 4096)) !== false) {
+      $rc .= $buffer;
+      if(preg_match("/# \$/s", $rc) > 0) break;
+    }
+    return preg_replace("/\n?# \$/s", "", $rc);
+  }
+  function write($data) {
+    fwrite($this->pipes[0], $data);
+    fflush($this->pipes[0]);
+  }
+  function __destruct() {
+    fclose($this->pipes[0]);
+    proc_close($this->process);
+  }
 }
+function debug() {
+  global $argv;
+  return in_array("-d", $argv);
+}
+function tab() {
+  global $argv;
+  if (in_array("-notab",$argv)) return "    "; else return "\t";
+}
+
 function addLineNo($src) {
   $line = 0;
   $src = preg_replace_callback("/^/m", function($m)use(&$line) {
     $line++;
     return $line.": ";
   }, $src);
-  return $src;
+  return preg_replace_callback("/(\\(\\*\\|)(.*?)(\\*\\))/s", function($m) {
+    array_shift($m);
+    $m[1] = preg_replace_callback("/(;;[ \t]*\n)([0-9]+:[ \t]*>>>[^;]*)/", function($m) {
+      return $m[1] . "00: " . tab() . "\n" . $m[2];
+    }, $m[1]);
+    return implode("", $m);
+  }, $src);
 }
 function getMDSrc($src) {
   $mdsrc = "";
   preg_replace_callback("/\\(\\*\\|(.*?)\\*\\)/s",
-    function($m)use(&$mdsrc) {
-      $mdsrc .= $m[1];
-      return "";
-    },
+    function($m)use(&$mdsrc) { $mdsrc .= $m[1]; },
     $src
   );
-  $mdsrc = preg_replace("/^\\s+/s", "", $mdsrc);
-  return $mdsrc;
+  return preg_replace("/^\\s+/s", "", $mdsrc);
 }
 function getTests($src) {
   $tests = array();
   preg_replace_callback(
-    "/(\\n)([0-9]+):[ \t]*>>>[ \t]*(.*?;;)[ \t]*\\n[0-9]+:[ \t]*([^\n]*?)[ \t]*\n/s",
+    "/^([0-9]+):[ \t]*>>>[ \t]*(.*?;;)[ \t]*\n[0-9]+:[ \t]*([^\n]*?)[ \t]*\n/sm",
     function($m)use(&$tests) {
-      $m[3] = preg_replace("/^[0-9]+:[ \t]*/m", "", $m[3]);
-      $tests[$m[2]] = array("line"=>$m[2], "test"=>$m[3],"expected"=> $m[4]);
-      array_shift($m);
+      $tests[$m[1]] = array("test"=>preg_replace("/^[0-9]+:[ \t]*/m", "", $m[2]),"expected"=> $m[3]);
     },
     getMDSrc($src)
   );
-  return $tests;  
+  return $tests;
 }
-function rewrite($argv,$mls) {
-  $ws = false;
-  foreach($argv as $arg) {
+function getRewriteMLs($mls) {
+  global $argv;
+  foreach($argv as $arg)
     if (preg_match("/^--rewrite=(.*)\$/", $arg, $m) > 0) {
       $ws = explode(",", $m[1]);
-      break;
+      if(in_array("all", $ws)) return $mls;
+      return array_map(function($w){return $w . ".ml";}, $ws);
     }
-  }
-  if($ws === false) {
-    return $ws;
-  }
-
-  foreach($ws as &$w) {
-    if($w == "all") {
-      $ws = $mls;
-      break;
-    }
-    $w .= ".ml";
-  }
-  return $ws;
+  return array();
 }
-function rewriteTest($ml, $src, $tests, $rewrites, $argv) {
+function rewriteML($ml, $src, $tests) {
+  global $argv;
   echo "# rewrite $ml.\n";
-  $tab = "\t";
-  foreach($argv as $arg) {
-    if($arg=="-notab") {
-      $tab = "    ";
-      break;
-    }
-  }
+
   $src = preg_replace_callback("/(\\(\\*\\|)(.*?)(\\*\\))/s",
-    function($m)use($tests,$tab) {
-      $m[2] = preg_replace_callback(
-        "/(\\n)([0-9]+)(:[ \t]*>>>[ \t]*)(.*?;;)([ \t]*\\n[0-9]+:)([ \t]*)([^\\n]*?)([ \t]*\n)/s",
-        function($m)use(&$tests,$tab) {
-          $m[7] = $tests[$m[2]]["expected"];
-          if(preg_match("/\t|$tab/", $m[6]) < 1) {
-            $m[6] = " ".$tab;
-            if($m[7] != "")
-              $m[7] .= "\n";
-          }
-          array_shift($m);
-          return implode("", $m);
-        },
-        $m[2]
-      );
+    function($m)use($tests) {
       array_shift($m);
+      $m[1] = preg_replace_callback(
+        "/^([0-9]+)(:[ \t]*>>>[ \t]*.*?;;[ \t]*\n[0-9]+:)([ \t]*)([^\n]*?)([ \t]*\n)/ms",
+        function($m)use($tests) {
+          array_shift($m);
+          $m[3] = $tests[$m[0]]["expected"];
+          if(preg_match("/\t|".tab()."/", $m[2]) < 1) {
+            $m[2] = " ".tab();
+            if($m[3] != "") $m[3] .= "\n";
+          }
+          return implode("", $m);
+        }, $m[1]
+      );
       return implode("", $m);
-    },
-    $src
+    }, $src
   );
-  $src = preg_replace("/^[0-9]+: /m","", $src);
   file_put_contents($ml.".bak", file_get_contents($ml));
-  file_put_contents($ml, $src);
+  file_put_contents($ml, preg_replace("/^[0-9]+: /m","", $src));
 }
 
-function tests(&$pipes, $argv, $mls) {
+function testMLs($pipes, $mls) {
 
   $allcount = $allok = 0;
 
   foreach ($mls as $ml) {
-
-    $src = file_get_contents($ml);
-    $src = addLineNo($src);
-
-    $tests = getTests($src);
+    $count = $ok = 0;
 
     echo "# start $ml test\n";
 
-    $count = $ok = 0;
+    $src = addLineNo(file_get_contents($ml));
+    $tests = getTests($src);
+    foreach ($tests as $line => &$test) {
 
-    foreach ($tests as &$test) {
+      $pipes->write($test["test"]."\n");
 
-      ppwrite($pipes, $test["test"]."\n");
-      $result = ppread($pipes);
-
-
-      $count++;
-      $result = preg_replace("/[\n\t ]+/s"," ", $result);
-      $result = preg_replace("/^\s+/s", "", $result);
-      if (debug($argv)) {
-        echo "# ".$test["test"]."\n";
+      $result = preg_replace("/^\s+/s", "", preg_replace("/[\n\t ]+/s"," ", $pipes->read()));
+      if (debug()) {
+        printf("# %d %s\n", $count, $test["test"]);
         echo $result."\n";
       }
+
+      $count++;
       if ($result == $test["expected"]) {
         $ok++;
         continue;
       }
 
-      echo "fail(".$test["line"]."):\n";
+      echo "fail(".$line."):\n";
       if($test["expected"]=="") {
         echo "\t".$result."\n";
       } else {
         echo "expcted: ".$test["expected"]."\n";
-        echo "but found:\n\t".$result."\n";
+        echo "but found:\n".tab().$result."\n";
       }
       $test["expected"] = $result;
     }
 
-    if ($count - $ok != 0 && ($rewrites = rewrite($argv, $mls)) && in_array($ml, $rewrites)) {
-      rewriteTest($ml, $src, $tests, $rewrites, $argv);
-    }
-
+    if ($count - $ok != 0 && in_array($ml, getRewriteMLs($mls)))
+      rewriteML($ml, $src, $tests);
+    
     echo "test $count ok $ok ng ".($count-$ok)."\n";
 
     $allcount += $count;
@@ -174,122 +183,62 @@ function tests(&$pipes, $argv, $mls) {
   echo "all test $allcount ok $allok ng ".($allcount-$allok)."\n";
 }
 
-function getMLs($argv) {
-  $mls = array();
-  foreach ($argv as $ml) {
-    if (preg_match("/\\.ml\$/", $ml) < 1) continue;
-    $mls[] = $ml;    
-  }
-  return $mls;
-}
+function getMLs() {
+  global $argv;
+  $mls = array_filter($argv, function($ml){ return (preg_match("/\\.ml\$/", $ml) > 0); });
 
-function getML2CMO($mls) {
-  $ml2cmo = array();
+  $mls2 = array();
   preg_replace_callback("/([^ ]+)\\.cmo/",
-    function($m) use(&$ml2cmo) {
-      $ml2cmo[$m[1].".ml"] = $m[1].".cmo";
-      return "";
+    function($m) use(&$mls2) {
+      $mls2[] = $m[1].".ml";
     },
-    ppexec("ocamldep ".implode(" ", $mls))
+    Pipes::exec("ocamldep ".implode(" ", $mls))
   );
-  return $ml2cmo;  
+  
+  $mlsstr = Pipes::exec("ocamldep -sort ".implode(" ", $mls2));
+  return array_filter(preg_split("/ +/", $mlsstr),function($ml){
+    return (preg_match("/\\.ml\$/", $ml) > 0);});
+  
 }
-function getMLSorts($argv) {
-  $mls = getMLs($argv);
-  $ml2cmo = getML2CMO($mls);
+function odoc() {
+  global $argv;
+  if (!in_array("-odoc", $argv)) return;
 
-  $mlsstr = ppexec("ocamldep -sort ".implode(" ", array_keys($ml2cmo)));
-
-  $mls = array();
-  foreach(preg_split("/ +/", $mlsstr) as $ml) {
-    if (preg_match("/\\.ml\$/", $ml) < 1) continue;
-    $mls[] = $ml;
-  }
-  return $mls;
-}
-function odocopt($argv) {
-  foreach($argv as $arg) {
-    if($arg == "-odoc") {
-      return true;
-    }
-  }
-  return false;
-}
-function odoc($argv) {
-  $mls = getMLSorts($argv);
+  $mls = getMLs();
   foreach($mls as $ml) {
     $md = preg_replace("/\\.ml\$/", ".md", $ml);
-    $src = file_get_contents($ml);
     echo "generate $md\n";
-    file_put_contents($md, getMdSrc($src));
-  }
-}
-function notify($f) {
-  $olds = array();
-  while(true) {
-    $news = array();
-    clearstatcache(true);
-    foreach(glob("*.ml") as $file) {
-      $news[$file] = stat($file)["mtime"];
-    }
-    $changes = array();
-    foreach($news as $file=>$data) {
-      if(!isset($olds[$file])
-         || var_export($olds[$file], true) != var_export($data,true)) {
-        $changes[] = $file;
-      }
-    }
-    if(count($changes) > 0) {
-      $f($changes);
-    }
-    $olds = $news;
-    usleep(1000*300);
-//    sleep(1);
+    file_put_contents($md, getMDSrc(file_get_contents($ml)));
   }
 }
 
-function notifyopt($argv) {
-  foreach($argv as $arg) {
-    if($arg=="-P") return true;
-  }
-  return false;
-}
+function test() {
+  
+  $mls = getMLs();
 
-function main($argv) {
-  if(odocopt($argv)) {
-    return odoc($argv);
-  }
-  $mls = getMLSorts($argv);
+  Pipes::exec("ocamlc ".implode(" ",$mls));
 
-  ppexec("ocamlc ".implode(" ",$mls));
+  $pipes = new Pipes("ocaml");
+  $pipes->read();
 
-  $process = proc_open('ocaml',
-    array(array("pipe", "r"), array("pipe", "w")), $pipes);
-
-  if (!is_resource($process)) return;
-
-  ppread($pipes);
   foreach($mls as $ml) {
     $cmo = preg_replace("/\\.ml\$/", ".cmo", $ml);
-    ppwrite($pipes, "#load \"$cmo\";;\n");
-    ppread($pipes);
+    $pipes->write("#load \"$cmo\";;\n");
+    $pipes->read();
   }
 
-  tests($pipes, $argv, $mls);
+  testMLs($pipes, $mls);
 
-  ppwrite($pipes, "exit 0;;\n");
-  fclose($pipes[0]);
-  proc_close($process);
+  $pipes->write("exit 0;;\n");
+  $pipes = null;
 
+  odoc();
 }
 
-
-if(notifyopt($argv)) {
-  notify(function($changes)use($argv){
-    main($argv);
-    echo "\n========================\n";
-  });
-} else {
-  main($argv);
+function main() {
+  global $argv;
+  test();
+  if(in_array("-P", $argv)) addMonitor('*.ml');
 }
 
+main();
