@@ -93,6 +93,8 @@ let toScheme (t:type_) :scheme = Forall([], (Qual([], t)))
 
 ## quantify
 
+tyvarのリストと、qualから量化されたスキームを作成します。
+
     >>> let tyvar = Tyvar("a", Star) ;;
     val tyvar : Type.tyvar = Tyvar ("a", Star)
 
@@ -119,6 +121,8 @@ let toScheme (t:type_) :scheme = Forall([], (Qual([], t)))
     - : bool = true
 
 ## toScheme
+
+型からスキームを作ります。
 
     >>> let ty = TVar(Tyvar("a", Star)) ;;
     val ty : Type.type_ = TVar (Tyvar ("a", Star))

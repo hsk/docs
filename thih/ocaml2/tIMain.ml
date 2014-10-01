@@ -178,17 +178,44 @@ var は変数ですね。
     >>> Var("test");;
     - : TIMain.expr = Var "test"
 
+### Const
+
+Constはassumpから出来ています。でも、assumpってなんだっけ？ってなります。
+
 assumpはschemeに名前がついている物です。
 schemeは型の元になるものです。
+
+まずはTyvarを作ります。
 
     >>> let ty = Tyvar ("a", Star);;
     val ty : Type.tyvar = Tyvar ("a", Star)
 
+typeはTyvar を TVar に入れた物ですね。
+
     >>> let t = TVar (ty) ;;
     val t : Type.type_ = TVar (Tyvar ("a", Star))
 
-    >>> let assump = Assump("ABC", Forall([], [ty] ==> t)) ;;
-    [A# let assump = Assump("ABC", Forall([], [[4mty[24m] ==> t)) ;; [24mError: This expression has type Type.tyvar but an expression was expected of type Pred.pred
+predはIsInで構築出来ます。
+
+    >>> let pred = IsIn("Num", t) ;;
+    val pred : Pred.pred = IsIn ("Num", TVar (Tyvar ("a", Star)))
+
+==>でQualが作れます。
+
+Num a => aの型ですね。
+
+    >>> [pred] ==> t;;
+    - : Type.type_ Pred.qual = Qual ([IsIn ("Num", TVar (Tyvar ("a", Star)))], TVar (Tyvar ("a", Star)))
+
+これが型スキームになるのだけど、左辺が空リストなのが気になるというか、ここ何入るんだっけ？
+
+    >>> Forall([], [pred] ==> t);;
+    - : Scheme.scheme = Forall ([], Qual ([IsIn ("Num", TVar (Tyvar ("a", Star)))], TVar (Tyvar ("a", Star))))
+
+Assumpは識別名とSchemeのペアです。
+
+    >>> let assump = Assump("ABC", Forall([], [pred] ==> t)) ;;
+    val assump : Assump.assump = Assump ("ABC", Forall ([], Qual ([IsIn ("Num", TVar (Tyvar ("a", Star)))], TVar (Tyvar ("a", Star))))) 
 
     >>> Const(Assump("ABC", Forall([], Qual([], t)))) ;;
     - : TIMain.expr = Const (Assump ("ABC", Forall ([], Qual ([], TVar (Tyvar ("a", Star))))))
