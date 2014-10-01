@@ -180,51 +180,88 @@ var は変数ですね。
 
 ### Const
 
-Constはassumpから出来ています。でも、assumpってなんだっけ？ってなります。
+Constはassumpから出来ています。
 
 assumpはschemeに名前がついている物です。
-schemeは型の元になるものです。
 
-まずはTyvarを作ります。
+toSchemeを使えば簡単な型からschemeを作ることができます。
 
-    >>> let ty = Tyvar ("a", Star);;
-    val ty : Type.tyvar = Tyvar ("a", Star)
+    >>> toScheme tInt;;
+    - : Scheme.scheme = Forall ([], Qual ([], TCon (Tycon ("Int", Star))))
 
-typeはTyvar を TVar に入れた物ですね。
+なので、単純なConstはAssumpとtoSchemeがあれば作れます。
 
-    >>> let t = TVar (ty) ;;
-    val t : Type.type_ = TVar (Tyvar ("a", Star))
+    >>> Const(Assump("int1", toScheme tInt));;
+    - : TIMain.expr = Const (Assump ("int1", Forall ([], Qual ([], TCon (Tycon ("Int", Star))))))
 
-predはIsInで構築出来ます。
+より複雑なschemeはquantify関数を使って作ります。
 
-    >>> let pred = IsIn("Num", t) ;;
+まず、qualを作ります。
+
+    >>> let ty = TVar(Tyvar("a", Star)) ;;
+    val ty : Type.type_ = TVar (Tyvar ("a", Star))
+
+    >>> let pred = IsIn("Num", ty) ;;
     val pred : Pred.pred = IsIn ("Num", TVar (Tyvar ("a", Star)))
 
-==>でQualが作れます。
+Num a => a -> int のqualは
 
-Num a => aの型ですね。
+    >>> let qual = [pred] ==> fn(ty)(tInt) ;;
+    val qual : Type.type_ Pred.qual = Qual ([IsIn ("Num", TVar (Tyvar ("a", Star)))], TAp (TAp (TCon (Tycon ("(->)", Kfun (Star, Kfun (Star, Star)))), TVar (Tyvar ("a", Star))), TCon (Tycon ("Int", Star))))
 
-    >>> [pred] ==> t;;
-    - : Type.type_ Pred.qual = Qual ([IsIn ("Num", TVar (Tyvar ("a", Star)))], TVar (Tyvar ("a", Star)))
+です。
 
-これが型スキームになるのだけど、左辺が空リストなのが気になるというか、ここ何入るんだっけ？
+Num a => a -> int のスキームはquantifyで作ると
 
-    >>> Forall([], [pred] ==> t);;
-    - : Scheme.scheme = Forall ([], Qual ([IsIn ("Num", TVar (Tyvar ("a", Star)))], TVar (Tyvar ("a", Star))))
+    >>> let sc = quantify([Tyvar("a", Star)])(qual) ;;
+    val sc : Scheme.scheme = Forall ([Star], Qual ([IsIn ("Num", TGen 0)], TAp (TAp (TCon (Tycon ("(->)", Kfun (Star, Kfun (Star, Star)))), TGen 0), TCon (Tycon ("Int", Star)))))
 
-Assumpは識別名とSchemeのペアです。
+schemeは forall [*] Num gen 0 => gen 0 -> int
+のようなイメージの物になる。
 
-    >>> let assump = Assump("ABC", Forall([], [pred] ==> t)) ;;
-    val assump : Assump.assump = Assump ("ABC", Forall ([], Qual ([IsIn ("Num", TVar (Tyvar ("a", Star)))], TVar (Tyvar ("a", Star))))) 
+    >>> sc =
+        Forall([Star],
+          Qual([IsIn("Num", TGen(0))],
+            TAp(
+              TAp(
+                TCon(Tycon("(->)", Kfun(Star, Kfun(Star, Star)))),
+                TGen(0)),
+              TCon(Tycon("Int", Star)))));;
+    - : bool = true
 
-    >>> Const(Assump("ABC", Forall([], Qual([], t)))) ;;
-    - : TIMain.expr = Const (Assump ("ABC", Forall ([], Qual ([], TVar (Tyvar ("a", Star))))))
+あとは名前付けてConstに入れれば完成です。
 
-    >>> Ap(Var("test"),Var("test2")) ;;
-    - : TIMain.expr = Ap (Var "test", Var "test2")
+    >>> Const(Assump("ABC", sc)) ;;
+    - : TIMain.expr = Const (Assump ("ABC", Forall ([Star], Qual ([IsIn ("Num", TGen 0)], TAp (TAp (TCon (Tycon ("(->)", Kfun (Star, Kfun (Star, Star)))), TGen 0), TCon (Tycon ("Int", Star)))))))
 
-    >>> Let(([],[]), Var("test")) ;;
-    - : TIMain.expr = Let (([], []), Var "test")
+大分複雑なConstが出来ました！
+
+## Ap 関数適応
+
+これは関数実行の式です。
+
+f v1 という式は
+
+    >>> Ap(Var("f"),Var("v1")) ;;
+    - : TIMain.expr = Ap (Var "f", Var "v1")
+
+add 1 2 という式は
+
+    >>> Ap(Ap(Var("add"),Lit(LitInt 1)),Lit(LitInt 2)) ;;
+    - : TIMain.expr = Ap (Ap (Var "add", Lit (LitInt 1)), Lit (LitInt 2))
+
+と書けます。
+
+## Let
+
+これは let inの式を表します。
+
+何もない場合は、以下のように書きます:
+
+    >>> Let(([],[]), Var("a")) ;;
+    - : TIMain.expr = Let (([], []), Var "a")
+
+1個ある場合はbinding groupを理解しないといけないので後でやりましょう。
 
 *)
 type expr =
@@ -242,11 +279,103 @@ type expr =
 
 altは パターンのリストと式を組み合わせたものです。
 
+    case a of
+    1 -> 10
+    a -> a+10
+
+このような式があった場合、
+
+    1 -> 10
+
+や
+
+    a -> a*10
+
+がaltになります。
+
+
+### 1 -> 10
+
+    >>> let (alt1:alt) = ([PVar "a"], Lit(LitInt 10)) ;;
+    val alt1 : TIMain.alt = ([PVar "a"], Lit (LitInt 10))
+
+### a -> a+10
+
+    >>> let (alt2:alt) = ([PVar "a"], Ap( Ap(Var("(+)"), Var("a")), Lit(LitInt 10))) ;;
+    val alt2 : TIMain.alt = ([PVar "a"], Ap (Ap (Var "(+)", Var "a"), Lit (LitInt 10)))
+
+### a b -> a+b
+
+    >>> let (alt3:alt) = ([PVar "a";PVar "b"],
+      Ap( Ap(Var("(+)"), Var("a")), Var("b"))) ;;
+    val alt3 : TIMain.alt = ([PVar "a"; PVar "b"], Ap (Ap (Var "(+)", Var "a"), Var "b"))
 
 *)
 and alt = pat list * expr
-and expl = Id.id * scheme * alt list
+(*|
+## impl
+
+implは名前とaltのリストの対です。
+
+    k 1 = 10
+    k a = a + 10
+
+と言うような関数を表す事が出来ます。
+
+    >>> let (impl:impl) = (("k":Id.id), [alt1; alt2]) ;;
+    val impl : TIMain.impl = ("k", [([PVar "a"], Lit (LitInt 10)); ([PVar "a"], Ap (Ap (Var "(+)", Var "a"), Lit (LitInt 10)))])
+
+以下のような式は
+
+    a = 1
+
+    >>> let (impl_a1:impl) = (("a", [[], Lit(LitInt 1)])) ;;
+    val impl_a1 : TIMain.impl = ("a", [([], Lit (LitInt 1))])
+
+です。
+
+    add a b = a + b
+
+は
+
+    >>> let (impl:impl) = (("add", [alt3])) ;;
+    val impl : TIMain.impl = ("add", [([PVar "a"; PVar "b"], Ap (Ap (Var "(+)", Var "a"), Var "b"))])
+
+になります。
+
+implがあれば、型スキームのない式はかけますね。
+
+*)
 and impl = Id.id * alt list
+and expl = Id.id * scheme * alt list
+(*|
+## bindGroup
+
+バインドグループは型スキーム付きの関数リストと実装リストのリストになります。
+実装のリストのリストにする理由は良くわからないのですけど、名前が同じ物をまとめているのではないかと思います。
+TODO:ちゃんと調べましょう。
+
+とりあえず、１つのbindGroupを1つのimplから作成してみましょう。
+
+    >>> let (bg_a1:bindGroup) = ([],[[impl_a1]]);;
+    val bg_a1 : TIMain.bindGroup = ([], [[("a", [([], Lit (LitInt 1))])]])
+
+
+    >>>
+      runTI begin fun (ti:ti) ->
+        let (ce:classEnv) = Pred.initialEnv in
+        let (as_:assump list) = [] in
+        let (bindGroup:bindGroup) = ([], [[impl_a1]]) in
+        let result:(pred list * assump list) =
+          tiBindGroup (ti:ti)(ce:classEnv)(as_:assump list)(bindGroup)
+        in
+        let expected = ([],[]) in
+        (expected = result, result)
+      end
+    ;;
+    kore1 kore2 kore3 Exception: Not_found.
+
+*)
 and bindGroup = expl list * impl list list
 let restricted (bs : impl list):bool =
   let simple (i, alts) = exists begin fun alt ->
@@ -436,10 +565,10 @@ let tiProgram (ce:classEnv) (as_:assump list) (bgs : program):assump list =
           tiAlt (ti:ti)(ce:classEnv)(as_:assump list)(alt:alt)
         in
         let expected = ([],tChar) in
-        expected = result
+        (expected = result, result)
       end
     ;;
-    - : bool = true
+    - : bool * (Pred.pred list * Type.type_) = (true, ([], TCon (Tycon ("Char", Star))))
 
 
 ## tiAlts LitChar

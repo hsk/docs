@@ -1,9 +1,6 @@
 (* 11.1 Literals *)
 (*|
-    >>> #load "nums.cma" ;;
-    
-    >>> open Big_int ;;
-    
+
     >>> open Lit;;
     
 *)
@@ -16,7 +13,7 @@
   open Big_int
   open Num
   type literal =
-    | LitInt of big_int
+    | LitInt of int
     | LitChar of char
     | LitRat of num
     | LitStr of string
@@ -34,19 +31,15 @@
     end
 
 (*|
-    
-        
-    >>> big_int_of_string "123";;
-    - : Big_int.big_int = <abstr>
 
-    >>> Lit.LitInt (big_int_of_string "123");;
-    - : Lit.literal = LitInt <abstr>
+    >>> Lit.LitInt 123;;
+    - : Lit.literal = LitInt 123
 
-    >>> LitInt (big_int_of_string "123");;
-    - : Lit.literal = LitInt <abstr>
+    >>> LitInt 123;;
+    - : Lit.literal = LitInt 123
 
     >>> runTI begin fun ti ->
-        let lit = LitInt (big_int_of_string "123") in
+        let lit = LitInt 123 in
         let (preds, ty) = tiLit(ti)(lit) in
         let subst = getSubst(ti) in
         let ty2 = Subst_.typeApply(subst)(ty) in

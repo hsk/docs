@@ -2,33 +2,13 @@
 # 8 Type Schemes
 
     >>> open Scheme;;
-
+    
 *)
 
 open List
 open Kind
 open Type
 open Pred
-
-type scheme = Forall of kind list * type_ qual
-
-let schemeApply (s:Subst_.subst) (Forall(ks, qt):scheme):scheme =
-  Forall(ks, qualTypeApply s qt)
-
-let schemeTv (Forall(_, qt):scheme):tyvar list = qualTypeTv qt
-
-let quantify(vs:tyvar list) (qt:type_ qual):scheme =
-  let vs' = filter (fun v -> mem v vs) (qualTypeTv qt) in
-  let ks = map tyvarKind vs' in
-  let newGen v =
-    let count = ref 0 in
-    let t = TGen !count in
-    incr count;
-    (v, t) in
-  let s = map newGen vs' in
-  Forall(ks, qualTypeApply s qt)
-
-let toScheme (t:type_) :scheme = Forall([], (Qual([], t)))
 
 (*|
 
@@ -49,6 +29,10 @@ let toScheme (t:type_) :scheme = Forall([], (Qual([], t)))
             [IsIn("Num", TVar(Tyvar("a", Star)))],
             TVar(Tyvar("a", Star))));;
     - : bool = true
+*)
+type scheme = Forall of kind list * type_ qual
+
+(*|
 
 ## schemeApply
 
@@ -73,7 +57,12 @@ let toScheme (t:type_) :scheme = Forall([], (Qual([], t)))
             [IsIn("Num", TCon(Tycon("Int", Star)))],
             TCon(Tycon("Int", Star))));;
     - : bool = true
+*)
 
+let schemeApply (s:Subst_.subst) (Forall(ks, qt):scheme):scheme =
+  Forall(ks, qualTypeApply s qt)
+
+(*|
 ## schemeTv
 
     >>> let ty = TVar(Tyvar("a", Star)) ;;
@@ -91,9 +80,14 @@ let toScheme (t:type_) :scheme = Forall([], (Qual([], t)))
     >>> tvs = [Tyvar("a", Star)];;
     - : bool = true
 
+*)
+let schemeTv (Forall(_, qt):scheme):tyvar list = qualTypeTv qt
+
+(*|
 ## quantify
 
-tyvarのリストと、qualから量化されたスキームを作成します。
+tyvarのリストと、type qualから量化されたスキームを作成します。
+とても便利な関数なのですよ。
 
     >>> let tyvar = Tyvar("a", Star) ;;
     val tyvar : Type.tyvar = Tyvar ("a", Star)
@@ -104,11 +98,18 @@ tyvarのリストと、qualから量化されたスキームを作成します�
     >>> let pred = IsIn("Num", ty) ;;
     val pred : Pred.pred = IsIn ("Num", TVar (Tyvar ("a", Star)))
 
-    >>> let qual = Qual([pred], fn(ty)(tInt)) ;;
+Num a => a -> int のqual
+
+    >>> let qual = [pred] ==> fn(ty)(tInt) ;;
     val qual : Type.type_ Pred.qual = Qual ([IsIn ("Num", TVar (Tyvar ("a", Star)))], TAp (TAp (TCon (Tycon ("(->)", Kfun (Star, Kfun (Star, Star)))), TVar (Tyvar ("a", Star))), TCon (Tycon ("Int", Star))))
+
+Num a => a -> int のqualからスキームを作る。
 
     >>> let sc = quantify([tyvar])(qual) ;;
     val sc : Scheme.scheme = Forall ([Star], Qual ([IsIn ("Num", TGen 0)], TAp (TAp (TCon (Tycon ("(->)", Kfun (Star, Kfun (Star, Star)))), TGen 0), TCon (Tycon ("Int", Star)))))
+
+schemeは forall [*] Num gen 0 => gen 0 -> int
+のようなイメージの物になる。
 
     >>> sc =
         Forall([Star],
@@ -119,10 +120,22 @@ tyvarのリストと、qualから量化されたスキームを作成します�
                 TGen(0)),
               TCon(Tycon("Int", Star)))));;
     - : bool = true
+*)
+let quantify(vs:tyvar list) (qt:type_ qual):scheme =
+  let vs' = filter (fun v -> mem v vs) (qualTypeTv qt) in
+  let ks = map tyvarKind vs' in
+  let newGen v =
+    let count = ref 0 in
+    let t = TGen !count in
+    incr count;
+    (v, t) in
+  let s = map newGen vs' in
+  Forall(ks, qualTypeApply s qt)
 
+(*|
 ## toScheme
 
-型からスキームを作ります。
+型からスキームを作ります。型変数がないシンプルな型の為にあります。
 
     >>> let ty = TVar(Tyvar("a", Star)) ;;
     val ty : Type.type_ = TVar (Tyvar ("a", Star))
@@ -134,3 +147,4 @@ tyvarのリストと、qualから量化されたスキームを作成します�
     - : bool = true
 
 *)
+let toScheme (t:type_) :scheme = Forall([], (Qual([], t)))

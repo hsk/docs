@@ -5,7 +5,6 @@
     >>> open Pat;;
     
 *)
-open Big_int
 open List
 open Kind
 open Type
@@ -16,14 +15,162 @@ open TIMonad
 open Infer
 open Lit
 
+(*|
+
+## type pat パターン
+
+パターンマッチで使う式
+
+    case a of
+    k -> k+1
+    (_ as a) -> 1
+    1 -> 10
+
+のような式が会った場合に、 ->の左辺がpatで
+
+kは
+
+    >>> let pat = PVar("k") ;;
+    val pat : Pat.pat = PVar "k"
+
+\_ は
+
+    >>> let pat = PWildcard ;;
+    val pat : Pat.pat = PWildcard
+
+\_ as a は
+
+    >>> let pat = PAs("a", PWildcard) ;;
+    val pat : Pat.pat = PAs ("a", PWildcard)
+
+1 は
+
+    >>> let pat = PLit(LitInt 1) ;;
+    val pat : Pat.pat = PLit (LitInt 1)
+
+と書きます。
+
+PNpkとPConの２つは謎なので、tiPatで型推論するさいの結果から見てみましょう。
+
+    >>> let pat = PNpk("a", 10) ;;
+    val pat : Pat.pat = PNpk ("a", 10)
+
+    >>> let assump = Assump("ABC", toScheme tInt) ;;
+    val assump : Assump.assump = Assump ("ABC", Forall ([], Qual ([], TCon (Tycon ("Int", Star)))))
+
+    >>> let pat = PCon(assump,[]);;
+    val pat : Pat.pat = PCon (Assump ("ABC", Forall ([], Qual ([], TCon (Tycon ("Int", Star))))), [])
+
+*)
+
 type pat =
   | PVar of Id.id
   | PWildcard
   | PAs of Id.id * pat
   | PLit of literal
-  | PNpk of Id.id * big_int
+  | PNpk of Id.id * int
   | PCon of assump * pat list
 
+(*|
+## tiPat パターンの型推論
+
+## tiPat PVar
+
+    >>> runTI begin fun ti ->
+        let pat = PVar("a") in
+        let (preds, assumps, ty) = tiPat(ti)(pat) in
+
+        (preds = [],
+        assumps =
+          [
+            Assump("a",Forall([],Qual([],TVar(Tyvar("v0",Star)))))],
+
+        ty = TVar(Tyvar("v0", Star)))
+      end
+    ;;
+    - : bool * bool * bool = (true, true, true)
+
+## tiPat PWildcard
+
+    >>> runTI begin fun ti ->
+        let pat = PWildcard in
+        let (preds, assumps, ty) = tiPat(ti)(pat) in
+
+        (preds = [],
+        assumps = [],
+        ty = TVar(Tyvar("v0", Star)))
+      end
+    ;;
+    - : bool * bool * bool = (true, true, true)
+
+## tiPat PAs
+
+    >>> runTI begin fun ti ->
+        let pat = PAs("a", PWildcard) in
+        let (preds, assumps, ty) = tiPat(ti)(pat) in
+
+        (preds = [],
+        assumps =
+          [
+            Assump("a",Forall([],Qual([],TVar(Tyvar("v0",Star)))))],
+
+        ty = TVar(Tyvar("v0", Star))
+        )
+      end
+    ;;
+    - : bool * bool * bool = (true, true, true)
+
+## tiPat PLit
+
+    >>> runTI begin fun ti ->
+        let pat = PLit(LitInt 123) in
+        let (preds, assumps, ty) = tiPat(ti)(pat) in
+
+        (preds =
+          [IsIn("Num",TVar(Tyvar("v0",Star)))],
+        assumps = [],
+        ty = TVar(Tyvar("v0", Star))
+        )
+      end
+    ;;
+    - : bool * bool * bool = (true, true, true)
+
+## tiPat PNpk
+
+    >>> runTI begin fun ti ->
+        let pat = PNpk("a", 10) in
+        let (preds, assumps, ty) = tiPat(ti)(pat) in
+
+        (preds =
+          [IsIn("Integral",TVar(Tyvar("v0",Star)))],
+        assumps =
+          [
+            Assump("a",Forall([],Qual([],TVar(Tyvar("v0",Star)))))],
+
+        ty = TVar(Tyvar("v0", Star))
+        )
+      end
+    ;;
+    - : bool * bool * bool = (true, true, true)
+
+## tiPat PCon
+
+    >>> runTI begin fun ti ->
+        let assump = Assump("ABC", toScheme tInt) in
+
+        let pat = PCon(assump,[]) in
+        let (preds, assumps, ty) = tiPat(ti)(pat) in
+
+        (preds = [],
+        assumps = [],
+        ty = TVar(Tyvar("v0", Star))
+        )
+
+      end
+    ;;
+    - : bool * bool * bool = (true, true, true)
+
+*)
 let rec tiPat (ti:ti) (pat:pat):pred list * assump list * type_ =
   begin match pat with
     | PVar i ->
@@ -50,113 +197,3 @@ let rec tiPat (ti:ti) (pat:pat):pred list * assump list * type_ =
 and tiPats (ti:ti) (pats:pat list):pred list * assump list * type_ list =
   let (pss, ass, ts) = Pre.split3 (map (tiPat ti) pats) in
   (concat pss, concat ass, ts)
-
-(*|
-
-    >> let pat = PVar("a") ;;
-
-
-## tiPat PVar
-
-    >>> runTI begin fun ti ->
-        let pat = PVar("a") in
-        let (preds, assumps, ty) = tiPat(ti)(pat) in
-
-        (preds = [],
-        assumps =
-          [
-            Assump("a",Forall([],Qual([],TVar(Tyvar("v0",Star)))))],
-
-        ty = TVar(Tyvar("v0", Star)))
-      end
-    ;;
-    - : bool * bool * bool = (true, true, true)
-
-
-## tiPat PWildcard
-
-    >>> runTI begin fun ti ->
-        let pat = PWildcard in
-        let (preds, assumps, ty) = tiPat(ti)(pat) in
-
-        (preds = [],
-        assumps = [],
-        ty = TVar(Tyvar("v0", Star)))
-      end
-    ;;
-    - : bool * bool * bool = (true, true, true)
-
-
-## tiPat PAs
-
-    >>> runTI begin fun ti ->
-        let pat = PAs("a", PWildcard) in
-        let (preds, assumps, ty) = tiPat(ti)(pat) in
-
-        (preds = [],
-        assumps =
-          [
-            Assump("a",Forall([],Qual([],TVar(Tyvar("v0",Star)))))],
-
-        ty = TVar(Tyvar("v0", Star))
-        )
-      end
-    ;;
-    - : bool * bool * bool = (true, true, true)
-
-
-## tiPat PLit
-
-    >>> runTI begin fun ti ->
-        let pat = PLit(LitInt(big_int_of_string "123")) in
-        let (preds, assumps, ty) = tiPat(ti)(pat) in
-
-        (preds =
-          [IsIn("Num",TVar(Tyvar("v0",Star)))],
-        assumps = [],
-        ty = TVar(Tyvar("v0", Star))
-        )
-      end
-    ;;
-    - : bool * bool * bool = (true, true, true)
-
-
-## tiPat PNpk
-
-    >>> runTI begin fun ti ->
-        let pat = PNpk("a",big_int_of_string "10") in
-        let (preds, assumps, ty) = tiPat(ti)(pat) in
-
-        (preds =
-          [IsIn("Integral",TVar(Tyvar("v0",Star)))],
-        assumps =
-          [
-            Assump("a",Forall([],Qual([],TVar(Tyvar("v0",Star)))))],
-
-        ty = TVar(Tyvar("v0", Star))
-        )
-      end
-    ;;
-    - : bool * bool * bool = (true, true, true)
-
-
-## tiPat PCon
-
-    >>> runTI begin fun ti ->
-        let t = TVar(Tyvar("a", Star)) in
-        let assump = Assump("ABC", Forall([], Qual([], t))) in
-
-        let pat = PCon(assump,[]) in
-        let (preds, assumps, ty) = tiPat(ti)(pat) in
-
-        (preds = [],
-        assumps = [],
-        ty = TVar(Tyvar("v0", Star))
-        )
-
-      end
-    ;;
-    - : bool * bool * bool = (true, true, true)
-
-
-*)
