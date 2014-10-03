@@ -1,5 +1,12 @@
+# fib bench
 
-## java
+| language | fib | object | trait | trait opt |
+| --- | ---- | ---- | --- | ---- |
+| Java | 627ms | 1110ms | 1576ms |     |
+| Cpp  | 474ms | 1031ms | 1220ms | 926ms |
+| Node | 2085ms | 3754ms |   |   |
+
+## Java
 
 ### fib
 
@@ -16,7 +23,7 @@
 165580141
 1576ms
 
-## cpp
+## Cpp
 
 ### fib
 
@@ -37,7 +44,7 @@
 165580141
 926ms
 
-## nodejs
+## Node
 
 ### fib
 
