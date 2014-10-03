@@ -9,3 +9,5 @@
 | Rust --opt-level=3| 548ms | 609ms | | |
 | Rust -O| 550ms | 1032ms | | |
 | Rust | 1355ms | 3927ms | | |
+| ocamlopt | 771ms | 13791ms | | |
+| ocamlc | 6516ms | 49043ms | | |
