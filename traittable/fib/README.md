@@ -2,12 +2,13 @@
 
 | language | fib | object | trait | trait opt |
 | --- | ---- | ---- | --- | ---- |
-| g++ -O3 | 474ms | 1031ms | 1220ms | 926ms |
-| Java | 627ms | 1110ms | 1576ms |     |
-| Node | 2085ms | 3754ms |   |   |
-| Ruby | 23380ms | 121465ms | | |
+| g++ -O3 | 474ms | 1,031ms | 1,220ms | 926ms |
+| Java | 627ms | 1,110ms | 1,576ms |     |
+| Node | 2,085ms | 3,754ms |   |   |
+| Ruby | 23,380ms | 121,465ms | | |
 | Rust --opt-level=3| 548ms | 609ms | | |
-| Rust -O| 550ms | 1032ms | | |
-| Rust | 1355ms | 3927ms | | |
-| ocamlopt | 771ms | 13791ms | | |
-| ocamlc | 6516ms | 49043ms | | |
+| Rust -O| 550ms | 1,032ms | | |
+| Rust | 1,355ms | 3,927ms | | |
+| ocamlopt | 771ms | 13,791ms | | |
+| ocamlc | 6,516ms | 49.043ms | | |
+| gcc fib.m -O3 -fobjc-arc| 474ms | 151,031ms | | |
