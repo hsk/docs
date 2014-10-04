@@ -174,7 +174,7 @@ namespace trait2 {
 
   int Class_genId() {
     static int classId = -1;
-    classId++;
+    classId+=70000;
     return classId;
   }
 
