@@ -18,12 +18,18 @@ rule token = parse
     { RBRACE }
 | "return"
     { RETURN}
+| "::"
+    { CAST }
+| '@' { AT }
+| "new"
+    { NEW }
 | "include"
     {  (token2 lexbuf) }
 | "this" { THIS }
-| "struct" { STRUCT }
+| "class" { STRUCT }
 | "trait" { TRAIT }
 | "<:" { IMPLEMENT }
+| ":>" { RIMPLEMENT }
 | "=>" { ARROW }
 | "->" { MEMBER }
 | "if" { IF }
@@ -34,6 +40,10 @@ rule token = parse
     { SUB }
 | '+'
     { ADD }
+| '*'
+    { MUL }
+| '&'
+    { AMP }
 | '<' { LT }
 | '>' { GT }
 | "<=" { LE }

@@ -1,19 +1,19 @@
 #include "core.h"
 #include <stdio.h>
+int fib(int a) {
+{
+    if ((a < 2))
+      return 1;
+    
+    return (fib((a - 2)) + fib((a - 1)));
+  }
+} 
 struct Fib{
 
   int(*fib)(Class*);
 };
 
 Vec* Fib_v = newVec();
-
-struct GetX{
-
-  int(*getX)(Class*);
-  void(*setX)(Class*, int);
-};
-
-Vec* GetX_v = newVec();
 
 int Int_classId = Class_genId();
 struct Int{
@@ -48,35 +48,51 @@ Fib* newFib_Int() {
 } 
 Fib* Fib_Int_ = newFib_Int();
 
-int GetX_Int_getX(Class* self_) {
-  Int* self = ((Int*)self_);
+int Add_classId = Class_genId();
+struct Add{
+
+  int id;
+  Add (Class* x, Class* y):id(Add_classId), x(x), y(y){
 {
-    return (self -> x);
+
+    }
   }
-} 
-void GetX_Int_setX(Class* self_, int x) {
+  Class* x;
+  Class* y;
+};
+
+
+struct Eval{
+
+  int(*eval)(Class*);
+};
+
+Vec* Eval_v = newVec();
+
+int Eval_Int_eval(Class* self_) {
   Int* self = ((Int*)self_);
-{
-    ((self -> x) = x);
-  }
+  return (self -> x);
 } 
-GetX* newGetX_Int() {
-  GetX (* impl) = (new GetX());
-  setVec(GetX_v, Int_classId, ((void*)impl));
-  ((impl -> getX) = (& GetX_Int_getX));
-  ((impl -> setX) = (& GetX_Int_setX));
+Eval* newEval_Int() {
+  Eval (* impl) = (new Eval());
+  setVec(Eval_v, Int_classId, ((void*)impl));
+  ((impl -> eval) = (& Eval_Int_eval));
   return impl;
 } 
-GetX* GetX_Int_ = newGetX_Int();
+Eval* Eval_Int_ = newEval_Int();
 
-int fib(int a) {
-{
-    if ((a < 2))
-      return 1;
-    
-    return (fib((a - 2)) + fib((a - 1)));
-  }
+int Eval_Add_eval(Class* self_) {
+  Add* self = ((Add*)self_);
+  return ((((Eval*)(Eval_v -> data)[((* (self -> x)) . id)]) -> eval)(((Class*)(& (* (self -> x))))) + (((Eval*)(Eval_v -> data)[((* (self -> y)) . id)]) -> eval)(((Class*)(& (* (self -> y))))));
 } 
+Eval* newEval_Add() {
+  Eval (* impl) = (new Eval());
+  setVec(Eval_v, Add_classId, ((void*)impl));
+  ((impl -> eval) = (& Eval_Add_eval));
+  return impl;
+} 
+Eval* Eval_Add_ = newEval_Add();
+
 int main() {
 {
     long start = gett();
@@ -86,7 +102,11 @@ int main() {
     Int f(20);
     ((f . x) = 40);
     (result = (((Fib*)(Fib_v -> data)[(f . id)]) -> fib)(((Class*)(& f))));
-    printf("fib %d %d %ld\n", (((GetX*)(GetX_v -> data)[(f . id)]) -> getX)(((Class*)(& f))), result, (gett() - start));
+    printf("fib %d %d %ld\n", (f . x), result, (gett() - start));
+    printf("eval %d\n", (((Eval*)(Eval_v -> data)[(f . id)]) -> eval)(((Class*)(& f))));
+    Int f2(30);
+    Add add(((Class*)(new Int(1))), ((Class*)(new Int(2))));
+    printf("eval %d\n", (((Eval*)(Eval_v -> data)[(add . id)]) -> eval)(((Class*)(& add))));
     return 0;
   }
 } 

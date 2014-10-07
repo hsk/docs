@@ -20,10 +20,10 @@ Vec* newVec() {
   return v;
 }
 void setVec(Vec* v, int idx, void* d) {
-  if (idx > v->size) {
+  if (idx >= v->size) {
     // resize
     void** data = new void*[idx+1];
-    memcpy(v->data, data, sizeof(void*)*v->size);
+    memcpy(data, v->data, sizeof(void*)*v->size);
     v->size = idx+1;
     delete[] v->data;
     v->data = data;

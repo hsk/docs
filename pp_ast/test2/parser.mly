@@ -20,15 +20,19 @@ open Exp
 %token <string> STRING
 %token STRUCT THIS DOT
 %token IF ELSE
-%token IMPLEMENT TRAIT
+%token IMPLEMENT RIMPLEMENT TRAIT
 %token ARROW MEMBER
 %token LT GT LE GE
+%token MUL AMP
+%token CAST NEW AT
 %right ASSIGN
+%right CAST
 %left LT GT LE GE
 %left ADD SUB
+%left NEW
 %left prec_app
 %left DOT ARROW MEMBER
-
+%left AT
 %type <Stmt.t list> stmts
 %start stmts
 
@@ -64,9 +68,13 @@ exp:
     { EBin($1, "<=", $3) }
 | exp GE exp
     { EBin($1, ">=", $3) }
-
-| ID COLON ID ARROW ID LPAREN RPAREN
-    { ECallM($3, EBin(EVar $1, "->", EVar $5), []) }
+| AMP exp { EPre("&", $2)}
+| MUL exp { EPre("*", $2)}
+| NEW exp { EPre("new", $2)}
+| AT exp { EBin(EVar "self", "->", $2)}
+| exp CAST typ { ECast($3, $1)}
+| exp COLON ID ARROW ID LPAREN RPAREN
+    { ECallM($3, EBin($1, "->", EVar $5), []) }
 
 | init { $1 }
 
@@ -123,16 +131,18 @@ def:
 | ID COLON STRUCT LBRACE str_mems RBRACE { SStruct($1, $5) }
 | ID COLON TRAIT LBRACE str_mems RBRACE { STrait($1, $5) }
 | ID IMPLEMENT ID LBRACE defs RBRACE { SImpl($3, $1, $5) }
+| ID RIMPLEMENT ID LBRACE defs RBRACE { SImpl($1, $3, $5) }
 
 prms:
-| ID COLON ID { [Ty $3, $1] }
-| ID COLON ID prms { (Ty $3, $1)::$4 }
+| ID COLON typ { [$3, $1] }
+| ID COLON typ COMMA prms { ($3, $1)::$5 }
 
 str_mems:
 | str_mem { [$1] }
 | str_mem str_mems { $1::$2 }
 
 typ:
+| MUL typ { TPtr $2 }
 | ID { Ty $1 }
 | LPAREN RPAREN ARROW ID { TFun(Ty $4, []) }
 
@@ -143,7 +153,7 @@ typs:
 str_mem:
 | ID COLON LPAREN typs RPAREN ARROW ID { (TFun(Ty $7, $4), SExp(EVar $1)) }
 | ID COLON LPAREN RPAREN ARROW ID { (TFun(Ty $6, []), SExp(EVar $1)) }
-| ID COLON ID { (Ty $3, SExp(EVar $1)) }
+| ID COLON typ { ($3, SExp(EVar $1)) }
 | THIS LPAREN prms RPAREN COLON inits ASSIGN stmt { (Ty "", SCon($3,$6,SBlock [$8])) }
 
 | error
