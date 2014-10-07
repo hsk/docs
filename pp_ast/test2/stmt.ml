@@ -11,7 +11,7 @@ type t =
   | SFun of Ty.t * string * (Ty.t * string) list * t
   | SInclude of string
   | SLet of Ty.t * Exp.e * Exp.e
-  | SStruct of string * (Ty.t * t) list
+  | SStruct of string * string * (Ty.t * t) list
   | SCon of (Ty.t * string) list * Exp.e list * t
   | STrait of  string * (Ty.t * t) list
   | SImpl of string * string * t list
@@ -65,7 +65,7 @@ and cnv(t:t):t =
       end ts
     in
     SList([
-      SStruct(id,ts);
+      SStruct(id,"",ts);
       (*
         Vec* Fib2_v = newVec();
       *)
@@ -94,11 +94,12 @@ and cnv(t:t):t =
     ])
   | SInclude _ -> t
   | SLet(t,e1,e2) -> SLet(t, cnve e1, cnve e2)
-  | SStruct(v,tts) ->
+  | SStruct(v,super,tts) ->
     SList[
       SLet(Ty "int", EVar (v ^ "_classId"), ECall(EVar"Class_genId",[]));
 
       SStruct(v,
+        super,
         (Ty "int", SExp(EVar "id")) ::
         (List.map begin fun(ty,t) ->
           let ty,t = match ty,t with
@@ -143,10 +144,11 @@ and print (t:t):string =
       id
       (print_ls (fun (t,a)-> Printf.sprintf "%s %s" (Ty.print "" t) a) ts ~sep:", " )
       (print2 sp e2 "\n")
-  | SStruct (id, ts) ->
-    Printf.sprintf "%sstruct %s{\n%s\n%s};\n"
+  | SStruct (id, super, ts) ->
+    Printf.sprintf "%sstruct %s%s{\n%s\n%s};\n"
       sp
       id
+      (if super = "" then "" else ":" ^ super)
       sp
       (List.fold_left (print_mem sp) "" ts)
   | SList ls -> List.fold_left(fun r t -> r ^ (print sp t) ^ "\n") "" ls  

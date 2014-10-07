@@ -3,61 +3,61 @@ include stdio.h
 
 
 fib(a:int):int = {
-	if (a < 2) return 1
-	return fib(a-2)+fib(a-1)
+  if (a < 2) return 1
+  return fib(a-2)+fib(a-1)
 }
 
 Fib : trait {
-	fib:()=>int
+  fib:()=>int
 }
 
 Int : class {
-	this(x:int):x(x)={}
-	x:int
+  this(x:int):x(x)={}
+  x:int
 }
 Int <: Fib {
-	fib():int = {
-		if (@x < 2) return 1
-		else {
-			p1:Int(@x - 2)
-			p2:Int(@x - 1)
-			return p1:Fib=>fib() + p2:Fib=>fib()
-		}
-	}
+  fib():int = {
+    if (@x < 2) return 1
+    else {
+      p1:Int(@x - 2)
+      p2:Int(@x - 1)
+      return p1:Fib=>fib() + p2:Fib=>fib()
+    }
+  }
 }
 
-Add : class {
-	this(x:*Class,y:*Class):x(x),y(y)={}
-	x:*Class
-	y:*Class
-}
+Exp : class()
+Exp > EInt: class(x:int)
+Exp > EAdd: class(x:*Exp,y:*Exp)
 
 Eval : trait { eval:()=>int }
-Eval :> Int { eval():int =
-	return @x
+Eval :> EInt { eval():int =
+  return @x
 }
-Eval :> Add { eval():int =
-	return (*@x):Eval=>eval() + (*@y):Eval=>eval()
+Eval :> EAdd { eval():int =
+  return (*@x):Eval=>eval() + (*@y):Eval=>eval()
+}
+Eval :> Int { eval():int =
+  return @x
 }
 
 main():int = {
-	start:long = gett()
+  start:long = gett()
 
-	result:int = fib(40)
-	printf("fib %d %d %ld\n", 40, result, gett() - start)
+  result:int = fib(40)
+  printf("fib %d %d %ld\n", 40, result, gett() - start)
 
-	start = gett()
-	f:Int(20)
-	f.x = 40
-	result = f:Fib=>fib()
-	printf("fib %d %d %ld\n", f.x, result, gett() - start)
+  start = gett()
+  i:Int(20)
+  i.x = 40
+  result = i:Fib=>fib()
+  printf("fib %d %d %ld\n", i.x, result, gett() - start)
 
-	printf("eval %d\n", f:Eval=>eval())
+  printf("eval 40 = %d\n", i:Eval=>eval())
 
-	f2:Int(30)
-	add:Add(new Int(1) :: *Class, new Int(2) :: *Class)
+  add:EAdd(new EInt(1), new EInt(2))
 
-	printf("eval %d\n", add:Eval=>eval())
+  printf("eval 1 + 2 = %d\n", add:Eval=>eval())
 
-	return 0
+  return 0
 }
