@@ -7,11 +7,11 @@ fib(a:int):int = {
   return fib(a-2)+fib(a-1)
 }
 
-Fib : trait {
+Fib trait {
   fib:()=>int
 }
 
-Int : class {
+Int class {
   this(x:int):x(x)={}
   x:int
 }
@@ -26,15 +26,15 @@ Int <: Fib {
   }
 }
 
-Exp : class()
-Exp > EInt: class(x:int)
-Exp > EAdd: class(x:*Exp,y:*Exp)
-Exp > EMul: class(x:*Exp,y:*Exp)
+Exp class ()
+Exp > EInt class (x:int)
+Exp > EAdd class (x:*Exp,y:*Exp)
+Exp > EMul class (x:*Exp,y:*Exp)
 
-Eval : trait { eval:()=>int }
-Eval :> EInt { eval():int = { printf("EInt %d\n", @x) return @x} }
-Eval :> EAdd { eval():int = {return (*@x):Eval=>eval() + (*@y):Eval=>eval()} }
-Eval :> EMul { eval():int = {return (*@x):Eval=>eval() * (*@y):Eval=>eval()} }
+Eval trait { eval:()=>int }
+Eval :> EInt { eval():int = return @x }
+Eval :> EAdd { eval():int = return (*@x):Eval=>eval() + (*@y):Eval=>eval() }
+Eval :> EMul { eval():int = return (*@x):Eval=>eval() * (*@y):Eval=>eval() }
 Eval :> Int  { eval():int = return @x }
 
 main():int = {

@@ -132,31 +132,31 @@ def:
 | ID COLON ID LPAREN exps RPAREN { SLet(Ty $3, ECall(EVar $1, $5), EEmpty) }
 | ID COLON ID { SLet(Ty $3, EVar $1, EEmpty) }
 | ID COLON typ ASSIGN exp { SLet($3, EVar $1, $5) }
-| ID COLON STRUCT LBRACE RBRACE { SStruct($1, "", []) }
-| ID COLON STRUCT LBRACE str_mems RBRACE { SStruct($1, "", $5) }
-| ID COLON STRUCT LPAREN RPAREN {
+| ID STRUCT LBRACE RBRACE { SStruct($1, "", []) }
+| ID STRUCT LBRACE str_mems RBRACE { SStruct($1, "", $4) }
+| ID STRUCT LPAREN RPAREN {
         SStruct($1, "",[(Ty "", SCon([],[],SBlock []))])
     }
-| ID COLON STRUCT LPAREN prms RPAREN {
+| ID STRUCT LPAREN prms RPAREN {
     let mems = List.map begin fun (ty,id) ->
         (ty, SExp(EVar id))
-    end $5 in
+    end $4 in
     let inits = List.map begin fun (ty,id) ->
         ECall(EVar id, [EVar id])
-    end $5 in
-    SStruct($1, "",(Ty "", SCon($5,inits,SBlock []))::mems)
+    end $4 in
+    SStruct($1, "",(Ty "", SCon($4,inits,SBlock []))::mems)
 }
-| ID GT ID COLON STRUCT LPAREN prms RPAREN {
+| ID GT ID STRUCT LPAREN prms RPAREN {
     let mems = List.map begin fun (ty,id) ->
         (ty, SExp(EVar id))
-    end $7 in
+    end $6 in
     let inits = List.map begin fun (ty,id) ->
         ECall(EVar id, [EVar id])
-    end $7 in
-    SStruct($3, $1,(Ty "", SCon($7,inits,SBlock []))::mems)
+    end $6 in
+    SStruct($3, $1,(Ty "", SCon($6,inits,SBlock []))::mems)
 }
 
-| ID COLON TRAIT LBRACE str_mems RBRACE { STrait($1, $5) }
+| ID TRAIT LBRACE str_mems RBRACE { STrait($1, $4) }
 | ID IMPLEMENT ID LBRACE defs RBRACE { SImpl($3, $1, $5) }
 | ID RIMPLEMENT ID LBRACE defs RBRACE { SImpl($1, $3, $5) }
 
