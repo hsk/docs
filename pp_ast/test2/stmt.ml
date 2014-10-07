@@ -94,12 +94,12 @@ and cnv(t:t):t =
     ])
   | SInclude _ -> t
   | SLet(t,e1,e2) -> SLet(t, cnve e1, cnve e2)
-  | SStruct(v,super,tts) ->
+  | SStruct(v,"",tts) ->
     SList[
       SLet(Ty "int", EVar (v ^ "_classId"), ECall(EVar"Class_genId",[]));
 
       SStruct(v,
-        super,
+        "",
         (Ty "int", SExp(EVar "id")) ::
         (List.map begin fun(ty,t) ->
           let ty,t = match ty,t with
@@ -107,6 +107,23 @@ and cnv(t:t):t =
               let id = ECall(EVar "id",[EVar(v^"_classId")]) in
 
               (Ty v, SCon(tyss,id::es,t1))
+            | _ -> ty,t
+          in
+          (ty, cnv t)
+        end tts))
+    ]
+  | SStruct(v,super,tts) ->
+    SList[
+      SLet(Ty "int", EVar (v ^ "_classId"), ECall(EVar"Class_genId",[]));
+
+      SStruct(v,
+        super,
+        (List.map begin fun(ty,t) ->
+          let ty,t = match ty,t with
+            | (Ty "", SCon(tyss,es,t1)) ->
+              let id = EBin(EVar "id","=",EVar(v^"_classId")) in
+
+              (Ty v, SCon(tyss,es,SBlock[SExp(id);t1]))
             | _ -> ty,t
           in
           (ty, cnv t)

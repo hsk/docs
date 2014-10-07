@@ -23,12 +23,13 @@ open Exp
 %token IMPLEMENT RIMPLEMENT TRAIT
 %token ARROW MEMBER
 %token LT GT LE GE
-%token MUL AMP
+%token MUL AMP DIV
 %token CAST NEW AT
 %right ASSIGN
 %right CAST
 %left LT GT LE GE
 %left ADD SUB
+%left MUL DIV
 %left NEW
 %left prec_app
 %left DOT ARROW MEMBER
@@ -56,6 +57,10 @@ exp:
     { EBin($1, "+", $3) }
 | exp SUB exp
     { EBin($1, "-", $3) }
+| exp MUL exp
+    { EBin($1, "*", $3) }
+| exp DIV exp
+    { EBin($1, "/", $3) }
 | exp DOT exp
     { EBin($1, ".", $3) }
 | exp MEMBER exp
@@ -129,7 +134,9 @@ def:
 | ID COLON typ ASSIGN exp { SLet($3, EVar $1, $5) }
 | ID COLON STRUCT LBRACE RBRACE { SStruct($1, "", []) }
 | ID COLON STRUCT LBRACE str_mems RBRACE { SStruct($1, "", $5) }
-| ID COLON STRUCT LPAREN RPAREN { SStruct($1, "",[]) }
+| ID COLON STRUCT LPAREN RPAREN {
+        SStruct($1, "",[(Ty "", SCon([],[],SBlock []))])
+    }
 | ID COLON STRUCT LPAREN prms RPAREN {
     let mems = List.map begin fun (ty,id) ->
         (ty, SExp(EVar id))

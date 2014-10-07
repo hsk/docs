@@ -52,15 +52,20 @@ int Exp_classId = Class_genId();
 struct Exp{
 
   int id;
+  Exp ():id(Exp_classId){
+
+  }
 };
 
 
 int EInt_classId = Class_genId();
 struct EInt:Exp{
 
-  int id;
-  EInt (int x):id(EInt_classId), x(x){
+  EInt (int x):x(x){
+    (id = EInt_classId);
+{
 
+    }
   }
   int x;
 };
@@ -69,9 +74,25 @@ struct EInt:Exp{
 int EAdd_classId = Class_genId();
 struct EAdd:Exp{
 
-  int id;
-  EAdd (Exp* x, Exp* y):id(EAdd_classId), x(x), y(y){
+  EAdd (Exp* x, Exp* y):x(x), y(y){
+    (id = EAdd_classId);
+{
 
+    }
+  }
+  Exp* x;
+  Exp* y;
+};
+
+
+int EMul_classId = Class_genId();
+struct EMul:Exp{
+
+  EMul (Exp* x, Exp* y):x(x), y(y){
+    (id = EMul_classId);
+{
+
+    }
   }
   Exp* x;
   Exp* y;
@@ -87,7 +108,10 @@ Vec* Eval_v = newVec();
 
 int Eval_EInt_eval(Class* self_) {
   EInt* self = ((EInt*)self_);
-  return (self -> x);
+{
+    printf("EInt %d\n", (self -> x));
+    return (self -> x);
+  }
 } 
 Eval* newEval_EInt() {
   Eval (* impl) = (new Eval());
@@ -99,7 +123,9 @@ Eval* Eval_EInt_ = newEval_EInt();
 
 int Eval_EAdd_eval(Class* self_) {
   EAdd* self = ((EAdd*)self_);
-  return ((((Eval*)(Eval_v -> data)[((* (self -> x)) . id)]) -> eval)(((Class*)(& (* (self -> x))))) + (((Eval*)(Eval_v -> data)[((* (self -> y)) . id)]) -> eval)(((Class*)(& (* (self -> y))))));
+{
+    return ((((Eval*)(Eval_v -> data)[((* (self -> x)) . id)]) -> eval)(((Class*)(& (* (self -> x))))) + (((Eval*)(Eval_v -> data)[((* (self -> y)) . id)]) -> eval)(((Class*)(& (* (self -> y))))));
+  }
 } 
 Eval* newEval_EAdd() {
   Eval (* impl) = (new Eval());
@@ -108,6 +134,20 @@ Eval* newEval_EAdd() {
   return impl;
 } 
 Eval* Eval_EAdd_ = newEval_EAdd();
+
+int Eval_EMul_eval(Class* self_) {
+  EMul* self = ((EMul*)self_);
+{
+    return ((((Eval*)(Eval_v -> data)[((* (self -> x)) . id)]) -> eval)(((Class*)(& (* (self -> x))))) * (((Eval*)(Eval_v -> data)[((* (self -> y)) . id)]) -> eval)(((Class*)(& (* (self -> y))))));
+  }
+} 
+Eval* newEval_EMul() {
+  Eval (* impl) = (new Eval());
+  setVec(Eval_v, EMul_classId, ((void*)impl));
+  ((impl -> eval) = (& Eval_EMul_eval));
+  return impl;
+} 
+Eval* Eval_EMul_ = newEval_EMul();
 
 int Eval_Int_eval(Class* self_) {
   Int* self = ((Int*)self_);
@@ -132,8 +172,12 @@ int main() {
     (result = (((Fib*)(Fib_v -> data)[(i . id)]) -> fib)(((Class*)(& i))));
     printf("fib %d %d %ld\n", (i . x), result, (gett() - start));
     printf("eval 40 = %d\n", (((Eval*)(Eval_v -> data)[(i . id)]) -> eval)(((Class*)(& i))));
-    EAdd add((new EInt(1)), (new EInt(2)));
-    printf("eval 1 + 2 = %d\n", (((Eval*)(Eval_v -> data)[(add . id)]) -> eval)(((Class*)(& add))));
+    EInt i2(41);
+    printf("eval 41 = %d\n", (((Eval*)(Eval_v -> data)[(i2 . id)]) -> eval)(((Class*)(& i2))));
+    EAdd add((new EInt(1)), (new EInt(22)));
+    printf("eval 1 + 22 = %d\n", (((Eval*)(Eval_v -> data)[(add . id)]) -> eval)(((Class*)(& add))));
+    EMul mul((new EAdd((new EInt(1)), (new EInt(2)))), (new EInt(111)));
+    printf("eval (1+2) * 111= %d\n", (((Eval*)(Eval_v -> data)[(mul . id)]) -> eval)(((Class*)(& mul))));
     return 0;
   }
 } 

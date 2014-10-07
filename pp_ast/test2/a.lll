@@ -29,17 +29,13 @@ Int <: Fib {
 Exp : class()
 Exp > EInt: class(x:int)
 Exp > EAdd: class(x:*Exp,y:*Exp)
+Exp > EMul: class(x:*Exp,y:*Exp)
 
 Eval : trait { eval:()=>int }
-Eval :> EInt { eval():int =
-  return @x
-}
-Eval :> EAdd { eval():int =
-  return (*@x):Eval=>eval() + (*@y):Eval=>eval()
-}
-Eval :> Int { eval():int =
-  return @x
-}
+Eval :> EInt { eval():int = { printf("EInt %d\n", @x) return @x} }
+Eval :> EAdd { eval():int = {return (*@x):Eval=>eval() + (*@y):Eval=>eval()} }
+Eval :> EMul { eval():int = {return (*@x):Eval=>eval() * (*@y):Eval=>eval()} }
+Eval :> Int  { eval():int = return @x }
 
 main():int = {
   start:long = gett()
@@ -55,9 +51,16 @@ main():int = {
 
   printf("eval 40 = %d\n", i:Eval=>eval())
 
-  add:EAdd(new EInt(1), new EInt(2))
+  i2:EInt(41)
+  printf("eval 41 = %d\n", i2:Eval=>eval())
 
-  printf("eval 1 + 2 = %d\n", add:Eval=>eval())
+  add:EAdd(new EInt(1), new EInt(22))
+
+  printf("eval 1 + 22 = %d\n", add:Eval=>eval())
+
+  mul:EMul(new EAdd(new EInt(1),new EInt(2)), new EInt(111))
+
+  printf("eval (1+2) * 111= %d\n", mul:Eval=>eval())
 
   return 0
 }
