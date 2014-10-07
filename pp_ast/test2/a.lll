@@ -1,0 +1,57 @@
+include "core.h"
+include stdio.h
+
+Fib : trait {
+	fib:()=>int
+}
+
+GetX : trait {
+	getX:()=>int
+	setX:(int)=>void
+}
+
+Int : struct {
+	this(x:int):x(x)={}
+	x:int
+}
+
+Int <: Fib {
+	fib():int = {
+		if (self->x < 2) return 1
+		else {
+			p1:Int(self->x - 2)
+			p2:Int(self->x - 1)
+			return p1:Fib=>fib() + p2:Fib=>fib()
+		}
+	}
+}
+
+Int <: GetX {
+
+	getX():int = {
+		return self->x
+	}
+
+	setX(x:int):void = {
+		self->x = x
+	}
+}
+
+fib(a:int):int = {
+	if (a < 2) return 1
+	return fib(a-2)+fib(a-1)
+}
+
+main():int = {
+	start:long = gett()
+
+	result:int = fib(40)
+	printf("fib %d %d %ld\n", 40, result, gett() - start)
+
+	start = gett()
+	f:Int(20)
+	f.x = 40
+	result = f:Fib=>fib()
+	printf("fib %d %d %ld\n", f:GetX=>getX(), result, gett() - start)
+	return 0
+}
