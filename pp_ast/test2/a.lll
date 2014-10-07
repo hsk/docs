@@ -27,9 +27,9 @@ Int <: Fib {
 }
 
 Exp class ()
-Exp > EInt class (x:int)
-Exp > EAdd class (x:*Exp,y:*Exp)
-Exp > EMul class (x:*Exp,y:*Exp)
+Exp :> EInt (x:int)
+Exp :> EAdd (x:*Exp,y:*Exp)
+Exp :> EMul (x:*Exp,y:*Exp)
 
 Eval trait { eval:()=>int }
 Eval :> EInt { eval():int = return @x }

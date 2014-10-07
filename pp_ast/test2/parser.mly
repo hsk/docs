@@ -146,14 +146,17 @@ def:
     end $4 in
     SStruct($1, "",(Ty "", SCon($4,inits,SBlock []))::mems)
 }
-| ID GT ID STRUCT LPAREN prms RPAREN {
+| ID RIMPLEMENT ID LPAREN RPAREN {
+        SStruct($3, $1,[(Ty "", SCon([],[],SBlock []))])
+    }
+| ID RIMPLEMENT ID LPAREN prms RPAREN {
     let mems = List.map begin fun (ty,id) ->
         (ty, SExp(EVar id))
-    end $6 in
+    end $5 in
     let inits = List.map begin fun (ty,id) ->
         ECall(EVar id, [EVar id])
-    end $6 in
-    SStruct($3, $1,(Ty "", SCon($6,inits,SBlock []))::mems)
+    end $5 in
+    SStruct($3, $1,(Ty "", SCon($5,inits,SBlock []))::mems)
 }
 
 | ID TRAIT LBRACE str_mems RBRACE { STrait($1, $4) }
