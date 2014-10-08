@@ -2,34 +2,31 @@ include "core.h"
 include stdio.h
 
 
-fib(a:int):int = {
+fib(a:int):int =
   if (a < 2) return 1
-  return fib(a-2)+fib(a-1)
-}
+  else       return fib(a-2)+fib(a-1)
+
 
 Fib trait {
   fib:()=>int
 }
 
-Int class {
-  this(x:int):x(x)={}
-  x:int
-}
+Int class (x:int)
 Int <: Fib {
-  fib():int = {
+  fib():int =
     if (@x < 2) return 1
     else {
       p1:Int(@x - 2)
       p2:Int(@x - 1)
       return p1:Fib=>fib() + p2:Fib=>fib()
     }
-  }
+
 }
 
-Exp class ()
-Exp :> EInt (x:int)
-Exp :> EAdd (x:*Exp,y:*Exp)
-Exp :> EMul (x:*Exp,y:*Exp)
+E class ()
+E :> EInt (x:int)
+E :> EAdd (x:*E,y:*E)
+E :> EMul (x:*E,y:*E)
 
 Eval trait { eval:()=>int }
 Eval :> EInt { eval():int = return @x }
@@ -48,18 +45,15 @@ main():int = {
   i.x = 40
   result = i:Fib=>fib()
   printf("fib %d %d %ld\n", i.x, result, gett() - start)
-
   printf("eval 40 = %d\n", i:Eval=>eval())
 
   i2:EInt(41)
   printf("eval 41 = %d\n", i2:Eval=>eval())
 
   add:EAdd(new EInt(1), new EInt(22))
-
   printf("eval 1 + 22 = %d\n", add:Eval=>eval())
 
   mul:EMul(new EAdd(new EInt(1),new EInt(2)), new EInt(111))
-
   printf("eval (1+2) * 111= %d\n", mul:Eval=>eval())
 
   return 0

@@ -1,12 +1,10 @@
 #include "core.h"
 #include <stdio.h>
 int fib(int a) {
-{
-    if ((a < 2))
-      return 1;
-    
+  if ((a < 2))
+    return 1;
+  else
     return (fib((a - 2)) + fib((a - 1)));
-  }
 } 
 struct Fib{
 
@@ -20,9 +18,7 @@ struct Int{
 
   int id;
   Int (int x):id(Int_classId), x(x){
-{
 
-    }
   }
   int x;
 };
@@ -30,14 +26,12 @@ struct Int{
 
 int Fib_Int_fib(Class* self_) {
   Int* self = ((Int*)self_);
-{
-    if (((self -> x) < 2))
-      return 1;
-    else {
-      Int p1(((self -> x) - 2));
-      Int p2(((self -> x) - 1));
-      return ((((Fib*)(Fib_v -> data)[(p1 . id)]) -> fib)(((Class*)(& p1))) + (((Fib*)(Fib_v -> data)[(p2 . id)]) -> fib)(((Class*)(& p2))));
-    }
+  if (((self -> x) < 2))
+    return 1;
+  else {
+    Int p1(((self -> x) - 2));
+    Int p2(((self -> x) - 1));
+    return ((((Fib*)(Fib_v -> data)[(p1 . id)]) -> fib)(((Class*)(& p1))) + (((Fib*)(Fib_v -> data)[(p2 . id)]) -> fib)(((Class*)(& p2))));
   }
 } 
 Fib* newFib_Int() {
@@ -48,18 +42,18 @@ Fib* newFib_Int() {
 } 
 Fib* Fib_Int_ = newFib_Int();
 
-int Exp_classId = Class_genId();
-struct Exp{
+int E_classId = Class_genId();
+struct E{
 
   int id;
-  Exp ():id(Exp_classId){
+  E ():id(E_classId){
 
   }
 };
 
 
 int EInt_classId = Class_genId();
-struct EInt:Exp{
+struct EInt:E{
 
   EInt (int x):x(x){
     (id = EInt_classId);
@@ -72,30 +66,30 @@ struct EInt:Exp{
 
 
 int EAdd_classId = Class_genId();
-struct EAdd:Exp{
+struct EAdd:E{
 
-  EAdd (Exp* x, Exp* y):x(x), y(y){
+  EAdd (E* x, E* y):x(x), y(y){
     (id = EAdd_classId);
 {
 
     }
   }
-  Exp* x;
-  Exp* y;
+  E* x;
+  E* y;
 };
 
 
 int EMul_classId = Class_genId();
-struct EMul:Exp{
+struct EMul:E{
 
-  EMul (Exp* x, Exp* y):x(x), y(y){
+  EMul (E* x, E* y):x(x), y(y){
     (id = EMul_classId);
 {
 
     }
   }
-  Exp* x;
-  Exp* y;
+  E* x;
+  E* y;
 };
 
 
