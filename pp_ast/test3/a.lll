@@ -30,6 +30,7 @@ Eval trait { eval:()=>int }
 Eval :> EInt { eval():int = return @x }
 Eval :> EAdd { eval():int = return (*@x):Eval=>eval() + (*@y):Eval=>eval() }
 Eval :> EMul { eval():int = return (*@x):Eval=>eval() * (*@y):Eval=>eval() }
+Eval :> Int { eval():int = return @x }
 
 main():int = {
   start:long = gett()

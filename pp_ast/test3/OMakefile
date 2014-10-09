@@ -21,7 +21,7 @@ RMS[] = *.cm* *.omc *.mli *.o .omakedb* test test.opt lexer.ml parser.ml
 
 .DEFAULT: $(OCamlProgram $(PROGRAM), $(FILES))
   time ./lllc a.lll a.cpp
-  time g++ b.cpp -O3
+  time g++ a.cpp -O3
   time ./a.out
   rm -f $(RMS)
 

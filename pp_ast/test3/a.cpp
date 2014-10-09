@@ -136,6 +136,18 @@ Eval* newEval_EMul() {
 } 
 Eval* Eval_EMul_ = newEval_EMul();
 
+int Eval_Int_eval(Class* self_) {
+  Int* self = ((Int*)self_);
+  return (self -> x);
+} 
+Eval* newEval_Int() {
+  Eval (* impl) = (new Eval());
+  setVec(Eval_v, Int_classId, ((void*)impl));
+  ((impl -> eval) = (& Eval_Int_eval));
+  return impl;
+} 
+Eval* Eval_Int_ = newEval_Int();
+
 int main() {
 {
     long start = gett();
