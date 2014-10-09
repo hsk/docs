@@ -1,0 +1,65 @@
+include "core.h"
+include stdio.h
+
+def fib(a:int):int
+  if a < 2 then
+    return 1
+  else
+    return fib(a-2)+fib(a-1)
+  end
+end
+
+trait Fib
+  def fib():int end
+end
+
+class Int
+  def this(x:int):@x(x) end
+  x:int
+end
+
+class Int < Fib
+  def fib():int
+    if @x < 2 then
+      return 1
+    else
+      p1:Int(@x - 2)
+      p2:Int(@x - 1)
+      return p1:Fib=>fib() + p2:Fib=>fib()
+    end
+  end
+end
+
+class E () end
+class E :> EInt(x:int) end
+class E :> EAdd(x:*E,y:*E) end
+class E :> EMul(x:*E,y:*E) end
+
+trait Eval         def eval():int           end end
+trait Eval :> EInt def eval():int return @x end end
+trait Eval :> EAdd def eval():int return (*@x):Eval=>eval()+(*@y):Eval=>eval() end end
+trait Eval :> EMul def eval():int return (*@x):Eval=>eval()+(*@y):Eval=>eval() end end
+
+def main():int
+  start:long = gett()
+
+  result:int = fib(40)
+  printf("fib %d %d %ld\n", 40, result, gett() - start)
+
+  start = gett()
+  i:Int(20)
+  i.x = 40
+  result = i:Fib=>fib()
+  printf("fib %d %d %ld\n", i.x, result, gett() - start)
+  printf("eval 40 = %d\n", i:Eval=>eval())
+
+  i2:EInt(41)
+  printf("eval 41 = %d\n", i2:Eval=>eval())
+
+  add:EAdd(new EInt(1), new EInt(22))
+  printf("eval 1 + 22 = %d\n", add:Eval=>eval())
+
+  mul:EMul(new EAdd(new EInt(1),new EInt(2)), new EInt(111))
+  printf("eval (1+2) * 111= %d\n", mul:Eval=>eval())
+  return 0
+end
