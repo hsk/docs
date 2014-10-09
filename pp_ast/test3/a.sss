@@ -1,21 +1,16 @@
 include "core.h"
 include stdio.h
 
+def fib(a:int):int =
+	if (a < 2) return 1
+	else       return fib(a-2) + fib(a-1)
+
+
 trait Fib {
 	def fib():int
 }
 
-trait GetX {
-	def getX():int
-	def setX(int):void
-}
-
-class Int {
-	var x:int
-	def this(x:int):x(x)={
-	}
-}
-
+class Int(x:int)
 class Int extends Fib {
 	def fib():int = {
 		if (@x < 2) return 1
@@ -27,32 +22,36 @@ class Int extends Fib {
 	}
 }
 
-class Int extends GetX {
+class E()
+class EInt(x:int) extends E
+class EAdd(x:*E, y:*E) extends E
+class EMul(x:*E, y:*E) extends E
 
-	def getX():int = {
-		return @x
-	}
-
-	def setX(x:int):void = {
-		@x = x
-	}
-}
-
-def fib(a:int):int = {
-	if (a < 2) return 1
-	return fib(a-2)+fib(a-1)
-}
+trait Eval { def eval():int }
+class EInt extends Eval { def eval():int = return @x }
+class EAdd extends Eval { def eval():int = return (*@x):Eval=>eval()+(*@y):Eval=>eval() }
+class EMul extends Eval { def eval():int = return (*@x):Eval=>eval()*(*@y):Eval=>eval() }
 
 def main():int = {
-	start:long = gett()
+	var start:long = gett()
 
-	result:int = fib(40)
+	var result:int = fib(40)
 	printf("fib %d %d %ld\n", 40, result, gett() - start)
 
 	start = gett()
-	f:Int(20)
-	f.x = 40
-	result = f:Fib=>fib()
-	printf("fib %d %d %ld\n", f:GetX=>getX(), result, gett() - start)
+	var i:Int(20)
+	i.x = 40
+	result = i:Fib=>fib()
+	printf("fib %d %d %ld\n", i.x, result, gett() - start)
+
+	var i2:EInt(41)
+	printf("eval 41 = %d\n", i2:Eval=>eval())
+
+	var add:EAdd(new EInt(1), new EInt(22))
+	printf("eval 1 + 22 = %d\n", add:Eval=>eval())
+
+	var mul:EMul(new EAdd(new EInt(1),new EInt(2)), new EInt(111))
+	printf("eval (1+2) * 111= %d\n", mul:Eval=>eval())
+
 	return 0
 }

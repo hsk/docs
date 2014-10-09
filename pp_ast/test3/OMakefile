@@ -20,9 +20,9 @@ PROGRAM2 = test
 RMS[] = *.cm* *.omc *.mli *.o .omakedb* test test.opt lexer.ml parser.ml
 
 .DEFAULT: $(OCamlProgram $(PROGRAM), $(FILES))
-  ./lllc
-  g++ a.cpp -O3
-  ./a.out
+  time ./lllc a.lll a.cpp
+  time g++ b.cpp -O3
+  time ./a.out
   rm -f $(RMS)
 
 FILES[] += test
