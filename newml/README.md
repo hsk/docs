@@ -71,7 +71,7 @@ printf("%d\n" f(1,2))
 f2 := {
   a,b c,d => a*b + c*d
 }
-printf("%d\n")(f(1,2)(3,4))
-printf("%d\n" f(1,2 3,4))
+printf("%d\n")(f2(1,2)(3,4))
+printf("%d\n" f2(1,2 3,4))
 ```
 

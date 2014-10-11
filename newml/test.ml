@@ -95,4 +95,8 @@ let b = eval(b) in
 (a + b);
 ));;
 printf("1+2=%d\n") (eval(KAdd((KInt(1) , KInt(2)))));;
+let f2 = (fun ( (a , b)) ( (c , d)) -> ((a * b) + (c * d));
+);;
+printf("%d\n")(f2((1 , 2))((3 , 4)));;
+printf("%d\n") (f2((1 , 2)) ((3 , 4)));;
 
