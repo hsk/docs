@@ -18,7 +18,6 @@ Int <: Fib {
       p2:Int(@x - 1)
       return p1:Fib=>fib() + p2:Fib=>fib()
     }
-
 }
 
 E class ()
@@ -33,8 +32,8 @@ Eval :> EMul { eval():int = return (*@x):Eval=>eval() * (*@y):Eval=>eval() }
 Eval :> Int { eval():int = return @x }
 
 main():int = {
-  start:long = gett()
 
+  start:long = gett()
   result:int = fib(40)
   printf("fib %d %d %ld\n", 40, result, gett() - start)
 

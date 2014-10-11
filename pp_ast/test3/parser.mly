@@ -3,6 +3,11 @@ open Syntax
 open Ty
 open Stmt
 open Exp
+
+let addBlock = function
+  | (SBlock _ as b) -> b
+  | b -> SBlock [b]
+
 %}
 
 %token <int> INT
@@ -124,10 +129,10 @@ defs:
 def:
 | INCLUDE { SInclude($1) }
 | ID LPAREN RPAREN COLON ID ASSIGN stmt{
-    SFun(Ty $5, $1, [], SBlock [$7])
+    SFun(Ty $5, $1, [], addBlock $7)
 }
 | ID LPAREN prms RPAREN COLON ID ASSIGN stmt{
-    SFun(Ty $6, $1, $3, SBlock [$8])
+    SFun(Ty $6, $1, $3, addBlock $8)
 }
 | ID COLON ID LPAREN exps RPAREN { SLet(Ty $3, ECall(EVar $1, $5), EEmpty) }
 | ID COLON ID { SLet(Ty $3, EVar $1, EEmpty) }
@@ -184,7 +189,7 @@ str_mem:
 | ID COLON LPAREN typs RPAREN ARROW ID { (TFun(Ty $7, $4), SExp(EVar $1)) }
 | ID COLON LPAREN RPAREN ARROW ID { (TFun(Ty $6, []), SExp(EVar $1)) }
 | ID COLON typ { ($3, SExp(EVar $1)) }
-| THIS LPAREN prms RPAREN COLON inits ASSIGN stmt { (Ty "", SCon($3,$6,SBlock [$8])) }
+| THIS LPAREN prms RPAREN COLON inits ASSIGN stmt { (Ty "", SCon($3,$6, addBlock $8)) }
 
 | error
     { failwith

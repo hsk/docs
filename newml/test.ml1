@@ -1,0 +1,159 @@
+open Printf
+open List
+
+b : int = 2
+a := 1
+
+f0 :()=>int = { () => 0 }
+
+printf("%d\n")(f0())
+printf("%d\n" f0())
+printf("%d\n"; f0())
+
+
+f1 :int=>int = { a => a }
+
+printf("%d\n")(f1(1))
+printf("%d\n" f1(1))
+printf("%d\n"; f1(1))
+
+f2 :int=>int=>int= { a b => a + b }
+
+printf("%d\n")(f2(1)(2))
+printf("%d\n" f2(1 2))
+printf("%d\n"; f2(1; 2))
+
+f3 :int=>int=>int=>int= { a b c=> a + b + c }
+printf("%d\n")(f3(1)(2)(3))
+printf("%d\n" f3(1 2 3))
+printf("%d\n"; f3(1; 2; 3))
+
+printf
+  ("%d %d %d %d\n")
+  (f0())
+  (f1(1))
+  (f2(1)(2))
+  (f3(1)(2)(3))
+
+printf(
+  "%d %d %d %d\n"
+  f0()
+  f1(1)
+  f2(1 2)
+  f3(1 2 3)
+)
+printf(
+  "%d %d %d %d\n";
+  f0();
+  f1(1);
+  f2(1; 2);
+  f3(1; 2; 3)
+)
+
+printf("%d\n")(f3(-1)(-2)(-3))
+printf("%d\n" f3(-1; -2; -3))
+printf("%d\n"; f3(-1; -2; -3))
+
+
+
+
+printf("%d+%d=%d\n")(a)(b)(a+b)
+printf("%d+%d=%d\n"; a; b; a + b)
+printf("%d+%d=%d\n" a b a + b)
+
+printf(if (a < 1) "a\n" else "b1\n")
+
+if(a < 10) {printf("b2\n")}
+
+if(a > 10) printf("a\n") else printf("b3\n")
+
+add1 : int => int = {a => a + 1}
+
+c := add1(10)
+printf("10+1=%d\n"; c)
+
+printf("10+1=%d\n" add1(10))
+
+add := {a b =>
+  a + b
+}
+
+add3 :int=>int=>int=>int= {a b c=>
+  a + b + c
+}
+
+addt :(int,int)=>int = { (a,b) =>
+  a + b
+}
+
+def fib := {
+  case 0 => 1
+  case 1 => 1
+  case n => fib(n-2) + fib(n-1)
+}
+
+def fib2 := { n =>
+  n match {
+    case 0 => 1
+    case 1 => 1
+    case n => fib2(n-2) + fib2(n-1)
+  }
+}
+
+llor := {
+  case 0,0 => a:=1 b:=2; a | b
+  case a,b => a | b
+}
+
+main := {() =>
+  printf("add 1 2 = %d\n" add(1 2))
+  printf("addt 1,2 = %d\n" addt(1,2))
+  printf("fib 10 = %d\n" fib(10))
+  printf("llor %d\n" llor(1,2))
+  a := 12
+  c := 2
+  b := c + a
+  printf("%d\n" b)
+}
+
+main()
+
+_ : unit = {
+  printf("test222\n");
+  [1 2 3 4000]->iter {
+    x => printf("%d\n" x)
+  } 
+
+  ls := [1 2 3 4 5]->map {x => x * 10}
+
+  ls->iter {
+    x => printf("%d\n" x)
+  }
+
+  iter{x => printf("%d\n" x)}(ls)
+
+  iter({x => printf("%d\n" x)} ls)
+
+}
+
+a type {;x: int ;y:int}
+
+aa := {;x=1 ;y=2}
+
+printf("%d\n" aa.x)
+
+printf("%d\n"; {;x=1 ;y=2}.x)
+
+aa := {{;x}=>printf("%d\n" x)}
+
+k type | KInt(int) | KAdd(k, k)
+
+def eval := {
+  case KInt(i) => i
+  case KAdd(a,b) =>
+    a:=eval(a)
+    b:=eval(b)
+    a+b
+}
+
+printf("1+2=%d\n" eval(KAdd(KInt(1),KInt(2))))

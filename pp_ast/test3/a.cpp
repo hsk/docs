@@ -149,23 +149,21 @@ Eval* newEval_Int() {
 Eval* Eval_Int_ = newEval_Int();
 
 int main() {
-{
-    long start = gett();
-    int result = fib(40);
-    printf("fib %d %d %ld\n", 40, result, (gett() - start));
-    (start = gett());
-    Int i(20);
-    ((i . x) = 40);
-    (result = (((Fib*)(Fib_v -> data)[(i . id)]) -> fib)(((Class*)(& i))));
-    printf("fib %d %d %ld\n", (i . x), result, (gett() - start));
-    printf("eval 40 = %d\n", (((Eval*)(Eval_v -> data)[(i . id)]) -> eval)(((Class*)(& i))));
-    EInt i2(41);
-    printf("eval 41 = %d\n", (((Eval*)(Eval_v -> data)[(i2 . id)]) -> eval)(((Class*)(& i2))));
-    EAdd add((new EInt(1)), (new EInt(22)));
-    printf("eval 1 + 22 = %d\n", (((Eval*)(Eval_v -> data)[(add . id)]) -> eval)(((Class*)(& add))));
-    EMul mul((new EAdd((new EInt(1)), (new EInt(2)))), (new EInt(111)));
-    printf("eval (1+2) * 111= %d\n", (((Eval*)(Eval_v -> data)[(mul . id)]) -> eval)(((Class*)(& mul))));
-    return 0;
-  }
+  long start = gett();
+  int result = fib(40);
+  printf("fib %d %d %ld\n", 40, result, (gett() - start));
+  (start = gett());
+  Int i(20);
+  ((i . x) = 40);
+  (result = (((Fib*)(Fib_v -> data)[(i . id)]) -> fib)(((Class*)(& i))));
+  printf("fib %d %d %ld\n", (i . x), result, (gett() - start));
+  printf("eval 40 = %d\n", (((Eval*)(Eval_v -> data)[(i . id)]) -> eval)(((Class*)(& i))));
+  EInt i2(41);
+  printf("eval 41 = %d\n", (((Eval*)(Eval_v -> data)[(i2 . id)]) -> eval)(((Class*)(& i2))));
+  EAdd add((new EInt(1)), (new EInt(22)));
+  printf("eval 1 + 22 = %d\n", (((Eval*)(Eval_v -> data)[(add . id)]) -> eval)(((Class*)(& add))));
+  EMul mul((new EAdd((new EInt(1)), (new EInt(2)))), (new EInt(111)));
+  printf("eval (1+2) * 111= %d\n", (((Eval*)(Eval_v -> data)[(mul . id)]) -> eval)(((Class*)(& mul))));
+  return 0;
 } 
 
