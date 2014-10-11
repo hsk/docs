@@ -46,11 +46,11 @@ let (add3:(int)->((int)->((int)->(int)))) = (fun ( a) ( b) ( c) -> ((a + b) + c)
 );;
 let (addt:((int * int))->(int)) = (fun ( (a , b)) -> (a + b);
 );;
-let rec fib = (function | ( 0) -> (1;
+let rec fib = (function | ( 0) -> (0;
 )| ( 1) -> (1;
 )| ( n) -> ((fib((n - 2)) + fib((n - 1)));
 ));;
-let rec fib2 = (fun ( n) -> (match n with | ( 0) -> (1;
+let rec fib2 = (fun ( n) -> (match n with | ( 0) -> (0;
 )| ( 1) -> (1;
 )| ( n) -> ((fib2((n - 2)) + fib2((n - 1)));
 ));

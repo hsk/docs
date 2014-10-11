@@ -87,14 +87,14 @@ addt :(int,int)=>int = { (a,b) =>
 }
 
 def fib := {
-  case 0 => 1
+  case 0 => 0
   case 1 => 1
   case n => fib(n-2) + fib(n-1)
 }
 
 def fib2 := { n =>
   n match {
-    case 0 => 1
+    case 0 => 0
     case 1 => 1
     case n => fib2(n-2) + fib2(n-1)
   }
