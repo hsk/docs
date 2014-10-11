@@ -106,5 +106,5 @@ printf("%d\n" f2(1,2 3,4))
 
 ## サンプル
 
-[test.ml](test.ml) を参考にしてください。
+[test.nml](test.nml)とその変換結果[test.ml](test.ml) を参考にしてください。
 
