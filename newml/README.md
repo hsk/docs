@@ -18,7 +18,8 @@ OCamlとOMakeがある環境で、
 ## Hello World
 
 ```
-print_string("hello world!\n")
+open Printf
+printf("hello world!\n")
 ```
 
 ## 特徴
