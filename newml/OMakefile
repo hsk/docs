@@ -14,14 +14,14 @@ FILES[] =
   gen_ml
   main
 
-PROGRAM = gomac
+PROGRAM = newmlc
 PROGRAM2 = test
 
 RMS[] = *.cm* *.omc *.mli *.o .omakedb* test test.opt lexer.ml parser.ml
 
 .DEFAULT: $(OCamlProgram $(PROGRAM), $(FILES))
-  ./gomac test.ml1 test.ml
-  cat test.ml1
+  ./newmlc test.nml test.ml
+  cat test.nml
   cat test.ml
   ocaml test.ml
 

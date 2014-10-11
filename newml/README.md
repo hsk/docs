@@ -21,6 +21,13 @@ OCamlとOMakeがある環境で、
 open Printf
 printf("hello world!\n")
 ```
+hello.nml
+
+```
+$ newmlc hello.nml hello.ml
+$ ocaml hello.ml
+hello world!
+```
 
 ## 特徴
 
