@@ -1,24 +1,27 @@
 open Printf
 open List
 
-/* variable */
-
-b : int = 2
+variable : int = 2
 a := 1
+b := 2
+_ := 3
 
-/* block */
-
-_ : unit = {
-  printf("test222\n")
+block : unit = {
+  printf("test 1\n")
 }
 
-_ := {
-  printf("test222\n")
+block := {
+  printf("test 2\n")
+  printf("test 2\n")
 }
 
-/* curry functions */
+functions() := {
 
-_ := {
+  printf("test")
+
+} functions()
+
+curry_function := {
 
   f0:()=>int= { () => 0 }
   f0():int= { 0 }
@@ -92,8 +95,7 @@ _ := {
   
 }
 
-/* if else */
-_ := {
+if_else() := {
 
   if (a < 10) printf("b1\n")
   if (a < 10) { printf("b2\n") }
@@ -102,12 +104,12 @@ _ := {
 
   printf(if (a < 1) "a\n" else "b1\n")
 
-}
+} if_else()
 
-/* recursive function (let rec) */
 
-_ := {
+recursive_function() := {
 
+  /* (let rec) */
   def fib:(int)=>int = { n=>
     if (n == 0) 0
     else if (n == 1) 1
@@ -124,11 +126,10 @@ _ := {
   */
 
   printf("fib 10 %d\n" fib(10))  
-}
 
-/* tuple */
+} recursive_function()
 
-_ := {
+tuple() := {
 
   addt:(int,int)=>int={ (a,b) =>
     a + b
@@ -153,13 +154,9 @@ _ := {
   printf("%d\n")(f2(1,2)(3,4))
   printf("%d\n" f2(1,2 3,4))
 
-}
+} tuple ()
 
-
-/* match */
-
-_ := {
-
+pattern_match() := {
 
   def fib:(int)=>int={ n =>
     n match {
@@ -178,11 +175,10 @@ _ := {
     }
   }
   */
-}
+} pattern_match()
 
 
-/* parcial function */
-_ := {
+parcial_function() := {
 
   def fib:(int)=>int={
     case 0 => 0
@@ -200,10 +196,9 @@ _ := {
   }
 
   printf("llor %d\n" llor(1,2))
-}
+} parcial_function()
 
-/* list */
-_ := {
+list() := {
 
   iter({x => printf("%d\n")(x)})([1; 2; 3; 4])
   iter({x => printf("%d\n"; x)})([1; 2; 3; 4])
@@ -224,13 +219,21 @@ _ := {
     x => printf("%d\n" x)
   }
 
-}
+  /*
+  def ps(xs):= {
+    case [] => ()
+    case x::xs => printf("%d\n" x) ps(xs)
+  }
+  ps(xs)
+  */
 
-/* record */
+
+} list ()
+
 
 a type {;x: int ;y:int}
 
-_ := {
+record() := {
 
   aa := {;x=1 ;y=2}
 
@@ -240,19 +243,34 @@ _ := {
 
   aa := {{;x}=>printf("%d\n" x)}
   
-}
+} record()
 
-/* variant type */
 
 e type  | EUnit | EInt(int) | EAdd(e, e)
 
-_ := {
+variant() := {
 
-  def eval:(e)=>int={
+  def eval:e=>int={
     case EUnit => 0
     case EInt(i) => i
     case EAdd(a, b) => eval(a) + eval(b)
   }
 
   printf("1+2=%d\n" eval(EAdd(EInt(1), EInt(2))))
-}
+} variant()
+
+reference() := {
+
+  a := & 1;
+
+  *a = 2;
+
+  printf("%d\n"; *a);
+
+  b #= 1;
+
+  *b = 3;
+
+  printf("%d\n"; *b);
+
+} reference()

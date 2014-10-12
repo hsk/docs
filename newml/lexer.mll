@@ -22,7 +22,6 @@ rule token = parse
     { RETURN}
 | "::"
     { CAST }
-| '@' { AT }
 | "new"
     { NEW }
 | "this" { THIS }
@@ -35,6 +34,7 @@ rule token = parse
 | "|>" { FARROW }
 | "if" { IF }
 | "else" {ELSE}
+| '@' {CASE}
 | "case" {CASE}
 | "match" {MATCH}
 | "type" {TYPE}
@@ -61,6 +61,7 @@ rule token = parse
 | ':'
     { COLON }
 | ":=" { COLONASSIGN }
+| "#=" { REFASSIGN }
 | "def" { DEF }
 | "==" { EQ}
 | '=' { ASSIGN }

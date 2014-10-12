@@ -27,7 +27,7 @@ let e2e = function
 %token LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK
 %token PRINT
 %token EOF
-%token COLON COMMA COLONASSIGN
+%token COLON COMMA COLONASSIGN REFASSIGN
 %token ASSIGN
 %token RETURN
 %token <string> OPEN
@@ -43,7 +43,7 @@ let e2e = function
 
 %right LIST
 %nonassoc ELSE
-%right ASSIGN COLONASSIGN
+%right ASSIGN COLONASSIGN REFASSIGN
 %left COMMA
 %right CAST
 %left LT GT LE GE EQ
@@ -108,6 +108,9 @@ exp:
 | ID TYPE LBRACE SEMICOLON defrecs RBRACE { ETypeRec($1, $5)}
 | ID TYPE OR variants { ETypeVariant($1, $4)}
 | SUB exp { EPre("-", $2)}
+| AMP exp { EPre("ref", $2)}
+| MUL exp { EPre("!", $2)}
+
 | exp ADD exp { EBin($1, "+", $3) }
 | exp SUB exp { EBin($1, "-", $3) }
 | exp MUL exp { EBin($1, "*", $3) }
@@ -120,6 +123,11 @@ exp:
 | exp EQ exp { EBin($1, "=", $3) }
 | exp OR exp { EBin($1, "lor", $3) }
 | exp COMMA exp { EBin($1, ",", $3) }
+| exp ASSIGN exp {
+	match $1 with
+	| EPre("!", a) -> EBin(a, ":=", $3)
+	| _ -> EBin($1, ":=", $3)
+}
 | exp MATCH LBRACE CASE fns RBRACE { EMatch($1, $5) }
 | IF LPAREN exp RPAREN exp ELSE exp { EIf($3,$5,$7) }
 | IF LPAREN exp RPAREN exp %prec LIST { EIf($3,$5,EEmpty) }
@@ -165,6 +173,18 @@ exp:
       | _ -> assert false
 	in
 	loop($1,$3)
+}
+| exp REFASSIGN exp {
+	let rec loop = function 
+      | EVar(id),b -> ELet(id, TEmpty, b)
+      | ECall((e:e), ls), b ->
+      	let le = List.map begin fun (l:e) ->
+      		e2e l
+      	end ls in
+      	loop(e, EFun(le, TEmpty, b))
+      | _ -> assert false
+	in
+	loop($1,EPre("ref", $3))
 }
 | exp COLON typ {
 
