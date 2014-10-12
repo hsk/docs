@@ -1,188 +1,258 @@
 open Printf
 open List
 
+/* variable */
+
 b : int = 2
 a := 1
 
-f0:()=>int= { () => 0 }
-f0():int={ 0 }
-f0():int= 0 
-
-printf("%d\n")(f0())
-printf("%d\n" f0())
-printf("%d\n"; f0())
-
-
-f1:(int)=>int={ a => a }
-f1(a:int):int={ a }
-f1(a:int):int= a
-
-printf("%d\n")(f1(1))
-printf("%d\n" f1(1))
-printf("%d\n"; f1(1))
-
-f2:(int)=>(int)=>int={ a b => a + b }
-
-printf("%d\n")(f2(1)(2))
-printf("%d\n" f2(1 2))
-printf("%d\n"; f2(1; 2))
-
-f3:int=>int=>int=>int={ a b c=> a + b + c }
-printf("%d\n")(f3(1)(2)(3))
-printf("%d\n" f3(1 2 3))
-printf("%d\n"; f3(1; 2; 3))
-
-printf
-  ("%d %d %d %d\n")
-  (f0())
-  (f1(1))
-  (f2(1)(2))
-  (f3(1)(2)(3))
-
-printf(
-  "%d %d %d %d\n"
-  f0()
-  f1(1)
-  f2(1 2)
-  f3(1 2 3)
-)
-printf(
-  "%d %d %d %d\n";
-  f0();
-  f1(1);
-  f2(1; 2);
-  f3(1; 2; 3)
-)
-
-printf("%d\n")(f3(-1)(-2)(-3))
-printf("%d\n" f3(-1; -2; -3))
-printf("%d\n"; f3(-1; -2; -3))
-
-
-
-
-printf("%d+%d=%d\n")(a)(b)(a+b)
-printf("%d+%d=%d\n"; a; b; a + b)
-printf("%d+%d=%d\n" a b a + b)
-
-printf(if (a < 1) "a\n" else "b1\n")
-
-if(a < 10) {printf("b2\n")}
-
-if(a > 10) printf("a\n") else printf("b3\n")
-
-add1:(int)=>int={a => a + 1}
-
-c := add1(10)
-printf("10+1=%d\n"; c)
-
-printf("10+1=%d\n" add1(10))
-
-add:int=>int=>int={a b =>
-  a + b
-}
-
-add3:int=>int=>int=>int={a b c=>
-  a + b + c
-}
-
-addt:(int,int)=>int={ (a,b) =>
-  a + b
-}
-
-def fib:(int)=>int={
-  case 0 => 0
-  case 1 => 1
-  case n => fib(n-2) + fib(n-1)
-}
-
-def fib2:(int)=>int={ n =>
-  n match {
-    case 0 => 0
-    case 1 => 1
-    case n => fib2(n-2) + fib2(n-1)
-  }
-}
-
-llor:(int,int)=>int={
-  case 0,0 => a:=1 b:=2; a | b
-  case a,b => a | b
-}
-
-main():unit={
-  printf("add 1 2 = %d\n" add(1 2))
-  printf("addt 1,2 = %d\n" addt(1,2))
-  printf("fib 10 = %d\n" fib(10))
-  printf("llor %d\n" llor(1,2))
-  a := 12
-  c := 2
-  b := c + a
-  printf("%d\n" b)
-}
-
-main()
+/* block */
 
 _ : unit = {
-  printf("test222\n");
-  [1 2 3 4000]->iter {
+  printf("test222\n")
+}
+
+_ := {
+  printf("test222\n")
+}
+
+/* curry functions */
+
+_ := {
+
+  f0:()=>int= { () => 0 }
+  f0():int= { 0 }
+  f0():int= 0 
+  f0():= 0 
+
+  printf("%d\n")(f0())
+  printf("%d\n"; f0())
+  printf("%d\n" f0())
+
+  f1:(int)=>int={ a => a }
+  f1(a:int):int={ a }
+  f1(a:int):int= a
+  f1(a:int):= a
+
+  printf("%d\n")(f1(1))
+  printf("%d\n"; f1(1))
+  printf("%d\n" f1(1))
+
+  f2:(int)=>(int)=>int={ a b => a + b }
+  f2(a:int):(int)=>int={ b => a + b }
+  f2(a:int)(b:int):int={a + b}
+  f2(a:int; b:int):int= a + b
+  f2(a:int b:int):= a + b
+
+  printf("%d\n")(f2(1)(2))
+  printf("%d\n"; f2(1; 2))
+  printf("%d\n" f2(1 2))
+
+  f3:(int)=>(int)=>(int)=>int={ a b c => a + b + c }
+  f3(a:int):(int)=>(int)=>int={ b c => a + b + c}
+  f3(a:int)(b:int):(int)=>int={ c => a + b + c}
+  f3(a:int)(b:int)(c:int):int={a + b + c}
+  f3(a:int; b:int; c:int):int= a + b + c
+  f3(a:int b:int c:int):= a + b + c
+
+  printf("%d\n")(f3(1)(2)(3))
+  printf("%d\n"; f3(1; 2; 3))
+  printf("%d\n" f3(1 2 3))
+
+  printf
+    ("%d %d %d %d\n")
+    (f0())
+    (f1(1))
+    (f2(1)(2))
+    (f3(1)(2)(3))
+
+  printf(
+    "%d %d %d %d\n";
+    f0();
+    f1(1);
+    f2(1; 2);
+    f3(1; 2; 3)
+  )
+
+  printf(
+    "%d %d %d %d\n"
+    f0()
+    f1(1)
+    f2(1 2)
+    f3(1 2 3)
+  )
+
+  printf("%d\n")(f3(-1)(-2)(-3))
+  printf("%d\n"; f3(-1; -2; -3))
+  printf("%d\n" f3(-1; -2; -3))
+
+  printf("%d+%d=%d\n")(a)(b)(a+b)
+  printf("%d+%d=%d\n"; a; b; a + b)
+  printf("%d+%d=%d\n" a b a + b)
+  
+}
+
+/* if else */
+_ := {
+
+  if (a < 10) printf("b1\n")
+  if (a < 10) { printf("b2\n") }
+  if (a < 10) { printf("b2\n") printf("b3\n") }
+  if (a > 10) printf("a\n") else printf("b3\n")
+
+  printf(if (a < 1) "a\n" else "b1\n")
+
+}
+
+/* recursive function (let rec) */
+
+_ := {
+
+  def fib:(int)=>int = { n=>
+    if (n == 0) 0
+    else if (n == 1) 1
+    else fib(n-2) + fib(n -1)
+
+  }
+
+  /*
+  def fib(n:int):int = {
+    if (n == 0) 0
+    else (if (n == 1) 1
+    else fib(n-2) + fib(n-1))
+  }
+  */
+
+  printf("fib 10 %d\n" fib(10))  
+}
+
+/* tuple */
+
+_ := {
+
+  addt:(int,int)=>int={ (a,b) =>
+    a + b
+  }
+  /*
+  addt(int:a,int:b):int= a + b
+  */
+  printf("%d\n" addt(1,2))
+
+  f2:(int,int)=>(int,int)=>int={
+    a,b c,d => a*b + c*d
+  }
+
+  /*
+  f2(a:int,b:int):(int,int)=>int={
+    c,d => a*b + c*d
+  }
+  f2(a:int,b:int)(c:int,d:int):int={
+    a*b + c*d
+  }
+  */
+  printf("%d\n")(f2(1,2)(3,4))
+  printf("%d\n" f2(1,2 3,4))
+
+}
+
+
+/* match */
+
+_ := {
+
+
+  def fib:(int)=>int={ n =>
+    n match {
+      case 0 => 0
+      case 1 => 1
+      case n => fib(n-2) + fib(n-1)
+    }
+  }
+
+  /*
+  def fib(n:int):int = {
+    n match {
+      case 0 => 0
+      case 1 => 1
+      case n => fib(n-2) + fib(n-1)
+    }
+  }
+  */
+}
+
+
+/* parcial function */
+_ := {
+
+  def fib:(int)=>int={
+    case 0 => 0
+    case 1 => 1
+    case n => fib(n-2) + fib(n-1)
+  }
+  
+  printf("fib 10 = %d\n" fib(10))
+
+  /* tuple parcual function */
+
+  llor:(int,int)=>int={
+    case 0,0 => a:=1 b:=2; a | b
+    case a,b => a | b
+  }
+
+  printf("llor %d\n" llor(1,2))
+}
+
+/* list */
+_ := {
+
+  iter({x => printf("%d\n")(x)})([1; 2; 3; 4])
+  iter({x => printf("%d\n"; x)})([1; 2; 3; 4])
+  iter({x => printf("%d\n" x)})([1; 2; 3; 4])
+  iter({x => printf("%d\n" x)}; [1; 2; 3; 4])
+  /* iter({x => printf("%d\n" x)} [1; 2; 3; 4])*/
+  iter{x => printf("%d\n" x)}([1; 2; 3; 4])
+  iter{x => printf("%d\n" x)}([1 2 3 4])
+  iter{x => printf("%d\n" x)}[1 2 3 4];
+
+  [1 2 3 4] -> iter {
     x => printf("%d\n" x)
-  } 
+  };
 
-  ls := [1 2 3 4 5]->map {x => x * 10}
-
-  ls->iter {
+  [1 2 3 4] -> map {
+    x => x * 10
+  } -> iter {
     x => printf("%d\n" x)
   }
 
-  iter{x => printf("%d\n" x)}(ls)
-
-  iter({x => printf("%d\n" x)} ls)
-
 }
+
+/* record */
 
 a type {;x: int ;y:int}
 
-aa := {;x=1 ;y=2}
+_ := {
 
-printf("%d\n" aa.x)
+  aa := {;x=1 ;y=2}
 
-printf("%d\n"; {;x=1 ;y=2}.x)
+  printf("%d\n" aa.x)
 
-aa := {{;x}=>printf("%d\n" x)}
+  printf("%d\n"; {;x=1 ;y=2}.x)
 
-k type | KInt(int) | KAdd(k, k)
-
-def eval:(k)=>int={
-  case KInt(i) => i
-  case KAdd(a,b) =>
-    a:=eval(a)
-    b:=eval(b)
-    a+b
+  aa := {{;x}=>printf("%d\n" x)}
+  
 }
 
-printf("1+2=%d\n" eval(KAdd(KInt(1),KInt(2))))
+/* variant type */
 
-f2:(int,int)=>(int,int)=>int={
-  a,b c,d => a*b + c*d
+e type  | EUnit | EInt(int) | EAdd(e, e)
+
+_ := {
+
+  def eval:(e)=>int={
+    case EUnit => 0
+    case EInt(i) => i
+    case EAdd(a, b) => eval(a) + eval(b)
+  }
+
+  printf("1+2=%d\n" eval(EAdd(EInt(1), EInt(2))))
 }
-printf("%d\n")(f2(1,2)(3,4))
-printf("%d\n" f2(1,2 3,4))
-
-f20:(int)=>(int)=>int={ a b => a + b }
-f21(a:int):(int)=>int={ b => a + b }
-f22(a:int)(b:int):int= a + b
-f23(a:int; b:int):int= a + b
-f24(a:int b:int):int= a + b
-
-printf("f21 %d\n")(f21(1)(2))
-printf("f22 %d\n")(f22(1)(2))
-printf("f23 %d\n")(f23(1)(2))
-printf("f24 %d\n")(f24(1)(2))
-
-f22(a:int)(b:int):={ a + b }
-f23(a:int; b:int):={ a + b }
-f24(a:int b:int):={ a + b }
-
-printf("f22 %d\n")(f22(1)(2))
-printf("f23 %d\n")(f23(1)(2))
-printf("f24 %d\n")(f24(1)(2))

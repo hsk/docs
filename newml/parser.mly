@@ -37,6 +37,7 @@ let e2e = function
 %token IMPLEMENT RIMPLEMENT TRAIT
 %token ARROW MEMBER FARROW
 %token LT GT LE GE
+%token EQ
 %token MUL AMP DIV
 %token CAST NEW AT DEF CASE MATCH TYPE
 
@@ -45,7 +46,7 @@ let e2e = function
 %right ASSIGN COLONASSIGN
 %left COMMA
 %right CAST
-%left LT GT LE GE
+%left LT GT LE GE EQ
 %left ADD SUB
 %left MUL DIV
 %left NEW
@@ -116,6 +117,7 @@ exp:
 | exp GT exp { EBin($1, ">", $3) }
 | exp LE exp { EBin($1, "<=", $3) }
 | exp GE exp { EBin($1, ">=", $3) }
+| exp EQ exp { EBin($1, "=", $3) }
 | exp OR exp { EBin($1, "lor", $3) }
 | exp COMMA exp { EBin($1, ",", $3) }
 | exp MATCH LBRACE CASE fns RBRACE { EMatch($1, $5) }

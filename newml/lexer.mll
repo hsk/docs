@@ -62,8 +62,8 @@ rule token = parse
     { COLON }
 | ":=" { COLONASSIGN }
 | "def" { DEF }
-| '='
-    { ASSIGN }
+| "==" { EQ}
+| '=' { ASSIGN }
 | '"' [^ '"']* '"' 
     { STRING(Lexing.lexeme lexbuf) }
 | ['a'-'z' 'A'-'Z' '_']['a'-'z' 'A'-'Z' '_' '0'-'9']*
