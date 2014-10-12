@@ -1,6 +1,22 @@
 %{
 open Ast
 
+let e2t = function
+| EVar(e) -> TEmpty
+| ELet(_,t,EEmpty) -> t
+| EUnit -> TUnit
+| _ -> assert false
+
+let e2id = function
+| EVar(i) -> i
+| ELet(i,t,EEmpty) -> i
+| _ -> assert false
+
+let e2e = function
+| ELet(e,_,EEmpty) -> EVar(e)
+| ELet(e,_,e2) -> assert false
+| e -> e
+
 %}
 
 %token <int> INT
@@ -120,12 +136,43 @@ exp:
 | exp LBRACK exps RBRACK %prec CALL { ECall($1, [EList $3]) }
 | exp LPAREN exps RPAREN %prec CALL { ECall($1, $3) }
 | exp LPAREN RPAREN %prec CALL { ECall($1, [EUnit]) }
+| exp COLON typ ASSIGN exp {
+	let rec loop = function 
+      | EVar(id),t,b -> ELet(id, t, b)
+      | ECall((e:e), ls), (t:t), b ->
+
+      	let (lt:t) = List.fold_left begin fun (t:t) (l:e)  ->
+      		TFun(e2t l, t)
+      	end (t:t) ls in
+      	let le = List.map begin fun (l:e) ->
+      		e2e l
+      	end ls in
+      	loop(e, lt, EFun(le, TEmpty, b))
+      | _ -> assert false
+	in
+	loop($1,$3,$5)
+}
+| exp COLONASSIGN exp {
+	let rec loop = function 
+      | EVar(id),b -> ELet(id, TEmpty, b)
+      | ECall((e:e), ls), b ->
+      	let le = List.map begin fun (l:e) ->
+      		e2e l
+      	end ls in
+      	loop(e, EFun(le, TEmpty, b))
+      | _ -> assert false
+	in
+	loop($1,$3)
+}
+| exp COLON typ {
+
+	ELet(e2id $1, $3, EEmpty)
+}
 | INT { EInt($1) }
 | ID { EVar($1) }
 | STRING { EString($1) }
 | ID COLONASSIGN exp { ELet($1, TEmpty, $3) }
 | DEF ID COLONASSIGN exp { ELetRec($2, TEmpty, $4) }
-| ID COLON typ ASSIGN exp { ELet($1, $3, $5) }
 | DEF ID COLON typ ASSIGN exp { ELetRec($2, $4, $6) }
 | exp MEMBER exp { ECall($3, [$1]) }
 fn:

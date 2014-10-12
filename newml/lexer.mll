@@ -8,6 +8,10 @@ let digit = ['0'-'9']
 rule token = parse
 | space+
     { token lexbuf }
+| "open"
+    {  (token2 lexbuf) }
+| "/*"
+    { comment lexbuf }
 | '(' { LPAREN }
 | ')' { RPAREN }
 | '{' { LBRACE }
@@ -21,8 +25,6 @@ rule token = parse
 | '@' { AT }
 | "new"
     { NEW }
-| "open"
-    {  (token2 lexbuf) }
 | "this" { THIS }
 | "class" { STRUCT }
 | "trait" { TRAIT }
@@ -78,8 +80,6 @@ rule token = parse
 and token2 = parse
 | space+
     { token2 lexbuf }
-| eof
-    { EOF }
 | ['a'-'z' 'A'-'Z' '_' '.']* 
     { OPEN(Lexing.lexeme lexbuf) }
 | _
@@ -88,3 +88,16 @@ and token2 = parse
         (Lexing.lexeme lexbuf)
         (Lexing.lexeme_start lexbuf)
         (Lexing.lexeme_end lexbuf)) }
+
+and comment = parse
+| "*/"
+    { token lexbuf }
+| eof
+    { failwith
+      (Printf.sprintf "unknown token %s near characters %d-%d"
+        (Lexing.lexeme lexbuf)
+        (Lexing.lexeme_start lexbuf)
+        (Lexing.lexeme_end lexbuf)) }
+
+| _
+    { comment lexbuf }
