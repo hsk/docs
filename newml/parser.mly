@@ -37,15 +37,18 @@ let e2e = function
 %token IMPLEMENT RIMPLEMENT TRAIT
 %token ARROW MEMBER FARROW
 %token LT GT LE GE
-%token EQ
+%token EQ HAT
 %token MUL AMP DIV
 %token CAST NEW AT DEF CASE MATCH TYPE
+%token ADDLIST
 
 %right LIST
 %nonassoc ELSE
 %right ASSIGN COLONASSIGN REFASSIGN
 %left COMMA
 %right CAST
+%right ADDLIST
+%left HAT
 %left LT GT LE GE EQ
 %left ADD SUB
 %left MUL DIV
@@ -67,8 +70,22 @@ let e2e = function
 typ:
 | ID { Ty $1 }
 | typ ARROW typ { TFun($1, $3) }
+| typ LPAREN typ2 RPAREN {
+	let rec loop = function
+	| TFun(a,b) -> TFun(a, loop b)
+	| t -> TFun(t, $1)
+	in loop $3
+}
+| typ LBRACK typs RBRACK {
+	TGen($1, $3)
+}
 | LPAREN typs RPAREN { TTuple($2)}
 | LPAREN RPAREN { TUnit }
+
+typ2:
+| typ { $1 }
+| typ typ2 { TFun($1, $2)}
+
 typs:
 | typ { [$1]}
 | typ COMMA typs { $1 :: $3 }
@@ -83,18 +100,19 @@ exps:
 
 
 defrec:
-|   ID COLON typ {($1, $3) }
+|   ID COLON typ { ($1, $3) }
+|   ID COLON typ SEMICOLON { ($1, $3) }
 
 defrecs:
 |   defrec { [$1] }
-|   defrec SEMICOLON defrecs { $1::$3 }
+|   defrec defrecs %prec LIST { $1::$2 }
 
 record:
-| ID ASSIGN exp { ($1, $3) }
+| ID ASSIGN exp1 { ($1, $3) }
 | ID { ($1, EEmpty)}
 records:
 | record { [$1] }
-| record SEMICOLON records { $1::$3 }
+| record records  %prec LIST { $1::$2 }
 
 variant:
 | ID typ { ($1,$2) }
@@ -105,7 +123,7 @@ variants:
 | variant OR variants { $1::$3 }
 
 exp:
-| ID TYPE LBRACE SEMICOLON defrecs RBRACE { ETypeRec($1, $5)}
+| ID TYPE LBRACE defrecs RBRACE { ETypeRec($1, $4)}
 | ID TYPE OR variants { ETypeVariant($1, $4)}
 | SUB exp { EPre("-", $2)}
 | AMP exp { EPre("ref", $2)}
@@ -122,7 +140,9 @@ exp:
 | exp GE exp { EBin($1, ">=", $3) }
 | exp EQ exp { EBin($1, "=", $3) }
 | exp OR exp { EBin($1, "lor", $3) }
+| exp HAT exp { EBin($1, "^", $3) }
 | exp COMMA exp { EBin($1, ",", $3) }
+| exp ADDLIST exp { EBin($1, "::", $3) }
 | exp ASSIGN exp {
 	match $1 with
 	| EPre("!", a) -> EBin(a, ":=", $3)
@@ -138,7 +158,7 @@ exp:
 | LBRACK exps RBRACK { EList $2 }
 | LPAREN RPAREN { EUnit }
 | LPAREN exp RPAREN { $2 }
-| LBRACE SEMICOLON records RBRACE { ERecord($3) }
+| LBRACE COLON records RBRACE { ERecord($3) }
 | exp LBRACE fn RBRACE %prec CALL { ECall($1, [$3]) }
 | exp LBRACE CASE fns RBRACE %prec CALL { ECall($1, [EPFun($4)]) }
 | exp LBRACE exps RBRACE %prec CALL { ECall($1, [EBlock($3)]) }

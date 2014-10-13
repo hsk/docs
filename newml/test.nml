@@ -41,7 +41,7 @@ curry_function := {
   printf("%d\n"; f1(1))
   printf("%d\n" f1(1))
 
-  f2:(int)=>(int)=>int={ a b => a + b }
+  f2:int(int)(int)={ a b => a + b }
   f2(a:int):(int)=>int={ b => a + b }
   f2(a:int)(b:int):int={a + b}
   f2(a:int; b:int):int= a + b
@@ -51,9 +51,9 @@ curry_function := {
   printf("%d\n"; f2(1; 2))
   printf("%d\n" f2(1 2))
 
-  f3:(int)=>(int)=>(int)=>int={ a b c => a + b + c }
-  f3(a:int):(int)=>(int)=>int={ b c => a + b + c}
-  f3(a:int)(b:int):(int)=>int={ c => a + b + c}
+  f3:int(int int int)={ a b c => a + b + c }
+  f3(a:int):int(int int)={ b c => a + b + c}
+  f3(a:int)(b:int):int(int)={ c => a + b + c}
   f3(a:int)(b:int)(c:int):int={a + b + c}
   f3(a:int; b:int; c:int):int= a + b + c
   f3(a:int b:int c:int):= a + b + c
@@ -137,16 +137,66 @@ tuple() := {
   /*
   addt(int:a,int:b):int= a + b
   */
+
+  /*
+  f3:={
+    (a,b,c) => a*b*c
+  }
+  */
+  /*
+  f3:(int,int,int)=>int={
+    (a,b,c) => a*b*c
+  }
+  f3:int((int,int,int))={
+    (a,b,c) => a*b*c
+  }
+  printf("%d" f3(1,2,3))
+  */
+
+
+  /*
   printf("%d\n" addt(1,2))
+
+  ff2:(int,int)=>(int,int)=>int={
+    a,b c,d => a*b + c*d
+  }
+
+  f2:int((int,int))((int,int))={
+    a,b c,d => a*b + c*d
+  }
+  */
+  /*
+  f2:int((int,int);(int,int))={
+    a,b c,d => a*b + c*d
+  }
+  */
+  /*
+  ff:int=>int,int=>int={
+    a c,d => a + c*d
+  }
+
+  ff:int=>((int,int)=>int)={
+    a c,d => a + c*d
+  }
+
+  ff:((int,int)=>int)(int)={
+    a c,d => a + c*d
+  }
+
+  ff:int((int,int))(int)={
+    a c,d => a + c*d
+  }
+  */
+  /*
+  ff:int(int int,int)={
+    a c,d => a + c*d
+  }
+  */
 
   f2:(int,int)=>(int,int)=>int={
     a,b c,d => a*b + c*d
   }
-
   /*
-  f2(a:int,b:int):(int,int)=>int={
-    c,d => a*b + c*d
-  }
   f2(a:int,b:int)(c:int,d:int):int={
     a*b + c*d
   }
@@ -227,21 +277,20 @@ list() := {
   ps(xs)
   */
 
-
 } list ()
 
 
-a type {;x: int ;y:int}
+a type {x:int y:int}
 
 record() := {
 
-  aa := {;x=1 ;y=2}
+  a :a= {:x=1 y=2}
 
-  printf("%d\n" aa.x)
+  printf("%d\n" a.x)
 
-  printf("%d\n"; {;x=1 ;y=2}.x)
+  printf("%d\n"; {:x=1+2*3 y={a:=1 a}}.x)
 
-  aa := {{;x}=>printf("%d\n" x)}
+  aa := {{:x}=>printf("%d\n" x)}
   
 } record()
 
@@ -274,3 +323,67 @@ reference() := {
   printf("%d\n"; *b);
 
 } reference()
+
+closure() := {
+
+  block(sp)(f):={
+    printf("{\n")
+    f(sp ^ "  ")
+    printf("%s}\n" sp)
+  }
+  p := printf
+
+  p("def %s() " "a") block(""){sp=>
+    p("%sdef %s() " sp "b") block(sp){sp=>
+      p("%sprogram2()\n" sp)
+      p("%sprogram2()\n" sp)
+    }
+    p("%sprogram()\n" sp)
+  }
+  
+
+  block(sp)(f):={
+    printf("{\n")
+    f(sp ^ "  ")
+    printf("%s}\n" sp)
+  }
+  p := printf
+
+  p("def %s() " "a") block(""){sp=>
+    p("%sdef %s() " sp "b") block(sp){sp=>
+      p("%sprogram2()\n" sp)
+      p("%sprogram2()\n" sp)
+    }
+    p("%sprogram()\n" sp)
+  }
+
+} closure()
+
+list_type := {
+
+  ls := [1 2 3]
+
+  ls -> iter {
+    l => printf("%d," l)
+  } printf("\n")
+
+  ls:list[int] = [1 2 3]
+  
+  ls -> iter {
+    l => printf("%d," l)
+  } printf("\n")
+
+  ls:list[(int,int)] = [1,2 3,4]
+  
+  ls -> iter {
+    (l,r) => printf("(%d,%d);" l r)
+  } printf("\n")
+
+  def f:={
+    case [] => ()
+    case x::xs => printf("%d," x) f(xs)
+  };
+
+  f [1 2 3]
+
+}

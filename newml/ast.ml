@@ -4,6 +4,7 @@ type t =
   | TFun of t * t
   | TTuple of t list
   | TEmpty
+  | TGen of t * t list
   | TUnit
 
 type e =

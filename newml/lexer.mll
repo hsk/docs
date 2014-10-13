@@ -20,8 +20,6 @@ rule token = parse
 | ']' { RBRACK }
 | "return"
     { RETURN}
-| "::"
-    { CAST }
 | "new"
     { NEW }
 | "this" { THIS }
@@ -35,6 +33,7 @@ rule token = parse
 | "if" { IF }
 | "else" {ELSE}
 | '@' {CASE}
+| "::" { ADDLIST }
 | "case" {CASE}
 | "match" {MATCH}
 | "type" {TYPE}
@@ -56,6 +55,7 @@ rule token = parse
 | '.' { DOT }
 | ','
     { COMMA }
+| '^' { HAT }
 | ';'
     { SEMICOLON }
 | ':'

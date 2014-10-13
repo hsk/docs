@@ -25,7 +25,11 @@ let rec print_t pp sp ppf = function
       (print_t "" sp) t2
   | TUnit ->
     fprintf ppf "unit"
-
+  | TGen(t,ts) ->
+    fprintf ppf "%s(%a) %a"
+      sp
+      (print_ls " * " (print_t "" "")) ts
+      (print_t "" "") t
 
 let rec print_e sp ppf = function
 
