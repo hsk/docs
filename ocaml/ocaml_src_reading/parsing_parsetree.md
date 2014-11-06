@@ -499,7 +499,7 @@ Asttypesを読み込み
 
     and case =   (* (P -> E) or (P when E0 -> E) *)
         {
-renai_meigenbot: 恋愛論を得意気に語る奴には、恋人がいない。 by マーフィーの法則         pc_lhs: pattern;
+         pc_lhs: pattern;
          pc_guard: expression option;
          pc_rhs: expression;
         }
