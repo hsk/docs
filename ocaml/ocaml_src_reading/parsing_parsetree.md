@@ -154,6 +154,123 @@
     - toplevel_phrase
     - directive_argument
 
+## パース結果のツリー構造
+
+- toplevel_phrase
+    - Ptop_def (#use, #load)
+        - directive_argument
+            - Pdir_none Pdir_string Pdir_int Pdir_ident Pdir_bool
+    - Ptop_dir
+        - structure
+            - structure_item
+                - Location.t
+                - structure_item_desc
+                    - Pstr_eval
+                        - attributes
+                        - expression
+                            - Location.t
+                            - attributes
+                            - expression_desc
+                                - Pexp_ident of Longident.t loc
+                                - Pexp_constant of constant
+                                - Pexp_let of rec_flag * value_binding list * expression
+                                - Pexp_function of case list
+                                    - case
+                                       - pc_lhs: pattern;
+                                       - pc_guard: expression option;
+                                       - pc_rhs: expression;
+                                - Pexp_fun of label * expression option * pattern * expression
+                                - Pexp_apply of expression * (label * expression) list
+                                - Pexp_match of expression * case list
+                                - Pexp_try of expression * case list
+                                - Pexp_tuple of expression list
+                                - Pexp_construct of Longident.t loc * expression option
+                                - Pexp_variant of label * expression option
+                                - Pexp_record of (Longident.t loc * expression) list * expression option
+                                - Pexp_field of expression * Longident.t loc
+                                - Pexp_setfield of expression * Longident.t loc * expression
+                                - Pexp_array of expression list
+                                - Pexp_ifthenelse of expression * expression * expression option
+                                - Pexp_sequence of expression * expression
+                                - Pexp_while of expression * expression
+                                - Pexp_for of
+                                - Pexp_constraint of expression * core_type
+                                - Pexp_coerce of expression * core_type option * core_type
+                                - Pexp_send of expression * string
+                                - Pexp_new of Longident.t loc
+                                - Pexp_setinstvar of string loc * expression
+                                - Pexp_override of (string loc * expression) list
+                                - Pexp_letmodule of string loc * module_expr * expression
+                                - Pexp_assert of expression
+                                - Pexp_lazy of expression
+                                - Pexp_poly of expression * core_type option
+                                - Pexp_object of class_structure
+                                - Pexp_newtype of string * expression
+                                - Pexp_pack of module_expr
+                                - Pexp_open of override_flag * Longident.t loc * expression
+                                - Pexp_extension of extension
+                    - Pstr_value (let [rec])
+                      - rec_flag
+                      - value_binding list
+                          - pvb_pat: pattern;
+                              - pattern
+                                  - ppat_desc: pattern_desc;
+                                      - pattern_desc
+                                          - Ppat_any
+                                          - Ppat_var of string loc
+                                          - Ppat_alias of pattern * string loc
+                                          - Ppat_constant of constant
+                                          - Ppat_interval of constant * constant
+                                          - Ppat_tuple of pattern list
+                                          - Ppat_construct of Longident.t loc * pattern option
+                                          - Ppat_variant of label * pattern option
+                                          - Ppat_record of (Longident.t loc * pattern) list * closed_flag
+                                          - Ppat_array of pattern list
+                                          - Ppat_or of pattern * pattern
+                                          - Ppat_constraint of pattern * core_type
+                                          - Ppat_type of Longident.t loc
+                                          - Ppat_lazy of pattern
+                                          - Ppat_unpack of string loc
+                                          - Ppat_exception of pattern
+                                          - Ppat_extension of extension
+                                  - ppat_loc: Location.t;
+                                  - ppat_attributes: attributes
+                          - pvb_expr: expression;
+                          - pvb_attributes: attributes;
+                          - pvb_loc: Location.t;
+                    - Pstr_primitive
+                      - value_description
+                    - Pstr_type
+                      - type_declaration list
+                    - Pstr_typext
+                      - type_extension
+                    - Pstr_exception
+                      - extension_constructor
+                    - Pstr_module
+                      - module_binding
+                    - Pstr_recmodule
+                      - module_binding list
+                    - Pstr_modtype
+                      - module_type_declaration
+                    - Pstr_open
+                      - open_description
+                         - popen_lid: Longident.t loc;
+                         - popen_override: override_flag;
+                         - popen_loc: Location.t;
+                         - popen_attributes: attributes;
+                    - Pstr_class
+                      - class_declaration list
+                    - Pstr_class_type
+                      - class_type_declaration list
+                    - Pstr_include
+                      - include_declaration
+                    - Pstr_attribute
+                      - attribute
+                    - Pstr_extension
+                      - extension
+                      - attributes
+
+
 ## ソースコード
 
 コピーライト
