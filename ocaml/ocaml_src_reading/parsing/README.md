@@ -77,6 +77,30 @@ ast\_mapperは使わずに済むので1万行を把握すればよいわけで�
 
 ## printast.ml にコメント出力を追加する
 
+@camlebaさんに教えてもらった方法をやってみます。
+コメントのロケーション情報を覚えて置いて、出力するロケーション情報の
+手前の物は出力します。
+
+```
+let comments = ref []
+
+let loc_cmp loc1 loc2 = loc1.pos_cnum +loc1.pos_bol <= loc2.pos_cnum+loc2.pos_bol 
+
+let fmt_comment f l =
+  let rec loop = function
+    | [] -> []
+    | (x,xl)::xs ->
+      if loc_cmp xl.loc_end l.loc_start then(
+        fprintf f "(*%s*)@." x;
+        loop xs
+      ) else (x,xl)::(loop xs)
+  in
+  comments := loop !comments
+```
+
+このような関数を作って、Lexer.comments()でコメントを取り出して、
+fmt_comment関数を必要な箇所に追加します。
+
 ## pprintast.mlにコメント出力を追加する
 
 - [x] fmt_longident_loc
