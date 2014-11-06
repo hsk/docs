@@ -176,9 +176,9 @@
                                 - Pexp_let of rec_flag * value_binding list * expression
                                 - Pexp_function of case list
                                     - case
-                                       - pc_lhs: pattern;
-                                       - pc_guard: expression option;
-                                       - pc_rhs: expression;
+                                        - pc_lhs: pattern;
+                                        - pc_guard: expression option;
+                                        - pc_rhs: expression;
                                 - Pexp_fun of label * expression option * pattern * expression
                                 - Pexp_apply of expression * (label * expression) list
                                 - Pexp_match of expression * case list
@@ -298,29 +298,32 @@ Asttypesを読み込み
 
 ## Extension points
 
-    (** {2 Extension points} *)
-
     type attribute = string loc * payload
-           (* [@id ARG]
-              [@@id ARG]
 
-              Metadata containers passed around within the AST.
-              The compiler ignores unknown attributes.
-           *)
+`[@id ARG]`
+`[@@id ARG]`
+
+Metadata containers passed around within the AST.
+The compiler ignores unknown attributes.
 
     and extension = string loc * payload
-          (* [%id ARG]
-             [%%id ARG]
 
-             Sub-language placeholder -- rejected by the typechecker.
-          *)
+`[%id ARG]`
+`[%%id ARG]`
+
+Sub-language placeholder -- rejected by the typechecker.
 
     and attributes = attribute list
 
     and payload =
       | PStr of structure
-      | PTyp of core_type  (* : T *)
-      | PPat of pattern * expression option  (* : P  or  : P when E *)
+      | PTyp of core_type
+
+: T
+
+      | PPat of pattern * expression option
+
+: P  or  : P when E
 
 
 ## Core language
