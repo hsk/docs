@@ -33,42 +33,60 @@
 
 - Extension points
     - attribute
+
         AST内を通過したメタデータコンテナ。コンパイラは、未知の属性を無視します。
     - extension
+
         サブ言語のプレースホルダ。型検査器によって拒否されます。
     - attributes
+
         attributeのリスト
     - payload
+
         structureかcore_typeかpatternとexpressionの対
 
 - Core language
     - Type expressions
+
         型式
         - core_type
+
             core_type_descと位置情報とattributes
         - core_type_desc
+
             型情報 指定無しや識別子や関数、タプル、等
         - package_type
+
             パッケージの型
         - row_field
+
             \`A \`A of T等
     - Patterns
+
         パターン
         - pattern
+
             pattern_descに位置情報と属性を追加
         - pattern_desc
+
             パターンの詳細
     - Value expressions
+
         - expression
+
             expression_descに位置情報と属性を追加
         - expression_desc
+
             式の詳細
         - case
+
             ケース
     - Value descriptions
         - value_description
+
             値式の詳細
     - Type declarations
+
         型宣言
         - type_declaration
         - type_kind
@@ -79,8 +97,10 @@
         - extension_constructor
         - extension_constructor_kind
 - Class language
+
     オブジェクト指向サポート
     - Type expressions for the class language
+
         オブジェクト指向の型の式
         - class_type
         - class_type_desc
@@ -91,6 +111,7 @@
         - class_description
         - class_type_declaration
     - Value expressions for the class language
+
         オブジェクト指向の値の式
         - class_expr
         - class_expr_desc
@@ -100,8 +121,10 @@
         - class_field_kind
         - class_declaration
 - Module language
+
     モジュール言語
     - Type expressions for the module language
+
         モジュールの型の式
         - module_type
         - module_type_desc
@@ -116,6 +139,7 @@
         - include_declaration
         - with_constraint
     - Value expressions for the module language
+
         モジュールの値の式
         - module_expr
         - module_expr_desc
@@ -125,6 +149,7 @@
         - value_binding
         - module_binding
 - Toplevel
+
     OCamlToplevelサポート
     - toplevel_phrase
     - directive_argument
