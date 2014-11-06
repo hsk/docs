@@ -21,7 +21,7 @@ let recのrecが付いているかフラグ Recursiveだとrecが付いており
 
     type direction_flag = Upto | Downto
 
-方向みたいだけど、謎
+forのtoとdownto
 
 ## private_flag
 
@@ -51,7 +51,24 @@ object内のoverride属性
 
     type closed_flag = Closed | Open
 
-何かのとじフラグ
+object,variant,recordの閉じてるか開いているかを表す
+
+    | Ptyp_object of (string * attributes * core_type) list * closed_flag
+          (* < l1:T1; ...; ln:Tn >     (flag = Closed)
+             < l1:T1; ...; ln:Tn; .. > (flag = Open)
+           *)
+    | Ptyp_variant of row_field list * closed_flag * label list option
+          (* [ `A|`B ]         (flag = Closed; labels = None)
+             [> `A|`B ]        (flag = Open;   labels = None)
+             [< `A|`B ]        (flag = Closed; labels = Some [])
+             [< `A|`B > `X `Y ](flag = Closed; labels = Some ["X";"Y"])
+           *)
+    | Ppat_record of (Longident.t loc * pattern) list * closed_flag
+          (* { l1=P1; ...; ln=Pn }     (flag = Closed)
+             { l1=P1; ...; ln=Pn; _}   (flag = Open)
+
+             Invariant: n > 0
+           *)
 
 ## label
 
@@ -74,5 +91,10 @@ object内のoverride属性
       | Covariant
       | Contravariant
       | Invariant
+
+以下のようにcore_type(型情報のコア)とペアで使う。
+
+    ptype_params: (core_type * variance) list;
+               (* ('a1,...'an) t; None represents  _*)
 
 謎
