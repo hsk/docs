@@ -73,6 +73,23 @@ lexerには追加ファイル無しで通りました。
 コメントもありで、1万700行です。
 ast\_mapperは使わずに済むので1万行を把握すればよいわけです。
 
+## make
+
+```
+$ make
+```
+
+でmacなら大体動くはず。configがmac決め撃ちなので、mac以外はconfigの書き換えが必要です。
+
+```
+$ make clean
+```
+で削除します。
+
+```
+$ ./a.out ast_mappter.ml
+```
+等とすると、`ast_mapper.ml1`と`ast_mapper.ml2`の２つのファイルが生成されます。
 
 
 ## printast.ml にコメント出力を追加する
