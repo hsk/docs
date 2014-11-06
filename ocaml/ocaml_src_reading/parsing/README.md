@@ -75,4 +75,29 @@ ast\_mapperは使わずに済むので1万行を把握すればよいわけで�
 
 
 
+## printast.ml にコメント出力を追加する
 
+## pprintast.mlにコメント出力を追加する
+
+- [x] fmt_longident_loc
+- [ ] fmt_string_loc
+- [x] core_type
+- [x] pattern
+- [x] expression
+- [x] value_description
+- [x] type_declaration
+- [x] extension_constructor
+- [x] class_type
+- [x] class_type_field
+- [x] class_description
+- [x] class_type_declaration
+- [x] class_expr
+- [x] class_field
+- [x] class_declaration
+- [x] module_type
+- [x] signature_item
+- [x] module_expr
+- [x] structure_item
+- [x] core_type_x_core_type_x_location
+- [x] constructor_decl
+- [x] label_decl
