@@ -210,6 +210,8 @@ Asttypesを読み込み
 
     (** {2 Core language} *)
 
+### Type expressions
+
     (* Type expressions *)
 
     and core_type =
@@ -304,6 +306,8 @@ Asttypesを読み込み
       | Rinherit of core_type
             (* [ T ] *)
 
+### Patterns
+
     (* Patterns *)
 
     and pattern =
@@ -366,6 +370,8 @@ Asttypesを読み込み
             (* exception P *)
       | Ppat_extension of extension
             (* [%id] *)
+
+### Value expressions
 
     (* Value expressions *)
 
@@ -498,6 +504,8 @@ renai_meigenbot: 恋愛論を得意気に語る奴には、恋人がいない。
          pc_rhs: expression;
         }
 
+### Value descriptions
+
     (* Value descriptions *)
 
     and value_description =
@@ -515,6 +523,8 @@ renai_meigenbot: 恋愛論を得意気に語る奴には、恋人がいない。
 
       Note: when used under Pstr_primitive, prim cannot be empty
     *)
+
+### Type declarations
 
     (* Type declarations *)
 
@@ -623,6 +633,8 @@ renai_meigenbot: 恋愛論を得意気に語る奴には、恋人がいない。
 
     (** {2 Class language} *)
 
+### Type expressions for the class language
+
     (* Type expressions for the class language *)
 
     and class_type =
@@ -698,6 +710,9 @@ renai_meigenbot: 恋愛論を得意気に語る奴には、恋人がいない。
     and class_description = class_type class_infos
 
     and class_type_declaration = class_type class_infos
+
+
+### Value expressions for the class language
 
     (* Value expressions for the class language *)
 
@@ -785,6 +800,8 @@ renai_meigenbot: 恋愛論を得意気に語る奴には、恋人がいない。
 ## Module language
 
     (** {2 Module language} *)
+
+### Type expressions for the module language
 
     (* Type expressions for the module language *)
 
@@ -908,6 +925,8 @@ renai_meigenbot: 恋愛論を得意気に語る奴には、恋人がいない。
             (* with type t := ... *)
       | Pwith_modsubst of string loc * Longident.t loc
             (* with module X := Z *)
+
+### Value expressions for the module language
 
     (* Value expressions for the module language *)
 
