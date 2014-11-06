@@ -1,5 +1,8 @@
 # parsing_parsetree.mli
 
+
+## typeの分類
+
 構文木は以下で分類されるデータで表されています。
 
 - Asttypes
@@ -25,6 +28,8 @@
 - Toplevel
 
     OCaml トップレベルのサポート
+
+## type一覧
 
 - Extension points
     - attribute
@@ -99,6 +104,7 @@
     - toplevel_phrase
     - directive_argument
 
+## ソースコード
 
 コピーライト
 
