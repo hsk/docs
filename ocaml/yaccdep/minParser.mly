@@ -646,24 +646,6 @@ seq_expr:
   | expr SEMI                     { reloc_exp $1 }
   | expr SEMI seq_expr            { mkexp(Pexp_sequence($1, $3)) }
   ;
-labeled_simple_pattern:
-  | QUESTION LPAREN label_let_pattern opt_default RPAREN
-      { ("?" ^ fst $3, $4, snd $3) }
-  | QUESTION label_var
-      { ("?" ^ fst $2, None, snd $2) }
-  | OPTLABEL LPAREN let_pattern opt_default RPAREN
-      { ("?" ^ $1, $4, $3) }
-  | OPTLABEL pattern_var
-      { ("?" ^ $1, None, $2) }
-  | TILDE LPAREN label_let_pattern RPAREN
-      { (fst $3, None, snd $3) }
-  | TILDE label_var
-      { (fst $2, None, snd $2) }
-  | LABEL simple_pattern
-      { ($1, None, $2) }
-  | simple_pattern
-      { ("", None, $1) }
-  ;
 pattern_var:
   | LIDENT            { mkpat(Ppat_var (mkrhs $1 1)) }
   | UNDERSCORE        { mkpat Ppat_any }
@@ -679,7 +661,6 @@ label_let_pattern:
       { let (lab, pat) = $1 in (lab, mkpat(Ppat_constraint(pat, $3))) }
   ;
 label_var:
-
   | LIDENT    { ($1, mkpat(Ppat_var (mkrhs $1 1))) }
   ;
 let_pattern:
@@ -699,17 +680,12 @@ expr:
       { mkexp_attrs (Pexp_open($3, mkrhs $4 5, $6)) (None, []) }
   | FUNCTION opt_bar match_cases
       { mkexp_attrs (Pexp_function(List.rev $3)) (None, []) }
-  | FUN labeled_simple_pattern fun_def
-      { let (l,o,p) = $2 in
-        mkexp_attrs (Pexp_fun(l, o, p, $3)) (None, []) }
   | FUN LPAREN TYPE LIDENT RPAREN fun_def
       { mkexp_attrs (Pexp_newtype($4, $6)) (None, []) }
   | MATCH seq_expr WITH opt_bar match_cases
       { mkexp_attrs (Pexp_match($2, List.rev $5)) (None, []) }
   | TRY seq_expr WITH opt_bar match_cases
       { mkexp_attrs (Pexp_try($2, List.rev $5)) (None, []) }
-  | TRY seq_expr WITH error
-      { syntax_error() }
   | expr_comma_list %prec below_COMMA
       { mkexp(Pexp_tuple(List.rev $1)) }
   | constr_longident simple_expr %prec below_SHARP
@@ -799,80 +775,52 @@ simple_expr:
       { mkexp(Pexp_variant($1, None)) }
   | LPAREN seq_expr RPAREN
       { reloc_exp $2 }
-  | LPAREN seq_expr error
-      { unclosed "(" 1 ")" 3 }
   | BEGIN seq_expr END
       { wrap_exp_attrs (reloc_exp $2) (None, []) (* check location *) }
   | BEGIN END
       { mkexp_attrs (Pexp_construct (mkloc (Lident "()") (symbol_rloc ()),
                                None)) (None, []) }
-  | BEGIN seq_expr error
-      { unclosed "begin" 1 "end" 3 }
   | LPAREN seq_expr type_constraint RPAREN
       { mkexp_constraint $2 $3 }
   | simple_expr DOT label_longident
       { mkexp(Pexp_field($1, mkrhs $3 3)) }
   | mod_longident DOT LPAREN seq_expr RPAREN
       { mkexp(Pexp_open(Fresh, mkrhs $1 1, $4)) }
-  | mod_longident DOT LPAREN seq_expr error
-      { unclosed "(" 3 ")" 5 }
   | simple_expr DOT LPAREN seq_expr RPAREN
       { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "Array" "get")),
                          ["",$1; "",$4])) }
-  | simple_expr DOT LPAREN seq_expr error
-      { unclosed "(" 3 ")" 5 }
   | simple_expr DOT LBRACKET seq_expr RBRACKET
       { mkexp(Pexp_apply(ghexp(Pexp_ident(array_function "String" "get")),
                          ["",$1; "",$4])) }
-  | simple_expr DOT LBRACKET seq_expr error
-      { unclosed "[" 3 "]" 5 }
   | simple_expr DOT LBRACE expr RBRACE
       { bigarray_get $1 $4 }
-  | simple_expr DOT LBRACE expr_comma_list error
-      { unclosed "{" 3 "}" 5 }
   | LBRACE record_expr RBRACE
       { let (exten, fields) = $2 in mkexp (Pexp_record(fields, exten)) }
-  | LBRACE record_expr error
-      { unclosed "{" 1 "}" 3 }
   | mod_longident DOT LBRACE record_expr RBRACE
       { let (exten, fields) = $4 in
         let rec_exp = mkexp(Pexp_record(fields, exten)) in
         mkexp(Pexp_open(Fresh, mkrhs $1 1, rec_exp)) }
-  | mod_longident DOT LBRACE record_expr error
-      { unclosed "{" 3 "}" 5 }
   | LBRACKETBAR expr_semi_list opt_semi BARRBRACKET
       { mkexp (Pexp_array(List.rev $2)) }
-  | LBRACKETBAR expr_semi_list opt_semi error
-      { unclosed "[|" 1 "|]" 4 }
   | LBRACKETBAR BARRBRACKET
       { mkexp (Pexp_array []) }
   | mod_longident DOT LBRACKETBAR expr_semi_list opt_semi BARRBRACKET
       { mkexp(Pexp_open(Fresh, mkrhs $1 1, mkexp(Pexp_array(List.rev $4)))) }
-  | mod_longident DOT LBRACKETBAR expr_semi_list opt_semi error
-      { unclosed "[|" 3 "|]" 6 }
   | LBRACKET expr_semi_list opt_semi RBRACKET
       { reloc_exp (mktailexp (rhs_loc 4) (List.rev $2)) }
-  | LBRACKET expr_semi_list opt_semi error
-      { unclosed "[" 1 "]" 4 }
   | mod_longident DOT LBRACKET expr_semi_list opt_semi RBRACKET
       { let list_exp = reloc_exp (mktailexp (rhs_loc 6) (List.rev $4)) in
         mkexp(Pexp_open(Fresh, mkrhs $1 1, list_exp)) }
-  | mod_longident DOT LBRACKET expr_semi_list opt_semi error
-      { unclosed "[" 3 "]" 6 }
   | PREFIXOP simple_expr
       { mkexp(Pexp_apply(mkoperator $1 1, ["",$2])) }
   | BANG simple_expr
       { mkexp(Pexp_apply(mkoperator "!" 1, ["",$2])) }
   | LBRACELESS field_expr_list opt_semi GREATERRBRACE
       { mkexp (Pexp_override(List.rev $2)) }
-  | LBRACELESS field_expr_list opt_semi error
-      { unclosed "{<" 1 ">}" 4 }
   | LBRACELESS GREATERRBRACE
       { mkexp (Pexp_override [])}
   | mod_longident DOT LBRACELESS field_expr_list opt_semi GREATERRBRACE
       { mkexp(Pexp_open(Fresh, mkrhs $1 1, mkexp (Pexp_override(List.rev $4))))}
-  | mod_longident DOT LBRACELESS field_expr_list opt_semi error
-      { unclosed "{<" 3 ">}" 6 }
   | simple_expr SHARP label
       { mkexp(Pexp_send($1, $3)) }
   ;
@@ -899,7 +847,6 @@ label_expr:
       { ("?" ^ $1, $2) }
   ;
 label_ident:
-
   | LIDENT   { ($1, mkexp(Pexp_ident(mkrhs (Lident $1) 1))) }
   ;
 let_bindings:
@@ -939,8 +886,6 @@ let_binding_:
         (ghpat(Ppat_constraint(mkpatvar $1 1, poly)), exp) }
   | pattern EQUAL seq_expr
       { ($1, $3) }
-  | simple_pattern_not_ident COLON core_type EQUAL seq_expr
-      { (ghpat(Ppat_constraint($1, $3)), $5) }
   ;
 fun_binding:
   | strict_binding
@@ -951,8 +896,6 @@ fun_binding:
 strict_binding:
   | EQUAL seq_expr
       { $2 }
-  | labeled_simple_pattern fun_binding
-      { let (l, o, p) = $1 in ghexp(Pexp_fun(l, o, p, $2)) }
   | LPAREN TYPE LIDENT RPAREN fun_binding
       { mkexp(Pexp_newtype($3, $5)) }
   ;
@@ -968,12 +911,6 @@ match_case:
   ;
 fun_def:
   | MINUSGREATER seq_expr                       { $2 }
-  /* Cf #5939: we used to accept (fun p when e0 -> e) */
-  | labeled_simple_pattern fun_def
-      {
-       let (l,o,p) = $1 in
-       ghexp(Pexp_fun(l, o, p, $2))
-      }
   | LPAREN TYPE LIDENT RPAREN fun_def
       { mkexp(Pexp_newtype($3, $5)) }
   ;
@@ -1010,8 +947,6 @@ type_constraint:
   | COLON core_type                             { (Some $2, None) }
   | COLON core_type COLONGREATER core_type      { (Some $2, Some $4) }
   | COLONGREATER core_type                      { (None, Some $2) }
-  | COLON error                                 { syntax_error() }
-  | COLONGREATER error                          { syntax_error() }
   ;
 
 /* Patterns */
@@ -1019,103 +954,10 @@ type_constraint:
 pattern:
   | simple_pattern
       { $1 }
-  | pattern AS val_ident
-      { mkpat(Ppat_alias($1, mkrhs $3 3)) }
-  | pattern AS error
-      { expecting 3 "identifier" }
-  | pattern_comma_list  %prec below_COMMA
-      { mkpat(Ppat_tuple(List.rev $1)) }
-  | constr_longident pattern %prec prec_constr_appl
-      { mkpat(Ppat_construct(mkrhs $1 1, Some $2)) }
-  | name_tag pattern %prec prec_constr_appl
-      { mkpat(Ppat_variant($1, Some $2)) }
-  | pattern COLONCOLON pattern
-      { mkpat_cons (rhs_loc 2) (ghpat(Ppat_tuple[$1;$3])) (symbol_rloc()) }
-  | pattern COLONCOLON error
-      { expecting 3 "pattern" }
-  | LPAREN COLONCOLON RPAREN LPAREN pattern COMMA pattern RPAREN
-      { mkpat_cons (rhs_loc 2) (ghpat(Ppat_tuple[$5;$7])) (symbol_rloc()) }
-  | LPAREN COLONCOLON RPAREN LPAREN pattern COMMA pattern error
-      { unclosed "(" 4 ")" 8 }
-  | pattern BAR pattern
-      { mkpat(Ppat_or($1, $3)) }
-  | pattern BAR error
-      { expecting 3 "pattern" }
-  | EXCEPTION pattern %prec prec_constr_appl
-      { mkpat(Ppat_exception $2) }
   ;
 simple_pattern:
   | val_ident %prec below_EQUAL
       { mkpat(Ppat_var (mkrhs $1 1)) }
-  | simple_pattern_not_ident { $1 }
-  ;
-simple_pattern_not_ident:
-  | UNDERSCORE
-      { mkpat(Ppat_any) }
-  | signed_constant
-      { mkpat(Ppat_constant $1) }
-  | signed_constant DOTDOT signed_constant
-      { mkpat(Ppat_interval ($1, $3)) }
-  | constr_longident
-      { mkpat(Ppat_construct(mkrhs $1 1, None)) }
-  | name_tag
-      { mkpat(Ppat_variant($1, None)) }
-  | SHARP type_longident
-      { mkpat(Ppat_type (mkrhs $2 2)) }
-  | LBRACE lbl_pattern_list RBRACE
-      { let (fields, closed) = $2 in mkpat(Ppat_record(fields, closed)) }
-  | LBRACE lbl_pattern_list error
-      { unclosed "{" 1 "}" 3 }
-  | LBRACKET pattern_semi_list opt_semi RBRACKET
-      { reloc_pat (mktailpat (rhs_loc 4) (List.rev $2)) }
-  | LBRACKET pattern_semi_list opt_semi error
-      { unclosed "[" 1 "]" 4 }
-  | LBRACKETBAR pattern_semi_list opt_semi BARRBRACKET
-      { mkpat(Ppat_array(List.rev $2)) }
-  | LBRACKETBAR BARRBRACKET
-      { mkpat(Ppat_array []) }
-  | LBRACKETBAR pattern_semi_list opt_semi error
-      { unclosed "[|" 1 "|]" 4 }
-  | LPAREN pattern RPAREN
-      { reloc_pat $2 }
-  | LPAREN pattern error
-      { unclosed "(" 1 ")" 3 }
-  | LPAREN pattern COLON core_type RPAREN
-      { mkpat(Ppat_constraint($2, $4)) }
-  | LPAREN pattern COLON core_type error
-      { unclosed "(" 1 ")" 5 }
-  | LPAREN pattern COLON error
-      { expecting 4 "type" }
-  | LPAREN MODULE UIDENT RPAREN
-      { mkpat(Ppat_unpack (mkrhs $3 3)) }
-  | LPAREN MODULE UIDENT COLON package_type RPAREN
-      { mkpat(Ppat_constraint(mkpat(Ppat_unpack (mkrhs $3 3)),
-                              ghtyp(Ptyp_package $5))) }
-  | LPAREN MODULE UIDENT COLON package_type error
-      { unclosed "(" 1 ")" 6 }
-  ;
-
-pattern_comma_list:
-  | pattern_comma_list COMMA pattern            { $3 :: $1 }
-  | pattern COMMA pattern                       { [$3; $1] }
-  | pattern COMMA error                         { expecting 3 "pattern" }
-  ;
-pattern_semi_list:
-  | pattern                                     { [$1] }
-  | pattern_semi_list SEMI pattern              { $3 :: $1 }
-  ;
-lbl_pattern_list:
-  | lbl_pattern { [$1], Closed }
-  | lbl_pattern SEMI { [$1], Closed }
-  | lbl_pattern SEMI UNDERSCORE opt_semi { [$1], Open }
-  | lbl_pattern SEMI lbl_pattern_list
-      { let (fields, closed) = $3 in $1 :: fields, closed }
-  ;
-lbl_pattern:
-  | label_longident EQUAL pattern
-      { (mkrhs $1 1,$3) }
-  | label_longident
-      { (mkrhs $1 1, pat_of_label $1 1) }
   ;
 
 /* Primitive declarations */
@@ -1162,7 +1004,6 @@ optional_type_parameters:
   | LPAREN optional_type_parameter_list RPAREN  { List.rev $2 }
   ;
 optional_type_parameter:
-
   | type_variance optional_type_variable        { $2, $1 }
   ;
 optional_type_parameter_list:
@@ -1181,7 +1022,6 @@ type_parameters:
   | LPAREN type_parameter_list RPAREN           { List.rev $2 }
   ;
 type_parameter:
-
   | type_variance type_variable                   { $2, $1 }
   ;
 type_variance:
@@ -1190,7 +1030,6 @@ type_variance:
   | MINUS                                       { Contravariant }
   ;
 type_variable:
-
   | QUOTE ident                                 { mktyp(Ptyp_var $2) }
   ;
 type_parameter_list:
@@ -1233,8 +1072,6 @@ with_constraint:
               ~manifest:$5
               ~priv:$4
               ~loc:(symbol_rloc()))) }
-    /* used label_longident instead of type_longident to disallow
-       functor applications in type path */
   | TYPE type_parameters label COLONEQUAL core_type
       { Pwith_typesubst
           (Type.mk (mkrhs $3 3)
@@ -1247,7 +1084,6 @@ with_constraint:
       { Pwith_modsubst (mkrhs $2 2, mkrhs $4 4) }
   ;
 with_type_binder:
-
   | EQUAL          { Public }
   ;
 
@@ -1316,10 +1152,6 @@ simple_core_type2:
       { mktyp(Ptyp_object ([], Closed)) }
   | LBRACKET tag_field RBRACKET
       { mktyp(Ptyp_variant([$2], Closed, None)) }
-  /* PR#3835: this is not LR(1), would need lookahead=2
-  | LBRACKET simple_core_type RBRACKET
-      { mktyp(Ptyp_variant([$2], Closed, None)) }
-  */
   | LBRACKET BAR row_field_list RBRACKET
       { mktyp(Ptyp_variant(List.rev $3, Closed, None)) }
   | LBRACKET row_field BAR row_field_list RBRACKET
@@ -1340,7 +1172,6 @@ package_type:
   | mty_longident WITH package_type_cstrs { (mkrhs $1 1, $3) }
   ;
 package_type_cstr:
-
   | TYPE label_longident EQUAL core_type { (mkrhs $2 2, $4) }
   ;
 package_type_cstrs:
@@ -1374,7 +1205,7 @@ name_tag_list:
   | name_tag_list name_tag                      { $2 :: $1 }
   ;
 simple_core_type_or_tuple:
-  | simple_core_type %prec below_LBRACKETAT  { $1 }
+  | simple_core_type %prec below_LBRACKETAT     { $1 }
   | simple_core_type STAR core_type_list
       { mktyp(Ptyp_tuple($1 :: List.rev $3)) }
   ;
@@ -1389,7 +1220,7 @@ core_type_comma_list:
   | core_type_comma_list COMMA core_type        { $3 :: $1 }
   ;
 core_type_list:
-  | simple_core_type %prec below_LBRACKETAT  { [$1] }
+  | simple_core_type %prec below_LBRACKETAT     { [$1] }
   | core_type_list STAR simple_core_type        { $3 :: $1 }
   ;
 core_type_list_no_attr:
@@ -1397,16 +1228,14 @@ core_type_list_no_attr:
   | core_type_list STAR simple_core_type_no_attr { $3 :: $1 }
   ;
 meth_list:
-  | field SEMI meth_list                     { let (f, c) = $3 in ($1 :: f, c) }
+  | field SEMI meth_list                        { let (f, c) = $3 in ($1 :: f, c) }
   | field opt_semi                              { [$1], Closed }
   | DOTDOT                                      { [], Open }
   ;
 field:
-
   | label COLON poly_type            { ($1, [], $3) }
   ;
 label:
-
   | LIDENT                                      { $1 }
   ;
 
@@ -1444,9 +1273,6 @@ ident:
 val_ident:
   | LIDENT                                      { $1 }
   | LPAREN operator RPAREN                      { $2 }
-  | LPAREN operator error                       { unclosed "(" 1 ")" 3 }
-  | LPAREN error                                { expecting 2 "operator" }
-  | LPAREN MODULE error                         { expecting 3 "module-expr" }
   ;
 operator:
   | PREFIXOP                                    { $1 }
