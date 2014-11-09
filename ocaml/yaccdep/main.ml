@@ -45,33 +45,32 @@ let trans input output =
     | [] -> uses
     | x::xs ->
       (*xは同じ成分のリスト*)
-      let x = List.filter (fun v->
-        (* 既に使ってれば消す *)
-        if List.mem v (uses) then false
-        (* まだ使われていないときだけど、usesか省くリストの中から使われているかチェック*)
-        else List.exists( fun use ->
-          (* mapになければトークンなので追加する *)
-          if not (Scc.M.mem use map) then true
-          (* 依存を取り出す *)
-          else (
-            let dep = Scc.M.find use map in
-            (* 依存がある？*)
-            Scc.S.mem v dep
+      let b = List.exists (fun v->
+        if List.mem v uses then true
+        else List.exists (fun use->
+          if not (Scc.M.mem use map1) then false
+          else
+          (
+            let set = Scc.M.find use map1 in
+            List.mem v set
           )
-        ) (x@uses)
-
+        ) uses
       ) x in
-      check (x@uses) xs
+      if b then check (Scc.S.elements (Scc.S.union (Scc.mkSet x) (Scc.mkSet uses) )) xs
+      else check uses xs
   in
   let ls = check starts ls in
-  Format.fprintf Format.std_formatter "depends[%a]@."
+  Format.fprintf Format.std_formatter "depends[%a] len=%d@."
     (fun f -> List.iter (fun l ->
-      Format.fprintf Format.std_formatter "%s;" l)) ls;
+      Format.fprintf Format.std_formatter "%s;" l)) ls
+    (List.length ls)
+    ;
   let nouse = Scc.S.diff (Scc.mkSet all) (Scc.mkSet ls) in
   let nouse = Scc.S.elements nouse in
-  Format.fprintf Format.std_formatter "nouse[%a]@."
+  Format.fprintf Format.std_formatter "nouse[%a] len=%d@."
     (fun f -> List.iter (fun l ->
       Format.fprintf Format.std_formatter "%s;" l)) nouse
+    (List.length nouse)
 
 
 let get_ext name =

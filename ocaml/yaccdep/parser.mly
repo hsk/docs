@@ -66,3 +66,21 @@ ptn:
 vars:
   |                          { [] }
   | VAR vars                 { $1::$2 }
+
+functor_arg:
+  | LPAREN RPAREN
+      { [] }
+  ;
+
+functor_arg_name:
+  | SEMI     { [] }
+  | VAR { [] }
+  ;
+
+
+functor_args:
+  | functor_args functor_arg
+      { [] }
+  | functor_arg
+      { [] }
+  ;
