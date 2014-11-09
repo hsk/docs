@@ -45,19 +45,21 @@ let trans input output =
     | [] -> uses
     | x::xs ->
       (*xは同じ成分のリスト*)
+
+      (* x内に１つでも使われている物があるか？*)
       let b = List.exists (fun v->
-        if List.mem v uses then true
-        else List.exists (fun use->
-          if not (Scc.M.mem use map1) then false
-          else
-          (
-            let set = Scc.M.find use map1 in
-            List.mem v set
-          )
+        List.exists (fun use->
+          v = use ||
+          ( (Scc.M.mem use map1) &&
+            List.mem v (Scc.M.find use map1))
         ) uses
       ) x in
-      if b then check (Scc.S.elements (Scc.S.union (Scc.mkSet x) (Scc.mkSet uses) )) xs
-      else check uses xs
+      let add a b = 
+        List.sort_uniq
+          (fun a b -> if a = b then 0 else 1) (a@b)
+      in
+      (* あれば追加する *)
+      check (if b then add x uses else uses) xs
   in
   let ls = check starts ls in
   Format.fprintf Format.std_formatter "depends[%a] len=%d@."
