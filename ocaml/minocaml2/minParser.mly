@@ -572,54 +572,6 @@ functor_args:
       { [ $1 ] }
 ;
 
-module_expr:
-    mod_longident
-      { mkmod(Pmod_ident (mkrhs $1 1)) }
-  | STRUCT structure END
-      { mkmod(Pmod_structure($2)) }
-  | STRUCT structure error
-      { unclosed "struct" 1 "end" 3 }
-  | FUNCTOR functor_args MINUSGREATER module_expr
-      { List.fold_left (fun acc (n, t) -> mkmod(Pmod_functor(n, t, acc)))
-                       $4 $2 }
-  | module_expr LPAREN module_expr RPAREN
-      { mkmod(Pmod_apply($1, $3)) }
-  | module_expr LPAREN RPAREN
-      { mkmod(Pmod_apply($1, mkmod (Pmod_structure []))) }
-  | module_expr LPAREN module_expr error
-      { unclosed "(" 2 ")" 4 }
-  | LPAREN module_expr COLON module_type RPAREN
-      { mkmod(Pmod_constraint($2, $4)) }
-  | LPAREN module_expr COLON module_type error
-      { unclosed "(" 1 ")" 5 }
-  | LPAREN module_expr RPAREN
-      { $2 }
-  | LPAREN module_expr error
-      { unclosed "(" 1 ")" 3 }
-  | LPAREN VAL expr RPAREN
-      { mkmod(Pmod_unpack $3) }
-  | LPAREN VAL expr COLON package_type RPAREN
-      { mkmod(Pmod_unpack(
-              ghexp(Pexp_constraint($3, ghtyp(Ptyp_package $5))))) }
-  | LPAREN VAL expr COLON package_type COLONGREATER package_type RPAREN
-      { mkmod(Pmod_unpack(
-              ghexp(Pexp_coerce($3, Some(ghtyp(Ptyp_package $5)),
-                                    ghtyp(Ptyp_package $7))))) }
-  | LPAREN VAL expr COLONGREATER package_type RPAREN
-      { mkmod(Pmod_unpack(
-              ghexp(Pexp_coerce($3, None, ghtyp(Ptyp_package $5))))) }
-  | LPAREN VAL expr COLON error
-      { unclosed "(" 1 ")" 5 }
-  | LPAREN VAL expr COLONGREATER error
-      { unclosed "(" 1 ")" 5 }
-  | LPAREN VAL expr error
-      { unclosed "(" 1 ")" 4 }
-  | module_expr attribute
-      { Mod.attr $1 $2 }
-  | extension
-      { mkmod(Pmod_extension $1) }
-;
-
 structure:
     seq_expr post_item_attributes structure_tail { mkstrexp $1 $2 :: $3 }
   | structure_tail { $1 }
@@ -671,18 +623,12 @@ structure_item:
       { mkstr(Pstr_class (List.rev $2)) }
   | CLASS TYPE class_type_declarations
       { mkstr(Pstr_class_type (List.rev $3)) }
-  | INCLUDE module_expr post_item_attributes
-      { mkstr(Pstr_include (Incl.mk $2 ~attrs:$3 ~loc:(symbol_rloc()))) }
   | item_extension post_item_attributes
       { mkstr(Pstr_extension ($1, $2)) }
   | floating_attribute
       { mkstr(Pstr_attribute $1) }
 ;
 module_binding_body:
-    EQUAL module_expr
-      { $2 }
-  | COLON module_type EQUAL module_expr
-      { mkmod(Pmod_constraint($4, $2)) }
   | functor_arg module_binding_body
       { mkmod(Pmod_functor(fst $1, snd $1, $2)) }
 ;
@@ -710,8 +656,6 @@ module_type:
                        $4 $2 }
   | module_type WITH with_constraints
       { mkmty(Pmty_with($1, List.rev $3)) }
-  | MODULE TYPE OF module_expr %prec below_LBRACKETAT
-      { mkmty(Pmty_typeof $4) }
 /*  | LPAREN MODULE mod_longident RPAREN
       { mkmty (Pmty_alias (mkrhs $3 3)) } */
   | LPAREN module_type RPAREN
@@ -1284,19 +1228,6 @@ simple_expr:
       { unclosed "{<" 3 ">}" 6 }
   | simple_expr SHARP label
       { mkexp(Pexp_send($1, $3)) }
-  | LPAREN MODULE module_expr RPAREN
-      { mkexp (Pexp_pack $3) }
-  | LPAREN MODULE module_expr COLON package_type RPAREN
-      { mkexp (Pexp_constraint (ghexp (Pexp_pack $3),
-                                ghtyp (Ptyp_package $5))) }
-  | LPAREN MODULE module_expr COLON error
-      { unclosed "(" 1 ")" 5 }
-  | mod_longident DOT LPAREN MODULE module_expr COLON package_type RPAREN
-      { mkexp(Pexp_open(Fresh, mkrhs $1 1,
-        mkexp (Pexp_constraint (ghexp (Pexp_pack $5),
-                                ghtyp (Ptyp_package $7))))) }
-  | mod_longident DOT LPAREN MODULE module_expr COLON error
-      { unclosed "(" 3 ")" 7 }
   | extension
       { mkexp (Pexp_extension $1) }
 ;
