@@ -1,0 +1,970 @@
+   0  $accept : %entry% $end
+
+   1  implementation : structure EOF
+
+   2  interface : EOF
+
+   3  toplevel_phrase : top_structure SEMISEMI
+   4                  | EOF
+
+   5  top_structure : seq_expr
+   6                | top_structure_tail
+
+   7  top_structure_tail :
+   8                     | structure_item top_structure_tail
+
+   9  use_file : use_file_tail
+  10           | seq_expr use_file_tail
+
+  11  use_file_tail : EOF
+  12                | structure_item use_file_tail
+
+  13  parse_core_type :
+
+  14  parse_expression : seq_expr EOF
+
+  15  parse_pattern : pattern EOF
+
+  16  structure : seq_expr structure_tail
+  17            | structure_tail
+
+  18  structure_tail :
+  19                 | structure_item structure_tail
+
+  20  structure_item : LET let_bindings
+  21                 | OPEN UIDENT
+
+  22  seq_expr : expr
+  23           | expr SEMI seq_expr
+
+  24  expr : simple_expr
+  25       | simple_expr simple_labeled_expr_list
+  26       | LET let_bindings IN seq_expr
+  27       | expr PLUS expr
+  28       | expr MINUS expr
+  29       | expr STAR expr
+  30       | expr EQUAL expr
+  31       | MINUS expr
+
+  32  simple_expr : LIDENT
+  33              | INT
+  34              | STRING
+  35              | constr_longident
+  36              | LPAREN seq_expr RPAREN
+
+  37  simple_labeled_expr_list : simple_expr
+  38                           | simple_labeled_expr_list simple_expr
+
+  39  let_bindings : pattern EQUAL seq_expr
+
+  40  pattern : LIDENT
+  41          | UNDERSCORE
+  42          | constr_longident
+  43          | LPAREN pattern RPAREN
+
+  44  constr_longident : UIDENT
+  45                   | LPAREN RPAREN
+
+  46  %entry% : '\001' implementation
+  47          | '\002' interface
+  48          | '\003' toplevel_phrase
+  49          | '\004' use_file
+  50          | '\005' parse_core_type
+  51          | '\006' parse_expression
+  52          | '\007' parse_pattern
+
+state 0
+	$accept : . %entry% $end  (0)
+
+	'\001'  shift 1
+	'\002'  shift 2
+	'\003'  shift 3
+	'\004'  shift 4
+	'\005'  shift 5
+	'\006'  shift 6
+	'\007'  shift 7
+	.  error
+
+	%entry%  goto 8
+
+
+state 1
+	%entry% : '\001' . implementation  (46)
+	structure_tail : .  (18)
+
+	INT  shift 9
+	LET  shift 10
+	LIDENT  shift 11
+	LPAREN  shift 12
+	MINUS  shift 13
+	OPEN  shift 14
+	STRING  shift 15
+	UIDENT  shift 16
+	EOF  reduce 18
+
+	implementation  goto 17
+	structure  goto 18
+	seq_expr  goto 19
+	structure_item  goto 20
+	structure_tail  goto 21
+	expr  goto 22
+	simple_expr  goto 23
+	constr_longident  goto 24
+
+
+state 2
+	%entry% : '\002' . interface  (47)
+
+	EOF  shift 25
+	.  error
+
+	interface  goto 26
+
+
+state 3
+	%entry% : '\003' . toplevel_phrase  (48)
+	top_structure_tail : .  (7)
+
+	EOF  shift 27
+	INT  shift 9
+	LET  shift 10
+	LIDENT  shift 11
+	LPAREN  shift 12
+	MINUS  shift 13
+	OPEN  shift 14
+	STRING  shift 15
+	UIDENT  shift 16
+	SEMISEMI  reduce 7
+
+	toplevel_phrase  goto 28
+	top_structure  goto 29
+	seq_expr  goto 30
+	top_structure_tail  goto 31
+	structure_item  goto 32
+	expr  goto 22
+	simple_expr  goto 23
+	constr_longident  goto 24
+
+
+state 4
+	%entry% : '\004' . use_file  (49)
+
+	EOF  shift 33
+	INT  shift 9
+	LET  shift 10
+	LIDENT  shift 11
+	LPAREN  shift 12
+	MINUS  shift 13
+	OPEN  shift 14
+	STRING  shift 15
+	UIDENT  shift 16
+	.  error
+
+	use_file  goto 34
+	seq_expr  goto 35
+	structure_item  goto 36
+	use_file_tail  goto 37
+	expr  goto 22
+	simple_expr  goto 23
+	constr_longident  goto 24
+
+
+state 5
+	%entry% : '\005' . parse_core_type  (50)
+	parse_core_type : .  (13)
+
+	.  reduce 13
+
+	parse_core_type  goto 38
+
+
+state 6
+	%entry% : '\006' . parse_expression  (51)
+
+	INT  shift 9
+	LET  shift 39
+	LIDENT  shift 11
+	LPAREN  shift 12
+	MINUS  shift 13
+	STRING  shift 15
+	UIDENT  shift 16
+	.  error
+
+	parse_expression  goto 40
+	seq_expr  goto 41
+	expr  goto 22
+	simple_expr  goto 23
+	constr_longident  goto 24
+
+
+state 7
+	%entry% : '\007' . parse_pattern  (52)
+
+	LIDENT  shift 42
+	LPAREN  shift 43
+	UIDENT  shift 16
+	UNDERSCORE  shift 44
+	.  error
+
+	parse_pattern  goto 45
+	pattern  goto 46
+	constr_longident  goto 47
+
+
+state 8
+	$accept : %entry% . $end  (0)
+
+	$end  accept
+
+
+state 9
+	simple_expr : INT .  (33)
+
+	.  reduce 33
+
+
+state 10
+	structure_item : LET . let_bindings  (20)
+	expr : LET . let_bindings IN seq_expr  (26)
+
+	LIDENT  shift 42
+	LPAREN  shift 43
+	UIDENT  shift 16
+	UNDERSCORE  shift 44
+	.  error
+
+	pattern  goto 48
+	let_bindings  goto 49
+	constr_longident  goto 47
+
+
+state 11
+	simple_expr : LIDENT .  (32)
+
+	.  reduce 32
+
+
+state 12
+	simple_expr : LPAREN . seq_expr RPAREN  (36)
+	constr_longident : LPAREN . RPAREN  (45)
+
+	INT  shift 9
+	LET  shift 39
+	LIDENT  shift 11
+	LPAREN  shift 12
+	MINUS  shift 13
+	RPAREN  shift 50
+	STRING  shift 15
+	UIDENT  shift 16
+	.  error
+
+	seq_expr  goto 51
+	expr  goto 22
+	simple_expr  goto 23
+	constr_longident  goto 24
+
+
+state 13
+	expr : MINUS . expr  (31)
+
+	INT  shift 9
+	LET  shift 39
+	LIDENT  shift 11
+	LPAREN  shift 12
+	MINUS  shift 13
+	STRING  shift 15
+	UIDENT  shift 16
+	.  error
+
+	expr  goto 52
+	simple_expr  goto 23
+	constr_longident  goto 24
+
+
+state 14
+	structure_item : OPEN . UIDENT  (21)
+
+	UIDENT  shift 53
+	.  error
+
+
+state 15
+	simple_expr : STRING .  (34)
+
+	.  reduce 34
+
+
+state 16
+	constr_longident : UIDENT .  (44)
+
+	.  reduce 44
+
+
+state 17
+	%entry% : '\001' implementation .  (46)
+
+	.  reduce 46
+
+
+state 18
+	implementation : structure . EOF  (1)
+
+	EOF  shift 54
+	.  error
+
+
+state 19
+	structure : seq_expr . structure_tail  (16)
+	structure_tail : .  (18)
+
+	LET  shift 55
+	OPEN  shift 14
+	EOF  reduce 18
+
+	structure_item  goto 20
+	structure_tail  goto 56
+
+
+state 20
+	structure_tail : structure_item . structure_tail  (19)
+	structure_tail : .  (18)
+
+	LET  shift 55
+	OPEN  shift 14
+	EOF  reduce 18
+
+	structure_item  goto 20
+	structure_tail  goto 57
+
+
+state 21
+	structure : structure_tail .  (17)
+
+	.  reduce 17
+
+
+state 22
+	seq_expr : expr .  (22)
+	seq_expr : expr . SEMI seq_expr  (23)
+	expr : expr . PLUS expr  (27)
+	expr : expr . MINUS expr  (28)
+	expr : expr . STAR expr  (29)
+	expr : expr . EQUAL expr  (30)
+
+	EQUAL  shift 58
+	MINUS  shift 59
+	PLUS  shift 60
+	SEMI  shift 61
+	STAR  shift 62
+	EOF  reduce 22
+	IN  reduce 22
+	LET  reduce 22
+	OPEN  reduce 22
+	RPAREN  reduce 22
+	SEMISEMI  reduce 22
+
+
+state 23
+	expr : simple_expr .  (24)
+	expr : simple_expr . simple_labeled_expr_list  (25)
+
+	INT  shift 9
+	LIDENT  shift 11
+	LPAREN  shift 12
+	STRING  shift 15
+	UIDENT  shift 16
+	EOF  reduce 24
+	EQUAL  reduce 24
+	IN  reduce 24
+	LET  reduce 24
+	MINUS  reduce 24
+	OPEN  reduce 24
+	PLUS  reduce 24
+	RPAREN  reduce 24
+	SEMI  reduce 24
+	SEMISEMI  reduce 24
+	STAR  reduce 24
+
+	simple_expr  goto 63
+	simple_labeled_expr_list  goto 64
+	constr_longident  goto 24
+
+
+state 24
+	simple_expr : constr_longident .  (35)
+
+	.  reduce 35
+
+
+state 25
+	interface : EOF .  (2)
+
+	.  reduce 2
+
+
+state 26
+	%entry% : '\002' interface .  (47)
+
+	.  reduce 47
+
+
+state 27
+	toplevel_phrase : EOF .  (4)
+
+	.  reduce 4
+
+
+state 28
+	%entry% : '\003' toplevel_phrase .  (48)
+
+	.  reduce 48
+
+
+state 29
+	toplevel_phrase : top_structure . SEMISEMI  (3)
+
+	SEMISEMI  shift 65
+	.  error
+
+
+state 30
+	top_structure : seq_expr .  (5)
+
+	.  reduce 5
+
+
+state 31
+	top_structure : top_structure_tail .  (6)
+
+	.  reduce 6
+
+
+state 32
+	top_structure_tail : structure_item . top_structure_tail  (8)
+	top_structure_tail : .  (7)
+
+	LET  shift 55
+	OPEN  shift 14
+	SEMISEMI  reduce 7
+
+	top_structure_tail  goto 66
+	structure_item  goto 32
+
+
+state 33
+	use_file_tail : EOF .  (11)
+
+	.  reduce 11
+
+
+state 34
+	%entry% : '\004' use_file .  (49)
+
+	.  reduce 49
+
+
+state 35
+	use_file : seq_expr . use_file_tail  (10)
+
+	EOF  shift 33
+	LET  shift 55
+	OPEN  shift 14
+	.  error
+
+	structure_item  goto 36
+	use_file_tail  goto 67
+
+
+state 36
+	use_file_tail : structure_item . use_file_tail  (12)
+
+	EOF  shift 33
+	LET  shift 55
+	OPEN  shift 14
+	.  error
+
+	structure_item  goto 36
+	use_file_tail  goto 68
+
+
+state 37
+	use_file : use_file_tail .  (9)
+
+	.  reduce 9
+
+
+state 38
+	%entry% : '\005' parse_core_type .  (50)
+
+	.  reduce 50
+
+
+state 39
+	expr : LET . let_bindings IN seq_expr  (26)
+
+	LIDENT  shift 42
+	LPAREN  shift 43
+	UIDENT  shift 16
+	UNDERSCORE  shift 44
+	.  error
+
+	pattern  goto 48
+	let_bindings  goto 69
+	constr_longident  goto 47
+
+
+state 40
+	%entry% : '\006' parse_expression .  (51)
+
+	.  reduce 51
+
+
+state 41
+	parse_expression : seq_expr . EOF  (14)
+
+	EOF  shift 70
+	.  error
+
+
+state 42
+	pattern : LIDENT .  (40)
+
+	.  reduce 40
+
+
+state 43
+	pattern : LPAREN . pattern RPAREN  (43)
+	constr_longident : LPAREN . RPAREN  (45)
+
+	LIDENT  shift 42
+	LPAREN  shift 43
+	RPAREN  shift 50
+	UIDENT  shift 16
+	UNDERSCORE  shift 44
+	.  error
+
+	pattern  goto 71
+	constr_longident  goto 47
+
+
+state 44
+	pattern : UNDERSCORE .  (41)
+
+	.  reduce 41
+
+
+state 45
+	%entry% : '\007' parse_pattern .  (52)
+
+	.  reduce 52
+
+
+state 46
+	parse_pattern : pattern . EOF  (15)
+
+	EOF  shift 72
+	.  error
+
+
+state 47
+	pattern : constr_longident .  (42)
+
+	.  reduce 42
+
+
+state 48
+	let_bindings : pattern . EQUAL seq_expr  (39)
+
+	EQUAL  shift 73
+	.  error
+
+
+state 49
+	structure_item : LET let_bindings .  (20)
+	expr : LET let_bindings . IN seq_expr  (26)
+
+	IN  shift 74
+	EOF  reduce 20
+	LET  reduce 20
+	OPEN  reduce 20
+	SEMISEMI  reduce 20
+
+
+state 50
+	constr_longident : LPAREN RPAREN .  (45)
+
+	.  reduce 45
+
+
+state 51
+	simple_expr : LPAREN seq_expr . RPAREN  (36)
+
+	RPAREN  shift 75
+	.  error
+
+
+state 52
+	expr : expr . PLUS expr  (27)
+	expr : expr . MINUS expr  (28)
+	expr : expr . STAR expr  (29)
+	expr : expr . EQUAL expr  (30)
+	expr : MINUS expr .  (31)
+
+	.  reduce 31
+
+
+state 53
+	structure_item : OPEN UIDENT .  (21)
+
+	.  reduce 21
+
+
+state 54
+	implementation : structure EOF .  (1)
+
+	.  reduce 1
+
+
+state 55
+	structure_item : LET . let_bindings  (20)
+
+	LIDENT  shift 42
+	LPAREN  shift 43
+	UIDENT  shift 16
+	UNDERSCORE  shift 44
+	.  error
+
+	pattern  goto 48
+	let_bindings  goto 76
+	constr_longident  goto 47
+
+
+state 56
+	structure : seq_expr structure_tail .  (16)
+
+	.  reduce 16
+
+
+state 57
+	structure_tail : structure_item structure_tail .  (19)
+
+	.  reduce 19
+
+
+state 58
+	expr : expr EQUAL . expr  (30)
+
+	INT  shift 9
+	LET  shift 39
+	LIDENT  shift 11
+	LPAREN  shift 12
+	MINUS  shift 13
+	STRING  shift 15
+	UIDENT  shift 16
+	.  error
+
+	expr  goto 77
+	simple_expr  goto 23
+	constr_longident  goto 24
+
+
+state 59
+	expr : expr MINUS . expr  (28)
+
+	INT  shift 9
+	LET  shift 39
+	LIDENT  shift 11
+	LPAREN  shift 12
+	MINUS  shift 13
+	STRING  shift 15
+	UIDENT  shift 16
+	.  error
+
+	expr  goto 78
+	simple_expr  goto 23
+	constr_longident  goto 24
+
+
+state 60
+	expr : expr PLUS . expr  (27)
+
+	INT  shift 9
+	LET  shift 39
+	LIDENT  shift 11
+	LPAREN  shift 12
+	MINUS  shift 13
+	STRING  shift 15
+	UIDENT  shift 16
+	.  error
+
+	expr  goto 79
+	simple_expr  goto 23
+	constr_longident  goto 24
+
+
+state 61
+	seq_expr : expr SEMI . seq_expr  (23)
+
+	INT  shift 9
+	LET  shift 39
+	LIDENT  shift 11
+	LPAREN  shift 12
+	MINUS  shift 13
+	STRING  shift 15
+	UIDENT  shift 16
+	.  error
+
+	seq_expr  goto 80
+	expr  goto 22
+	simple_expr  goto 23
+	constr_longident  goto 24
+
+
+state 62
+	expr : expr STAR . expr  (29)
+
+	INT  shift 9
+	LET  shift 39
+	LIDENT  shift 11
+	LPAREN  shift 12
+	MINUS  shift 13
+	STRING  shift 15
+	UIDENT  shift 16
+	.  error
+
+	expr  goto 81
+	simple_expr  goto 23
+	constr_longident  goto 24
+
+
+state 63
+	simple_labeled_expr_list : simple_expr .  (37)
+
+	.  reduce 37
+
+
+state 64
+	expr : simple_expr simple_labeled_expr_list .  (25)
+	simple_labeled_expr_list : simple_labeled_expr_list . simple_expr  (38)
+
+	INT  shift 9
+	LIDENT  shift 11
+	LPAREN  shift 12
+	STRING  shift 15
+	UIDENT  shift 16
+	EOF  reduce 25
+	EQUAL  reduce 25
+	IN  reduce 25
+	LET  reduce 25
+	MINUS  reduce 25
+	OPEN  reduce 25
+	PLUS  reduce 25
+	RPAREN  reduce 25
+	SEMI  reduce 25
+	SEMISEMI  reduce 25
+	STAR  reduce 25
+
+	simple_expr  goto 82
+	constr_longident  goto 24
+
+
+state 65
+	toplevel_phrase : top_structure SEMISEMI .  (3)
+
+	.  reduce 3
+
+
+state 66
+	top_structure_tail : structure_item top_structure_tail .  (8)
+
+	.  reduce 8
+
+
+state 67
+	use_file : seq_expr use_file_tail .  (10)
+
+	.  reduce 10
+
+
+state 68
+	use_file_tail : structure_item use_file_tail .  (12)
+
+	.  reduce 12
+
+
+state 69
+	expr : LET let_bindings . IN seq_expr  (26)
+
+	IN  shift 74
+	.  error
+
+
+state 70
+	parse_expression : seq_expr EOF .  (14)
+
+	.  reduce 14
+
+
+state 71
+	pattern : LPAREN pattern . RPAREN  (43)
+
+	RPAREN  shift 83
+	.  error
+
+
+state 72
+	parse_pattern : pattern EOF .  (15)
+
+	.  reduce 15
+
+
+state 73
+	let_bindings : pattern EQUAL . seq_expr  (39)
+
+	INT  shift 9
+	LET  shift 39
+	LIDENT  shift 11
+	LPAREN  shift 12
+	MINUS  shift 13
+	STRING  shift 15
+	UIDENT  shift 16
+	.  error
+
+	seq_expr  goto 84
+	expr  goto 22
+	simple_expr  goto 23
+	constr_longident  goto 24
+
+
+state 74
+	expr : LET let_bindings IN . seq_expr  (26)
+
+	INT  shift 9
+	LET  shift 39
+	LIDENT  shift 11
+	LPAREN  shift 12
+	MINUS  shift 13
+	STRING  shift 15
+	UIDENT  shift 16
+	.  error
+
+	seq_expr  goto 85
+	expr  goto 22
+	simple_expr  goto 23
+	constr_longident  goto 24
+
+
+state 75
+	simple_expr : LPAREN seq_expr RPAREN .  (36)
+
+	.  reduce 36
+
+
+state 76
+	structure_item : LET let_bindings .  (20)
+
+	.  reduce 20
+
+
+state 77
+	expr : expr . PLUS expr  (27)
+	expr : expr . MINUS expr  (28)
+	expr : expr . STAR expr  (29)
+	expr : expr . EQUAL expr  (30)
+	expr : expr EQUAL expr .  (30)
+
+	MINUS  shift 59
+	PLUS  shift 60
+	STAR  shift 62
+	EOF  reduce 30
+	EQUAL  reduce 30
+	IN  reduce 30
+	LET  reduce 30
+	OPEN  reduce 30
+	RPAREN  reduce 30
+	SEMI  reduce 30
+	SEMISEMI  reduce 30
+
+
+state 78
+	expr : expr . PLUS expr  (27)
+	expr : expr . MINUS expr  (28)
+	expr : expr MINUS expr .  (28)
+	expr : expr . STAR expr  (29)
+	expr : expr . EQUAL expr  (30)
+
+	STAR  shift 62
+	EOF  reduce 28
+	EQUAL  reduce 28
+	IN  reduce 28
+	LET  reduce 28
+	MINUS  reduce 28
+	OPEN  reduce 28
+	PLUS  reduce 28
+	RPAREN  reduce 28
+	SEMI  reduce 28
+	SEMISEMI  reduce 28
+
+
+state 79
+	expr : expr . PLUS expr  (27)
+	expr : expr PLUS expr .  (27)
+	expr : expr . MINUS expr  (28)
+	expr : expr . STAR expr  (29)
+	expr : expr . EQUAL expr  (30)
+
+	STAR  shift 62
+	EOF  reduce 27
+	EQUAL  reduce 27
+	IN  reduce 27
+	LET  reduce 27
+	MINUS  reduce 27
+	OPEN  reduce 27
+	PLUS  reduce 27
+	RPAREN  reduce 27
+	SEMI  reduce 27
+	SEMISEMI  reduce 27
+
+
+state 80
+	seq_expr : expr SEMI seq_expr .  (23)
+
+	.  reduce 23
+
+
+state 81
+	expr : expr . PLUS expr  (27)
+	expr : expr . MINUS expr  (28)
+	expr : expr . STAR expr  (29)
+	expr : expr STAR expr .  (29)
+	expr : expr . EQUAL expr  (30)
+
+	.  reduce 29
+
+
+state 82
+	simple_labeled_expr_list : simple_labeled_expr_list simple_expr .  (38)
+
+	.  reduce 38
+
+
+state 83
+	pattern : LPAREN pattern RPAREN .  (43)
+
+	.  reduce 43
+
+
+state 84
+	let_bindings : pattern EQUAL seq_expr .  (39)
+
+	.  reduce 39
+
+
+state 85
+	expr : LET let_bindings IN seq_expr .  (26)
+
+	.  reduce 26
+
+
+129 terminals, 22 nonterminals
+53 grammar rules, 86 states
