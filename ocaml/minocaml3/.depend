@@ -1,0 +1,10 @@
+minParse.cmi :
+minParser.cmi :
+main.cmo : minCompile.cmo
+main.cmx : minCompile.cmx
+minCompile.cmo : minParse.cmi
+minCompile.cmx : minParse.cmx
+minParse.cmo : minParse.cmi
+minParse.cmx : minParse.cmi
+minParser.cmo : minParser.cmi
+minParser.cmx : minParser.cmi

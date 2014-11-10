@@ -1,0 +1,503 @@
+starts[parse_pattern;parse_expression;parse_core_type;use_file;toplevel_phrase;interface;implementation;]
+Rule(implementation,[Ptn[structure;EOF;];])
+Rule(interface,[Ptn[signature;EOF;];])
+Rule(toplevel_phrase,[Ptn[top_structure;SEMISEMI;];Ptn[EOF;];])
+Rule(top_structure,[Ptn[seq_expr;];Ptn[top_structure_tail;];])
+Rule(top_structure_tail,[Ptn[];Ptn[structure_item;top_structure_tail;];])
+Rule(use_file,[Ptn[use_file_tail;];Ptn[seq_expr;use_file_tail;];])
+Rule(use_file_tail,[Ptn[EOF;];Ptn[SEMISEMI;EOF;];Ptn[SEMISEMI;seq_expr;use_file_tail;];Ptn[SEMISEMI;structure_item;use_file_tail;];Ptn[structure_item;use_file_tail;];])
+Rule(parse_core_type,[Ptn[core_type;EOF;];])
+Rule(parse_expression,[Ptn[seq_expr;EOF;];])
+Rule(parse_pattern,[Ptn[pattern;EOF;];])
+Rule(functor_arg,[Ptn[LPAREN;RPAREN;];])
+Rule(functor_args,[Ptn[functor_args;functor_arg;];Ptn[functor_arg;];])
+Rule(structure,[Ptn[seq_expr;structure_tail;];Ptn[structure_tail;];])
+Rule(structure_tail,[Ptn[];Ptn[SEMISEMI;structure;];Ptn[structure_item;structure_tail;];])
+Rule(structure_item,[Ptn[LET;rec_flag;let_bindings;];Ptn[EXTERNAL;val_ident;COLON;core_type;EQUAL;primitive_declaration;];Ptn[TYPE;type_declarations;];Ptn[MODULE;TYPE;ident;];Ptn[open_statement;];])
+Rule(signature,[Ptn[];Ptn[SEMISEMI;signature;];Ptn[signature_item;signature;];])
+Rule(signature_item,[Ptn[VAL;val_ident;COLON;core_type;];Ptn[EXTERNAL;val_ident;COLON;core_type;EQUAL;primitive_declaration;];Ptn[TYPE;type_declarations;];Ptn[MODULE;UIDENT;EQUAL;mod_longident;];Ptn[MODULE;TYPE;ident;];Ptn[open_statement;];])
+Rule(open_statement,[Ptn[OPEN;override_flag;mod_longident;];])
+Rule(constrain,[Ptn[core_type;EQUAL;core_type;];])
+Rule(seq_expr,[Ptn[expr;%prec;below_SEMI;];Ptn[expr;SEMI;];Ptn[expr;SEMI;seq_expr;];])
+Rule(expr,[Ptn[simple_expr;%prec;below_SHARP;];Ptn[simple_expr;simple_labeled_expr_list;];Ptn[LET;rec_flag;let_bindings_no_attrs;IN;seq_expr;];Ptn[LET;OPEN;override_flag;mod_longident;IN;seq_expr;];Ptn[FUNCTION;opt_bar;match_cases;];Ptn[FUN;LPAREN;TYPE;LIDENT;RPAREN;fun_def;];Ptn[MATCH;seq_expr;WITH;opt_bar;match_cases;];Ptn[TRY;seq_expr;WITH;opt_bar;match_cases;];Ptn[expr_comma_list;%prec;below_COMMA;];Ptn[constr_longident;simple_expr;%prec;below_SHARP;];Ptn[name_tag;simple_expr;%prec;below_SHARP;];Ptn[IF;seq_expr;THEN;expr;ELSE;expr;];Ptn[IF;seq_expr;THEN;expr;];Ptn[WHILE;seq_expr;DO;seq_expr;DONE;];Ptn[FOR;pattern;EQUAL;seq_expr;direction_flag;seq_expr;DO;seq_expr;DONE;];Ptn[expr;COLONCOLON;expr;];Ptn[LPAREN;COLONCOLON;RPAREN;LPAREN;expr;COMMA;expr;RPAREN;];Ptn[expr;INFIXOP0;expr;];Ptn[expr;INFIXOP1;expr;];Ptn[expr;INFIXOP2;expr;];Ptn[expr;INFIXOP3;expr;];Ptn[expr;INFIXOP4;expr;];Ptn[expr;PLUS;expr;];Ptn[expr;PLUSDOT;expr;];Ptn[expr;PLUSEQ;expr;];Ptn[expr;MINUS;expr;];Ptn[expr;MINUSDOT;expr;];Ptn[expr;STAR;expr;];Ptn[expr;PERCENT;expr;];Ptn[expr;EQUAL;expr;];Ptn[expr;LESS;expr;];Ptn[expr;GREATER;expr;];Ptn[expr;OR;expr;];Ptn[expr;BARBAR;expr;];Ptn[expr;AMPERSAND;expr;];Ptn[expr;AMPERAMPER;expr;];Ptn[expr;COLONEQUAL;expr;];Ptn[subtractive;expr;%prec;prec_unary_minus;];Ptn[additive;expr;%prec;prec_unary_plus;];Ptn[simple_expr;DOT;label_longident;LESSMINUS;expr;];Ptn[simple_expr;DOT;LPAREN;seq_expr;RPAREN;LESSMINUS;expr;];Ptn[simple_expr;DOT;LBRACKET;seq_expr;RBRACKET;LESSMINUS;expr;];Ptn[simple_expr;DOT;LBRACE;expr;RBRACE;LESSMINUS;expr;];Ptn[label;LESSMINUS;expr;];Ptn[ASSERT;simple_expr;%prec;below_SHARP;];])
+Rule(simple_expr,[Ptn[val_longident;];Ptn[constant;];Ptn[constr_longident;%prec;prec_constant_constructor;];Ptn[name_tag;%prec;prec_constant_constructor;];Ptn[LPAREN;seq_expr;RPAREN;];Ptn[BEGIN;seq_expr;END;];Ptn[BEGIN;END;];Ptn[LPAREN;seq_expr;type_constraint;RPAREN;];Ptn[simple_expr;DOT;label_longident;];Ptn[mod_longident;DOT;LPAREN;seq_expr;RPAREN;];Ptn[simple_expr;DOT;LPAREN;seq_expr;RPAREN;];Ptn[simple_expr;DOT;LBRACKET;seq_expr;RBRACKET;];Ptn[simple_expr;DOT;LBRACE;expr;RBRACE;];Ptn[LBRACE;record_expr;RBRACE;];Ptn[mod_longident;DOT;LBRACE;record_expr;RBRACE;];Ptn[LBRACKETBAR;expr_semi_list;opt_semi;BARRBRACKET;];Ptn[LBRACKETBAR;BARRBRACKET;];Ptn[mod_longident;DOT;LBRACKETBAR;expr_semi_list;opt_semi;BARRBRACKET;];Ptn[LBRACKET;expr_semi_list;opt_semi;RBRACKET;];Ptn[mod_longident;DOT;LBRACKET;expr_semi_list;opt_semi;RBRACKET;];Ptn[PREFIXOP;simple_expr;];Ptn[BANG;simple_expr;];Ptn[LBRACELESS;field_expr_list;opt_semi;GREATERRBRACE;];Ptn[LBRACELESS;GREATERRBRACE;];Ptn[mod_longident;DOT;LBRACELESS;field_expr_list;opt_semi;GREATERRBRACE;];Ptn[simple_expr;SHARP;label;];])
+Rule(simple_labeled_expr_list,[Ptn[labeled_simple_expr;];Ptn[simple_labeled_expr_list;labeled_simple_expr;];])
+Rule(labeled_simple_expr,[Ptn[simple_expr;%prec;below_SHARP;];Ptn[label_expr;];])
+Rule(label_expr,[Ptn[LABEL;simple_expr;%prec;below_SHARP;];Ptn[TILDE;label_ident;];Ptn[QUESTION;label_ident;];Ptn[OPTLABEL;simple_expr;%prec;below_SHARP;];])
+Rule(label_ident,[Ptn[LIDENT;];])
+Rule(let_bindings,[Ptn[let_binding;];Ptn[let_bindings;AND;let_binding;];])
+Rule(let_bindings_no_attrs,[Ptn[let_bindings;];])
+Rule(lident_list,[Ptn[LIDENT;];Ptn[LIDENT;lident_list;];])
+Rule(let_binding,[Ptn[let_binding_;];])
+Rule(let_binding_,[Ptn[val_ident;fun_binding;];Ptn[val_ident;COLON;typevar_list;DOT;core_type;EQUAL;seq_expr;];Ptn[val_ident;COLON;TYPE;lident_list;DOT;core_type;EQUAL;seq_expr;];Ptn[pattern;EQUAL;seq_expr;];])
+Rule(fun_binding,[Ptn[strict_binding;];Ptn[type_constraint;EQUAL;seq_expr;];])
+Rule(strict_binding,[Ptn[EQUAL;seq_expr;];Ptn[LPAREN;TYPE;LIDENT;RPAREN;fun_binding;];])
+Rule(match_cases,[Ptn[match_case;];Ptn[match_cases;BAR;match_case;];])
+Rule(match_case,[Ptn[pattern;MINUSGREATER;seq_expr;];Ptn[pattern;WHEN;seq_expr;MINUSGREATER;seq_expr;];])
+Rule(fun_def,[Ptn[MINUSGREATER;seq_expr;];Ptn[LPAREN;TYPE;LIDENT;RPAREN;fun_def;];])
+Rule(expr_comma_list,[Ptn[expr_comma_list;COMMA;expr;];Ptn[expr;COMMA;expr;];])
+Rule(record_expr,[Ptn[simple_expr;WITH;lbl_expr_list;];Ptn[lbl_expr_list;];])
+Rule(lbl_expr_list,[Ptn[lbl_expr;];Ptn[lbl_expr;SEMI;lbl_expr_list;];Ptn[lbl_expr;SEMI;];])
+Rule(lbl_expr,[Ptn[label_longident;EQUAL;expr;];Ptn[label_longident;];])
+Rule(field_expr_list,[Ptn[label;EQUAL;expr;];Ptn[field_expr_list;SEMI;label;EQUAL;expr;];])
+Rule(expr_semi_list,[Ptn[expr;];Ptn[expr_semi_list;SEMI;expr;];])
+Rule(type_constraint,[Ptn[COLON;core_type;];Ptn[COLON;core_type;COLONGREATER;core_type;];Ptn[COLONGREATER;core_type;];])
+Rule(pattern,[Ptn[simple_pattern;];])
+Rule(simple_pattern,[Ptn[val_ident;%prec;below_EQUAL;];])
+Rule(primitive_declaration,[Ptn[STRING;];Ptn[STRING;primitive_declaration;];])
+Rule(type_declarations,[Ptn[type_declaration;];Ptn[type_declarations;AND;type_declaration;];])
+Rule(type_declaration,[Ptn[optional_type_parameters;LIDENT;type_kind;constraints;];])
+Rule(constraints,[Ptn[constraints;CONSTRAINT;constrain;];Ptn[];])
+Rule(type_kind,[Ptn[];Ptn[EQUAL;core_type;];Ptn[EQUAL;constructor_declarations;];Ptn[EQUAL;DOTDOT;];Ptn[EQUAL;core_type;EQUAL;DOTDOT;];])
+Rule(optional_type_parameters,[Ptn[];Ptn[optional_type_parameter;];Ptn[LPAREN;optional_type_parameter_list;RPAREN;];])
+Rule(optional_type_parameter,[Ptn[type_variance;optional_type_variable;];])
+Rule(optional_type_parameter_list,[Ptn[optional_type_parameter;];Ptn[optional_type_parameter_list;COMMA;optional_type_parameter;];])
+Rule(optional_type_variable,[Ptn[QUOTE;ident;];Ptn[UNDERSCORE;];])
+Rule(type_parameters,[Ptn[];Ptn[type_parameter;];Ptn[LPAREN;type_parameter_list;RPAREN;];])
+Rule(type_parameter,[Ptn[type_variance;type_variable;];])
+Rule(type_variance,[Ptn[];Ptn[PLUS;];Ptn[MINUS;];])
+Rule(type_variable,[Ptn[QUOTE;ident;];])
+Rule(type_parameter_list,[Ptn[type_parameter;];Ptn[type_parameter_list;COMMA;type_parameter;];])
+Rule(constructor_declarations,[Ptn[constructor_declaration;];Ptn[constructor_declarations;BAR;constructor_declaration;];])
+Rule(constructor_declaration,[Ptn[constr_ident;generalized_constructor_arguments;];])
+Rule(generalized_constructor_arguments,[Ptn[];Ptn[OF;core_type_list;];Ptn[COLON;core_type_list;MINUSGREATER;simple_core_type;];Ptn[COLON;simple_core_type;];])
+Rule(with_constraints,[Ptn[with_constraint;];Ptn[with_constraints;AND;with_constraint;];])
+Rule(with_constraint,[Ptn[TYPE;type_parameters;label_longident;with_type_binder;core_type;constraints;];Ptn[TYPE;type_parameters;label;COLONEQUAL;core_type;];Ptn[MODULE;mod_longident;EQUAL;mod_ext_longident;];Ptn[MODULE;UIDENT;COLONEQUAL;mod_ext_longident;];])
+Rule(with_type_binder,[Ptn[EQUAL;];])
+Rule(typevar_list,[Ptn[QUOTE;ident;];Ptn[typevar_list;QUOTE;ident;];])
+Rule(poly_type,[Ptn[core_type;];Ptn[typevar_list;DOT;core_type;];])
+Rule(core_type,[Ptn[core_type2;];Ptn[core_type2;AS;QUOTE;ident;];])
+Rule(core_type2,[Ptn[simple_core_type_or_tuple;];Ptn[QUESTION;LIDENT;COLON;core_type2;MINUSGREATER;core_type2;];Ptn[OPTLABEL;core_type2;MINUSGREATER;core_type2;];Ptn[LIDENT;COLON;core_type2;MINUSGREATER;core_type2;];Ptn[core_type2;MINUSGREATER;core_type2;];])
+Rule(simple_core_type,[Ptn[simple_core_type2;%prec;below_SHARP;];Ptn[LPAREN;core_type_comma_list;RPAREN;%prec;below_SHARP;];])
+Rule(simple_core_type2,[Ptn[QUOTE;ident;];Ptn[UNDERSCORE;];Ptn[type_longident;];Ptn[simple_core_type2;type_longident;];Ptn[LPAREN;core_type_comma_list;RPAREN;type_longident;];Ptn[LESS;meth_list;GREATER;];Ptn[LESS;GREATER;];Ptn[LBRACKET;tag_field;RBRACKET;];Ptn[LBRACKET;BAR;row_field_list;RBRACKET;];Ptn[LBRACKET;row_field;BAR;row_field_list;RBRACKET;];Ptn[LBRACKETGREATER;opt_bar;row_field_list;RBRACKET;];Ptn[LBRACKETGREATER;RBRACKET;];Ptn[LBRACKETLESS;opt_bar;row_field_list;RBRACKET;];Ptn[LBRACKETLESS;opt_bar;row_field_list;GREATER;name_tag_list;RBRACKET;];Ptn[LPAREN;MODULE;package_type;RPAREN;];])
+Rule(package_type,[Ptn[mty_longident;];Ptn[mty_longident;WITH;package_type_cstrs;];])
+Rule(package_type_cstr,[Ptn[TYPE;label_longident;EQUAL;core_type;];])
+Rule(package_type_cstrs,[Ptn[package_type_cstr;];Ptn[package_type_cstr;AND;package_type_cstrs;];])
+Rule(row_field_list,[Ptn[row_field;];Ptn[row_field_list;BAR;row_field;];])
+Rule(row_field,[Ptn[tag_field;];Ptn[simple_core_type;];])
+Rule(tag_field,[Ptn[name_tag;OF;opt_ampersand;amper_type_list;];Ptn[name_tag;];])
+Rule(opt_ampersand,[Ptn[AMPERSAND;];Ptn[];])
+Rule(amper_type_list,[Ptn[core_type;];Ptn[amper_type_list;AMPERSAND;core_type;];])
+Rule(name_tag_list,[Ptn[name_tag;];Ptn[name_tag_list;name_tag;];])
+Rule(simple_core_type_or_tuple,[Ptn[simple_core_type;%prec;below_LBRACKETAT;];Ptn[simple_core_type;STAR;core_type_list;];])
+Rule(core_type_comma_list,[Ptn[core_type;];Ptn[core_type_comma_list;COMMA;core_type;];])
+Rule(core_type_list,[Ptn[simple_core_type;%prec;below_LBRACKETAT;];Ptn[core_type_list;STAR;simple_core_type;];])
+Rule(meth_list,[Ptn[field;SEMI;meth_list;];Ptn[field;opt_semi;];Ptn[DOTDOT;];])
+Rule(field,[Ptn[label;COLON;poly_type;];])
+Rule(label,[Ptn[LIDENT;];])
+Rule(constant,[Ptn[INT;];Ptn[CHAR;];Ptn[STRING;];Ptn[FLOAT;];Ptn[INT32;];Ptn[INT64;];Ptn[NATIVEINT;];])
+Rule(ident,[Ptn[UIDENT;];Ptn[LIDENT;];])
+Rule(val_ident,[Ptn[LIDENT;];Ptn[LPAREN;operator;RPAREN;];])
+Rule(operator,[Ptn[PREFIXOP;];Ptn[INFIXOP0;];Ptn[INFIXOP1;];Ptn[INFIXOP2;];Ptn[INFIXOP3;];Ptn[INFIXOP4;];Ptn[BANG;];Ptn[PLUS;];Ptn[PLUSDOT;];Ptn[MINUS;];Ptn[MINUSDOT;];Ptn[STAR;];Ptn[EQUAL;];Ptn[LESS;];Ptn[GREATER;];Ptn[OR;];Ptn[BARBAR;];Ptn[AMPERSAND;];Ptn[AMPERAMPER;];Ptn[COLONEQUAL;];Ptn[PLUSEQ;];Ptn[PERCENT;];])
+Rule(constr_ident,[Ptn[UIDENT;];Ptn[LPAREN;RPAREN;];Ptn[COLONCOLON;];Ptn[FALSE;];Ptn[TRUE;];])
+Rule(val_longident,[Ptn[val_ident;];Ptn[mod_longident;DOT;val_ident;];])
+Rule(constr_longident,[Ptn[mod_longident;%prec;below_DOT;];Ptn[LBRACKET;RBRACKET;];Ptn[LPAREN;RPAREN;];Ptn[FALSE;];Ptn[TRUE;];])
+Rule(label_longident,[Ptn[LIDENT;];Ptn[mod_longident;DOT;LIDENT;];])
+Rule(type_longident,[Ptn[LIDENT;];Ptn[mod_ext_longident;DOT;LIDENT;];])
+Rule(mod_longident,[Ptn[UIDENT;];Ptn[mod_longident;DOT;UIDENT;];])
+Rule(mod_ext_longident,[Ptn[UIDENT;];Ptn[mod_ext_longident;DOT;UIDENT;];Ptn[mod_ext_longident;LPAREN;mod_ext_longident;RPAREN;];])
+Rule(mty_longident,[Ptn[ident;];Ptn[mod_ext_longident;DOT;ident;];])
+Rule(name_tag,[Ptn[BACKQUOTE;ident;];])
+Rule(rec_flag,[Ptn[];Ptn[REC;];])
+Rule(direction_flag,[Ptn[TO;];Ptn[DOWNTO;];])
+Rule(override_flag,[Ptn[];Ptn[BANG;];])
+Rule(opt_bar,[Ptn[];Ptn[BAR;];])
+Rule(opt_semi,[Ptn[];Ptn[SEMI;];])
+Rule(subtractive,[Ptn[MINUS;];Ptn[MINUSDOT;];])
+Rule(additive,[Ptn[PLUS;];Ptn[PLUSDOT;];])
+
+scc
+map
+additive -> [PLUS,PLUSDOT,]
+amper_type_list -> [AMPERSAND,amper_type_list,core_type,]
+constant -> [CHAR,FLOAT,INT,INT32,INT64,NATIVEINT,STRING,]
+constr_ident -> [COLONCOLON,FALSE,LPAREN,RPAREN,TRUE,UIDENT,]
+constr_longident -> [%prec,FALSE,LBRACKET,LPAREN,RBRACKET,RPAREN,TRUE,below_DOT,mod_longident,]
+constrain -> [EQUAL,core_type,]
+constraints -> [CONSTRAINT,constrain,constraints,]
+constructor_declaration -> [constr_ident,generalized_constructor_arguments,]
+constructor_declarations -> [BAR,constructor_declaration,constructor_declarations,]
+core_type -> [AS,QUOTE,core_type2,ident,]
+core_type2 -> [COLON,LIDENT,MINUSGREATER,OPTLABEL,QUESTION,core_type2,simple_core_type_or_tuple,]
+core_type_comma_list -> [COMMA,core_type,core_type_comma_list,]
+core_type_list -> [%prec,STAR,below_LBRACKETAT,core_type_list,simple_core_type,]
+direction_flag -> [DOWNTO,TO,]
+expr -> [%prec,AMPERAMPER,AMPERSAND,ASSERT,BARBAR,COLONCOLON,COLONEQUAL,COMMA,DO,DONE,DOT,ELSE,EQUAL,FOR,FUN,FUNCTION,GREATER,IF,IN,INFIXOP0,INFIXOP1,INFIXOP2,INFIXOP3,INFIXOP4,LBRACE,LBRACKET,LESS,LESSMINUS,LET,LIDENT,LPAREN,MATCH,MINUS,MINUSDOT,OPEN,OR,PERCENT,PLUS,PLUSDOT,PLUSEQ,RBRACE,RBRACKET,RPAREN,STAR,THEN,TRY,TYPE,WHILE,WITH,additive,below_COMMA,below_SHARP,constr_longident,direction_flag,expr,expr_comma_list,fun_def,label,label_longident,let_bindings_no_attrs,match_cases,mod_longident,name_tag,opt_bar,override_flag,pattern,prec_unary_minus,prec_unary_plus,rec_flag,seq_expr,simple_expr,simple_labeled_expr_list,subtractive,]
+expr_comma_list -> [COMMA,expr,expr_comma_list,]
+expr_semi_list -> [SEMI,expr,expr_semi_list,]
+field -> [COLON,label,poly_type,]
+field_expr_list -> [EQUAL,SEMI,expr,field_expr_list,label,]
+fun_binding -> [EQUAL,seq_expr,strict_binding,type_constraint,]
+fun_def -> [LIDENT,LPAREN,MINUSGREATER,RPAREN,TYPE,fun_def,seq_expr,]
+functor_arg -> [LPAREN,RPAREN,]
+functor_args -> [functor_arg,functor_args,]
+generalized_constructor_arguments -> [COLON,MINUSGREATER,OF,core_type_list,simple_core_type,]
+ident -> [LIDENT,UIDENT,]
+implementation -> [EOF,structure,]
+interface -> [EOF,signature,]
+label -> [LIDENT,]
+label_expr -> [%prec,LABEL,OPTLABEL,QUESTION,TILDE,below_SHARP,label_ident,simple_expr,]
+label_ident -> [LIDENT,]
+label_longident -> [DOT,LIDENT,mod_longident,]
+labeled_simple_expr -> [%prec,below_SHARP,label_expr,simple_expr,]
+lbl_expr -> [EQUAL,expr,label_longident,]
+lbl_expr_list -> [SEMI,lbl_expr,lbl_expr_list,]
+let_binding -> [let_binding_,]
+let_binding_ -> [COLON,DOT,EQUAL,TYPE,core_type,fun_binding,lident_list,pattern,seq_expr,typevar_list,val_ident,]
+let_bindings -> [AND,let_binding,let_bindings,]
+let_bindings_no_attrs -> [let_bindings,]
+lident_list -> [LIDENT,lident_list,]
+match_case -> [MINUSGREATER,WHEN,pattern,seq_expr,]
+match_cases -> [BAR,match_case,match_cases,]
+meth_list -> [DOTDOT,SEMI,field,meth_list,opt_semi,]
+mod_ext_longident -> [DOT,LPAREN,RPAREN,UIDENT,mod_ext_longident,]
+mod_longident -> [DOT,UIDENT,mod_longident,]
+mty_longident -> [DOT,ident,mod_ext_longident,]
+name_tag -> [BACKQUOTE,ident,]
+name_tag_list -> [name_tag,name_tag_list,]
+open_statement -> [OPEN,mod_longident,override_flag,]
+operator -> [AMPERAMPER,AMPERSAND,BANG,BARBAR,COLONEQUAL,EQUAL,GREATER,INFIXOP0,INFIXOP1,INFIXOP2,INFIXOP3,INFIXOP4,LESS,MINUS,MINUSDOT,OR,PERCENT,PLUS,PLUSDOT,PLUSEQ,PREFIXOP,STAR,]
+opt_ampersand -> [AMPERSAND,]
+opt_bar -> [BAR,]
+opt_semi -> [SEMI,]
+optional_type_parameter -> [optional_type_variable,type_variance,]
+optional_type_parameter_list -> [COMMA,optional_type_parameter,optional_type_parameter_list,]
+optional_type_parameters -> [LPAREN,RPAREN,optional_type_parameter,optional_type_parameter_list,]
+optional_type_variable -> [QUOTE,UNDERSCORE,ident,]
+override_flag -> [BANG,]
+package_type -> [WITH,mty_longident,package_type_cstrs,]
+package_type_cstr -> [EQUAL,TYPE,core_type,label_longident,]
+package_type_cstrs -> [AND,package_type_cstr,package_type_cstrs,]
+parse_core_type -> [EOF,core_type,]
+parse_expression -> [EOF,seq_expr,]
+parse_pattern -> [EOF,pattern,]
+pattern -> [simple_pattern,]
+poly_type -> [DOT,core_type,typevar_list,]
+primitive_declaration -> [STRING,primitive_declaration,]
+rec_flag -> [REC,]
+record_expr -> [WITH,lbl_expr_list,simple_expr,]
+row_field -> [simple_core_type,tag_field,]
+row_field_list -> [BAR,row_field,row_field_list,]
+seq_expr -> [%prec,SEMI,below_SEMI,expr,seq_expr,]
+signature -> [SEMISEMI,signature,signature_item,]
+signature_item -> [COLON,EQUAL,EXTERNAL,MODULE,TYPE,UIDENT,VAL,core_type,ident,mod_longident,open_statement,primitive_declaration,type_declarations,val_ident,]
+simple_core_type -> [%prec,LPAREN,RPAREN,below_SHARP,core_type_comma_list,simple_core_type2,]
+simple_core_type2 -> [BAR,GREATER,LBRACKET,LBRACKETGREATER,LBRACKETLESS,LESS,LPAREN,MODULE,QUOTE,RBRACKET,RPAREN,UNDERSCORE,core_type_comma_list,ident,meth_list,name_tag_list,opt_bar,package_type,row_field,row_field_list,simple_core_type2,tag_field,type_longident,]
+simple_core_type_or_tuple -> [%prec,STAR,below_LBRACKETAT,core_type_list,simple_core_type,]
+simple_expr -> [%prec,BANG,BARRBRACKET,BEGIN,DOT,END,GREATERRBRACE,LBRACE,LBRACELESS,LBRACKET,LBRACKETBAR,LPAREN,PREFIXOP,RBRACE,RBRACKET,RPAREN,SHARP,constant,constr_longident,expr,expr_semi_list,field_expr_list,label,label_longident,mod_longident,name_tag,opt_semi,prec_constant_constructor,record_expr,seq_expr,simple_expr,type_constraint,val_longident,]
+simple_labeled_expr_list -> [labeled_simple_expr,simple_labeled_expr_list,]
+simple_pattern -> [%prec,below_EQUAL,val_ident,]
+strict_binding -> [EQUAL,LIDENT,LPAREN,RPAREN,TYPE,fun_binding,seq_expr,]
+structure -> [seq_expr,structure_tail,]
+structure_item -> [COLON,EQUAL,EXTERNAL,LET,MODULE,TYPE,core_type,ident,let_bindings,open_statement,primitive_declaration,rec_flag,type_declarations,val_ident,]
+structure_tail -> [SEMISEMI,structure,structure_item,structure_tail,]
+subtractive -> [MINUS,MINUSDOT,]
+tag_field -> [OF,amper_type_list,name_tag,opt_ampersand,]
+top_structure -> [seq_expr,top_structure_tail,]
+top_structure_tail -> [structure_item,top_structure_tail,]
+toplevel_phrase -> [EOF,SEMISEMI,top_structure,]
+type_constraint -> [COLON,COLONGREATER,core_type,]
+type_declaration -> [LIDENT,constraints,optional_type_parameters,type_kind,]
+type_declarations -> [AND,type_declaration,type_declarations,]
+type_kind -> [DOTDOT,EQUAL,constructor_declarations,core_type,]
+type_longident -> [DOT,LIDENT,mod_ext_longident,]
+type_parameter -> [type_variable,type_variance,]
+type_parameter_list -> [COMMA,type_parameter,type_parameter_list,]
+type_parameters -> [LPAREN,RPAREN,type_parameter,type_parameter_list,]
+type_variable -> [QUOTE,ident,]
+type_variance -> [MINUS,PLUS,]
+typevar_list -> [QUOTE,ident,typevar_list,]
+use_file -> [seq_expr,use_file_tail,]
+use_file_tail -> [EOF,SEMISEMI,seq_expr,structure_item,use_file_tail,]
+val_ident -> [LIDENT,LPAREN,RPAREN,operator,]
+val_longident -> [DOT,mod_longident,val_ident,]
+with_constraint -> [COLONEQUAL,EQUAL,MODULE,TYPE,UIDENT,constraints,core_type,label,label_longident,mod_ext_longident,mod_longident,type_parameters,with_type_binder,]
+with_constraints -> [AND,with_constraint,with_constraints,]
+with_type_binder -> [EQUAL,]
+
+scc
+rg=
+%prec -> [constr_longident,core_type_list,expr,label_expr,labeled_simple_expr,seq_expr,simple_core_type,simple_core_type_or_tuple,simple_expr,simple_pattern,]
+AMPERAMPER -> [expr,operator,]
+AMPERSAND -> [amper_type_list,expr,operator,opt_ampersand,]
+AND -> [let_bindings,package_type_cstrs,type_declarations,with_constraints,]
+AS -> [core_type,]
+ASSERT -> [expr,]
+BACKQUOTE -> [name_tag,]
+BANG -> [operator,override_flag,simple_expr,]
+BAR -> [constructor_declarations,match_cases,opt_bar,row_field_list,simple_core_type2,]
+BARBAR -> [expr,operator,]
+BARRBRACKET -> [simple_expr,]
+BEGIN -> [simple_expr,]
+CHAR -> [constant,]
+COLON -> [core_type2,field,generalized_constructor_arguments,let_binding_,signature_item,structure_item,type_constraint,]
+COLONCOLON -> [constr_ident,expr,]
+COLONEQUAL -> [expr,operator,with_constraint,]
+COLONGREATER -> [type_constraint,]
+COMMA -> [core_type_comma_list,expr,expr_comma_list,optional_type_parameter_list,type_parameter_list,]
+CONSTRAINT -> [constraints,]
+DO -> [expr,]
+DONE -> [expr,]
+DOT -> [expr,label_longident,let_binding_,mod_ext_longident,mod_longident,mty_longident,poly_type,simple_expr,type_longident,val_longident,]
+DOTDOT -> [meth_list,type_kind,]
+DOWNTO -> [direction_flag,]
+ELSE -> [expr,]
+END -> [simple_expr,]
+EOF -> [implementation,interface,parse_core_type,parse_expression,parse_pattern,toplevel_phrase,use_file_tail,]
+EQUAL -> [constrain,expr,field_expr_list,fun_binding,lbl_expr,let_binding_,operator,package_type_cstr,signature_item,strict_binding,structure_item,type_kind,with_constraint,with_type_binder,]
+EXTERNAL -> [signature_item,structure_item,]
+FALSE -> [constr_ident,constr_longident,]
+FLOAT -> [constant,]
+FOR -> [expr,]
+FUN -> [expr,]
+FUNCTION -> [expr,]
+GREATER -> [expr,operator,simple_core_type2,]
+GREATERRBRACE -> [simple_expr,]
+IF -> [expr,]
+IN -> [expr,]
+INFIXOP0 -> [expr,operator,]
+INFIXOP1 -> [expr,operator,]
+INFIXOP2 -> [expr,operator,]
+INFIXOP3 -> [expr,operator,]
+INFIXOP4 -> [expr,operator,]
+INT -> [constant,]
+INT32 -> [constant,]
+INT64 -> [constant,]
+LABEL -> [label_expr,]
+LBRACE -> [expr,simple_expr,]
+LBRACELESS -> [simple_expr,]
+LBRACKET -> [constr_longident,expr,simple_core_type2,simple_expr,]
+LBRACKETBAR -> [simple_expr,]
+LBRACKETGREATER -> [simple_core_type2,]
+LBRACKETLESS -> [simple_core_type2,]
+LESS -> [expr,operator,simple_core_type2,]
+LESSMINUS -> [expr,]
+LET -> [expr,structure_item,]
+LIDENT -> [core_type2,expr,fun_def,ident,label,label_ident,label_longident,lident_list,strict_binding,type_declaration,type_longident,val_ident,]
+LPAREN -> [constr_ident,constr_longident,expr,fun_def,functor_arg,mod_ext_longident,optional_type_parameters,simple_core_type,simple_core_type2,simple_expr,strict_binding,type_parameters,val_ident,]
+MATCH -> [expr,]
+MINUS -> [expr,operator,subtractive,type_variance,]
+MINUSDOT -> [expr,operator,subtractive,]
+MINUSGREATER -> [core_type2,fun_def,generalized_constructor_arguments,match_case,]
+MODULE -> [signature_item,simple_core_type2,structure_item,with_constraint,]
+NATIVEINT -> [constant,]
+OF -> [generalized_constructor_arguments,tag_field,]
+OPEN -> [expr,open_statement,]
+OPTLABEL -> [core_type2,label_expr,]
+OR -> [expr,operator,]
+PERCENT -> [expr,operator,]
+PLUS -> [additive,expr,operator,type_variance,]
+PLUSDOT -> [additive,expr,operator,]
+PLUSEQ -> [expr,operator,]
+PREFIXOP -> [operator,simple_expr,]
+QUESTION -> [core_type2,label_expr,]
+QUOTE -> [core_type,optional_type_variable,simple_core_type2,type_variable,typevar_list,]
+RBRACE -> [expr,simple_expr,]
+RBRACKET -> [constr_longident,expr,simple_core_type2,simple_expr,]
+REC -> [rec_flag,]
+RPAREN -> [constr_ident,constr_longident,expr,fun_def,functor_arg,mod_ext_longident,optional_type_parameters,simple_core_type,simple_core_type2,simple_expr,strict_binding,type_parameters,val_ident,]
+SEMI -> [expr_semi_list,field_expr_list,lbl_expr_list,meth_list,opt_semi,seq_expr,]
+SEMISEMI -> [signature,structure_tail,toplevel_phrase,use_file_tail,]
+SHARP -> [simple_expr,]
+STAR -> [core_type_list,expr,operator,simple_core_type_or_tuple,]
+STRING -> [constant,primitive_declaration,]
+THEN -> [expr,]
+TILDE -> [label_expr,]
+TO -> [direction_flag,]
+TRUE -> [constr_ident,constr_longident,]
+TRY -> [expr,]
+TYPE -> [expr,fun_def,let_binding_,package_type_cstr,signature_item,strict_binding,structure_item,with_constraint,]
+UIDENT -> [constr_ident,ident,mod_ext_longident,mod_longident,signature_item,with_constraint,]
+UNDERSCORE -> [optional_type_variable,simple_core_type2,]
+VAL -> [signature_item,]
+WHEN -> [match_case,]
+WHILE -> [expr,]
+WITH -> [expr,package_type,record_expr,]
+additive -> [expr,]
+amper_type_list -> [amper_type_list,tag_field,]
+below_COMMA -> [expr,]
+below_DOT -> [constr_longident,]
+below_EQUAL -> [simple_pattern,]
+below_LBRACKETAT -> [core_type_list,simple_core_type_or_tuple,]
+below_SEMI -> [seq_expr,]
+below_SHARP -> [expr,label_expr,labeled_simple_expr,simple_core_type,]
+constant -> [simple_expr,]
+constr_ident -> [constructor_declaration,]
+constr_longident -> [expr,simple_expr,]
+constrain -> [constraints,]
+constraints -> [constraints,type_declaration,with_constraint,]
+constructor_declaration -> [constructor_declarations,]
+constructor_declarations -> [constructor_declarations,type_kind,]
+core_type -> [amper_type_list,constrain,core_type_comma_list,let_binding_,package_type_cstr,parse_core_type,poly_type,signature_item,structure_item,type_constraint,type_kind,with_constraint,]
+core_type2 -> [core_type,core_type2,]
+core_type_comma_list -> [core_type_comma_list,simple_core_type,simple_core_type2,]
+core_type_list -> [core_type_list,generalized_constructor_arguments,simple_core_type_or_tuple,]
+direction_flag -> [expr,]
+expr -> [expr,expr_comma_list,expr_semi_list,field_expr_list,lbl_expr,seq_expr,simple_expr,]
+expr_comma_list -> [expr,expr_comma_list,]
+expr_semi_list -> [expr_semi_list,simple_expr,]
+field -> [meth_list,]
+field_expr_list -> [field_expr_list,simple_expr,]
+fun_binding -> [let_binding_,strict_binding,]
+fun_def -> [expr,fun_def,]
+functor_arg -> [functor_args,]
+functor_args -> [functor_args,]
+generalized_constructor_arguments -> [constructor_declaration,]
+ident -> [core_type,mty_longident,name_tag,optional_type_variable,signature_item,simple_core_type2,structure_item,type_variable,typevar_list,]
+implementation -> []
+interface -> []
+label -> [expr,field,field_expr_list,simple_expr,with_constraint,]
+label_expr -> [labeled_simple_expr,]
+label_ident -> [label_expr,]
+label_longident -> [expr,lbl_expr,package_type_cstr,simple_expr,with_constraint,]
+labeled_simple_expr -> [simple_labeled_expr_list,]
+lbl_expr -> [lbl_expr_list,]
+lbl_expr_list -> [lbl_expr_list,record_expr,]
+let_binding -> [let_bindings,]
+let_binding_ -> [let_binding,]
+let_bindings -> [let_bindings,let_bindings_no_attrs,structure_item,]
+let_bindings_no_attrs -> [expr,]
+lident_list -> [let_binding_,lident_list,]
+match_case -> [match_cases,]
+match_cases -> [expr,match_cases,]
+meth_list -> [meth_list,simple_core_type2,]
+mod_ext_longident -> [mod_ext_longident,mty_longident,type_longident,with_constraint,]
+mod_longident -> [constr_longident,expr,label_longident,mod_longident,open_statement,signature_item,simple_expr,val_longident,with_constraint,]
+mty_longident -> [package_type,]
+name_tag -> [expr,name_tag_list,simple_expr,tag_field,]
+name_tag_list -> [name_tag_list,simple_core_type2,]
+open_statement -> [signature_item,structure_item,]
+operator -> [val_ident,]
+opt_ampersand -> [tag_field,]
+opt_bar -> [expr,simple_core_type2,]
+opt_semi -> [meth_list,simple_expr,]
+optional_type_parameter -> [optional_type_parameter_list,optional_type_parameters,]
+optional_type_parameter_list -> [optional_type_parameter_list,optional_type_parameters,]
+optional_type_parameters -> [type_declaration,]
+optional_type_variable -> [optional_type_parameter,]
+override_flag -> [expr,open_statement,]
+package_type -> [simple_core_type2,]
+package_type_cstr -> [package_type_cstrs,]
+package_type_cstrs -> [package_type,package_type_cstrs,]
+parse_core_type -> []
+parse_expression -> []
+parse_pattern -> []
+pattern -> [expr,let_binding_,match_case,parse_pattern,]
+poly_type -> [field,]
+prec_constant_constructor -> [simple_expr,]
+prec_unary_minus -> [expr,]
+prec_unary_plus -> [expr,]
+primitive_declaration -> [primitive_declaration,signature_item,structure_item,]
+rec_flag -> [expr,structure_item,]
+record_expr -> [simple_expr,]
+row_field -> [row_field_list,simple_core_type2,]
+row_field_list -> [row_field_list,simple_core_type2,]
+seq_expr -> [expr,fun_binding,fun_def,let_binding_,match_case,parse_expression,seq_expr,simple_expr,strict_binding,structure,top_structure,use_file,use_file_tail,]
+signature -> [interface,signature,]
+signature_item -> [signature,]
+simple_core_type -> [core_type_list,generalized_constructor_arguments,row_field,simple_core_type_or_tuple,]
+simple_core_type2 -> [simple_core_type,simple_core_type2,]
+simple_core_type_or_tuple -> [core_type2,]
+simple_expr -> [expr,label_expr,labeled_simple_expr,record_expr,simple_expr,]
+simple_labeled_expr_list -> [expr,simple_labeled_expr_list,]
+simple_pattern -> [pattern,]
+strict_binding -> [fun_binding,]
+structure -> [implementation,structure_tail,]
+structure_item -> [structure_tail,top_structure_tail,use_file_tail,]
+structure_tail -> [structure,structure_tail,]
+subtractive -> [expr,]
+tag_field -> [row_field,simple_core_type2,]
+top_structure -> [toplevel_phrase,]
+top_structure_tail -> [top_structure,top_structure_tail,]
+toplevel_phrase -> []
+type_constraint -> [fun_binding,simple_expr,]
+type_declaration -> [type_declarations,]
+type_declarations -> [signature_item,structure_item,type_declarations,]
+type_kind -> [type_declaration,]
+type_longident -> [simple_core_type2,]
+type_parameter -> [type_parameter_list,type_parameters,]
+type_parameter_list -> [type_parameter_list,type_parameters,]
+type_parameters -> [with_constraint,]
+type_variable -> [type_parameter,]
+type_variance -> [optional_type_parameter,type_parameter,]
+typevar_list -> [let_binding_,poly_type,typevar_list,]
+use_file -> []
+use_file_tail -> [use_file,use_file_tail,]
+val_ident -> [let_binding_,signature_item,simple_pattern,structure_item,val_longident,]
+val_longident -> [simple_expr,]
+with_constraint -> [with_constraints,]
+with_constraints -> [with_constraints,]
+with_type_binder -> [with_constraint,]
+
+vs=with_constraints,with_constraint,with_type_binder,use_file,use_file_tail,type_parameters,type_parameter_list,type_parameter,type_variable,toplevel_phrase,top_structure,top_structure_tail,parse_pattern,parse_expression,parse_core_type,interface,signature,signature_item,implementation,structure,structure_tail,structure_item,type_declarations,type_declaration,type_kind,optional_type_parameters,optional_type_parameter_list,optional_type_parameter,type_variance,optional_type_variable,primitive_declaration,open_statement,functor_args,functor_arg,expr,subtractive,simple_labeled_expr_list,labeled_simple_expr,label_expr,label_ident,simple_expr,val_longident,record_expr,lbl_expr_list,lbl_expr,field_expr_list,expr_semi_list,rec_flag,override_flag,match_cases,match_case,let_bindings_no_attrs,let_bindings,let_binding,let_binding_,pattern,simple_pattern,val_ident,operator,lident_list,fun_binding,type_constraint,strict_binding,fun_def,seq_expr,expr_comma_list,direction_flag,constructor_declarations,constructor_declaration,generalized_constructor_arguments,constraints,constrain,constr_longident,constr_ident,constant,amper_type_list,core_type,core_type2,simple_core_type_or_tuple,core_type_list,simple_core_type,simple_core_type2,type_longident,row_field_list,row_field,tag_field,opt_ampersand,package_type,package_type_cstrs,package_type_cstr,label_longident,mod_longident,mty_longident,mod_ext_longident,opt_bar,name_tag_list,name_tag,meth_list,opt_semi,field,poly_type,typevar_list,label,ident,core_type_comma_list,additive,
+with_constraints,
+with_constraint,
+with_type_binder,
+use_file,
+use_file_tail,
+type_parameters,
+type_parameter_list,
+type_parameter,
+type_variable,
+toplevel_phrase,
+top_structure,
+top_structure_tail,
+parse_pattern,
+parse_expression,
+parse_core_type,
+interface,
+signature,
+signature_item,
+implementation,
+structure_tail,structure,
+structure_item,
+type_declarations,
+type_declaration,
+type_kind,
+optional_type_parameters,
+optional_type_parameter_list,
+optional_type_parameter,
+type_variance,
+optional_type_variable,
+primitive_declaration,
+open_statement,
+functor_args,
+functor_arg,
+match_cases,match_case,fun_def,strict_binding,let_bindings_no_attrs,let_bindings,let_binding,let_binding_,fun_binding,seq_expr,lbl_expr_list,lbl_expr,field_expr_list,record_expr,simple_labeled_expr_list,labeled_simple_expr,label_expr,simple_expr,expr_semi_list,expr_comma_list,expr,
+subtractive,
+label_ident,
+val_longident,
+rec_flag,
+override_flag,
+pattern,
+simple_pattern,
+val_ident,
+operator,
+lident_list,
+type_constraint,
+direction_flag,
+constructor_declarations,
+constructor_declaration,
+generalized_constructor_arguments,
+constraints,
+constrain,
+constr_longident,
+constr_ident,
+constant,
+meth_list,field,poly_type,package_type,package_type_cstrs,package_type_cstr,core_type_comma_list,core_type,core_type2,simple_core_type_or_tuple,core_type_list,simple_core_type,simple_core_type2,row_field_list,row_field,tag_field,amper_type_list,
+type_longident,
+opt_ampersand,
+label_longident,
+mod_longident,
+mty_longident,
+mod_ext_longident,
+opt_bar,
+name_tag_list,
+name_tag,
+opt_semi,
+typevar_list,
+label,
+ident,
+additive,
+depends[additive;ident;label;typevar_list;opt_semi;name_tag;name_tag_list;opt_bar;mod_ext_longident;mod_longident;label_longident;opt_ampersand;type_longident;amper_type_list;tag_field;row_field;row_field_list;simple_core_type2;simple_core_type;core_type_list;simple_core_type_or_tuple;core_type2;core_type;constant;constr_ident;constr_longident;constrain;constraints;generalized_constructor_arguments;constructor_declaration;constructor_declarations;direction_flag;type_constraint;lident_list;operator;val_ident;simple_pattern;pattern;override_flag;rec_flag;val_longident;label_ident;subtractive;expr;expr_comma_list;expr_semi_list;simple_expr;label_expr;labeled_simple_expr;simple_labeled_expr_list;record_expr;field_expr_list;lbl_expr;lbl_expr_list;seq_expr;fun_binding;let_binding_;let_binding;let_bindings;open_statement;primitive_declaration;optional_type_variable;type_variance;optional_type_parameter;optional_type_parameter_list;optional_type_parameters;type_kind;type_declaration;type_declarations;structure_item;structure;signature_item;signature;top_structure_tail;top_structure;use_file_tail;parse_pattern;parse_expression;parse_core_type;use_file;toplevel_phrase;interface;implementation;] len=83
+nouse[core_type_comma_list;field;fun_def;functor_arg;functor_args;let_bindings_no_attrs;match_case;match_cases;meth_list;mty_longident;package_type;package_type_cstr;package_type_cstrs;poly_type;strict_binding;structure_tail;type_parameter;type_parameter_list;type_parameters;type_variable;with_constraint;with_constraints;with_type_binder;] len=23
