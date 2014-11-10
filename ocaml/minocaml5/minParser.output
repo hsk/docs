@@ -1,0 +1,7229 @@
+   0  $accept : %entry% $end
+
+   1  implementation : structure EOF
+
+   2  interface : signature EOF
+
+   3  toplevel_phrase : top_structure SEMISEMI
+   4                  | EOF
+
+   5  top_structure : seq_expr
+   6                | top_structure_tail
+
+   7  top_structure_tail :
+   8                     | structure_item top_structure_tail
+
+   9  use_file : use_file_tail
+  10           | seq_expr use_file_tail
+
+  11  use_file_tail : EOF
+  12                | SEMISEMI EOF
+  13                | SEMISEMI seq_expr use_file_tail
+  14                | SEMISEMI structure_item use_file_tail
+  15                | structure_item use_file_tail
+
+  16  parse_core_type : core_type EOF
+
+  17  parse_expression : seq_expr EOF
+
+  18  parse_pattern : pattern EOF
+
+  19  structure : seq_expr structure_tail
+  20            | structure_tail
+
+  21  structure_tail :
+  22                 | SEMISEMI structure
+  23                 | structure_item structure_tail
+
+  24  structure_item : LET rec_flag let_bindings
+  25                 | open_statement
+
+  26  signature :
+  27            | SEMISEMI signature
+  28            | signature_item signature
+
+  29  signature_item : VAL val_ident COLON core_type
+  30                 | open_statement
+
+  31  open_statement : OPEN mod_longident
+
+  32  seq_expr : expr
+  33           | expr SEMI
+  34           | expr SEMI seq_expr
+
+  35  labeled_simple_pattern : LABEL simple_pattern
+  36                         | simple_pattern
+
+  37  expr : simple_expr
+  38       | simple_expr simple_labeled_expr_list
+  39       | LET rec_flag let_bindings_no_attrs IN seq_expr
+  40       | FUN labeled_simple_pattern fun_def
+  41       | expr_comma_list
+  42       | constr_longident simple_expr
+  43       | IF seq_expr THEN expr ELSE expr
+  44       | IF seq_expr THEN expr
+  45       | expr INFIXOP0 expr
+  46       | expr INFIXOP1 expr
+  47       | expr INFIXOP2 expr
+  48       | expr INFIXOP3 expr
+  49       | expr INFIXOP4 expr
+  50       | expr PLUS expr
+  51       | expr PLUSDOT expr
+  52       | expr PLUSEQ expr
+  53       | expr MINUS expr
+  54       | expr MINUSDOT expr
+  55       | expr STAR expr
+  56       | expr PERCENT expr
+  57       | expr EQUAL expr
+  58       | expr LESS expr
+  59       | expr GREATER expr
+  60       | expr OR expr
+  61       | expr BARBAR expr
+  62       | expr AMPERSAND expr
+  63       | expr AMPERAMPER expr
+  64       | expr COLONEQUAL expr
+  65       | subtractive expr
+  66       | additive expr
+  67       | simple_expr DOT label_longident LESSMINUS expr
+  68       | simple_expr DOT LPAREN seq_expr RPAREN LESSMINUS expr
+  69       | label LESSMINUS expr
+  70       | ASSERT simple_expr
+
+  71  simple_expr : val_longident
+  72              | constant
+  73              | constr_longident
+  74              | LPAREN seq_expr RPAREN
+  75              | BEGIN seq_expr END
+  76              | BEGIN END
+  77              | LPAREN seq_expr type_constraint RPAREN
+  78              | simple_expr DOT label_longident
+  79              | mod_longident DOT LPAREN seq_expr RPAREN
+  80              | simple_expr DOT LPAREN seq_expr RPAREN
+  81              | PREFIXOP simple_expr
+  82              | BANG simple_expr
+
+  83  simple_labeled_expr_list : labeled_simple_expr
+  84                           | simple_labeled_expr_list labeled_simple_expr
+
+  85  labeled_simple_expr : simple_expr
+  86                      | label_expr
+
+  87  label_expr : LABEL simple_expr
+  88             | TILDE label_ident
+
+  89  label_ident : LIDENT
+
+  90  let_bindings : let_binding
+  91               | let_bindings AND let_binding
+
+  92  let_bindings_no_attrs : let_bindings
+
+  93  let_binding : let_binding_
+
+  94  let_binding_ : val_ident fun_binding
+  95               | pattern EQUAL seq_expr
+  96               | simple_pattern_not_ident COLON core_type EQUAL seq_expr
+
+  97  fun_binding : strict_binding
+  98              | type_constraint EQUAL seq_expr
+
+  99  strict_binding : EQUAL seq_expr
+ 100                 | labeled_simple_pattern fun_binding
+
+ 101  fun_def : MINUSGREATER seq_expr
+ 102          | labeled_simple_pattern fun_def
+
+ 103  expr_comma_list : expr_comma_list COMMA expr
+ 104                  | expr COMMA expr
+
+ 105  type_constraint : COLON core_type
+ 106                  | COLON core_type COLONGREATER core_type
+ 107                  | COLONGREATER core_type
+
+ 108  pattern : simple_pattern
+ 109          | pattern AS val_ident
+ 110          | pattern_comma_list
+ 111          | constr_longident pattern
+ 112          | pattern BAR pattern
+ 113          | EXCEPTION pattern
+
+ 114  simple_pattern : val_ident
+ 115                 | simple_pattern_not_ident
+
+ 116  simple_pattern_not_ident : UNDERSCORE
+ 117                           | signed_constant
+ 118                           | signed_constant DOTDOT signed_constant
+ 119                           | constr_longident
+ 120                           | LBRACE lbl_pattern_list RBRACE
+ 121                           | LPAREN pattern RPAREN
+ 122                           | LPAREN pattern COLON core_type RPAREN
+
+ 123  pattern_comma_list : pattern_comma_list COMMA pattern
+ 124                     | pattern COMMA pattern
+
+ 125  lbl_pattern_list : lbl_pattern
+ 126                   | lbl_pattern SEMI
+ 127                   | lbl_pattern SEMI UNDERSCORE opt_semi
+ 128                   | lbl_pattern SEMI lbl_pattern_list
+
+ 129  lbl_pattern : label_longident EQUAL pattern
+ 130              | label_longident
+
+ 131  core_type : core_type2
+
+ 132  core_type2 : simple_core_type_or_tuple
+ 133             | LIDENT COLON core_type2 MINUSGREATER core_type2
+ 134             | core_type2 MINUSGREATER core_type2
+
+ 135  simple_core_type : simple_core_type2
+ 136                   | LPAREN core_type_comma_list RPAREN
+
+ 137  simple_core_type2 : UNDERSCORE
+ 138                    | type_longident
+ 139                    | simple_core_type2 type_longident
+ 140                    | LPAREN core_type_comma_list RPAREN type_longident
+
+ 141  simple_core_type_or_tuple : simple_core_type
+ 142                            | simple_core_type STAR core_type_list
+
+ 143  core_type_comma_list : core_type
+ 144                       | core_type_comma_list COMMA core_type
+
+ 145  core_type_list : simple_core_type
+ 146                 | core_type_list STAR simple_core_type
+
+ 147  label : LIDENT
+
+ 148  constant : INT
+ 149           | CHAR
+ 150           | STRING
+ 151           | FLOAT
+
+ 152  signed_constant : constant
+ 153                  | MINUS INT
+ 154                  | MINUS FLOAT
+ 155                  | PLUS INT
+ 156                  | PLUS FLOAT
+
+ 157  val_ident : LIDENT
+
+ 158  val_longident : val_ident
+ 159                | mod_longident DOT val_ident
+
+ 160  constr_longident : mod_longident
+ 161                   | LPAREN RPAREN
+ 162                   | FALSE
+ 163                   | TRUE
+
+ 164  label_longident : LIDENT
+ 165                  | mod_longident DOT LIDENT
+
+ 166  type_longident : LIDENT
+ 167                 | mod_ext_longident DOT LIDENT
+
+ 168  mod_longident : UIDENT
+ 169                | mod_longident DOT UIDENT
+
+ 170  mod_ext_longident : UIDENT
+ 171                    | mod_ext_longident DOT UIDENT
+ 172                    | mod_ext_longident LPAREN mod_ext_longident RPAREN
+
+ 173  rec_flag :
+ 174           | REC
+
+ 175  opt_semi :
+ 176           | SEMI
+
+ 177  subtractive : MINUS
+ 178              | MINUSDOT
+
+ 179  additive : PLUS
+ 180           | PLUSDOT
+
+ 181  %entry% : '\001' implementation
+ 182          | '\002' interface
+ 183          | '\003' toplevel_phrase
+ 184          | '\004' use_file
+ 185          | '\005' parse_core_type
+ 186          | '\006' parse_expression
+ 187          | '\007' parse_pattern
+
+state 0
+	$accept : . %entry% $end  (0)
+
+	'\001'  shift 1
+	'\002'  shift 2
+	'\003'  shift 3
+	'\004'  shift 4
+	'\005'  shift 5
+	'\006'  shift 6
+	'\007'  shift 7
+	.  error
+
+	%entry%  goto 8
+
+
+state 1
+	%entry% : '\001' . implementation  (181)
+	structure_tail : .  (21)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 18
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	OPEN  shift 23
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	SEMISEMI  shift 27
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	EOF  reduce 21
+
+	implementation  goto 31
+	structure  goto 32
+	seq_expr  goto 33
+	structure_item  goto 34
+	structure_tail  goto 35
+	open_statement  goto 36
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 39
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 2
+	%entry% : '\002' . interface  (182)
+	signature : .  (26)
+
+	OPEN  shift 23
+	SEMISEMI  shift 48
+	VAL  shift 49
+	EOF  reduce 26
+
+	interface  goto 50
+	signature  goto 51
+	open_statement  goto 52
+	signature_item  goto 53
+
+
+state 3
+	%entry% : '\003' . toplevel_phrase  (183)
+	top_structure_tail : .  (7)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	EOF  shift 54
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 18
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	OPEN  shift 23
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	SEMISEMI  reduce 7
+
+	toplevel_phrase  goto 55
+	top_structure  goto 56
+	seq_expr  goto 57
+	top_structure_tail  goto 58
+	structure_item  goto 59
+	open_statement  goto 36
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 39
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 4
+	%entry% : '\004' . use_file  (184)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	EOF  shift 60
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 18
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	OPEN  shift 23
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	SEMISEMI  shift 61
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	use_file  goto 62
+	seq_expr  goto 63
+	structure_item  goto 64
+	use_file_tail  goto 65
+	open_statement  goto 36
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 39
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 5
+	%entry% : '\005' . parse_core_type  (185)
+
+	LIDENT  shift 66
+	LPAREN  shift 67
+	UIDENT  shift 68
+	UNDERSCORE  shift 69
+	.  error
+
+	parse_core_type  goto 70
+	core_type  goto 71
+	core_type2  goto 72
+	simple_core_type_or_tuple  goto 73
+	simple_core_type  goto 74
+	simple_core_type2  goto 75
+	type_longident  goto 76
+	mod_ext_longident  goto 77
+
+
+state 6
+	%entry% : '\006' . parse_expression  (186)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	parse_expression  goto 79
+	seq_expr  goto 80
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 39
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 7
+	%entry% : '\007' . parse_pattern  (187)
+
+	CHAR  shift 12
+	EXCEPTION  shift 81
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LBRACE  shift 82
+	LIDENT  shift 83
+	LPAREN  shift 84
+	MINUS  shift 85
+	PLUS  shift 86
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	UNDERSCORE  shift 87
+	.  error
+
+	parse_pattern  goto 88
+	pattern  goto 89
+	val_ident  goto 90
+	mod_longident  goto 91
+	simple_pattern  goto 92
+	constr_longident  goto 93
+	constant  goto 94
+	simple_pattern_not_ident  goto 95
+	pattern_comma_list  goto 96
+	signed_constant  goto 97
+
+
+state 8
+	$accept : %entry% . $end  (0)
+
+	$end  accept
+
+
+state 9
+	expr : ASSERT . simple_expr  (70)
+
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LIDENT  shift 83
+	LPAREN  shift 20
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	simple_expr  goto 98
+	constr_longident  goto 99
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 10
+	simple_expr : BANG . simple_expr  (82)
+
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LIDENT  shift 83
+	LPAREN  shift 20
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	simple_expr  goto 100
+	constr_longident  goto 99
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 11
+	simple_expr : BEGIN . seq_expr END  (75)
+	simple_expr : BEGIN . END  (76)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	END  shift 101
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	seq_expr  goto 102
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 39
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 12
+	constant : CHAR .  (149)
+
+	.  reduce 149
+
+
+state 13
+	constr_longident : FALSE .  (162)
+
+	.  reduce 162
+
+
+state 14
+	constant : FLOAT .  (151)
+
+	.  reduce 151
+
+
+state 15
+	expr : FUN . labeled_simple_pattern fun_def  (40)
+
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LABEL  shift 103
+	LBRACE  shift 82
+	LIDENT  shift 83
+	LPAREN  shift 84
+	MINUS  shift 85
+	PLUS  shift 86
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	UNDERSCORE  shift 87
+	.  error
+
+	val_ident  goto 90
+	mod_longident  goto 91
+	labeled_simple_pattern  goto 104
+	simple_pattern  goto 105
+	constr_longident  goto 106
+	constant  goto 94
+	simple_pattern_not_ident  goto 95
+	signed_constant  goto 97
+
+
+state 16
+	expr : IF . seq_expr THEN expr ELSE expr  (43)
+	expr : IF . seq_expr THEN expr  (44)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	seq_expr  goto 107
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 39
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 17
+	constant : INT .  (148)
+
+	.  reduce 148
+
+
+state 18
+	structure_item : LET . rec_flag let_bindings  (24)
+	expr : LET . rec_flag let_bindings_no_attrs IN seq_expr  (39)
+	rec_flag : .  (173)
+
+	REC  shift 108
+	CHAR  reduce 173
+	EXCEPTION  reduce 173
+	FALSE  reduce 173
+	FLOAT  reduce 173
+	INT  reduce 173
+	LBRACE  reduce 173
+	LIDENT  reduce 173
+	LPAREN  reduce 173
+	MINUS  reduce 173
+	PLUS  reduce 173
+	STRING  reduce 173
+	TRUE  reduce 173
+	UIDENT  reduce 173
+	UNDERSCORE  reduce 173
+
+	rec_flag  goto 109
+
+
+state 19
+	label : LIDENT .  (147)
+	val_ident : LIDENT .  (157)
+
+	AMPERAMPER  reduce 157
+	AMPERSAND  reduce 157
+	AND  reduce 157
+	BANG  reduce 157
+	BARBAR  reduce 157
+	BEGIN  reduce 157
+	CHAR  reduce 157
+	COLON  reduce 157
+	COLONEQUAL  reduce 157
+	COLONGREATER  reduce 157
+	COMMA  reduce 157
+	DOT  reduce 157
+	ELSE  reduce 157
+	END  reduce 157
+	EOF  reduce 157
+	EQUAL  reduce 157
+	FALSE  reduce 157
+	FLOAT  reduce 157
+	GREATER  reduce 157
+	IN  reduce 157
+	INFIXOP0  reduce 157
+	INFIXOP1  reduce 157
+	INFIXOP2  reduce 157
+	INFIXOP3  reduce 157
+	INFIXOP4  reduce 157
+	INT  reduce 157
+	LABEL  reduce 157
+	LESS  reduce 157
+	LESSMINUS  reduce 147
+	LET  reduce 157
+	LIDENT  reduce 157
+	LPAREN  reduce 157
+	MINUS  reduce 157
+	MINUSDOT  reduce 157
+	OPEN  reduce 157
+	OR  reduce 157
+	PERCENT  reduce 157
+	PLUS  reduce 157
+	PLUSDOT  reduce 157
+	PLUSEQ  reduce 157
+	PREFIXOP  reduce 157
+	RPAREN  reduce 157
+	SEMI  reduce 157
+	SEMISEMI  reduce 157
+	STAR  reduce 157
+	STRING  reduce 157
+	THEN  reduce 157
+	TILDE  reduce 157
+	TRUE  reduce 157
+	UIDENT  reduce 157
+
+
+state 20
+	simple_expr : LPAREN . seq_expr RPAREN  (74)
+	simple_expr : LPAREN . seq_expr type_constraint RPAREN  (77)
+	constr_longident : LPAREN . RPAREN  (161)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	RPAREN  shift 110
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	seq_expr  goto 111
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 39
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 21
+	subtractive : MINUS .  (177)
+
+	.  reduce 177
+
+
+state 22
+	subtractive : MINUSDOT .  (178)
+
+	.  reduce 178
+
+
+state 23
+	open_statement : OPEN . mod_longident  (31)
+
+	UIDENT  shift 30
+	.  error
+
+	mod_longident  goto 112
+
+
+state 24
+	additive : PLUS .  (179)
+
+	.  reduce 179
+
+
+state 25
+	additive : PLUSDOT .  (180)
+
+	.  reduce 180
+
+
+state 26
+	simple_expr : PREFIXOP . simple_expr  (81)
+
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LIDENT  shift 83
+	LPAREN  shift 20
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	simple_expr  goto 113
+	constr_longident  goto 99
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 27
+	structure_tail : SEMISEMI . structure  (22)
+	structure_tail : .  (21)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 18
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	OPEN  shift 23
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	SEMISEMI  shift 27
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	EOF  reduce 21
+
+	structure  goto 114
+	seq_expr  goto 33
+	structure_item  goto 34
+	structure_tail  goto 35
+	open_statement  goto 36
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 39
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 28
+	constant : STRING .  (150)
+
+	.  reduce 150
+
+
+state 29
+	constr_longident : TRUE .  (163)
+
+	.  reduce 163
+
+
+state 30
+	mod_longident : UIDENT .  (168)
+
+	.  reduce 168
+
+
+state 31
+	%entry% : '\001' implementation .  (181)
+
+	.  reduce 181
+
+
+state 32
+	implementation : structure . EOF  (1)
+
+	EOF  shift 115
+	.  error
+
+
+state 33
+	structure : seq_expr . structure_tail  (19)
+	structure_tail : .  (21)
+
+	LET  shift 116
+	OPEN  shift 23
+	SEMISEMI  shift 27
+	EOF  reduce 21
+
+	structure_item  goto 34
+	structure_tail  goto 117
+	open_statement  goto 36
+
+
+state 34
+	structure_tail : structure_item . structure_tail  (23)
+	structure_tail : .  (21)
+
+	LET  shift 116
+	OPEN  shift 23
+	SEMISEMI  shift 27
+	EOF  reduce 21
+
+	structure_item  goto 34
+	structure_tail  goto 118
+	open_statement  goto 36
+
+
+state 35
+	structure : structure_tail .  (20)
+
+	.  reduce 20
+
+
+state 36
+	structure_item : open_statement .  (25)
+
+	.  reduce 25
+
+
+state 37
+	val_longident : val_ident .  (158)
+
+	.  reduce 158
+
+
+state 38
+	simple_expr : mod_longident . DOT LPAREN seq_expr RPAREN  (79)
+	val_longident : mod_longident . DOT val_ident  (159)
+	constr_longident : mod_longident .  (160)
+	mod_longident : mod_longident . DOT UIDENT  (169)
+
+	DOT  shift 119
+	AMPERAMPER  reduce 160
+	AMPERSAND  reduce 160
+	AND  reduce 160
+	BANG  reduce 160
+	BARBAR  reduce 160
+	BEGIN  reduce 160
+	CHAR  reduce 160
+	COLON  reduce 160
+	COLONEQUAL  reduce 160
+	COLONGREATER  reduce 160
+	COMMA  reduce 160
+	ELSE  reduce 160
+	END  reduce 160
+	EOF  reduce 160
+	EQUAL  reduce 160
+	FALSE  reduce 160
+	FLOAT  reduce 160
+	GREATER  reduce 160
+	IN  reduce 160
+	INFIXOP0  reduce 160
+	INFIXOP1  reduce 160
+	INFIXOP2  reduce 160
+	INFIXOP3  reduce 160
+	INFIXOP4  reduce 160
+	INT  reduce 160
+	LABEL  reduce 160
+	LESS  reduce 160
+	LET  reduce 160
+	LIDENT  reduce 160
+	LPAREN  reduce 160
+	MINUS  reduce 160
+	MINUSDOT  reduce 160
+	OPEN  reduce 160
+	OR  reduce 160
+	PERCENT  reduce 160
+	PLUS  reduce 160
+	PLUSDOT  reduce 160
+	PLUSEQ  reduce 160
+	PREFIXOP  reduce 160
+	RPAREN  reduce 160
+	SEMI  reduce 160
+	SEMISEMI  reduce 160
+	STAR  reduce 160
+	STRING  reduce 160
+	THEN  reduce 160
+	TILDE  reduce 160
+	TRUE  reduce 160
+	UIDENT  reduce 160
+
+
+state 39
+	seq_expr : expr .  (32)
+	seq_expr : expr . SEMI  (33)
+	seq_expr : expr . SEMI seq_expr  (34)
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	AMPERAMPER  shift 120
+	AMPERSAND  shift 121
+	BARBAR  shift 122
+	COLONEQUAL  shift 123
+	COMMA  shift 124
+	EQUAL  shift 125
+	GREATER  shift 126
+	INFIXOP0  shift 127
+	INFIXOP1  shift 128
+	INFIXOP2  shift 129
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	LESS  shift 132
+	MINUS  shift 133
+	MINUSDOT  shift 134
+	OR  shift 135
+	PERCENT  shift 136
+	PLUS  shift 137
+	PLUSDOT  shift 138
+	PLUSEQ  shift 139
+	SEMI  shift 140
+	STAR  shift 141
+	AND  reduce 32
+	COLON  reduce 32
+	COLONGREATER  reduce 32
+	ELSE  reduce 32
+	END  reduce 32
+	EOF  reduce 32
+	IN  reduce 32
+	LET  reduce 32
+	OPEN  reduce 32
+	RPAREN  reduce 32
+	SEMISEMI  reduce 32
+	THEN  reduce 32
+
+
+state 40
+	expr : simple_expr .  (37)
+	expr : simple_expr . simple_labeled_expr_list  (38)
+	expr : simple_expr . DOT label_longident LESSMINUS expr  (67)
+	expr : simple_expr . DOT LPAREN seq_expr RPAREN LESSMINUS expr  (68)
+	simple_expr : simple_expr . DOT label_longident  (78)
+	simple_expr : simple_expr . DOT LPAREN seq_expr RPAREN  (80)
+
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	DOT  shift 142
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LABEL  shift 143
+	LIDENT  shift 83
+	LPAREN  shift 20
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TILDE  shift 144
+	TRUE  shift 29
+	UIDENT  shift 30
+	AMPERAMPER  reduce 37
+	AMPERSAND  reduce 37
+	AND  reduce 37
+	BARBAR  reduce 37
+	COLON  reduce 37
+	COLONEQUAL  reduce 37
+	COLONGREATER  reduce 37
+	COMMA  reduce 37
+	ELSE  reduce 37
+	END  reduce 37
+	EOF  reduce 37
+	EQUAL  reduce 37
+	GREATER  reduce 37
+	IN  reduce 37
+	INFIXOP0  reduce 37
+	INFIXOP1  reduce 37
+	INFIXOP2  reduce 37
+	INFIXOP3  reduce 37
+	INFIXOP4  reduce 37
+	LESS  reduce 37
+	LET  reduce 37
+	MINUS  reduce 37
+	MINUSDOT  reduce 37
+	OPEN  reduce 37
+	OR  reduce 37
+	PERCENT  reduce 37
+	PLUS  reduce 37
+	PLUSDOT  reduce 37
+	PLUSEQ  reduce 37
+	RPAREN  reduce 37
+	SEMI  reduce 37
+	SEMISEMI  reduce 37
+	STAR  reduce 37
+	THEN  reduce 37
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	simple_expr  goto 145
+	simple_labeled_expr_list  goto 146
+	constr_longident  goto 99
+	val_longident  goto 46
+	constant  goto 47
+	labeled_simple_expr  goto 147
+	label_expr  goto 148
+
+
+state 41
+	expr : expr_comma_list .  (41)
+	expr_comma_list : expr_comma_list . COMMA expr  (103)
+
+	COMMA  shift 149
+	AMPERAMPER  reduce 41
+	AMPERSAND  reduce 41
+	AND  reduce 41
+	BARBAR  reduce 41
+	COLON  reduce 41
+	COLONEQUAL  reduce 41
+	COLONGREATER  reduce 41
+	ELSE  reduce 41
+	END  reduce 41
+	EOF  reduce 41
+	EQUAL  reduce 41
+	GREATER  reduce 41
+	IN  reduce 41
+	INFIXOP0  reduce 41
+	INFIXOP1  reduce 41
+	INFIXOP2  reduce 41
+	INFIXOP3  reduce 41
+	INFIXOP4  reduce 41
+	LESS  reduce 41
+	LET  reduce 41
+	MINUS  reduce 41
+	MINUSDOT  reduce 41
+	OPEN  reduce 41
+	OR  reduce 41
+	PERCENT  reduce 41
+	PLUS  reduce 41
+	PLUSDOT  reduce 41
+	PLUSEQ  reduce 41
+	RPAREN  reduce 41
+	SEMI  reduce 41
+	SEMISEMI  reduce 41
+	STAR  reduce 41
+	THEN  reduce 41
+
+
+state 42
+	expr : constr_longident . simple_expr  (42)
+	simple_expr : constr_longident .  (73)
+
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LIDENT  shift 83
+	LPAREN  shift 20
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	AMPERAMPER  reduce 73
+	AMPERSAND  reduce 73
+	AND  reduce 73
+	BARBAR  reduce 73
+	COLON  reduce 73
+	COLONEQUAL  reduce 73
+	COLONGREATER  reduce 73
+	COMMA  reduce 73
+	DOT  reduce 73
+	ELSE  reduce 73
+	END  reduce 73
+	EOF  reduce 73
+	EQUAL  reduce 73
+	GREATER  reduce 73
+	IN  reduce 73
+	INFIXOP0  reduce 73
+	INFIXOP1  reduce 73
+	INFIXOP2  reduce 73
+	INFIXOP3  reduce 73
+	INFIXOP4  reduce 73
+	LABEL  reduce 73
+	LESS  reduce 73
+	LET  reduce 73
+	MINUS  reduce 73
+	MINUSDOT  reduce 73
+	OPEN  reduce 73
+	OR  reduce 73
+	PERCENT  reduce 73
+	PLUS  reduce 73
+	PLUSDOT  reduce 73
+	PLUSEQ  reduce 73
+	RPAREN  reduce 73
+	SEMI  reduce 73
+	SEMISEMI  reduce 73
+	STAR  reduce 73
+	THEN  reduce 73
+	TILDE  reduce 73
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	simple_expr  goto 150
+	constr_longident  goto 99
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 43
+	expr : subtractive . expr  (65)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 151
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 44
+	expr : additive . expr  (66)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 152
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 45
+	expr : label . LESSMINUS expr  (69)
+
+	LESSMINUS  shift 153
+	.  error
+
+
+state 46
+	simple_expr : val_longident .  (71)
+
+	.  reduce 71
+
+
+state 47
+	simple_expr : constant .  (72)
+
+	.  reduce 72
+
+
+state 48
+	signature : SEMISEMI . signature  (27)
+	signature : .  (26)
+
+	OPEN  shift 23
+	SEMISEMI  shift 48
+	VAL  shift 49
+	EOF  reduce 26
+
+	signature  goto 154
+	open_statement  goto 52
+	signature_item  goto 53
+
+
+state 49
+	signature_item : VAL . val_ident COLON core_type  (29)
+
+	LIDENT  shift 83
+	.  error
+
+	val_ident  goto 155
+
+
+state 50
+	%entry% : '\002' interface .  (182)
+
+	.  reduce 182
+
+
+state 51
+	interface : signature . EOF  (2)
+
+	EOF  shift 156
+	.  error
+
+
+state 52
+	signature_item : open_statement .  (30)
+
+	.  reduce 30
+
+
+state 53
+	signature : signature_item . signature  (28)
+	signature : .  (26)
+
+	OPEN  shift 23
+	SEMISEMI  shift 48
+	VAL  shift 49
+	EOF  reduce 26
+
+	signature  goto 157
+	open_statement  goto 52
+	signature_item  goto 53
+
+
+state 54
+	toplevel_phrase : EOF .  (4)
+
+	.  reduce 4
+
+
+state 55
+	%entry% : '\003' toplevel_phrase .  (183)
+
+	.  reduce 183
+
+
+state 56
+	toplevel_phrase : top_structure . SEMISEMI  (3)
+
+	SEMISEMI  shift 158
+	.  error
+
+
+state 57
+	top_structure : seq_expr .  (5)
+
+	.  reduce 5
+
+
+state 58
+	top_structure : top_structure_tail .  (6)
+
+	.  reduce 6
+
+
+state 59
+	top_structure_tail : structure_item . top_structure_tail  (8)
+	top_structure_tail : .  (7)
+
+	LET  shift 116
+	OPEN  shift 23
+	SEMISEMI  reduce 7
+
+	top_structure_tail  goto 159
+	structure_item  goto 59
+	open_statement  goto 36
+
+
+state 60
+	use_file_tail : EOF .  (11)
+
+	.  reduce 11
+
+
+state 61
+	use_file_tail : SEMISEMI . EOF  (12)
+	use_file_tail : SEMISEMI . seq_expr use_file_tail  (13)
+	use_file_tail : SEMISEMI . structure_item use_file_tail  (14)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	EOF  shift 160
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 18
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	OPEN  shift 23
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	seq_expr  goto 161
+	structure_item  goto 162
+	open_statement  goto 36
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 39
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 62
+	%entry% : '\004' use_file .  (184)
+
+	.  reduce 184
+
+
+state 63
+	use_file : seq_expr . use_file_tail  (10)
+
+	EOF  shift 60
+	LET  shift 116
+	OPEN  shift 23
+	SEMISEMI  shift 61
+	.  error
+
+	structure_item  goto 64
+	use_file_tail  goto 163
+	open_statement  goto 36
+
+
+state 64
+	use_file_tail : structure_item . use_file_tail  (15)
+
+	EOF  shift 60
+	LET  shift 116
+	OPEN  shift 23
+	SEMISEMI  shift 61
+	.  error
+
+	structure_item  goto 64
+	use_file_tail  goto 164
+	open_statement  goto 36
+
+
+state 65
+	use_file : use_file_tail .  (9)
+
+	.  reduce 9
+
+
+state 66
+	core_type2 : LIDENT . COLON core_type2 MINUSGREATER core_type2  (133)
+	type_longident : LIDENT .  (166)
+
+	COLON  shift 165
+	COLONGREATER  reduce 166
+	COMMA  reduce 166
+	EOF  reduce 166
+	EQUAL  reduce 166
+	LIDENT  reduce 166
+	MINUSGREATER  reduce 166
+	OPEN  reduce 166
+	RPAREN  reduce 166
+	SEMISEMI  reduce 166
+	STAR  reduce 166
+	UIDENT  reduce 166
+	VAL  reduce 166
+
+
+state 67
+	simple_core_type : LPAREN . core_type_comma_list RPAREN  (136)
+	simple_core_type2 : LPAREN . core_type_comma_list RPAREN type_longident  (140)
+
+	LIDENT  shift 66
+	LPAREN  shift 67
+	UIDENT  shift 68
+	UNDERSCORE  shift 69
+	.  error
+
+	core_type  goto 166
+	core_type2  goto 72
+	simple_core_type_or_tuple  goto 73
+	simple_core_type  goto 74
+	simple_core_type2  goto 75
+	core_type_comma_list  goto 167
+	type_longident  goto 76
+	mod_ext_longident  goto 77
+
+
+state 68
+	mod_ext_longident : UIDENT .  (170)
+
+	.  reduce 170
+
+
+state 69
+	simple_core_type2 : UNDERSCORE .  (137)
+
+	.  reduce 137
+
+
+state 70
+	%entry% : '\005' parse_core_type .  (185)
+
+	.  reduce 185
+
+
+state 71
+	parse_core_type : core_type . EOF  (16)
+
+	EOF  shift 168
+	.  error
+
+
+state 72
+	core_type : core_type2 .  (131)
+	core_type2 : core_type2 . MINUSGREATER core_type2  (134)
+
+	MINUSGREATER  shift 169
+	COLONGREATER  reduce 131
+	COMMA  reduce 131
+	EOF  reduce 131
+	EQUAL  reduce 131
+	OPEN  reduce 131
+	RPAREN  reduce 131
+	SEMISEMI  reduce 131
+	VAL  reduce 131
+
+
+state 73
+	core_type2 : simple_core_type_or_tuple .  (132)
+
+	.  reduce 132
+
+
+state 74
+	simple_core_type_or_tuple : simple_core_type .  (141)
+	simple_core_type_or_tuple : simple_core_type . STAR core_type_list  (142)
+
+	STAR  shift 170
+	COLONGREATER  reduce 141
+	COMMA  reduce 141
+	EOF  reduce 141
+	EQUAL  reduce 141
+	MINUSGREATER  reduce 141
+	OPEN  reduce 141
+	RPAREN  reduce 141
+	SEMISEMI  reduce 141
+	VAL  reduce 141
+
+
+state 75
+	simple_core_type : simple_core_type2 .  (135)
+	simple_core_type2 : simple_core_type2 . type_longident  (139)
+
+	LIDENT  shift 171
+	UIDENT  shift 68
+	COLONGREATER  reduce 135
+	COMMA  reduce 135
+	EOF  reduce 135
+	EQUAL  reduce 135
+	MINUSGREATER  reduce 135
+	OPEN  reduce 135
+	RPAREN  reduce 135
+	SEMISEMI  reduce 135
+	STAR  reduce 135
+	VAL  reduce 135
+
+	type_longident  goto 172
+	mod_ext_longident  goto 77
+
+
+state 76
+	simple_core_type2 : type_longident .  (138)
+
+	.  reduce 138
+
+
+state 77
+	type_longident : mod_ext_longident . DOT LIDENT  (167)
+	mod_ext_longident : mod_ext_longident . DOT UIDENT  (171)
+	mod_ext_longident : mod_ext_longident . LPAREN mod_ext_longident RPAREN  (172)
+
+	DOT  shift 173
+	LPAREN  shift 174
+	.  error
+
+
+state 78
+	expr : LET . rec_flag let_bindings_no_attrs IN seq_expr  (39)
+	rec_flag : .  (173)
+
+	REC  shift 108
+	CHAR  reduce 173
+	EXCEPTION  reduce 173
+	FALSE  reduce 173
+	FLOAT  reduce 173
+	INT  reduce 173
+	LBRACE  reduce 173
+	LIDENT  reduce 173
+	LPAREN  reduce 173
+	MINUS  reduce 173
+	PLUS  reduce 173
+	STRING  reduce 173
+	TRUE  reduce 173
+	UIDENT  reduce 173
+	UNDERSCORE  reduce 173
+
+	rec_flag  goto 175
+
+
+state 79
+	%entry% : '\006' parse_expression .  (186)
+
+	.  reduce 186
+
+
+state 80
+	parse_expression : seq_expr . EOF  (17)
+
+	EOF  shift 176
+	.  error
+
+
+state 81
+	pattern : EXCEPTION . pattern  (113)
+
+	CHAR  shift 12
+	EXCEPTION  shift 81
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LBRACE  shift 82
+	LIDENT  shift 83
+	LPAREN  shift 84
+	MINUS  shift 85
+	PLUS  shift 86
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	UNDERSCORE  shift 87
+	.  error
+
+	pattern  goto 177
+	val_ident  goto 90
+	mod_longident  goto 91
+	simple_pattern  goto 92
+	constr_longident  goto 93
+	constant  goto 94
+	simple_pattern_not_ident  goto 95
+	pattern_comma_list  goto 96
+	signed_constant  goto 97
+
+
+state 82
+	simple_pattern_not_ident : LBRACE . lbl_pattern_list RBRACE  (120)
+
+	LIDENT  shift 178
+	UIDENT  shift 30
+	.  error
+
+	mod_longident  goto 179
+	label_longident  goto 180
+	lbl_pattern_list  goto 181
+	lbl_pattern  goto 182
+
+
+state 83
+	val_ident : LIDENT .  (157)
+
+	.  reduce 157
+
+
+state 84
+	simple_pattern_not_ident : LPAREN . pattern RPAREN  (121)
+	simple_pattern_not_ident : LPAREN . pattern COLON core_type RPAREN  (122)
+	constr_longident : LPAREN . RPAREN  (161)
+
+	CHAR  shift 12
+	EXCEPTION  shift 81
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LBRACE  shift 82
+	LIDENT  shift 83
+	LPAREN  shift 84
+	MINUS  shift 85
+	PLUS  shift 86
+	RPAREN  shift 110
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	UNDERSCORE  shift 87
+	.  error
+
+	pattern  goto 183
+	val_ident  goto 90
+	mod_longident  goto 91
+	simple_pattern  goto 92
+	constr_longident  goto 93
+	constant  goto 94
+	simple_pattern_not_ident  goto 95
+	pattern_comma_list  goto 96
+	signed_constant  goto 97
+
+
+state 85
+	signed_constant : MINUS . INT  (153)
+	signed_constant : MINUS . FLOAT  (154)
+
+	FLOAT  shift 184
+	INT  shift 185
+	.  error
+
+
+state 86
+	signed_constant : PLUS . INT  (155)
+	signed_constant : PLUS . FLOAT  (156)
+
+	FLOAT  shift 186
+	INT  shift 187
+	.  error
+
+
+state 87
+	simple_pattern_not_ident : UNDERSCORE .  (116)
+
+	.  reduce 116
+
+
+state 88
+	%entry% : '\007' parse_pattern .  (187)
+
+	.  reduce 187
+
+
+state 89
+	parse_pattern : pattern . EOF  (18)
+	pattern : pattern . AS val_ident  (109)
+	pattern : pattern . BAR pattern  (112)
+	pattern_comma_list : pattern . COMMA pattern  (124)
+
+	AS  shift 188
+	BAR  shift 189
+	COMMA  shift 190
+	EOF  shift 191
+	.  error
+
+
+state 90
+	simple_pattern : val_ident .  (114)
+
+	.  reduce 114
+
+
+state 91
+	constr_longident : mod_longident .  (160)
+	mod_longident : mod_longident . DOT UIDENT  (169)
+
+	DOT  shift 192
+	AS  reduce 160
+	BAR  reduce 160
+	CHAR  reduce 160
+	COLON  reduce 160
+	COLONGREATER  reduce 160
+	COMMA  reduce 160
+	EOF  reduce 160
+	EQUAL  reduce 160
+	EXCEPTION  reduce 160
+	FALSE  reduce 160
+	FLOAT  reduce 160
+	INT  reduce 160
+	LABEL  reduce 160
+	LBRACE  reduce 160
+	LIDENT  reduce 160
+	LPAREN  reduce 160
+	MINUS  reduce 160
+	MINUSGREATER  reduce 160
+	PLUS  reduce 160
+	RBRACE  reduce 160
+	RPAREN  reduce 160
+	SEMI  reduce 160
+	STRING  reduce 160
+	TRUE  reduce 160
+	UIDENT  reduce 160
+	UNDERSCORE  reduce 160
+
+
+state 92
+	pattern : simple_pattern .  (108)
+
+	.  reduce 108
+
+
+state 93
+	pattern : constr_longident . pattern  (111)
+	simple_pattern_not_ident : constr_longident .  (119)
+
+	CHAR  shift 12
+	EXCEPTION  shift 81
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LBRACE  shift 82
+	LIDENT  shift 83
+	LPAREN  shift 84
+	MINUS  shift 85
+	PLUS  shift 86
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	UNDERSCORE  shift 87
+	AS  reduce 119
+	BAR  reduce 119
+	COLON  reduce 119
+	COMMA  reduce 119
+	EOF  reduce 119
+	EQUAL  reduce 119
+	RBRACE  reduce 119
+	RPAREN  reduce 119
+	SEMI  reduce 119
+
+	pattern  goto 193
+	val_ident  goto 90
+	mod_longident  goto 91
+	simple_pattern  goto 92
+	constr_longident  goto 93
+	constant  goto 94
+	simple_pattern_not_ident  goto 95
+	pattern_comma_list  goto 96
+	signed_constant  goto 97
+
+
+state 94
+	signed_constant : constant .  (152)
+
+	.  reduce 152
+
+
+state 95
+	simple_pattern : simple_pattern_not_ident .  (115)
+
+	.  reduce 115
+
+
+state 96
+	pattern : pattern_comma_list .  (110)
+	pattern_comma_list : pattern_comma_list . COMMA pattern  (123)
+
+	COMMA  shift 194
+	AS  reduce 110
+	BAR  reduce 110
+	COLON  reduce 110
+	EOF  reduce 110
+	EQUAL  reduce 110
+	RBRACE  reduce 110
+	RPAREN  reduce 110
+	SEMI  reduce 110
+
+
+state 97
+	simple_pattern_not_ident : signed_constant .  (117)
+	simple_pattern_not_ident : signed_constant . DOTDOT signed_constant  (118)
+
+	DOTDOT  shift 195
+	AS  reduce 117
+	BAR  reduce 117
+	CHAR  reduce 117
+	COLON  reduce 117
+	COLONGREATER  reduce 117
+	COMMA  reduce 117
+	EOF  reduce 117
+	EQUAL  reduce 117
+	FALSE  reduce 117
+	FLOAT  reduce 117
+	INT  reduce 117
+	LABEL  reduce 117
+	LBRACE  reduce 117
+	LIDENT  reduce 117
+	LPAREN  reduce 117
+	MINUS  reduce 117
+	MINUSGREATER  reduce 117
+	PLUS  reduce 117
+	RBRACE  reduce 117
+	RPAREN  reduce 117
+	SEMI  reduce 117
+	STRING  reduce 117
+	TRUE  reduce 117
+	UIDENT  reduce 117
+	UNDERSCORE  reduce 117
+
+
+state 98
+	expr : ASSERT simple_expr .  (70)
+	simple_expr : simple_expr . DOT label_longident  (78)
+	simple_expr : simple_expr . DOT LPAREN seq_expr RPAREN  (80)
+
+	DOT  shift 196
+	AMPERAMPER  reduce 70
+	AMPERSAND  reduce 70
+	AND  reduce 70
+	BARBAR  reduce 70
+	COLON  reduce 70
+	COLONEQUAL  reduce 70
+	COLONGREATER  reduce 70
+	COMMA  reduce 70
+	ELSE  reduce 70
+	END  reduce 70
+	EOF  reduce 70
+	EQUAL  reduce 70
+	GREATER  reduce 70
+	IN  reduce 70
+	INFIXOP0  reduce 70
+	INFIXOP1  reduce 70
+	INFIXOP2  reduce 70
+	INFIXOP3  reduce 70
+	INFIXOP4  reduce 70
+	LESS  reduce 70
+	LET  reduce 70
+	MINUS  reduce 70
+	MINUSDOT  reduce 70
+	OPEN  reduce 70
+	OR  reduce 70
+	PERCENT  reduce 70
+	PLUS  reduce 70
+	PLUSDOT  reduce 70
+	PLUSEQ  reduce 70
+	RPAREN  reduce 70
+	SEMI  reduce 70
+	SEMISEMI  reduce 70
+	STAR  reduce 70
+	THEN  reduce 70
+
+
+state 99
+	simple_expr : constr_longident .  (73)
+
+	.  reduce 73
+
+
+state 100
+	simple_expr : simple_expr . DOT label_longident  (78)
+	simple_expr : simple_expr . DOT LPAREN seq_expr RPAREN  (80)
+	simple_expr : BANG simple_expr .  (82)
+
+	.  reduce 82
+
+
+state 101
+	simple_expr : BEGIN END .  (76)
+
+	.  reduce 76
+
+
+state 102
+	simple_expr : BEGIN seq_expr . END  (75)
+
+	END  shift 197
+	.  error
+
+
+state 103
+	labeled_simple_pattern : LABEL . simple_pattern  (35)
+
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LBRACE  shift 82
+	LIDENT  shift 83
+	LPAREN  shift 84
+	MINUS  shift 85
+	PLUS  shift 86
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	UNDERSCORE  shift 87
+	.  error
+
+	val_ident  goto 90
+	mod_longident  goto 91
+	simple_pattern  goto 198
+	constr_longident  goto 106
+	constant  goto 94
+	simple_pattern_not_ident  goto 95
+	signed_constant  goto 97
+
+
+state 104
+	expr : FUN labeled_simple_pattern . fun_def  (40)
+
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LABEL  shift 103
+	LBRACE  shift 82
+	LIDENT  shift 83
+	LPAREN  shift 84
+	MINUS  shift 85
+	MINUSGREATER  shift 199
+	PLUS  shift 86
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	UNDERSCORE  shift 87
+	.  error
+
+	val_ident  goto 90
+	mod_longident  goto 91
+	labeled_simple_pattern  goto 200
+	simple_pattern  goto 105
+	fun_def  goto 201
+	constr_longident  goto 106
+	constant  goto 94
+	simple_pattern_not_ident  goto 95
+	signed_constant  goto 97
+
+
+state 105
+	labeled_simple_pattern : simple_pattern .  (36)
+
+	.  reduce 36
+
+
+state 106
+	simple_pattern_not_ident : constr_longident .  (119)
+
+	.  reduce 119
+
+
+state 107
+	expr : IF seq_expr . THEN expr ELSE expr  (43)
+	expr : IF seq_expr . THEN expr  (44)
+
+	THEN  shift 202
+	.  error
+
+
+state 108
+	rec_flag : REC .  (174)
+
+	.  reduce 174
+
+
+state 109
+	structure_item : LET rec_flag . let_bindings  (24)
+	expr : LET rec_flag . let_bindings_no_attrs IN seq_expr  (39)
+
+	CHAR  shift 12
+	EXCEPTION  shift 81
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LBRACE  shift 82
+	LIDENT  shift 83
+	LPAREN  shift 84
+	MINUS  shift 85
+	PLUS  shift 86
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	UNDERSCORE  shift 87
+	.  error
+
+	pattern  goto 203
+	let_bindings  goto 204
+	val_ident  goto 205
+	mod_longident  goto 91
+	simple_pattern  goto 92
+	let_bindings_no_attrs  goto 206
+	constr_longident  goto 93
+	constant  goto 94
+	let_binding  goto 207
+	let_binding_  goto 208
+	simple_pattern_not_ident  goto 209
+	pattern_comma_list  goto 96
+	signed_constant  goto 97
+
+
+state 110
+	constr_longident : LPAREN RPAREN .  (161)
+
+	.  reduce 161
+
+
+state 111
+	simple_expr : LPAREN seq_expr . RPAREN  (74)
+	simple_expr : LPAREN seq_expr . type_constraint RPAREN  (77)
+
+	COLON  shift 210
+	COLONGREATER  shift 211
+	RPAREN  shift 212
+	.  error
+
+	type_constraint  goto 213
+
+
+state 112
+	open_statement : OPEN mod_longident .  (31)
+	mod_longident : mod_longident . DOT UIDENT  (169)
+
+	DOT  shift 192
+	EOF  reduce 31
+	LET  reduce 31
+	OPEN  reduce 31
+	SEMISEMI  reduce 31
+	VAL  reduce 31
+
+
+state 113
+	simple_expr : simple_expr . DOT label_longident  (78)
+	simple_expr : simple_expr . DOT LPAREN seq_expr RPAREN  (80)
+	simple_expr : PREFIXOP simple_expr .  (81)
+
+	.  reduce 81
+
+
+state 114
+	structure_tail : SEMISEMI structure .  (22)
+
+	.  reduce 22
+
+
+state 115
+	implementation : structure EOF .  (1)
+
+	.  reduce 1
+
+
+state 116
+	structure_item : LET . rec_flag let_bindings  (24)
+	rec_flag : .  (173)
+
+	REC  shift 108
+	CHAR  reduce 173
+	EXCEPTION  reduce 173
+	FALSE  reduce 173
+	FLOAT  reduce 173
+	INT  reduce 173
+	LBRACE  reduce 173
+	LIDENT  reduce 173
+	LPAREN  reduce 173
+	MINUS  reduce 173
+	PLUS  reduce 173
+	STRING  reduce 173
+	TRUE  reduce 173
+	UIDENT  reduce 173
+	UNDERSCORE  reduce 173
+
+	rec_flag  goto 214
+
+
+state 117
+	structure : seq_expr structure_tail .  (19)
+
+	.  reduce 19
+
+
+state 118
+	structure_tail : structure_item structure_tail .  (23)
+
+	.  reduce 23
+
+
+state 119
+	simple_expr : mod_longident DOT . LPAREN seq_expr RPAREN  (79)
+	val_longident : mod_longident DOT . val_ident  (159)
+	mod_longident : mod_longident DOT . UIDENT  (169)
+
+	LIDENT  shift 83
+	LPAREN  shift 215
+	UIDENT  shift 216
+	.  error
+
+	val_ident  goto 217
+
+
+state 120
+	expr : expr AMPERAMPER . expr  (63)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 218
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 121
+	expr : expr AMPERSAND . expr  (62)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 219
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 122
+	expr : expr BARBAR . expr  (61)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 220
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 123
+	expr : expr COLONEQUAL . expr  (64)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 221
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 124
+	expr_comma_list : expr COMMA . expr  (104)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 222
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 125
+	expr : expr EQUAL . expr  (57)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 223
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 126
+	expr : expr GREATER . expr  (59)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 224
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 127
+	expr : expr INFIXOP0 . expr  (45)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 225
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 128
+	expr : expr INFIXOP1 . expr  (46)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 226
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 129
+	expr : expr INFIXOP2 . expr  (47)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 227
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 130
+	expr : expr INFIXOP3 . expr  (48)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 228
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 131
+	expr : expr INFIXOP4 . expr  (49)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 229
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 132
+	expr : expr LESS . expr  (58)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 230
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 133
+	expr : expr MINUS . expr  (53)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 231
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 134
+	expr : expr MINUSDOT . expr  (54)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 232
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 135
+	expr : expr OR . expr  (60)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 233
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 136
+	expr : expr PERCENT . expr  (56)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 234
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 137
+	expr : expr PLUS . expr  (50)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 235
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 138
+	expr : expr PLUSDOT . expr  (51)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 236
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 139
+	expr : expr PLUSEQ . expr  (52)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 237
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 140
+	seq_expr : expr SEMI .  (33)
+	seq_expr : expr SEMI . seq_expr  (34)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	AMPERAMPER  reduce 33
+	AMPERSAND  reduce 33
+	AND  reduce 33
+	BARBAR  reduce 33
+	COLON  reduce 33
+	COLONEQUAL  reduce 33
+	COLONGREATER  reduce 33
+	COMMA  reduce 33
+	ELSE  reduce 33
+	END  reduce 33
+	EOF  reduce 33
+	EQUAL  reduce 33
+	GREATER  reduce 33
+	IN  reduce 33
+	INFIXOP0  reduce 33
+	INFIXOP1  reduce 33
+	INFIXOP2  reduce 33
+	INFIXOP3  reduce 33
+	INFIXOP4  reduce 33
+	LESS  reduce 33
+	OPEN  reduce 33
+	OR  reduce 33
+	PERCENT  reduce 33
+	PLUSEQ  reduce 33
+	RPAREN  reduce 33
+	SEMI  reduce 33
+	SEMISEMI  reduce 33
+	STAR  reduce 33
+	THEN  reduce 33
+
+	seq_expr  goto 238
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 39
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 141
+	expr : expr STAR . expr  (55)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 239
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 142
+	expr : simple_expr DOT . label_longident LESSMINUS expr  (67)
+	expr : simple_expr DOT . LPAREN seq_expr RPAREN LESSMINUS expr  (68)
+	simple_expr : simple_expr DOT . label_longident  (78)
+	simple_expr : simple_expr DOT . LPAREN seq_expr RPAREN  (80)
+
+	LIDENT  shift 178
+	LPAREN  shift 240
+	UIDENT  shift 30
+	.  error
+
+	mod_longident  goto 179
+	label_longident  goto 241
+
+
+state 143
+	label_expr : LABEL . simple_expr  (87)
+
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LIDENT  shift 83
+	LPAREN  shift 20
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	simple_expr  goto 242
+	constr_longident  goto 99
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 144
+	label_expr : TILDE . label_ident  (88)
+
+	LIDENT  shift 243
+	.  error
+
+	label_ident  goto 244
+
+
+state 145
+	simple_expr : simple_expr . DOT label_longident  (78)
+	simple_expr : simple_expr . DOT LPAREN seq_expr RPAREN  (80)
+	labeled_simple_expr : simple_expr .  (85)
+
+	DOT  shift 196
+	AMPERAMPER  reduce 85
+	AMPERSAND  reduce 85
+	AND  reduce 85
+	BANG  reduce 85
+	BARBAR  reduce 85
+	BEGIN  reduce 85
+	CHAR  reduce 85
+	COLON  reduce 85
+	COLONEQUAL  reduce 85
+	COLONGREATER  reduce 85
+	COMMA  reduce 85
+	ELSE  reduce 85
+	END  reduce 85
+	EOF  reduce 85
+	EQUAL  reduce 85
+	FALSE  reduce 85
+	FLOAT  reduce 85
+	GREATER  reduce 85
+	IN  reduce 85
+	INFIXOP0  reduce 85
+	INFIXOP1  reduce 85
+	INFIXOP2  reduce 85
+	INFIXOP3  reduce 85
+	INFIXOP4  reduce 85
+	INT  reduce 85
+	LABEL  reduce 85
+	LESS  reduce 85
+	LET  reduce 85
+	LIDENT  reduce 85
+	LPAREN  reduce 85
+	MINUS  reduce 85
+	MINUSDOT  reduce 85
+	OPEN  reduce 85
+	OR  reduce 85
+	PERCENT  reduce 85
+	PLUS  reduce 85
+	PLUSDOT  reduce 85
+	PLUSEQ  reduce 85
+	PREFIXOP  reduce 85
+	RPAREN  reduce 85
+	SEMI  reduce 85
+	SEMISEMI  reduce 85
+	STAR  reduce 85
+	STRING  reduce 85
+	THEN  reduce 85
+	TILDE  reduce 85
+	TRUE  reduce 85
+	UIDENT  reduce 85
+
+
+state 146
+	expr : simple_expr simple_labeled_expr_list .  (38)
+	simple_labeled_expr_list : simple_labeled_expr_list . labeled_simple_expr  (84)
+
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LABEL  shift 143
+	LIDENT  shift 83
+	LPAREN  shift 20
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TILDE  shift 144
+	TRUE  shift 29
+	UIDENT  shift 30
+	AMPERAMPER  reduce 38
+	AMPERSAND  reduce 38
+	AND  reduce 38
+	BARBAR  reduce 38
+	COLON  reduce 38
+	COLONEQUAL  reduce 38
+	COLONGREATER  reduce 38
+	COMMA  reduce 38
+	ELSE  reduce 38
+	END  reduce 38
+	EOF  reduce 38
+	EQUAL  reduce 38
+	GREATER  reduce 38
+	IN  reduce 38
+	INFIXOP0  reduce 38
+	INFIXOP1  reduce 38
+	INFIXOP2  reduce 38
+	INFIXOP3  reduce 38
+	INFIXOP4  reduce 38
+	LESS  reduce 38
+	LET  reduce 38
+	MINUS  reduce 38
+	MINUSDOT  reduce 38
+	OPEN  reduce 38
+	OR  reduce 38
+	PERCENT  reduce 38
+	PLUS  reduce 38
+	PLUSDOT  reduce 38
+	PLUSEQ  reduce 38
+	RPAREN  reduce 38
+	SEMI  reduce 38
+	SEMISEMI  reduce 38
+	STAR  reduce 38
+	THEN  reduce 38
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	simple_expr  goto 145
+	constr_longident  goto 99
+	val_longident  goto 46
+	constant  goto 47
+	labeled_simple_expr  goto 245
+	label_expr  goto 148
+
+
+state 147
+	simple_labeled_expr_list : labeled_simple_expr .  (83)
+
+	.  reduce 83
+
+
+state 148
+	labeled_simple_expr : label_expr .  (86)
+
+	.  reduce 86
+
+
+state 149
+	expr_comma_list : expr_comma_list COMMA . expr  (103)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 246
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 150
+	expr : constr_longident simple_expr .  (42)
+	simple_expr : simple_expr . DOT label_longident  (78)
+	simple_expr : simple_expr . DOT LPAREN seq_expr RPAREN  (80)
+
+	DOT  shift 196
+	AMPERAMPER  reduce 42
+	AMPERSAND  reduce 42
+	AND  reduce 42
+	BARBAR  reduce 42
+	COLON  reduce 42
+	COLONEQUAL  reduce 42
+	COLONGREATER  reduce 42
+	COMMA  reduce 42
+	ELSE  reduce 42
+	END  reduce 42
+	EOF  reduce 42
+	EQUAL  reduce 42
+	GREATER  reduce 42
+	IN  reduce 42
+	INFIXOP0  reduce 42
+	INFIXOP1  reduce 42
+	INFIXOP2  reduce 42
+	INFIXOP3  reduce 42
+	INFIXOP4  reduce 42
+	LESS  reduce 42
+	LET  reduce 42
+	MINUS  reduce 42
+	MINUSDOT  reduce 42
+	OPEN  reduce 42
+	OR  reduce 42
+	PERCENT  reduce 42
+	PLUS  reduce 42
+	PLUSDOT  reduce 42
+	PLUSEQ  reduce 42
+	RPAREN  reduce 42
+	SEMI  reduce 42
+	SEMISEMI  reduce 42
+	STAR  reduce 42
+	THEN  reduce 42
+
+
+state 151
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr : subtractive expr .  (65)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	.  reduce 65
+
+
+state 152
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr : additive expr .  (66)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	.  reduce 66
+
+
+state 153
+	expr : label LESSMINUS . expr  (69)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 247
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 154
+	signature : SEMISEMI signature .  (27)
+
+	.  reduce 27
+
+
+state 155
+	signature_item : VAL val_ident . COLON core_type  (29)
+
+	COLON  shift 248
+	.  error
+
+
+state 156
+	interface : signature EOF .  (2)
+
+	.  reduce 2
+
+
+state 157
+	signature : signature_item signature .  (28)
+
+	.  reduce 28
+
+
+state 158
+	toplevel_phrase : top_structure SEMISEMI .  (3)
+
+	.  reduce 3
+
+
+state 159
+	top_structure_tail : structure_item top_structure_tail .  (8)
+
+	.  reduce 8
+
+
+state 160
+	use_file_tail : SEMISEMI EOF .  (12)
+
+	.  reduce 12
+
+
+state 161
+	use_file_tail : SEMISEMI seq_expr . use_file_tail  (13)
+
+	EOF  shift 60
+	LET  shift 116
+	OPEN  shift 23
+	SEMISEMI  shift 61
+	.  error
+
+	structure_item  goto 64
+	use_file_tail  goto 249
+	open_statement  goto 36
+
+
+state 162
+	use_file_tail : SEMISEMI structure_item . use_file_tail  (14)
+
+	EOF  shift 60
+	LET  shift 116
+	OPEN  shift 23
+	SEMISEMI  shift 61
+	.  error
+
+	structure_item  goto 64
+	use_file_tail  goto 250
+	open_statement  goto 36
+
+
+state 163
+	use_file : seq_expr use_file_tail .  (10)
+
+	.  reduce 10
+
+
+state 164
+	use_file_tail : structure_item use_file_tail .  (15)
+
+	.  reduce 15
+
+
+state 165
+	core_type2 : LIDENT COLON . core_type2 MINUSGREATER core_type2  (133)
+
+	LIDENT  shift 66
+	LPAREN  shift 67
+	UIDENT  shift 68
+	UNDERSCORE  shift 69
+	.  error
+
+	core_type2  goto 251
+	simple_core_type_or_tuple  goto 73
+	simple_core_type  goto 74
+	simple_core_type2  goto 75
+	type_longident  goto 76
+	mod_ext_longident  goto 77
+
+
+state 166
+	core_type_comma_list : core_type .  (143)
+
+	.  reduce 143
+
+
+state 167
+	simple_core_type : LPAREN core_type_comma_list . RPAREN  (136)
+	simple_core_type2 : LPAREN core_type_comma_list . RPAREN type_longident  (140)
+	core_type_comma_list : core_type_comma_list . COMMA core_type  (144)
+
+	COMMA  shift 252
+	RPAREN  shift 253
+	.  error
+
+
+state 168
+	parse_core_type : core_type EOF .  (16)
+
+	.  reduce 16
+
+
+state 169
+	core_type2 : core_type2 MINUSGREATER . core_type2  (134)
+
+	LIDENT  shift 66
+	LPAREN  shift 67
+	UIDENT  shift 68
+	UNDERSCORE  shift 69
+	.  error
+
+	core_type2  goto 254
+	simple_core_type_or_tuple  goto 73
+	simple_core_type  goto 74
+	simple_core_type2  goto 75
+	type_longident  goto 76
+	mod_ext_longident  goto 77
+
+
+state 170
+	simple_core_type_or_tuple : simple_core_type STAR . core_type_list  (142)
+
+	LIDENT  shift 171
+	LPAREN  shift 67
+	UIDENT  shift 68
+	UNDERSCORE  shift 69
+	.  error
+
+	simple_core_type  goto 255
+	simple_core_type2  goto 75
+	type_longident  goto 76
+	core_type_list  goto 256
+	mod_ext_longident  goto 77
+
+
+state 171
+	type_longident : LIDENT .  (166)
+
+	.  reduce 166
+
+
+state 172
+	simple_core_type2 : simple_core_type2 type_longident .  (139)
+
+	.  reduce 139
+
+
+state 173
+	type_longident : mod_ext_longident DOT . LIDENT  (167)
+	mod_ext_longident : mod_ext_longident DOT . UIDENT  (171)
+
+	LIDENT  shift 257
+	UIDENT  shift 258
+	.  error
+
+
+state 174
+	mod_ext_longident : mod_ext_longident LPAREN . mod_ext_longident RPAREN  (172)
+
+	UIDENT  shift 68
+	.  error
+
+	mod_ext_longident  goto 259
+
+
+state 175
+	expr : LET rec_flag . let_bindings_no_attrs IN seq_expr  (39)
+
+	CHAR  shift 12
+	EXCEPTION  shift 81
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LBRACE  shift 82
+	LIDENT  shift 83
+	LPAREN  shift 84
+	MINUS  shift 85
+	PLUS  shift 86
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	UNDERSCORE  shift 87
+	.  error
+
+	pattern  goto 203
+	let_bindings  goto 260
+	val_ident  goto 205
+	mod_longident  goto 91
+	simple_pattern  goto 92
+	let_bindings_no_attrs  goto 206
+	constr_longident  goto 93
+	constant  goto 94
+	let_binding  goto 207
+	let_binding_  goto 208
+	simple_pattern_not_ident  goto 209
+	pattern_comma_list  goto 96
+	signed_constant  goto 97
+
+
+state 176
+	parse_expression : seq_expr EOF .  (17)
+
+	.  reduce 17
+
+
+state 177
+	pattern : pattern . AS val_ident  (109)
+	pattern : pattern . BAR pattern  (112)
+	pattern : EXCEPTION pattern .  (113)
+	pattern_comma_list : pattern . COMMA pattern  (124)
+
+	.  reduce 113
+
+
+state 178
+	label_longident : LIDENT .  (164)
+
+	.  reduce 164
+
+
+state 179
+	label_longident : mod_longident . DOT LIDENT  (165)
+	mod_longident : mod_longident . DOT UIDENT  (169)
+
+	DOT  shift 261
+	.  error
+
+
+state 180
+	lbl_pattern : label_longident . EQUAL pattern  (129)
+	lbl_pattern : label_longident .  (130)
+
+	EQUAL  shift 262
+	RBRACE  reduce 130
+	SEMI  reduce 130
+
+
+state 181
+	simple_pattern_not_ident : LBRACE lbl_pattern_list . RBRACE  (120)
+
+	RBRACE  shift 263
+	.  error
+
+
+state 182
+	lbl_pattern_list : lbl_pattern .  (125)
+	lbl_pattern_list : lbl_pattern . SEMI  (126)
+	lbl_pattern_list : lbl_pattern . SEMI UNDERSCORE opt_semi  (127)
+	lbl_pattern_list : lbl_pattern . SEMI lbl_pattern_list  (128)
+
+	SEMI  shift 264
+	RBRACE  reduce 125
+
+
+state 183
+	pattern : pattern . AS val_ident  (109)
+	pattern : pattern . BAR pattern  (112)
+	simple_pattern_not_ident : LPAREN pattern . RPAREN  (121)
+	simple_pattern_not_ident : LPAREN pattern . COLON core_type RPAREN  (122)
+	pattern_comma_list : pattern . COMMA pattern  (124)
+
+	AS  shift 188
+	BAR  shift 189
+	COLON  shift 265
+	COMMA  shift 190
+	RPAREN  shift 266
+	.  error
+
+
+state 184
+	signed_constant : MINUS FLOAT .  (154)
+
+	.  reduce 154
+
+
+state 185
+	signed_constant : MINUS INT .  (153)
+
+	.  reduce 153
+
+
+state 186
+	signed_constant : PLUS FLOAT .  (156)
+
+	.  reduce 156
+
+
+state 187
+	signed_constant : PLUS INT .  (155)
+
+	.  reduce 155
+
+
+state 188
+	pattern : pattern AS . val_ident  (109)
+
+	LIDENT  shift 83
+	.  error
+
+	val_ident  goto 267
+
+
+state 189
+	pattern : pattern BAR . pattern  (112)
+
+	CHAR  shift 12
+	EXCEPTION  shift 81
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LBRACE  shift 82
+	LIDENT  shift 83
+	LPAREN  shift 84
+	MINUS  shift 85
+	PLUS  shift 86
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	UNDERSCORE  shift 87
+	.  error
+
+	pattern  goto 268
+	val_ident  goto 90
+	mod_longident  goto 91
+	simple_pattern  goto 92
+	constr_longident  goto 93
+	constant  goto 94
+	simple_pattern_not_ident  goto 95
+	pattern_comma_list  goto 96
+	signed_constant  goto 97
+
+
+state 190
+	pattern_comma_list : pattern COMMA . pattern  (124)
+
+	CHAR  shift 12
+	EXCEPTION  shift 81
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LBRACE  shift 82
+	LIDENT  shift 83
+	LPAREN  shift 84
+	MINUS  shift 85
+	PLUS  shift 86
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	UNDERSCORE  shift 87
+	.  error
+
+	pattern  goto 269
+	val_ident  goto 90
+	mod_longident  goto 91
+	simple_pattern  goto 92
+	constr_longident  goto 93
+	constant  goto 94
+	simple_pattern_not_ident  goto 95
+	pattern_comma_list  goto 96
+	signed_constant  goto 97
+
+
+state 191
+	parse_pattern : pattern EOF .  (18)
+
+	.  reduce 18
+
+
+state 192
+	mod_longident : mod_longident DOT . UIDENT  (169)
+
+	UIDENT  shift 216
+	.  error
+
+
+state 193
+	pattern : pattern . AS val_ident  (109)
+	pattern : constr_longident pattern .  (111)
+	pattern : pattern . BAR pattern  (112)
+	pattern_comma_list : pattern . COMMA pattern  (124)
+
+	.  reduce 111
+
+
+state 194
+	pattern_comma_list : pattern_comma_list COMMA . pattern  (123)
+
+	CHAR  shift 12
+	EXCEPTION  shift 81
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LBRACE  shift 82
+	LIDENT  shift 83
+	LPAREN  shift 84
+	MINUS  shift 85
+	PLUS  shift 86
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	UNDERSCORE  shift 87
+	.  error
+
+	pattern  goto 270
+	val_ident  goto 90
+	mod_longident  goto 91
+	simple_pattern  goto 92
+	constr_longident  goto 93
+	constant  goto 94
+	simple_pattern_not_ident  goto 95
+	pattern_comma_list  goto 96
+	signed_constant  goto 97
+
+
+state 195
+	simple_pattern_not_ident : signed_constant DOTDOT . signed_constant  (118)
+
+	CHAR  shift 12
+	FLOAT  shift 14
+	INT  shift 17
+	MINUS  shift 85
+	PLUS  shift 86
+	STRING  shift 28
+	.  error
+
+	constant  goto 94
+	signed_constant  goto 271
+
+
+state 196
+	simple_expr : simple_expr DOT . label_longident  (78)
+	simple_expr : simple_expr DOT . LPAREN seq_expr RPAREN  (80)
+
+	LIDENT  shift 178
+	LPAREN  shift 272
+	UIDENT  shift 30
+	.  error
+
+	mod_longident  goto 179
+	label_longident  goto 273
+
+
+state 197
+	simple_expr : BEGIN seq_expr END .  (75)
+
+	.  reduce 75
+
+
+state 198
+	labeled_simple_pattern : LABEL simple_pattern .  (35)
+
+	.  reduce 35
+
+
+state 199
+	fun_def : MINUSGREATER . seq_expr  (101)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	seq_expr  goto 274
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 39
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 200
+	fun_def : labeled_simple_pattern . fun_def  (102)
+
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LABEL  shift 103
+	LBRACE  shift 82
+	LIDENT  shift 83
+	LPAREN  shift 84
+	MINUS  shift 85
+	MINUSGREATER  shift 199
+	PLUS  shift 86
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	UNDERSCORE  shift 87
+	.  error
+
+	val_ident  goto 90
+	mod_longident  goto 91
+	labeled_simple_pattern  goto 200
+	simple_pattern  goto 105
+	fun_def  goto 275
+	constr_longident  goto 106
+	constant  goto 94
+	simple_pattern_not_ident  goto 95
+	signed_constant  goto 97
+
+
+state 201
+	expr : FUN labeled_simple_pattern fun_def .  (40)
+
+	.  reduce 40
+
+
+state 202
+	expr : IF seq_expr THEN . expr ELSE expr  (43)
+	expr : IF seq_expr THEN . expr  (44)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 276
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 203
+	let_binding_ : pattern . EQUAL seq_expr  (95)
+	pattern : pattern . AS val_ident  (109)
+	pattern : pattern . BAR pattern  (112)
+	pattern_comma_list : pattern . COMMA pattern  (124)
+
+	AS  shift 188
+	BAR  shift 189
+	COMMA  shift 190
+	EQUAL  shift 277
+	.  error
+
+
+state 204
+	structure_item : LET rec_flag let_bindings .  (24)
+	let_bindings : let_bindings . AND let_binding  (91)
+	let_bindings_no_attrs : let_bindings .  (92)
+
+	AND  shift 278
+	EOF  reduce 24
+	IN  reduce 92
+	LET  reduce 24
+	OPEN  reduce 24
+	SEMISEMI  reduce 24
+
+
+state 205
+	let_binding_ : val_ident . fun_binding  (94)
+	simple_pattern : val_ident .  (114)
+
+	CHAR  shift 12
+	COLON  shift 210
+	COLONGREATER  shift 211
+	EQUAL  shift 279
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LABEL  shift 103
+	LBRACE  shift 82
+	LIDENT  shift 83
+	LPAREN  shift 84
+	MINUS  shift 85
+	PLUS  shift 86
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	UNDERSCORE  shift 87
+	AS  reduce 114
+	BAR  reduce 114
+	COMMA  reduce 114
+
+	val_ident  goto 90
+	mod_longident  goto 91
+	labeled_simple_pattern  goto 280
+	simple_pattern  goto 105
+	constr_longident  goto 106
+	constant  goto 94
+	type_constraint  goto 281
+	fun_binding  goto 282
+	simple_pattern_not_ident  goto 95
+	strict_binding  goto 283
+	signed_constant  goto 97
+
+
+state 206
+	expr : LET rec_flag let_bindings_no_attrs . IN seq_expr  (39)
+
+	IN  shift 284
+	.  error
+
+
+state 207
+	let_bindings : let_binding .  (90)
+
+	.  reduce 90
+
+
+state 208
+	let_binding : let_binding_ .  (93)
+
+	.  reduce 93
+
+
+state 209
+	let_binding_ : simple_pattern_not_ident . COLON core_type EQUAL seq_expr  (96)
+	simple_pattern : simple_pattern_not_ident .  (115)
+
+	COLON  shift 285
+	AS  reduce 115
+	BAR  reduce 115
+	COMMA  reduce 115
+	EQUAL  reduce 115
+
+
+state 210
+	type_constraint : COLON . core_type  (105)
+	type_constraint : COLON . core_type COLONGREATER core_type  (106)
+
+	LIDENT  shift 66
+	LPAREN  shift 67
+	UIDENT  shift 68
+	UNDERSCORE  shift 69
+	.  error
+
+	core_type  goto 286
+	core_type2  goto 72
+	simple_core_type_or_tuple  goto 73
+	simple_core_type  goto 74
+	simple_core_type2  goto 75
+	type_longident  goto 76
+	mod_ext_longident  goto 77
+
+
+state 211
+	type_constraint : COLONGREATER . core_type  (107)
+
+	LIDENT  shift 66
+	LPAREN  shift 67
+	UIDENT  shift 68
+	UNDERSCORE  shift 69
+	.  error
+
+	core_type  goto 287
+	core_type2  goto 72
+	simple_core_type_or_tuple  goto 73
+	simple_core_type  goto 74
+	simple_core_type2  goto 75
+	type_longident  goto 76
+	mod_ext_longident  goto 77
+
+
+state 212
+	simple_expr : LPAREN seq_expr RPAREN .  (74)
+
+	.  reduce 74
+
+
+state 213
+	simple_expr : LPAREN seq_expr type_constraint . RPAREN  (77)
+
+	RPAREN  shift 288
+	.  error
+
+
+state 214
+	structure_item : LET rec_flag . let_bindings  (24)
+
+	CHAR  shift 12
+	EXCEPTION  shift 81
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LBRACE  shift 82
+	LIDENT  shift 83
+	LPAREN  shift 84
+	MINUS  shift 85
+	PLUS  shift 86
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	UNDERSCORE  shift 87
+	.  error
+
+	pattern  goto 203
+	let_bindings  goto 289
+	val_ident  goto 205
+	mod_longident  goto 91
+	simple_pattern  goto 92
+	constr_longident  goto 93
+	constant  goto 94
+	let_binding  goto 207
+	let_binding_  goto 208
+	simple_pattern_not_ident  goto 209
+	pattern_comma_list  goto 96
+	signed_constant  goto 97
+
+
+state 215
+	simple_expr : mod_longident DOT LPAREN . seq_expr RPAREN  (79)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	seq_expr  goto 290
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 39
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 216
+	mod_longident : mod_longident DOT UIDENT .  (169)
+
+	.  reduce 169
+
+
+state 217
+	val_longident : mod_longident DOT val_ident .  (159)
+
+	.  reduce 159
+
+
+state 218
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr AMPERAMPER expr .  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	AMPERAMPER  shift 120
+	AMPERSAND  shift 121
+	EQUAL  shift 125
+	GREATER  shift 126
+	INFIXOP0  shift 127
+	INFIXOP1  shift 128
+	INFIXOP2  shift 129
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	LESS  shift 132
+	MINUS  shift 133
+	MINUSDOT  shift 134
+	PERCENT  shift 136
+	PLUS  shift 137
+	PLUSDOT  shift 138
+	PLUSEQ  shift 139
+	STAR  shift 141
+	AND  reduce 63
+	BARBAR  reduce 63
+	COLON  reduce 63
+	COLONEQUAL  reduce 63
+	COLONGREATER  reduce 63
+	COMMA  reduce 63
+	ELSE  reduce 63
+	END  reduce 63
+	EOF  reduce 63
+	IN  reduce 63
+	LET  reduce 63
+	OPEN  reduce 63
+	OR  reduce 63
+	RPAREN  reduce 63
+	SEMI  reduce 63
+	SEMISEMI  reduce 63
+	THEN  reduce 63
+
+
+state 219
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr AMPERSAND expr .  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	AMPERAMPER  shift 120
+	AMPERSAND  shift 121
+	EQUAL  shift 125
+	GREATER  shift 126
+	INFIXOP0  shift 127
+	INFIXOP1  shift 128
+	INFIXOP2  shift 129
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	LESS  shift 132
+	MINUS  shift 133
+	MINUSDOT  shift 134
+	PERCENT  shift 136
+	PLUS  shift 137
+	PLUSDOT  shift 138
+	PLUSEQ  shift 139
+	STAR  shift 141
+	AND  reduce 62
+	BARBAR  reduce 62
+	COLON  reduce 62
+	COLONEQUAL  reduce 62
+	COLONGREATER  reduce 62
+	COMMA  reduce 62
+	ELSE  reduce 62
+	END  reduce 62
+	EOF  reduce 62
+	IN  reduce 62
+	LET  reduce 62
+	OPEN  reduce 62
+	OR  reduce 62
+	RPAREN  reduce 62
+	SEMI  reduce 62
+	SEMISEMI  reduce 62
+	THEN  reduce 62
+
+
+state 220
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr BARBAR expr .  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	AMPERAMPER  shift 120
+	AMPERSAND  shift 121
+	BARBAR  shift 122
+	EQUAL  shift 125
+	GREATER  shift 126
+	INFIXOP0  shift 127
+	INFIXOP1  shift 128
+	INFIXOP2  shift 129
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	LESS  shift 132
+	MINUS  shift 133
+	MINUSDOT  shift 134
+	OR  shift 135
+	PERCENT  shift 136
+	PLUS  shift 137
+	PLUSDOT  shift 138
+	PLUSEQ  shift 139
+	STAR  shift 141
+	AND  reduce 61
+	COLON  reduce 61
+	COLONEQUAL  reduce 61
+	COLONGREATER  reduce 61
+	COMMA  reduce 61
+	ELSE  reduce 61
+	END  reduce 61
+	EOF  reduce 61
+	IN  reduce 61
+	LET  reduce 61
+	OPEN  reduce 61
+	RPAREN  reduce 61
+	SEMI  reduce 61
+	SEMISEMI  reduce 61
+	THEN  reduce 61
+
+
+state 221
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr : expr COLONEQUAL expr .  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	AMPERAMPER  shift 120
+	AMPERSAND  shift 121
+	BARBAR  shift 122
+	COLONEQUAL  shift 123
+	COMMA  shift 124
+	EQUAL  shift 125
+	GREATER  shift 126
+	INFIXOP0  shift 127
+	INFIXOP1  shift 128
+	INFIXOP2  shift 129
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	LESS  shift 132
+	MINUS  shift 133
+	MINUSDOT  shift 134
+	OR  shift 135
+	PERCENT  shift 136
+	PLUS  shift 137
+	PLUSDOT  shift 138
+	PLUSEQ  shift 139
+	STAR  shift 141
+	AND  reduce 64
+	COLON  reduce 64
+	COLONGREATER  reduce 64
+	ELSE  reduce 64
+	END  reduce 64
+	EOF  reduce 64
+	IN  reduce 64
+	LET  reduce 64
+	OPEN  reduce 64
+	RPAREN  reduce 64
+	SEMI  reduce 64
+	SEMISEMI  reduce 64
+	THEN  reduce 64
+
+
+state 222
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+	expr_comma_list : expr COMMA expr .  (104)
+
+	AMPERAMPER  shift 120
+	AMPERSAND  shift 121
+	BARBAR  shift 122
+	EQUAL  shift 125
+	GREATER  shift 126
+	INFIXOP0  shift 127
+	INFIXOP1  shift 128
+	INFIXOP2  shift 129
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	LESS  shift 132
+	MINUS  shift 133
+	MINUSDOT  shift 134
+	OR  shift 135
+	PERCENT  shift 136
+	PLUS  shift 137
+	PLUSDOT  shift 138
+	PLUSEQ  shift 139
+	STAR  shift 141
+	AND  reduce 104
+	COLON  reduce 104
+	COLONEQUAL  reduce 104
+	COLONGREATER  reduce 104
+	COMMA  reduce 104
+	ELSE  reduce 104
+	END  reduce 104
+	EOF  reduce 104
+	IN  reduce 104
+	LET  reduce 104
+	OPEN  reduce 104
+	RPAREN  reduce 104
+	SEMI  reduce 104
+	SEMISEMI  reduce 104
+	THEN  reduce 104
+
+
+state 223
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr EQUAL expr .  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	INFIXOP1  shift 128
+	INFIXOP2  shift 129
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	MINUS  shift 133
+	MINUSDOT  shift 134
+	PERCENT  shift 136
+	PLUS  shift 137
+	PLUSDOT  shift 138
+	PLUSEQ  shift 139
+	STAR  shift 141
+	AMPERAMPER  reduce 57
+	AMPERSAND  reduce 57
+	AND  reduce 57
+	BARBAR  reduce 57
+	COLON  reduce 57
+	COLONEQUAL  reduce 57
+	COLONGREATER  reduce 57
+	COMMA  reduce 57
+	ELSE  reduce 57
+	END  reduce 57
+	EOF  reduce 57
+	EQUAL  reduce 57
+	GREATER  reduce 57
+	IN  reduce 57
+	INFIXOP0  reduce 57
+	LESS  reduce 57
+	LET  reduce 57
+	OPEN  reduce 57
+	OR  reduce 57
+	RPAREN  reduce 57
+	SEMI  reduce 57
+	SEMISEMI  reduce 57
+	THEN  reduce 57
+
+
+state 224
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr GREATER expr .  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	INFIXOP1  shift 128
+	INFIXOP2  shift 129
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	MINUS  shift 133
+	MINUSDOT  shift 134
+	PERCENT  shift 136
+	PLUS  shift 137
+	PLUSDOT  shift 138
+	PLUSEQ  shift 139
+	STAR  shift 141
+	AMPERAMPER  reduce 59
+	AMPERSAND  reduce 59
+	AND  reduce 59
+	BARBAR  reduce 59
+	COLON  reduce 59
+	COLONEQUAL  reduce 59
+	COLONGREATER  reduce 59
+	COMMA  reduce 59
+	ELSE  reduce 59
+	END  reduce 59
+	EOF  reduce 59
+	EQUAL  reduce 59
+	GREATER  reduce 59
+	IN  reduce 59
+	INFIXOP0  reduce 59
+	LESS  reduce 59
+	LET  reduce 59
+	OPEN  reduce 59
+	OR  reduce 59
+	RPAREN  reduce 59
+	SEMI  reduce 59
+	SEMISEMI  reduce 59
+	THEN  reduce 59
+
+
+state 225
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr INFIXOP0 expr .  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	INFIXOP1  shift 128
+	INFIXOP2  shift 129
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	MINUS  shift 133
+	MINUSDOT  shift 134
+	PERCENT  shift 136
+	PLUS  shift 137
+	PLUSDOT  shift 138
+	PLUSEQ  shift 139
+	STAR  shift 141
+	AMPERAMPER  reduce 45
+	AMPERSAND  reduce 45
+	AND  reduce 45
+	BARBAR  reduce 45
+	COLON  reduce 45
+	COLONEQUAL  reduce 45
+	COLONGREATER  reduce 45
+	COMMA  reduce 45
+	ELSE  reduce 45
+	END  reduce 45
+	EOF  reduce 45
+	EQUAL  reduce 45
+	GREATER  reduce 45
+	IN  reduce 45
+	INFIXOP0  reduce 45
+	LESS  reduce 45
+	LET  reduce 45
+	OPEN  reduce 45
+	OR  reduce 45
+	RPAREN  reduce 45
+	SEMI  reduce 45
+	SEMISEMI  reduce 45
+	THEN  reduce 45
+
+
+state 226
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr INFIXOP1 expr .  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	INFIXOP1  shift 128
+	INFIXOP2  shift 129
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	MINUS  shift 133
+	MINUSDOT  shift 134
+	PERCENT  shift 136
+	PLUS  shift 137
+	PLUSDOT  shift 138
+	PLUSEQ  shift 139
+	STAR  shift 141
+	AMPERAMPER  reduce 46
+	AMPERSAND  reduce 46
+	AND  reduce 46
+	BARBAR  reduce 46
+	COLON  reduce 46
+	COLONEQUAL  reduce 46
+	COLONGREATER  reduce 46
+	COMMA  reduce 46
+	ELSE  reduce 46
+	END  reduce 46
+	EOF  reduce 46
+	EQUAL  reduce 46
+	GREATER  reduce 46
+	IN  reduce 46
+	INFIXOP0  reduce 46
+	LESS  reduce 46
+	LET  reduce 46
+	OPEN  reduce 46
+	OR  reduce 46
+	RPAREN  reduce 46
+	SEMI  reduce 46
+	SEMISEMI  reduce 46
+	THEN  reduce 46
+
+
+state 227
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr INFIXOP2 expr .  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	PERCENT  shift 136
+	STAR  shift 141
+	AMPERAMPER  reduce 47
+	AMPERSAND  reduce 47
+	AND  reduce 47
+	BARBAR  reduce 47
+	COLON  reduce 47
+	COLONEQUAL  reduce 47
+	COLONGREATER  reduce 47
+	COMMA  reduce 47
+	ELSE  reduce 47
+	END  reduce 47
+	EOF  reduce 47
+	EQUAL  reduce 47
+	GREATER  reduce 47
+	IN  reduce 47
+	INFIXOP0  reduce 47
+	INFIXOP1  reduce 47
+	INFIXOP2  reduce 47
+	LESS  reduce 47
+	LET  reduce 47
+	MINUS  reduce 47
+	MINUSDOT  reduce 47
+	OPEN  reduce 47
+	OR  reduce 47
+	PLUS  reduce 47
+	PLUSDOT  reduce 47
+	PLUSEQ  reduce 47
+	RPAREN  reduce 47
+	SEMI  reduce 47
+	SEMISEMI  reduce 47
+	THEN  reduce 47
+
+
+state 228
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr INFIXOP3 expr .  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	INFIXOP4  shift 131
+	AMPERAMPER  reduce 48
+	AMPERSAND  reduce 48
+	AND  reduce 48
+	BARBAR  reduce 48
+	COLON  reduce 48
+	COLONEQUAL  reduce 48
+	COLONGREATER  reduce 48
+	COMMA  reduce 48
+	ELSE  reduce 48
+	END  reduce 48
+	EOF  reduce 48
+	EQUAL  reduce 48
+	GREATER  reduce 48
+	IN  reduce 48
+	INFIXOP0  reduce 48
+	INFIXOP1  reduce 48
+	INFIXOP2  reduce 48
+	INFIXOP3  reduce 48
+	LESS  reduce 48
+	LET  reduce 48
+	MINUS  reduce 48
+	MINUSDOT  reduce 48
+	OPEN  reduce 48
+	OR  reduce 48
+	PERCENT  reduce 48
+	PLUS  reduce 48
+	PLUSDOT  reduce 48
+	PLUSEQ  reduce 48
+	RPAREN  reduce 48
+	SEMI  reduce 48
+	SEMISEMI  reduce 48
+	STAR  reduce 48
+	THEN  reduce 48
+
+
+state 229
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr INFIXOP4 expr .  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	INFIXOP4  shift 131
+	AMPERAMPER  reduce 49
+	AMPERSAND  reduce 49
+	AND  reduce 49
+	BARBAR  reduce 49
+	COLON  reduce 49
+	COLONEQUAL  reduce 49
+	COLONGREATER  reduce 49
+	COMMA  reduce 49
+	ELSE  reduce 49
+	END  reduce 49
+	EOF  reduce 49
+	EQUAL  reduce 49
+	GREATER  reduce 49
+	IN  reduce 49
+	INFIXOP0  reduce 49
+	INFIXOP1  reduce 49
+	INFIXOP2  reduce 49
+	INFIXOP3  reduce 49
+	LESS  reduce 49
+	LET  reduce 49
+	MINUS  reduce 49
+	MINUSDOT  reduce 49
+	OPEN  reduce 49
+	OR  reduce 49
+	PERCENT  reduce 49
+	PLUS  reduce 49
+	PLUSDOT  reduce 49
+	PLUSEQ  reduce 49
+	RPAREN  reduce 49
+	SEMI  reduce 49
+	SEMISEMI  reduce 49
+	STAR  reduce 49
+	THEN  reduce 49
+
+
+state 230
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr LESS expr .  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	INFIXOP1  shift 128
+	INFIXOP2  shift 129
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	MINUS  shift 133
+	MINUSDOT  shift 134
+	PERCENT  shift 136
+	PLUS  shift 137
+	PLUSDOT  shift 138
+	PLUSEQ  shift 139
+	STAR  shift 141
+	AMPERAMPER  reduce 58
+	AMPERSAND  reduce 58
+	AND  reduce 58
+	BARBAR  reduce 58
+	COLON  reduce 58
+	COLONEQUAL  reduce 58
+	COLONGREATER  reduce 58
+	COMMA  reduce 58
+	ELSE  reduce 58
+	END  reduce 58
+	EOF  reduce 58
+	EQUAL  reduce 58
+	GREATER  reduce 58
+	IN  reduce 58
+	INFIXOP0  reduce 58
+	LESS  reduce 58
+	LET  reduce 58
+	OPEN  reduce 58
+	OR  reduce 58
+	RPAREN  reduce 58
+	SEMI  reduce 58
+	SEMISEMI  reduce 58
+	THEN  reduce 58
+
+
+state 231
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr MINUS expr .  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	PERCENT  shift 136
+	STAR  shift 141
+	AMPERAMPER  reduce 53
+	AMPERSAND  reduce 53
+	AND  reduce 53
+	BARBAR  reduce 53
+	COLON  reduce 53
+	COLONEQUAL  reduce 53
+	COLONGREATER  reduce 53
+	COMMA  reduce 53
+	ELSE  reduce 53
+	END  reduce 53
+	EOF  reduce 53
+	EQUAL  reduce 53
+	GREATER  reduce 53
+	IN  reduce 53
+	INFIXOP0  reduce 53
+	INFIXOP1  reduce 53
+	INFIXOP2  reduce 53
+	LESS  reduce 53
+	LET  reduce 53
+	MINUS  reduce 53
+	MINUSDOT  reduce 53
+	OPEN  reduce 53
+	OR  reduce 53
+	PLUS  reduce 53
+	PLUSDOT  reduce 53
+	PLUSEQ  reduce 53
+	RPAREN  reduce 53
+	SEMI  reduce 53
+	SEMISEMI  reduce 53
+	THEN  reduce 53
+
+
+state 232
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr MINUSDOT expr .  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	PERCENT  shift 136
+	STAR  shift 141
+	AMPERAMPER  reduce 54
+	AMPERSAND  reduce 54
+	AND  reduce 54
+	BARBAR  reduce 54
+	COLON  reduce 54
+	COLONEQUAL  reduce 54
+	COLONGREATER  reduce 54
+	COMMA  reduce 54
+	ELSE  reduce 54
+	END  reduce 54
+	EOF  reduce 54
+	EQUAL  reduce 54
+	GREATER  reduce 54
+	IN  reduce 54
+	INFIXOP0  reduce 54
+	INFIXOP1  reduce 54
+	INFIXOP2  reduce 54
+	LESS  reduce 54
+	LET  reduce 54
+	MINUS  reduce 54
+	MINUSDOT  reduce 54
+	OPEN  reduce 54
+	OR  reduce 54
+	PLUS  reduce 54
+	PLUSDOT  reduce 54
+	PLUSEQ  reduce 54
+	RPAREN  reduce 54
+	SEMI  reduce 54
+	SEMISEMI  reduce 54
+	THEN  reduce 54
+
+
+state 233
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr OR expr .  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	AMPERAMPER  shift 120
+	AMPERSAND  shift 121
+	BARBAR  shift 122
+	EQUAL  shift 125
+	GREATER  shift 126
+	INFIXOP0  shift 127
+	INFIXOP1  shift 128
+	INFIXOP2  shift 129
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	LESS  shift 132
+	MINUS  shift 133
+	MINUSDOT  shift 134
+	OR  shift 135
+	PERCENT  shift 136
+	PLUS  shift 137
+	PLUSDOT  shift 138
+	PLUSEQ  shift 139
+	STAR  shift 141
+	AND  reduce 60
+	COLON  reduce 60
+	COLONEQUAL  reduce 60
+	COLONGREATER  reduce 60
+	COMMA  reduce 60
+	ELSE  reduce 60
+	END  reduce 60
+	EOF  reduce 60
+	IN  reduce 60
+	LET  reduce 60
+	OPEN  reduce 60
+	RPAREN  reduce 60
+	SEMI  reduce 60
+	SEMISEMI  reduce 60
+	THEN  reduce 60
+
+
+state 234
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr PERCENT expr .  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	INFIXOP4  shift 131
+	AMPERAMPER  reduce 56
+	AMPERSAND  reduce 56
+	AND  reduce 56
+	BARBAR  reduce 56
+	COLON  reduce 56
+	COLONEQUAL  reduce 56
+	COLONGREATER  reduce 56
+	COMMA  reduce 56
+	ELSE  reduce 56
+	END  reduce 56
+	EOF  reduce 56
+	EQUAL  reduce 56
+	GREATER  reduce 56
+	IN  reduce 56
+	INFIXOP0  reduce 56
+	INFIXOP1  reduce 56
+	INFIXOP2  reduce 56
+	INFIXOP3  reduce 56
+	LESS  reduce 56
+	LET  reduce 56
+	MINUS  reduce 56
+	MINUSDOT  reduce 56
+	OPEN  reduce 56
+	OR  reduce 56
+	PERCENT  reduce 56
+	PLUS  reduce 56
+	PLUSDOT  reduce 56
+	PLUSEQ  reduce 56
+	RPAREN  reduce 56
+	SEMI  reduce 56
+	SEMISEMI  reduce 56
+	STAR  reduce 56
+	THEN  reduce 56
+
+
+state 235
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr PLUS expr .  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	PERCENT  shift 136
+	STAR  shift 141
+	AMPERAMPER  reduce 50
+	AMPERSAND  reduce 50
+	AND  reduce 50
+	BARBAR  reduce 50
+	COLON  reduce 50
+	COLONEQUAL  reduce 50
+	COLONGREATER  reduce 50
+	COMMA  reduce 50
+	ELSE  reduce 50
+	END  reduce 50
+	EOF  reduce 50
+	EQUAL  reduce 50
+	GREATER  reduce 50
+	IN  reduce 50
+	INFIXOP0  reduce 50
+	INFIXOP1  reduce 50
+	INFIXOP2  reduce 50
+	LESS  reduce 50
+	LET  reduce 50
+	MINUS  reduce 50
+	MINUSDOT  reduce 50
+	OPEN  reduce 50
+	OR  reduce 50
+	PLUS  reduce 50
+	PLUSDOT  reduce 50
+	PLUSEQ  reduce 50
+	RPAREN  reduce 50
+	SEMI  reduce 50
+	SEMISEMI  reduce 50
+	THEN  reduce 50
+
+
+state 236
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr PLUSDOT expr .  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	PERCENT  shift 136
+	STAR  shift 141
+	AMPERAMPER  reduce 51
+	AMPERSAND  reduce 51
+	AND  reduce 51
+	BARBAR  reduce 51
+	COLON  reduce 51
+	COLONEQUAL  reduce 51
+	COLONGREATER  reduce 51
+	COMMA  reduce 51
+	ELSE  reduce 51
+	END  reduce 51
+	EOF  reduce 51
+	EQUAL  reduce 51
+	GREATER  reduce 51
+	IN  reduce 51
+	INFIXOP0  reduce 51
+	INFIXOP1  reduce 51
+	INFIXOP2  reduce 51
+	LESS  reduce 51
+	LET  reduce 51
+	MINUS  reduce 51
+	MINUSDOT  reduce 51
+	OPEN  reduce 51
+	OR  reduce 51
+	PLUS  reduce 51
+	PLUSDOT  reduce 51
+	PLUSEQ  reduce 51
+	RPAREN  reduce 51
+	SEMI  reduce 51
+	SEMISEMI  reduce 51
+	THEN  reduce 51
+
+
+state 237
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr PLUSEQ expr .  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	PERCENT  shift 136
+	STAR  shift 141
+	AMPERAMPER  reduce 52
+	AMPERSAND  reduce 52
+	AND  reduce 52
+	BARBAR  reduce 52
+	COLON  reduce 52
+	COLONEQUAL  reduce 52
+	COLONGREATER  reduce 52
+	COMMA  reduce 52
+	ELSE  reduce 52
+	END  reduce 52
+	EOF  reduce 52
+	EQUAL  reduce 52
+	GREATER  reduce 52
+	IN  reduce 52
+	INFIXOP0  reduce 52
+	INFIXOP1  reduce 52
+	INFIXOP2  reduce 52
+	LESS  reduce 52
+	LET  reduce 52
+	MINUS  reduce 52
+	MINUSDOT  reduce 52
+	OPEN  reduce 52
+	OR  reduce 52
+	PLUS  reduce 52
+	PLUSDOT  reduce 52
+	PLUSEQ  reduce 52
+	RPAREN  reduce 52
+	SEMI  reduce 52
+	SEMISEMI  reduce 52
+	THEN  reduce 52
+
+
+state 238
+	seq_expr : expr SEMI seq_expr .  (34)
+
+	.  reduce 34
+
+
+state 239
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr STAR expr .  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	INFIXOP4  shift 131
+	AMPERAMPER  reduce 55
+	AMPERSAND  reduce 55
+	AND  reduce 55
+	BARBAR  reduce 55
+	COLON  reduce 55
+	COLONEQUAL  reduce 55
+	COLONGREATER  reduce 55
+	COMMA  reduce 55
+	ELSE  reduce 55
+	END  reduce 55
+	EOF  reduce 55
+	EQUAL  reduce 55
+	GREATER  reduce 55
+	IN  reduce 55
+	INFIXOP0  reduce 55
+	INFIXOP1  reduce 55
+	INFIXOP2  reduce 55
+	INFIXOP3  reduce 55
+	LESS  reduce 55
+	LET  reduce 55
+	MINUS  reduce 55
+	MINUSDOT  reduce 55
+	OPEN  reduce 55
+	OR  reduce 55
+	PERCENT  reduce 55
+	PLUS  reduce 55
+	PLUSDOT  reduce 55
+	PLUSEQ  reduce 55
+	RPAREN  reduce 55
+	SEMI  reduce 55
+	SEMISEMI  reduce 55
+	STAR  reduce 55
+	THEN  reduce 55
+
+
+state 240
+	expr : simple_expr DOT LPAREN . seq_expr RPAREN LESSMINUS expr  (68)
+	simple_expr : simple_expr DOT LPAREN . seq_expr RPAREN  (80)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	seq_expr  goto 291
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 39
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 241
+	expr : simple_expr DOT label_longident . LESSMINUS expr  (67)
+	simple_expr : simple_expr DOT label_longident .  (78)
+
+	LESSMINUS  shift 292
+	AMPERAMPER  reduce 78
+	AMPERSAND  reduce 78
+	AND  reduce 78
+	BANG  reduce 78
+	BARBAR  reduce 78
+	BEGIN  reduce 78
+	CHAR  reduce 78
+	COLON  reduce 78
+	COLONEQUAL  reduce 78
+	COLONGREATER  reduce 78
+	COMMA  reduce 78
+	DOT  reduce 78
+	ELSE  reduce 78
+	END  reduce 78
+	EOF  reduce 78
+	EQUAL  reduce 78
+	FALSE  reduce 78
+	FLOAT  reduce 78
+	GREATER  reduce 78
+	IN  reduce 78
+	INFIXOP0  reduce 78
+	INFIXOP1  reduce 78
+	INFIXOP2  reduce 78
+	INFIXOP3  reduce 78
+	INFIXOP4  reduce 78
+	INT  reduce 78
+	LABEL  reduce 78
+	LESS  reduce 78
+	LET  reduce 78
+	LIDENT  reduce 78
+	LPAREN  reduce 78
+	MINUS  reduce 78
+	MINUSDOT  reduce 78
+	OPEN  reduce 78
+	OR  reduce 78
+	PERCENT  reduce 78
+	PLUS  reduce 78
+	PLUSDOT  reduce 78
+	PLUSEQ  reduce 78
+	PREFIXOP  reduce 78
+	RPAREN  reduce 78
+	SEMI  reduce 78
+	SEMISEMI  reduce 78
+	STAR  reduce 78
+	STRING  reduce 78
+	THEN  reduce 78
+	TILDE  reduce 78
+	TRUE  reduce 78
+	UIDENT  reduce 78
+
+
+state 242
+	simple_expr : simple_expr . DOT label_longident  (78)
+	simple_expr : simple_expr . DOT LPAREN seq_expr RPAREN  (80)
+	label_expr : LABEL simple_expr .  (87)
+
+	DOT  shift 196
+	AMPERAMPER  reduce 87
+	AMPERSAND  reduce 87
+	AND  reduce 87
+	BANG  reduce 87
+	BARBAR  reduce 87
+	BEGIN  reduce 87
+	CHAR  reduce 87
+	COLON  reduce 87
+	COLONEQUAL  reduce 87
+	COLONGREATER  reduce 87
+	COMMA  reduce 87
+	ELSE  reduce 87
+	END  reduce 87
+	EOF  reduce 87
+	EQUAL  reduce 87
+	FALSE  reduce 87
+	FLOAT  reduce 87
+	GREATER  reduce 87
+	IN  reduce 87
+	INFIXOP0  reduce 87
+	INFIXOP1  reduce 87
+	INFIXOP2  reduce 87
+	INFIXOP3  reduce 87
+	INFIXOP4  reduce 87
+	INT  reduce 87
+	LABEL  reduce 87
+	LESS  reduce 87
+	LET  reduce 87
+	LIDENT  reduce 87
+	LPAREN  reduce 87
+	MINUS  reduce 87
+	MINUSDOT  reduce 87
+	OPEN  reduce 87
+	OR  reduce 87
+	PERCENT  reduce 87
+	PLUS  reduce 87
+	PLUSDOT  reduce 87
+	PLUSEQ  reduce 87
+	PREFIXOP  reduce 87
+	RPAREN  reduce 87
+	SEMI  reduce 87
+	SEMISEMI  reduce 87
+	STAR  reduce 87
+	STRING  reduce 87
+	THEN  reduce 87
+	TILDE  reduce 87
+	TRUE  reduce 87
+	UIDENT  reduce 87
+
+
+state 243
+	label_ident : LIDENT .  (89)
+
+	.  reduce 89
+
+
+state 244
+	label_expr : TILDE label_ident .  (88)
+
+	.  reduce 88
+
+
+state 245
+	simple_labeled_expr_list : simple_labeled_expr_list labeled_simple_expr .  (84)
+
+	.  reduce 84
+
+
+state 246
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr_comma_list COMMA expr .  (103)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	AMPERAMPER  shift 120
+	AMPERSAND  shift 121
+	BARBAR  shift 122
+	EQUAL  shift 125
+	GREATER  shift 126
+	INFIXOP0  shift 127
+	INFIXOP1  shift 128
+	INFIXOP2  shift 129
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	LESS  shift 132
+	MINUS  shift 133
+	MINUSDOT  shift 134
+	OR  shift 135
+	PERCENT  shift 136
+	PLUS  shift 137
+	PLUSDOT  shift 138
+	PLUSEQ  shift 139
+	STAR  shift 141
+	AND  reduce 103
+	COLON  reduce 103
+	COLONEQUAL  reduce 103
+	COLONGREATER  reduce 103
+	COMMA  reduce 103
+	ELSE  reduce 103
+	END  reduce 103
+	EOF  reduce 103
+	IN  reduce 103
+	LET  reduce 103
+	OPEN  reduce 103
+	RPAREN  reduce 103
+	SEMI  reduce 103
+	SEMISEMI  reduce 103
+	THEN  reduce 103
+
+
+state 247
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr : label LESSMINUS expr .  (69)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	AMPERAMPER  shift 120
+	AMPERSAND  shift 121
+	BARBAR  shift 122
+	COLONEQUAL  shift 123
+	COMMA  shift 124
+	EQUAL  shift 125
+	GREATER  shift 126
+	INFIXOP0  shift 127
+	INFIXOP1  shift 128
+	INFIXOP2  shift 129
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	LESS  shift 132
+	MINUS  shift 133
+	MINUSDOT  shift 134
+	OR  shift 135
+	PERCENT  shift 136
+	PLUS  shift 137
+	PLUSDOT  shift 138
+	PLUSEQ  shift 139
+	STAR  shift 141
+	AND  reduce 69
+	COLON  reduce 69
+	COLONGREATER  reduce 69
+	ELSE  reduce 69
+	END  reduce 69
+	EOF  reduce 69
+	IN  reduce 69
+	LET  reduce 69
+	OPEN  reduce 69
+	RPAREN  reduce 69
+	SEMI  reduce 69
+	SEMISEMI  reduce 69
+	THEN  reduce 69
+
+
+state 248
+	signature_item : VAL val_ident COLON . core_type  (29)
+
+	LIDENT  shift 66
+	LPAREN  shift 67
+	UIDENT  shift 68
+	UNDERSCORE  shift 69
+	.  error
+
+	core_type  goto 293
+	core_type2  goto 72
+	simple_core_type_or_tuple  goto 73
+	simple_core_type  goto 74
+	simple_core_type2  goto 75
+	type_longident  goto 76
+	mod_ext_longident  goto 77
+
+
+state 249
+	use_file_tail : SEMISEMI seq_expr use_file_tail .  (13)
+
+	.  reduce 13
+
+
+state 250
+	use_file_tail : SEMISEMI structure_item use_file_tail .  (14)
+
+	.  reduce 14
+
+
+state 251
+	core_type2 : LIDENT COLON core_type2 . MINUSGREATER core_type2  (133)
+	core_type2 : core_type2 . MINUSGREATER core_type2  (134)
+
+	MINUSGREATER  shift 294
+	.  error
+
+
+state 252
+	core_type_comma_list : core_type_comma_list COMMA . core_type  (144)
+
+	LIDENT  shift 66
+	LPAREN  shift 67
+	UIDENT  shift 68
+	UNDERSCORE  shift 69
+	.  error
+
+	core_type  goto 295
+	core_type2  goto 72
+	simple_core_type_or_tuple  goto 73
+	simple_core_type  goto 74
+	simple_core_type2  goto 75
+	type_longident  goto 76
+	mod_ext_longident  goto 77
+
+
+state 253
+	simple_core_type : LPAREN core_type_comma_list RPAREN .  (136)
+	simple_core_type2 : LPAREN core_type_comma_list RPAREN . type_longident  (140)
+
+	LIDENT  shift 171
+	UIDENT  shift 68
+	COLONGREATER  reduce 136
+	COMMA  reduce 136
+	EOF  reduce 136
+	EQUAL  reduce 136
+	MINUSGREATER  reduce 136
+	OPEN  reduce 136
+	RPAREN  reduce 136
+	SEMISEMI  reduce 136
+	STAR  reduce 136
+	VAL  reduce 136
+
+	type_longident  goto 296
+	mod_ext_longident  goto 77
+
+
+state 254
+	core_type2 : core_type2 . MINUSGREATER core_type2  (134)
+	core_type2 : core_type2 MINUSGREATER core_type2 .  (134)
+
+	MINUSGREATER  shift 169
+	COLONGREATER  reduce 134
+	COMMA  reduce 134
+	EOF  reduce 134
+	EQUAL  reduce 134
+	OPEN  reduce 134
+	RPAREN  reduce 134
+	SEMISEMI  reduce 134
+	VAL  reduce 134
+
+
+state 255
+	core_type_list : simple_core_type .  (145)
+
+	.  reduce 145
+
+
+state 256
+	simple_core_type_or_tuple : simple_core_type STAR core_type_list .  (142)
+	core_type_list : core_type_list . STAR simple_core_type  (146)
+
+	STAR  shift 297
+	COLONGREATER  reduce 142
+	COMMA  reduce 142
+	EOF  reduce 142
+	EQUAL  reduce 142
+	MINUSGREATER  reduce 142
+	OPEN  reduce 142
+	RPAREN  reduce 142
+	SEMISEMI  reduce 142
+	VAL  reduce 142
+
+
+state 257
+	type_longident : mod_ext_longident DOT LIDENT .  (167)
+
+	.  reduce 167
+
+
+state 258
+	mod_ext_longident : mod_ext_longident DOT UIDENT .  (171)
+
+	.  reduce 171
+
+
+state 259
+	mod_ext_longident : mod_ext_longident . DOT UIDENT  (171)
+	mod_ext_longident : mod_ext_longident . LPAREN mod_ext_longident RPAREN  (172)
+	mod_ext_longident : mod_ext_longident LPAREN mod_ext_longident . RPAREN  (172)
+
+	DOT  shift 298
+	LPAREN  shift 174
+	RPAREN  shift 299
+	.  error
+
+
+state 260
+	let_bindings : let_bindings . AND let_binding  (91)
+	let_bindings_no_attrs : let_bindings .  (92)
+
+	AND  shift 278
+	IN  reduce 92
+
+
+state 261
+	label_longident : mod_longident DOT . LIDENT  (165)
+	mod_longident : mod_longident DOT . UIDENT  (169)
+
+	LIDENT  shift 300
+	UIDENT  shift 216
+	.  error
+
+
+state 262
+	lbl_pattern : label_longident EQUAL . pattern  (129)
+
+	CHAR  shift 12
+	EXCEPTION  shift 81
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LBRACE  shift 82
+	LIDENT  shift 83
+	LPAREN  shift 84
+	MINUS  shift 85
+	PLUS  shift 86
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	UNDERSCORE  shift 87
+	.  error
+
+	pattern  goto 301
+	val_ident  goto 90
+	mod_longident  goto 91
+	simple_pattern  goto 92
+	constr_longident  goto 93
+	constant  goto 94
+	simple_pattern_not_ident  goto 95
+	pattern_comma_list  goto 96
+	signed_constant  goto 97
+
+
+state 263
+	simple_pattern_not_ident : LBRACE lbl_pattern_list RBRACE .  (120)
+
+	.  reduce 120
+
+
+state 264
+	lbl_pattern_list : lbl_pattern SEMI .  (126)
+	lbl_pattern_list : lbl_pattern SEMI . UNDERSCORE opt_semi  (127)
+	lbl_pattern_list : lbl_pattern SEMI . lbl_pattern_list  (128)
+
+	LIDENT  shift 178
+	UIDENT  shift 30
+	UNDERSCORE  shift 302
+	RBRACE  reduce 126
+
+	mod_longident  goto 179
+	label_longident  goto 180
+	lbl_pattern_list  goto 303
+	lbl_pattern  goto 182
+
+
+state 265
+	simple_pattern_not_ident : LPAREN pattern COLON . core_type RPAREN  (122)
+
+	LIDENT  shift 66
+	LPAREN  shift 67
+	UIDENT  shift 68
+	UNDERSCORE  shift 69
+	.  error
+
+	core_type  goto 304
+	core_type2  goto 72
+	simple_core_type_or_tuple  goto 73
+	simple_core_type  goto 74
+	simple_core_type2  goto 75
+	type_longident  goto 76
+	mod_ext_longident  goto 77
+
+
+state 266
+	simple_pattern_not_ident : LPAREN pattern RPAREN .  (121)
+
+	.  reduce 121
+
+
+state 267
+	pattern : pattern AS val_ident .  (109)
+
+	.  reduce 109
+
+
+state 268
+	pattern : pattern . AS val_ident  (109)
+	pattern : pattern . BAR pattern  (112)
+	pattern : pattern BAR pattern .  (112)
+	pattern_comma_list : pattern . COMMA pattern  (124)
+
+	COMMA  shift 190
+	AS  reduce 112
+	BAR  reduce 112
+	COLON  reduce 112
+	EOF  reduce 112
+	EQUAL  reduce 112
+	RBRACE  reduce 112
+	RPAREN  reduce 112
+	SEMI  reduce 112
+
+
+state 269
+	pattern : pattern . AS val_ident  (109)
+	pattern : pattern . BAR pattern  (112)
+	pattern_comma_list : pattern . COMMA pattern  (124)
+	pattern_comma_list : pattern COMMA pattern .  (124)
+
+	.  reduce 124
+
+
+state 270
+	pattern : pattern . AS val_ident  (109)
+	pattern : pattern . BAR pattern  (112)
+	pattern_comma_list : pattern_comma_list COMMA pattern .  (123)
+	pattern_comma_list : pattern . COMMA pattern  (124)
+
+	.  reduce 123
+
+
+state 271
+	simple_pattern_not_ident : signed_constant DOTDOT signed_constant .  (118)
+
+	.  reduce 118
+
+
+state 272
+	simple_expr : simple_expr DOT LPAREN . seq_expr RPAREN  (80)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	seq_expr  goto 305
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 39
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 273
+	simple_expr : simple_expr DOT label_longident .  (78)
+
+	.  reduce 78
+
+
+state 274
+	fun_def : MINUSGREATER seq_expr .  (101)
+
+	.  reduce 101
+
+
+state 275
+	fun_def : labeled_simple_pattern fun_def .  (102)
+
+	.  reduce 102
+
+
+state 276
+	expr : IF seq_expr THEN expr . ELSE expr  (43)
+	expr : IF seq_expr THEN expr .  (44)
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	AMPERAMPER  shift 120
+	AMPERSAND  shift 121
+	BARBAR  shift 122
+	COLONEQUAL  shift 123
+	COMMA  shift 124
+	ELSE  shift 306
+	EQUAL  shift 125
+	GREATER  shift 126
+	INFIXOP0  shift 127
+	INFIXOP1  shift 128
+	INFIXOP2  shift 129
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	LESS  shift 132
+	MINUS  shift 133
+	MINUSDOT  shift 134
+	OR  shift 135
+	PERCENT  shift 136
+	PLUS  shift 137
+	PLUSDOT  shift 138
+	PLUSEQ  shift 139
+	STAR  shift 141
+	AND  reduce 44
+	COLON  reduce 44
+	COLONGREATER  reduce 44
+	END  reduce 44
+	EOF  reduce 44
+	IN  reduce 44
+	LET  reduce 44
+	OPEN  reduce 44
+	RPAREN  reduce 44
+	SEMI  reduce 44
+	SEMISEMI  reduce 44
+	THEN  reduce 44
+
+
+state 277
+	let_binding_ : pattern EQUAL . seq_expr  (95)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	seq_expr  goto 307
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 39
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 278
+	let_bindings : let_bindings AND . let_binding  (91)
+
+	CHAR  shift 12
+	EXCEPTION  shift 81
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LBRACE  shift 82
+	LIDENT  shift 83
+	LPAREN  shift 84
+	MINUS  shift 85
+	PLUS  shift 86
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	UNDERSCORE  shift 87
+	.  error
+
+	pattern  goto 203
+	val_ident  goto 205
+	mod_longident  goto 91
+	simple_pattern  goto 92
+	constr_longident  goto 93
+	constant  goto 94
+	let_binding  goto 308
+	let_binding_  goto 208
+	simple_pattern_not_ident  goto 209
+	pattern_comma_list  goto 96
+	signed_constant  goto 97
+
+
+state 279
+	strict_binding : EQUAL . seq_expr  (99)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	seq_expr  goto 309
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 39
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 280
+	strict_binding : labeled_simple_pattern . fun_binding  (100)
+
+	CHAR  shift 12
+	COLON  shift 210
+	COLONGREATER  shift 211
+	EQUAL  shift 279
+	FALSE  shift 13
+	FLOAT  shift 14
+	INT  shift 17
+	LABEL  shift 103
+	LBRACE  shift 82
+	LIDENT  shift 83
+	LPAREN  shift 84
+	MINUS  shift 85
+	PLUS  shift 86
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	UNDERSCORE  shift 87
+	.  error
+
+	val_ident  goto 90
+	mod_longident  goto 91
+	labeled_simple_pattern  goto 280
+	simple_pattern  goto 105
+	constr_longident  goto 106
+	constant  goto 94
+	type_constraint  goto 281
+	fun_binding  goto 310
+	simple_pattern_not_ident  goto 95
+	strict_binding  goto 283
+	signed_constant  goto 97
+
+
+state 281
+	fun_binding : type_constraint . EQUAL seq_expr  (98)
+
+	EQUAL  shift 311
+	.  error
+
+
+state 282
+	let_binding_ : val_ident fun_binding .  (94)
+
+	.  reduce 94
+
+
+state 283
+	fun_binding : strict_binding .  (97)
+
+	.  reduce 97
+
+
+state 284
+	expr : LET rec_flag let_bindings_no_attrs IN . seq_expr  (39)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	seq_expr  goto 312
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 39
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 285
+	let_binding_ : simple_pattern_not_ident COLON . core_type EQUAL seq_expr  (96)
+
+	LIDENT  shift 66
+	LPAREN  shift 67
+	UIDENT  shift 68
+	UNDERSCORE  shift 69
+	.  error
+
+	core_type  goto 313
+	core_type2  goto 72
+	simple_core_type_or_tuple  goto 73
+	simple_core_type  goto 74
+	simple_core_type2  goto 75
+	type_longident  goto 76
+	mod_ext_longident  goto 77
+
+
+state 286
+	type_constraint : COLON core_type .  (105)
+	type_constraint : COLON core_type . COLONGREATER core_type  (106)
+
+	COLONGREATER  shift 314
+	EQUAL  reduce 105
+	RPAREN  reduce 105
+
+
+state 287
+	type_constraint : COLONGREATER core_type .  (107)
+
+	.  reduce 107
+
+
+state 288
+	simple_expr : LPAREN seq_expr type_constraint RPAREN .  (77)
+
+	.  reduce 77
+
+
+state 289
+	structure_item : LET rec_flag let_bindings .  (24)
+	let_bindings : let_bindings . AND let_binding  (91)
+
+	AND  shift 278
+	EOF  reduce 24
+	LET  reduce 24
+	OPEN  reduce 24
+	SEMISEMI  reduce 24
+
+
+state 290
+	simple_expr : mod_longident DOT LPAREN seq_expr . RPAREN  (79)
+
+	RPAREN  shift 315
+	.  error
+
+
+state 291
+	expr : simple_expr DOT LPAREN seq_expr . RPAREN LESSMINUS expr  (68)
+	simple_expr : simple_expr DOT LPAREN seq_expr . RPAREN  (80)
+
+	RPAREN  shift 316
+	.  error
+
+
+state 292
+	expr : simple_expr DOT label_longident LESSMINUS . expr  (67)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 317
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 293
+	signature_item : VAL val_ident COLON core_type .  (29)
+
+	.  reduce 29
+
+
+state 294
+	core_type2 : LIDENT COLON core_type2 MINUSGREATER . core_type2  (133)
+	core_type2 : core_type2 MINUSGREATER . core_type2  (134)
+
+	LIDENT  shift 66
+	LPAREN  shift 67
+	UIDENT  shift 68
+	UNDERSCORE  shift 69
+	.  error
+
+	core_type2  goto 318
+	simple_core_type_or_tuple  goto 73
+	simple_core_type  goto 74
+	simple_core_type2  goto 75
+	type_longident  goto 76
+	mod_ext_longident  goto 77
+
+
+state 295
+	core_type_comma_list : core_type_comma_list COMMA core_type .  (144)
+
+	.  reduce 144
+
+
+state 296
+	simple_core_type2 : LPAREN core_type_comma_list RPAREN type_longident .  (140)
+
+	.  reduce 140
+
+
+state 297
+	core_type_list : core_type_list STAR . simple_core_type  (146)
+
+	LIDENT  shift 171
+	LPAREN  shift 67
+	UIDENT  shift 68
+	UNDERSCORE  shift 69
+	.  error
+
+	simple_core_type  goto 319
+	simple_core_type2  goto 75
+	type_longident  goto 76
+	mod_ext_longident  goto 77
+
+
+state 298
+	mod_ext_longident : mod_ext_longident DOT . UIDENT  (171)
+
+	UIDENT  shift 258
+	.  error
+
+
+state 299
+	mod_ext_longident : mod_ext_longident LPAREN mod_ext_longident RPAREN .  (172)
+
+	.  reduce 172
+
+
+state 300
+	label_longident : mod_longident DOT LIDENT .  (165)
+
+	.  reduce 165
+
+
+state 301
+	pattern : pattern . AS val_ident  (109)
+	pattern : pattern . BAR pattern  (112)
+	pattern_comma_list : pattern . COMMA pattern  (124)
+	lbl_pattern : label_longident EQUAL pattern .  (129)
+
+	AS  shift 188
+	BAR  shift 189
+	COMMA  shift 190
+	RBRACE  reduce 129
+	SEMI  reduce 129
+
+
+state 302
+	lbl_pattern_list : lbl_pattern SEMI UNDERSCORE . opt_semi  (127)
+	opt_semi : .  (175)
+
+	SEMI  shift 320
+	RBRACE  reduce 175
+
+	opt_semi  goto 321
+
+
+state 303
+	lbl_pattern_list : lbl_pattern SEMI lbl_pattern_list .  (128)
+
+	.  reduce 128
+
+
+state 304
+	simple_pattern_not_ident : LPAREN pattern COLON core_type . RPAREN  (122)
+
+	RPAREN  shift 322
+	.  error
+
+
+state 305
+	simple_expr : simple_expr DOT LPAREN seq_expr . RPAREN  (80)
+
+	RPAREN  shift 323
+	.  error
+
+
+state 306
+	expr : IF seq_expr THEN expr ELSE . expr  (43)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 324
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 307
+	let_binding_ : pattern EQUAL seq_expr .  (95)
+
+	.  reduce 95
+
+
+state 308
+	let_bindings : let_bindings AND let_binding .  (91)
+
+	.  reduce 91
+
+
+state 309
+	strict_binding : EQUAL seq_expr .  (99)
+
+	.  reduce 99
+
+
+state 310
+	strict_binding : labeled_simple_pattern fun_binding .  (100)
+
+	.  reduce 100
+
+
+state 311
+	fun_binding : type_constraint EQUAL . seq_expr  (98)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	seq_expr  goto 325
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 39
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 312
+	expr : LET rec_flag let_bindings_no_attrs IN seq_expr .  (39)
+
+	.  reduce 39
+
+
+state 313
+	let_binding_ : simple_pattern_not_ident COLON core_type . EQUAL seq_expr  (96)
+
+	EQUAL  shift 326
+	.  error
+
+
+state 314
+	type_constraint : COLON core_type COLONGREATER . core_type  (106)
+
+	LIDENT  shift 66
+	LPAREN  shift 67
+	UIDENT  shift 68
+	UNDERSCORE  shift 69
+	.  error
+
+	core_type  goto 327
+	core_type2  goto 72
+	simple_core_type_or_tuple  goto 73
+	simple_core_type  goto 74
+	simple_core_type2  goto 75
+	type_longident  goto 76
+	mod_ext_longident  goto 77
+
+
+state 315
+	simple_expr : mod_longident DOT LPAREN seq_expr RPAREN .  (79)
+
+	.  reduce 79
+
+
+state 316
+	expr : simple_expr DOT LPAREN seq_expr RPAREN . LESSMINUS expr  (68)
+	simple_expr : simple_expr DOT LPAREN seq_expr RPAREN .  (80)
+
+	LESSMINUS  shift 328
+	AMPERAMPER  reduce 80
+	AMPERSAND  reduce 80
+	AND  reduce 80
+	BANG  reduce 80
+	BARBAR  reduce 80
+	BEGIN  reduce 80
+	CHAR  reduce 80
+	COLON  reduce 80
+	COLONEQUAL  reduce 80
+	COLONGREATER  reduce 80
+	COMMA  reduce 80
+	DOT  reduce 80
+	ELSE  reduce 80
+	END  reduce 80
+	EOF  reduce 80
+	EQUAL  reduce 80
+	FALSE  reduce 80
+	FLOAT  reduce 80
+	GREATER  reduce 80
+	IN  reduce 80
+	INFIXOP0  reduce 80
+	INFIXOP1  reduce 80
+	INFIXOP2  reduce 80
+	INFIXOP3  reduce 80
+	INFIXOP4  reduce 80
+	INT  reduce 80
+	LABEL  reduce 80
+	LESS  reduce 80
+	LET  reduce 80
+	LIDENT  reduce 80
+	LPAREN  reduce 80
+	MINUS  reduce 80
+	MINUSDOT  reduce 80
+	OPEN  reduce 80
+	OR  reduce 80
+	PERCENT  reduce 80
+	PLUS  reduce 80
+	PLUSDOT  reduce 80
+	PLUSEQ  reduce 80
+	PREFIXOP  reduce 80
+	RPAREN  reduce 80
+	SEMI  reduce 80
+	SEMISEMI  reduce 80
+	STAR  reduce 80
+	STRING  reduce 80
+	THEN  reduce 80
+	TILDE  reduce 80
+	TRUE  reduce 80
+	UIDENT  reduce 80
+
+
+state 317
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr : simple_expr DOT label_longident LESSMINUS expr .  (67)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	AMPERAMPER  shift 120
+	AMPERSAND  shift 121
+	BARBAR  shift 122
+	COLONEQUAL  shift 123
+	COMMA  shift 124
+	EQUAL  shift 125
+	GREATER  shift 126
+	INFIXOP0  shift 127
+	INFIXOP1  shift 128
+	INFIXOP2  shift 129
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	LESS  shift 132
+	MINUS  shift 133
+	MINUSDOT  shift 134
+	OR  shift 135
+	PERCENT  shift 136
+	PLUS  shift 137
+	PLUSDOT  shift 138
+	PLUSEQ  shift 139
+	STAR  shift 141
+	AND  reduce 67
+	COLON  reduce 67
+	COLONGREATER  reduce 67
+	ELSE  reduce 67
+	END  reduce 67
+	EOF  reduce 67
+	IN  reduce 67
+	LET  reduce 67
+	OPEN  reduce 67
+	RPAREN  reduce 67
+	SEMI  reduce 67
+	SEMISEMI  reduce 67
+	THEN  reduce 67
+
+
+state 318
+	core_type2 : LIDENT COLON core_type2 MINUSGREATER core_type2 .  (133)
+	core_type2 : core_type2 . MINUSGREATER core_type2  (134)
+	core_type2 : core_type2 MINUSGREATER core_type2 .  (134)
+
+	MINUSGREATER  shift 169
+	COLONGREATER  reduce 133
+	COMMA  reduce 133
+	EOF  reduce 133
+	EQUAL  reduce 133
+	OPEN  reduce 133
+	RPAREN  reduce 133
+	SEMISEMI  reduce 133
+	VAL  reduce 133
+
+
+state 319
+	core_type_list : core_type_list STAR simple_core_type .  (146)
+
+	.  reduce 146
+
+
+state 320
+	opt_semi : SEMI .  (176)
+
+	.  reduce 176
+
+
+state 321
+	lbl_pattern_list : lbl_pattern SEMI UNDERSCORE opt_semi .  (127)
+
+	.  reduce 127
+
+
+state 322
+	simple_pattern_not_ident : LPAREN pattern COLON core_type RPAREN .  (122)
+
+	.  reduce 122
+
+
+state 323
+	simple_expr : simple_expr DOT LPAREN seq_expr RPAREN .  (80)
+
+	.  reduce 80
+
+
+state 324
+	expr : IF seq_expr THEN expr ELSE expr .  (43)
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	AMPERAMPER  shift 120
+	AMPERSAND  shift 121
+	BARBAR  shift 122
+	COLONEQUAL  shift 123
+	COMMA  shift 124
+	EQUAL  shift 125
+	GREATER  shift 126
+	INFIXOP0  shift 127
+	INFIXOP1  shift 128
+	INFIXOP2  shift 129
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	LESS  shift 132
+	MINUS  shift 133
+	MINUSDOT  shift 134
+	OR  shift 135
+	PERCENT  shift 136
+	PLUS  shift 137
+	PLUSDOT  shift 138
+	PLUSEQ  shift 139
+	STAR  shift 141
+	AND  reduce 43
+	COLON  reduce 43
+	COLONGREATER  reduce 43
+	ELSE  reduce 43
+	END  reduce 43
+	EOF  reduce 43
+	IN  reduce 43
+	LET  reduce 43
+	OPEN  reduce 43
+	RPAREN  reduce 43
+	SEMI  reduce 43
+	SEMISEMI  reduce 43
+	THEN  reduce 43
+
+
+state 325
+	fun_binding : type_constraint EQUAL seq_expr .  (98)
+
+	.  reduce 98
+
+
+state 326
+	let_binding_ : simple_pattern_not_ident COLON core_type EQUAL . seq_expr  (96)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	seq_expr  goto 329
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 39
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 327
+	type_constraint : COLON core_type COLONGREATER core_type .  (106)
+
+	.  reduce 106
+
+
+state 328
+	expr : simple_expr DOT LPAREN seq_expr RPAREN LESSMINUS . expr  (68)
+
+	ASSERT  shift 9
+	BANG  shift 10
+	BEGIN  shift 11
+	CHAR  shift 12
+	FALSE  shift 13
+	FLOAT  shift 14
+	FUN  shift 15
+	IF  shift 16
+	INT  shift 17
+	LET  shift 78
+	LIDENT  shift 19
+	LPAREN  shift 20
+	MINUS  shift 21
+	MINUSDOT  shift 22
+	PLUS  shift 24
+	PLUSDOT  shift 25
+	PREFIXOP  shift 26
+	STRING  shift 28
+	TRUE  shift 29
+	UIDENT  shift 30
+	.  error
+
+	val_ident  goto 37
+	mod_longident  goto 38
+	expr  goto 330
+	simple_expr  goto 40
+	expr_comma_list  goto 41
+	constr_longident  goto 42
+	subtractive  goto 43
+	additive  goto 44
+	label  goto 45
+	val_longident  goto 46
+	constant  goto 47
+
+
+state 329
+	let_binding_ : simple_pattern_not_ident COLON core_type EQUAL seq_expr .  (96)
+
+	.  reduce 96
+
+
+state 330
+	expr : expr . INFIXOP0 expr  (45)
+	expr : expr . INFIXOP1 expr  (46)
+	expr : expr . INFIXOP2 expr  (47)
+	expr : expr . INFIXOP3 expr  (48)
+	expr : expr . INFIXOP4 expr  (49)
+	expr : expr . PLUS expr  (50)
+	expr : expr . PLUSDOT expr  (51)
+	expr : expr . PLUSEQ expr  (52)
+	expr : expr . MINUS expr  (53)
+	expr : expr . MINUSDOT expr  (54)
+	expr : expr . STAR expr  (55)
+	expr : expr . PERCENT expr  (56)
+	expr : expr . EQUAL expr  (57)
+	expr : expr . LESS expr  (58)
+	expr : expr . GREATER expr  (59)
+	expr : expr . OR expr  (60)
+	expr : expr . BARBAR expr  (61)
+	expr : expr . AMPERSAND expr  (62)
+	expr : expr . AMPERAMPER expr  (63)
+	expr : expr . COLONEQUAL expr  (64)
+	expr : simple_expr DOT LPAREN seq_expr RPAREN LESSMINUS expr .  (68)
+	expr_comma_list : expr . COMMA expr  (104)
+
+	AMPERAMPER  shift 120
+	AMPERSAND  shift 121
+	BARBAR  shift 122
+	COLONEQUAL  shift 123
+	COMMA  shift 124
+	EQUAL  shift 125
+	GREATER  shift 126
+	INFIXOP0  shift 127
+	INFIXOP1  shift 128
+	INFIXOP2  shift 129
+	INFIXOP3  shift 130
+	INFIXOP4  shift 131
+	LESS  shift 132
+	MINUS  shift 133
+	MINUSDOT  shift 134
+	OR  shift 135
+	PERCENT  shift 136
+	PLUS  shift 137
+	PLUSDOT  shift 138
+	PLUSEQ  shift 139
+	STAR  shift 141
+	AND  reduce 68
+	COLON  reduce 68
+	COLONGREATER  reduce 68
+	ELSE  reduce 68
+	END  reduce 68
+	EOF  reduce 68
+	IN  reduce 68
+	LET  reduce 68
+	OPEN  reduce 68
+	RPAREN  reduce 68
+	SEMI  reduce 68
+	SEMISEMI  reduce 68
+	THEN  reduce 68
+
+
+138 terminals, 62 nonterminals
+188 grammar rules, 331 states
