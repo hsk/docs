@@ -106,6 +106,23 @@ let main =
 標準入力を受け取って、Ast.printで出力してます。
 それだけだと、良くわからないので、評価関数evalを作って評価してみました。
 
+この評価規則は以下のように書けるのかも:
+
+```
+
+Z
+- (e-zero)
+0
+
+S(n)
+----- (e-succ)
+1 + n
+
+```
+
+よくわかってないので、間違ってたらすいません。
+
+
 あとは、ビルドできればいいはず:
 
 Makefile
@@ -144,10 +161,13 @@ Fatal error: exception Parsing.Parse_error
 
 いい感じじゃないでしょうか。
 
+## まとめ
 
 	n ::= Z | S(n)
 
-というたったこの１つの式でこれだけのプログラムを表せる。素晴らしい事です。人類の英知じゃあ！！！
+というたったこの１つの式でこれだけのプログラムを表せました。素晴らしい事です。人類の英知じゃあ！！！
+
+偉い先生方はこの辺がもう、体に染み付いてるんでしょうねぇ。これが、一般庶民の我々も分かってしまえば、もう、バッチリです。
 
 ## ふゅーちゃーわーく
 
@@ -158,4 +178,3 @@ Fatal error: exception Parsing.Parse_error
 
 1. [プログラミング言語の基礎概念](http://www.fos.kuis.kyoto-u.ac.jp/~igarashi/CoPL/)
 2. [OCaml-manual-3.06-ja](http://ocaml.jp/archive/ocaml-manual-3.06-ja/manual026.html)
-
