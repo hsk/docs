@@ -185,3 +185,79 @@
     in
       ()
     end
+
+## case
+
+  case ofでパターンマッチ出来ます。
+
+    // case.dats
+
+    #include "share/atspre_staload.hats"
+
+    fn f1(v:int):int = case v of 1 => 2 | _ => 3
+
+    fn f2(v:int):int =
+      case v of 
+      | 1 => 2
+      | _ => 3
+
+    fn f3(v:int):int =
+      begin case v of 
+        | 1 => 2
+        | _ => 3
+      end
+
+    implement main0() = begin
+      println!(f1(3));
+      println!(f2(3));
+      println!(f3(3));
+      ()
+    end
+
+## datatype
+
+  datatypeで代数データ型を使う事が出来ます。パラメータがない場合は of ()と書く点が変わっている所です。
+
+    // datatype.dats
+
+    #include "share/atspre_staload.hats"
+
+    datatype e =
+      | ENil of ()
+      | EInt of (int)
+      | EAdd of (e, e)
+      | ESub of (e, e)
+
+    fun eval(e:e):int =
+      begin case e of
+        | ENil()  => 0
+        | EInt(i) => i
+        | EAdd(a, b) => eval(a) + eval(b)
+        | ESub(a, b) => eval(a) + eval(b)
+      end
+
+    implement main0() = {
+      val () = println!(eval(ESub(EAdd(EInt(1),EInt(2)),EInt(1))))
+    }
+
+## where
+
+  ATSのwhereはHaskellのwhereっぽく後ろに書く事が出来ますが、上から順番に実行され、遅延評価されるような事はありません。以下の例では、"kore" "kore2" も表示されます。
+
+    // where.dats
+
+    #include "share/atspre_staload.hats"
+
+    fn f():int = b where {
+      val a = 1
+      val b = 2
+      val () = println!("kore")
+      val () = println!("kore2")
+      val c = a + b
+      val d = c
+    }
+
+    implement main0() = {
+      val v = f()
+      val () = println!("v=",v)
+    }

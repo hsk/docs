@@ -14,8 +14,14 @@ poly: poly.dats
 	patscc -o poly poly.dats
 let: let.dats
 	patscc -o let let.dats
+case: case.dats
+	patscc -o case case.dats
+datatype: datatype.dats
+	patscc -DATS_MEMALLOC_LIBC -o datatype datatype.dats
+where: where.dats
+	patscc -DATS_MEMALLOC_LIBC -o where where.dats
 fun2: fun2.dats
 	patscc -o fun2 fun2.dats -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -I$(PATSHOME) -I$(PATSHOME)/ccomp/runtime
 
 clean:
-	rm -f a.out *_dats.c hello int int2 fn fun fun2 if poly let
+	rm -f a.out *_dats.c hello int int2 fn fun fun2 if poly let case datatype where
