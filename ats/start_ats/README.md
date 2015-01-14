@@ -317,3 +317,63 @@
       val () = println!(f2(e))
       val () = println!(f3(e))
     }
+
+## var 参照
+
+  参照を使うにはvarを使います。
+
+    // var.dats
+
+    implement main0 () = let
+      var v: int = 1
+      val () = v := 33
+    in
+      println!(v)
+    end
+
+## whileループ
+
+  whileループもあります。
+
+    // while.dats
+
+    #include "share/atspre_staload.hats"
+
+    fun fact (n: int): int =
+      if n > 0 then n * fact(n-1) else 1
+
+    fun fact2(n: int): int = let
+      var n: int = n
+      var res: int = 1
+    in
+      while (n > 0) (res := res * n; n := n - 1); res
+    end
+
+    implement main0 () = {
+      val () = println!(fact(10))
+      val () = println!(fact2(10))
+    }
+
+## forループ
+
+  forループもあります。
+
+    // for.dats
+
+    #include "share/atspre_staload.hats"
+
+    fun fact (n: int): int =
+      if n > 0 then n * fact(n-1) else 1
+
+    fun fact3
+      (n: int): int = let
+      var i: int
+      var res: int = 1
+    in
+      for (i := n; i > 0; i := i-1) res := res * i; res
+    end
+
+    implement main0 () = {
+      val () = println!(fact(10))
+      val () = println!(fact3(10))
+    }
