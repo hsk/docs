@@ -261,3 +261,59 @@
       val v = f()
       val () = println!("v=",v)
     }
+
+## record
+
+  構造体
+
+    // record.dats
+
+    #include "share/atspre_staload.hats"
+
+    typedef point2D = @{ x= double, y= double }
+
+    fn f1(a:point2D):double = begin
+      a.x + a.y
+    end
+
+    fn f2(a:point2D):double = begin
+      begin case a of
+        | @{x=a,y=b} => a + b
+      end
+    end
+
+    implement main0() = {
+      val e = @{x=1.1,y=2.2}
+      val () = println!(e.x)
+      val () = println!(f1(e))
+    }
+
+## tuple
+
+  タプル、多値
+
+    // tuple.dats
+
+    #include "share/atspre_staload.hats"
+
+    fn f1(a:(int,int)):int = a.0
+    fn f2(a:(int,int)):int = let
+      val (x,y) = a
+    in
+      x
+    end
+
+    fn f3(a:(int,int)):int = let
+      val x = case a of _ => 0
+    in
+      x
+    end
+
+    implement main0() = {
+      val e = (1,2)
+      val () = println!(e.0)
+      val () = println!(e.1)
+      val () = println!(f1(e))
+      val () = println!(f2(e))
+      val () = println!(f3(e))
+    }
