@@ -30,8 +30,10 @@ for: for.dats
 	patscc -o for for.dats
 while: while.dats
 	patscc -o while while.dats
+array: array.dats
+	patscc -o array array.dats
 fun2: fun2.dats
 	patscc -o fun2 fun2.dats -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -I$(PATSHOME) -I$(PATSHOME)/ccomp/runtime
 
 clean:
-	rm -f a.out *_dats.c hello int int2 fn fun fun2 if poly let case datatype where tuple record var for while
+	rm -f a.out *_dats.c hello int int2 fn fun fun2 if poly let case datatype where tuple record var for while array
