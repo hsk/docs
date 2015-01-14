@@ -14,6 +14,7 @@ end
 implement main0() = let
   val v = dt()
   val () = println!("v=",v)
+  val () = println!("n=",let val n = 1 in n end)
 in
   ()
 end

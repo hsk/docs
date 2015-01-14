@@ -122,9 +122,26 @@
       val () = println!("sum(10)=",sum(10))
     }
 
+## if
+
+    // if.dats
+
+    #include "share/atspre_staload.hats"
+
+    fn f(v:int):int = 
+      if v = 10 then 1 else 2
+
+    implement main0() = {
+      val v:int = 10
+
+      val v2:int = f(v)
+      val () = println!("v2=",v2)
+    }
+
 ## 多相性 poly
 
   テンプレートを使ってみましょう。
+  `+`演算子等は`int`や`float`等の型にしかないため、多相的にするには`gadd_val`関数等を使います。
 
     // poly.dats
 
@@ -146,6 +163,8 @@
 
 ## let
 
+  SMLのlet in endがあります。
+
     // let.dats
 
     #include "share/atspre_staload.hats"
@@ -162,6 +181,7 @@
     implement main0() = let
       val v = dt()
       val () = println!("v=",v)
+      val () = println!("n=",let val n = 1 in n end)
     in
       ()
     end

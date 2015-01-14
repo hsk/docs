@@ -4,3 +4,4 @@
 
 - [ATSで書く四則演算](calc.md)
 - [ATSのコンパイラ結果マクロ](compiled_c_macro.md)
+- [スタートATS](start_ats)
