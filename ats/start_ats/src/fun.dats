@@ -2,10 +2,12 @@
 
 #include "share/atspre_staload.hats"
 
-fn add(a:int,b:int):int = begin
-  a + b
+fun sum(n:int):int = begin
+  if n = 0
+  then 0
+  else n+sum(n-1)
 end
 
 implement main0() = {
-  val () = println!("add(1,2)=",add(1,2))
+  val () = println!("sum(10)=",sum(10))
 }
