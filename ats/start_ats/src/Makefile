@@ -20,8 +20,12 @@ datatype: datatype.dats
 	patscc -DATS_MEMALLOC_LIBC -o datatype datatype.dats
 where: where.dats
 	patscc -DATS_MEMALLOC_LIBC -o where where.dats
+tuple: tuple.dats
+	patscc -o tuple tuple.dats -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -I$(PATSHOME) -I$(PATSHOME)/ccomp/runtime
+record: record.dats
+	patscc -o record record.dats -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -I$(PATSHOME) -I$(PATSHOME)/ccomp/runtime
 fun2: fun2.dats
 	patscc -o fun2 fun2.dats -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -I$(PATSHOME) -I$(PATSHOME)/ccomp/runtime
 
 clean:
-	rm -f a.out *_dats.c hello int int2 fn fun fun2 if poly let case datatype where
+	rm -f a.out *_dats.c hello int int2 fn fun fun2 if poly let case datatype where tuple record
