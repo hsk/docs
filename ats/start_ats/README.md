@@ -457,8 +457,12 @@
 
   cのプログラムとatsをリンクします。
 
-    $ gcc -D_GNU_SOURCE -I$(PATSHOME) -I$(PATSHOME)/ccomp/runtime -o main main.c atsfunc_dats.c
+    $ gcc -I${PATSHOME} -I${PATSHOME}/ccomp/runtime -o main main.c atsfunc_dats.c
 
+  実行します。
+
+    $ ./main
+    fib(7) = 13
 
   - 参考
     - https://github.com/jats-ug/practice-ats/tree/master/call-ats-fromc
