@@ -414,3 +414,51 @@
 
     }
 
+## ATSからC言語のコードの呼び出し
+
+
+  参考
+
+  https://github.com/metasepi/linux-bohai-s1/blob/bohai-s1/metasepi/net/sunrpc/DATS/xdr.dats#L25
+
+  https://github.com/metasepi/linux-bohai-s1/blob/bohai-s1/metasepi/include/linux/sunrpc/SATS/xdr.sats#L19
+
+
+## C言語からATSの呼び出し
+
+  ATSのコードを書きます。
+
+    // atsfunc.dats
+    #define ATS_DYNLOADFLAG 0
+    #include "share/atspre_staload.hats"
+
+    extern fun fib (n: uint): uint = "ext#ats_fib"
+    implement fib (n: uint): uint = case+ n of
+      | 0U => 0U
+      | 1U => 1U
+      | _  => fib(n - 2U) + fib(n - 1U)
+
+
+  C言語のコードを書きます。
+
+    // main.c
+    #include <stdio.h>
+
+    extern unsigned int ats_fib(unsigned int);
+
+    int main() {
+      printf("fib(7) = %u\n", ats_fib(7));
+      return 0;
+    }
+
+  atsfuncをコンパイルします。
+
+    $ patscc -c atsfunc.dats
+
+  cのプログラムとatsをリンクします。
+
+    $ gcc -D_GNU_SOURCE -I$(PATSHOME) -I$(PATSHOME)/ccomp/runtime -o main main.c atsfunc_dats.c
+
+
+  - 参考
+    - https://github.com/jats-ug/practice-ats/tree/master/call-ats-fromc
