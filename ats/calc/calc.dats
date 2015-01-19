@@ -1,4 +1,4 @@
-// patscc -DATS_MEMALLOC_LIBC calc.dats -o calc
+// patscc -lgc -DATS_MEMALLOC_GCBDW calc.dats -o calc
 
 #include "share/atspre_staload.hats"
 
