@@ -465,3 +465,8 @@
 
   - 参考
     - https://github.com/jats-ug/practice-ats/tree/master/call-ats-fromc
+
+## 証明する
+
+## 線形型を使ってみる
+
