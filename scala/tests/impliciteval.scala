@@ -17,5 +17,13 @@ object main extends App {
   }
 
   println(eval(ELet("a",EInt(1),ELet("b",EInt(2), EAdd(EVar("a"),EVar("b")))))(Map()))
+  
+  def run(f:Map[String,Int]=>Int) {
+    println(f(Map("a"->1)))
+  }
 
+
+  run{implicit env =>
+    eval(ELet("a",EInt(1),ELet("b",EInt(2), EAdd(EVar("a"),EVar("b")))))
+  }
 }
