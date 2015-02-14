@@ -32,6 +32,8 @@ while: while.dats
 	patscc -o while while.dats
 array: array.dats
 	patscc -o array array.dats
+fib: fib.dats
+	patscc -o fib fib.dats
 fun2: fun2.dats
 	patscc -o fun2 fun2.dats -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -I$(PATSHOME) -I$(PATSHOME)/ccomp/runtime
 

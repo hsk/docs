@@ -1,5 +1,5 @@
 calc: calc.dats
-	patscc -lgc -DATS_MEMALLOC_GCBDW calc.dats -o calc
+	patscc -lgc -DATS_MEMALLOC_GCBDW calc.dats -o calc.js
 calc_nogc: calc.dats
 	patscc -DATS_MEMALLOC_LIBC calc.dats -o calc_nogc
 calc_ref: calc_ref.dats

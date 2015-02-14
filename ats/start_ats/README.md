@@ -121,45 +121,6 @@
       val () = println!("sum(10)=",sum(10))
     }
 
-## if
-
-    // if.dats
-
-    #include "share/atspre_staload.hats"
-
-    fn f(v:int):int = 
-      if v = 10 then 1 else 2
-
-    implement main0() = {
-      val v:int = 10
-
-      val v2:int = f(v)
-      val () = println!("v2=",v2)
-    }
-
-## 多相性 poly
-
-  テンプレートを使ってみましょう。
-  `+`演算子等は`int`や`float`等の型にしかないため、多相的にするには`gadd_val`関数等を使います。
-
-    // poly.dats
-
-    #include "share/atspre_staload.hats"
-
-    fun{a:t@ype} add(f: a, g: a) :a = gadd_val(f, g)
-    fun{a:t@ype} sub(f: a, g: a) :a = gsub_val(f, g)
-    fun{a:t@ype} mul(f: a, g: a) :a = gmul_val(f, g)
-    fun{a:t@ype} div(f: a, g: a) :a = gdiv_val(f, g)
-    fun{a:t@ype} mod(f: a, g: a) :a = gmod_val(f, g)
-
-    implement main0() = {
-      val () = println!("add(1,2)=",add<int>(1,2));
-      val () = println!("sub(1,2)=",sub<int>(1,2));
-      val () = println!("mul(1,2)=",mul<int>(1,2));
-      val () = println!("div(1,2)=",div<int>(1,2));
-      val () = println!("mod(1,2)=",mod<int>(1,2));
-    }
-
 ## let
 
   SMLのlet in endがあります。
@@ -184,6 +145,46 @@
     in
       ()
     end
+
+## where
+
+  ATSのwhereはHaskellのwhereっぽく後ろに書く事が出来ますが、上から順番に実行され、遅延評価されるような事はありません。以下の例では、"kore" "kore2" も表示されます。
+
+    // where.dats
+
+    #include "share/atspre_staload.hats"
+
+    fn f():int = b where {
+      val a = 1
+      val b = 2
+      val () = println!("kore")
+      val () = println!("kore2")
+      val c = a + b
+      val d = c
+    }
+
+    implement main0() = {
+      val v = f()
+      val () = println!("v=",v)
+    }
+
+## if then else
+
+  ATSではifは式です。
+
+    // if.dats
+
+    #include "share/atspre_staload.hats"
+
+    fn f(v:int):int = 
+      if v = 10 then 1 else 2
+
+    implement main0() = {
+      val v:int = 10
+
+      val v2:int = f(v)
+      val () = println!("v2=",v2)
+    }
 
 ## case
 
@@ -212,110 +213,6 @@
       println!(f3(3));
       ()
     end
-
-## datatype
-
-  datatypeで代数データ型を使う事が出来ます。パラメータがない場合は of ()と書く点が変わっている所です。
-
-    // datatype.dats
-
-    #include "share/atspre_staload.hats"
-
-    datatype e =
-      | ENil of ()
-      | EInt of (int)
-      | EAdd of (e, e)
-      | ESub of (e, e)
-
-    fun eval(e:e):int =
-      begin case e of
-        | ENil()  => 0
-        | EInt(i) => i
-        | EAdd(a, b) => eval(a) + eval(b)
-        | ESub(a, b) => eval(a) + eval(b)
-      end
-
-    implement main0() = {
-      val () = println!(eval(ESub(EAdd(EInt(1),EInt(2)),EInt(1))))
-    }
-
-## where
-
-  ATSのwhereはHaskellのwhereっぽく後ろに書く事が出来ますが、上から順番に実行され、遅延評価されるような事はありません。以下の例では、"kore" "kore2" も表示されます。
-
-    // where.dats
-
-    #include "share/atspre_staload.hats"
-
-    fn f():int = b where {
-      val a = 1
-      val b = 2
-      val () = println!("kore")
-      val () = println!("kore2")
-      val c = a + b
-      val d = c
-    }
-
-    implement main0() = {
-      val v = f()
-      val () = println!("v=",v)
-    }
-
-## record
-
-  構造体
-
-    // record.dats
-
-    #include "share/atspre_staload.hats"
-
-    typedef point2D = @{ x= double, y= double }
-
-    fn f1(a:point2D):double = begin
-      a.x + a.y
-    end
-
-    fn f2(a:point2D):double = begin
-      begin case a of
-        | @{x=a,y=b} => a + b
-      end
-    end
-
-    implement main0() = {
-      val e = @{x=1.1,y=2.2}
-      val () = println!(e.x)
-      val () = println!(f1(e))
-    }
-
-## tuple
-
-  タプル、多値
-
-    // tuple.dats
-
-    #include "share/atspre_staload.hats"
-
-    fn f1(a:(int,int)):int = a.0
-    fn f2(a:(int,int)):int = let
-      val (x,y) = a
-    in
-      x
-    end
-
-    fn f3(a:(int,int)):int = let
-      val x = case a of _ => 0
-    in
-      x
-    end
-
-    implement main0() = {
-      val e = (1,2)
-      val () = println!(e.0)
-      val () = println!(e.1)
-      val () = println!(f1(e))
-      val () = println!(f2(e))
-      val () = println!(f3(e))
-    }
 
 ## var スタック上の変数
 
@@ -377,6 +274,88 @@
       val () = println!(fact3(10))
     }
 
+## record
+
+  構造体
+
+    // record.dats
+
+    #include "share/atspre_staload.hats"
+
+    typedef point2D = @{ x= double, y= double }
+
+    fn f1(a:point2D):double = begin
+      a.x + a.y
+    end
+
+    fn f2(a:point2D):double = begin
+      begin case a of
+        | @{x=a,y=b} => a + b
+      end
+    end
+
+    implement main0() = {
+      val e = @{x=1.1,y=2.2}
+      val () = println!(e.x)
+      val () = println!(f1(e))
+    }
+
+## tuple
+
+  タプル、多値
+
+    // tuple.dats
+
+    #include "share/atspre_staload.hats"
+
+    fn f1(a:(int,int)):int = a.0
+    fn f2(a:(int,int)):int = let
+      val (x,y) = a
+    in
+      x
+    end
+
+    fn f3(a:(int,int)):int = let
+      val x = case a of _ => 0
+    in
+      x
+    end
+
+    implement main0() = {
+      val e = (1,2)
+      val () = println!(e.0)
+      val () = println!(e.1)
+      val () = println!(f1(e))
+      val () = println!(f2(e))
+      val () = println!(f3(e))
+    }
+
+## datatype
+
+  datatypeで代数データ型を使う事が出来ます。パラメータがない場合は of ()と書く点が変わっている所です。
+
+    // datatype.dats
+
+    #include "share/atspre_staload.hats"
+
+    datatype e =
+      | ENil of ()
+      | EInt of (int)
+      | EAdd of (e, e)
+      | ESub of (e, e)
+
+    fun eval(e:e):int =
+      begin case e of
+        | ENil()  => 0
+        | EInt(i) => i
+        | EAdd(a, b) => eval(a) + eval(b)
+        | ESub(a, b) => eval(a) + eval(b)
+      end
+
+    implement main0() = {
+      val () = println!(eval(ESub(EAdd(EInt(1),EInt(2)),EInt(1))))
+    }
+
 ## array 配列と依存型
 
   ATSの配列をforループで計算する場合、単純にループカウンタのiをint型にするとエラーになってしまいます。
@@ -400,7 +379,6 @@
       val () = for (i := 0; i < len; i := i+1) sum := sum + A[i]
     }
 
-
     implement main0 () = {
 
       var A = @[int][10]() // A: array(int?, 10) // 初期化されない配列
@@ -411,6 +389,33 @@
       val () = println!(f1(A))
       val () = println!(f2(A,10))
 
+    }
+
+
+## 多相性 poly
+
+  C++でいうところのテンプレートを使ってみましょう。
+  `+`演算子等は`int`や`float`等の型にしかないため、多相的にするには`gadd_val`関数等を使います。
+
+    // poly.dats
+
+    #include "share/atspre_staload.hats"
+
+    fun{a:t@ype} id(x:a) :a = x
+
+    fun{a:t@ype} add(f: a, g: a) :a = gadd_val(f, g)
+    fun{a:t@ype} sub(f: a, g: a) :a = gsub_val(f, g)
+    fun{a:t@ype} mul(f: a, g: a) :a = gmul_val(f, g)
+    fun{a:t@ype} div(f: a, g: a) :a = gdiv_val(f, g)
+    fun{a:t@ype} mod(f: a, g: a) :a = gmod_val(f, g)
+
+    implement main0() = {
+      val () = println!("id(1)=",id<int>(1));
+      val () = println!("add(1,2)=",add<int>(1,2));
+      val () = println!("sub(1,2)=",sub<int>(1,2));
+      val () = println!("mul(1,2)=",mul<int>(1,2));
+      val () = println!("div(1,2)=",div<int>(1,2));
+      val () = println!("mod(1,2)=",mod<int>(1,2));
     }
 
 ## ATSからC言語のコードの呼び出し
@@ -432,7 +437,8 @@
     #include "share/atspre_staload.hats"
 
     extern fun fib (n: uint): uint = "ext#ats_fib"
-    implement fib (n: uint): uint = case+ n of
+    implement fib (n: uint): uint =
+      case+ n of
       | 0U => 0U
       | 1U => 1U
       | _  => fib(n - 2U) + fib(n - 1U)
@@ -468,5 +474,68 @@
 
 ## 証明する
 
+    dataprop FIB (int, int) =
+      | FIB0 (0, 0) of ()
+      | FIB1 (1, 1) of ()
+      | {n:nat}{r0,r1:nat}
+        FIB2 (n+2, r0+r1) of (FIB (n, r0), FIB (n+1, r1))
+  
+  これは、一つ目の引数が引数の値で、二つ目の引数が答えであるような関数としてFIBをみると
+  こう書けます。
+
+  fib(0) = 0, and
+  fib(1) = 1, and
+  fib(n+2) = fib(n+1) + fib(n) for n >= 2. 
+
 ## 線形型を使ってみる
+
+
+  線形型を使うとリソースの持ち主を決めて、持ち回り誰かが最後に消費する必要があります。
+
+    // patscc -DATS_MEMALLOC_LIBC calc_cpy.dats -o calc_cpy
+
+    #include "share/atspre_staload.hats"
+
+    datavtype e =
+      | EInt of (int)
+
+    // データを借りてコピーする
+    fun e_copy(e: !e): e =
+      begin case+ e of
+        | EInt(x) => EInt(x)
+      end
+
+    // データを受け取って消費する
+    fun e_free(e: e): void =
+      begin case+ e of
+        | ~EInt(x) => ()
+      end
+
+    // データを借りて計算する
+    fun e_eval(e: !e): int =
+      begin case+ e of
+        | EInt(x) => x
+      end
+
+    extern fun e_print(!e): void
+    overload print with e_print
+
+    // データを借りて来て出力する
+    implement e_print(e) =
+      begin case+ e of
+        | EInt(x) => print!("EInt(",x,")")
+      end
+
+    implement main0() = {
+
+      val e0 = EInt 1
+      val e2 = e_copy e0
+
+      val () = println!e2
+      val () = println!(e_eval e2)
+
+      val () = e_free e0
+      val () = e_free e2
+    }
+
 
