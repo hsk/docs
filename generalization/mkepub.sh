@@ -1,5 +1,5 @@
 pandoc title.txt \
-  Home.md \
+  README.md \
   1.intro.md \
   2.一般化.md \
   3.メモリ管理ミスがある不完全な一般化.md \
