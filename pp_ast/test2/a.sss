@@ -1,0 +1,58 @@
+include "core.h"
+include stdio.h
+
+trait Fib {
+	def fib():int
+}
+
+trait GetX {
+	def getX():int
+	def setX(int):void
+}
+
+class Int {
+	var x:int
+	def this(x:int):x(x)={
+	}
+}
+
+class Int extends Fib {
+	def fib():int = {
+		if (@x < 2) return 1
+		else {
+			var p1:Int(@x - 2)
+			var p2:Int(@x - 1)
+			return p1:Fib=>fib() + p2:Fib=>fib()
+		}
+	}
+}
+
+class Int extends GetX {
+
+	def getX():int = {
+		return @x
+	}
+
+	def setX(x:int):void = {
+		@x = x
+	}
+}
+
+def fib(a:int):int = {
+	if (a < 2) return 1
+	return fib(a-2)+fib(a-1)
+}
+
+def main():int = {
+	start:long = gett()
+
+	result:int = fib(40)
+	printf("fib %d %d %ld\n", 40, result, gett() - start)
+
+	start = gett()
+	f:Int(20)
+	f.x = 40
+	result = f:Fib=>fib()
+	printf("fib %d %d %ld\n", f:GetX=>getX(), result, gett() - start)
+	return 0
+}

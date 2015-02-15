@@ -1,0 +1,31 @@
+.PHONY: all clean test
+OCamlGeneratedFiles(parser.ml lexer.ml)
+
+USE_OCAMLFIND = true
+OCAML_OTHER_LIBS = unix
+
+FILES[] =
+  utils
+  syntax
+  parser
+  lexer
+  main
+
+PROGRAM = lllc
+PROGRAM2 = test
+
+RMS[] = *.cm* *.omc *.mli *.o .omakedb* test test.opt lexer.ml parser.ml a.*
+
+.DEFAULT: $(OCamlProgram $(PROGRAM), $(FILES))
+  ./lllc
+  rm -f $(RMS)
+
+FILES[] += test
+RMS[] += $(PROGRAM) *.opt
+
+test: $(OCamlProgram $(PROGRAM2), $(FILES))
+  ./test
+  rm -f $(RMS)
+
+clean:
+  rm -f $(RMS)
