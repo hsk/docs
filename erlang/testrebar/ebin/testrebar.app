@@ -1,0 +1,8 @@
+{application,testrebar,
+             [{description,[]},
+              {vsn,"1"},
+              {registered,[]},
+              {applications,[kernel,stdlib]},
+              {mod,{testrebar_app,[]}},
+              {env,[]},
+              {modules,[testrebar_app,testrebar_sup]}]}.
