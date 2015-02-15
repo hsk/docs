@@ -1,0 +1,7 @@
+Ptop_def
+  [
+    structure_item ([1,0+0]..[1,0+1])
+      Pstr_eval
+      expression ([1,0+0]..[1,0+1])
+        Pexp_constant Const_int 1
+  ]
