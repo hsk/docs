@@ -24,7 +24,7 @@
 
 ## プリティプリント
 
+- [pp_ast](pp_ast) トランスレータを作る実験
+- [printer](printer) OCamlのプリティプリントを使う方法
 - [ocaml/ocaml_src_reading/parsing](ocaml/ocaml_src_reading/parsing) OCamlのパーサにコメントを追加して、プリティプリントにコメントを追加する例
-- [pp_ast](pp_ast)
-- [printer](printer)
 - [ocaml/pprint](ocaml/pprint) プリティプリントに対する考察
