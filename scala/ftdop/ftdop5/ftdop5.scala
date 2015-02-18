@@ -222,10 +222,15 @@ object main {
     def expand(a:Any, e:Env):Any = {
       a match {
       case ("@",a) =>
-        (a,e) match {
-          case (("mac","(",b,")",c),e) => e("macros").asInstanceOf[Stack[(Any,Any)]].push((b,c));0
-          case Macro(a,e) => a
-          case a => a
+        a match {
+          case ("mac","(",b,")",c) => e("macros").asInstanceOf[Stack[(Any,Any)]].push((b,c));0
+          case a =>
+            val macros = e("macros").asInstanceOf[Stack[(Any,Any)]]
+            for((prms,body) <- macros) {
+              var env = match5(prms,a,e)
+              if(env != null) return eval(body, env)
+            }
+            a
         }
       case (a,b) => (expand(a,e),expand(b,e))
       case (a,b,c) => (expand(a,e),expand(b,e),expand(c,e))
@@ -235,18 +240,6 @@ object main {
       }
     }
  
-    def unapply(arg:(Any,Env)):Option[(Any,Env)]={
-      arg match {
-      case (a,e) =>
-        val macros = e("macros").asInstanceOf[Stack[(Any,Any)]]
-        if (macros == null) return None
-        for((prms,body) <- macros) {
-          var env = match5(prms,a,e)
-          if(env != null) return Some(eval(body, env),e)
-        }
-        None
-      }
-    }
  
     def match5(a:Any,b:Any,e:Env):Env = {
       var m = new Env(e)
@@ -326,6 +319,7 @@ object main {
     case a:Symbol => a
     case a:Int => a
     case a => throw new Error("runtime error " + a)
-  }}
+    }
+  }
 }
 
