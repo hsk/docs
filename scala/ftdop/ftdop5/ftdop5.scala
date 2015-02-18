@@ -74,7 +74,7 @@ object main {
  
     val prefixs:(Any => Int) = {
       case "-" => 100
-      case "@" => 1
+      case "@" => 99
       case _   => -1
     }
  
