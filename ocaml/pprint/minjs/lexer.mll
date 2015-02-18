@@ -10,7 +10,9 @@ let t f l =
 	let s = f l in
 	add (s);
 	s
-
+let tt f l r =
+	let _ = t f l in
+	r
 
 let get () =
 	let ts = List.rev !tokens in
@@ -50,14 +52,14 @@ rule token = parse
 	(comment lexbuf);
 	token lexbuf
 }
-| '{' { LPAREN(t Lexing.lexeme lexbuf) }
-| '}' { RPAREN(t Lexing.lexeme lexbuf) }
-| '(' { IDENT(t Lexing.lexeme lexbuf) }
-| ')' { IDENT(t Lexing.lexeme lexbuf) }
+| '{' { tt Lexing.lexeme lexbuf LBRACE }
+| '}' { tt Lexing.lexeme lexbuf RBRACE }
+| '(' { tt Lexing.lexeme lexbuf LPAREN }
+| ')' { tt Lexing.lexeme lexbuf RPAREN }
 | space+ { token lexbuf }
 | digit+ { IDENT(t Lexing.lexeme lexbuf) }
-| '+' { t Lexing.lexeme lexbuf; ADD }
-| [':' '+' '-' '*' '/' '%' '&' '!' '|' '>' '<']+ { IDENT(t Lexing.lexeme lexbuf) }
+| '+' { tt Lexing.lexeme lexbuf ADD }
+| [':' '+' '-' '*' '%' '&' '!' '|' '>' '<'] [':' '+' '-' '%' '&' '!' '|' '>' '<']* { IDENT(t Lexing.lexeme lexbuf) }
 
 | eof { EOF }
 | (digit|lower|upper|'_')* { IDENT(t Lexing.lexeme lexbuf) }

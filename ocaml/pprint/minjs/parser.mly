@@ -5,8 +5,10 @@ open E
 
 %token <int> INT
 %token <string> IDENT
-%token <string>LPAREN
-%token <string>RPAREN
+%token LPAREN
+%token RPAREN
+%token LBRACE
+%token RBRACE
 %token ADD
 %token EOF
 
@@ -22,11 +24,12 @@ simple_exp:
 | IDENT { Var($1) }
 | LPAREN exp RPAREN { $2 }
 exps:
-| exp { [$1] }
+|  { [] }
 | exp exps { $1::$2 }
 exp:
 | simple_exp { $1 }
 | exp LPAREN exps RPAREN %prec prec_app { App($1, $3) }
+| exp LBRACE exps RBRACE %prec prec_app { App($1, $3) }
 | exp ADD exp { Bin($1, "+", $3) }
 | error
     { failwith
