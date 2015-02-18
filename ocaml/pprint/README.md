@@ -1,53 +1,268 @@
 # MLのプリティプリント
 
-## 概要
-
-    type e =
-      | Int of int
-      | Let of string * e * e
-      | Var of string
-
-  のプリティプリントについて考えます。
-  出来たらここに、コメントを追加して奇麗にプリティプリントする事を考えてみます。
-
 ## 1. はじめに
 
 
-  どうも、OCamlには奇麗なプリティプリンタが存在していないようです。
-  おそらく、普通じゃない言語であるので、いるのかどうか分かりませんが、プリティープリント職人も手を出し辛い言語なのではないかと思います。逆に学術的な研究に使われているので、研究対象として面白い素材なのかもしれません。
-  そこで、ここでは、プリティプリントについて考えます。
+  どうも、OCamlにはコメントを考慮した奇麗なプリティプリンタがCamlp4以外には存在していないようです。
+  そして、CamlP4もイマイチのようです。
 
-  まず、抽象構文木にしてから印字する場合、演算子の優先順があるので括弧を生成する必要が出てきます。
-  解決するには、括弧を全部に付ける方法と、優先順位を考慮して括弧を付けて出力する方法があります。
+  時代はPPXとcompilerlibsの時代なのでうまくやりたい物です。
 
-  優先順位を考慮したプリティプリントについては[OCamlチュートリアルのChapter 1 OCamlの基本、18. 1.8 Pretty-printing and parsing](http://ocaml.jp/Chapter%201%20OCaml%E3%81%AE%E5%9F%BA%E6%9C%AC#content_1_7)に詳しくあります。
+  ここでは、プリティプリントについて考えます。
+  まず現状あるOCamlのプリティプリンタ周りの現状をまとめます。次に新しい手法を提案し、実装してみます。
 
-  また、表を使って演算子の括弧を付けるプリティプリントは[GomaJの出力](https://github.com/hsk/gomaj/blob/master/src/gen_java.ml)が参考になります。
+## 2. 現状ある技術
 
-  論文 http://belle.sourceforge.net/doc/hughes95design.pdf
-  http://homepages.inf.ed.ac.uk/wadler/papers/prettier/prettier.pdf
+### 2.1. Formatモジュール
 
-  http://t0yv0.blogspot.com/2012/04/prettier-printer-in-ml.html
-  https://github.com/t0yv0/ocaml-pretty/blob/master/pretty_test.ml
+  OCamlのFormatモジュールを使ってみます。
 
-  http://okmij.org/ftp/continuations/PPYield/yield-pp.pdf
+  分かり辛い改行とネストは以下のように書くとうまく行きます。
 
-  http://rgrig.blogspot.jp/2010/12/more-ocaml-pretty-printing.html
+    let () =
+      Format.printf "tes(@[<2>";
+        Format.printf "@\ntes(@[<2>";
+          Format.printf "@\ntes(@[<2>";
+            Format.printf "@\naa";
+            Format.printf "@\naa";
+            Format.printf "@\naa";
+          Format.printf "@]@\n)";
+        Format.printf "@]@\n)";
+      Format.printf "@]@\n)";
+      Format.printf "@."
 
-  1. 括弧の生成
-      1. 全部に括弧を付ける
-      2. 優先順位を考慮して括弧を付ける
-  2. コメントの問題
-      1. コメント情報を何処に残すのか問題
-          1. 構文木に含める
-          2. コメント情報は別に残して、ロケーション情報から引き出す。
-      2. 消えたトークン前後問題
-      3. コメント何処にかかる問題
+  出力結果
+
+    tes(
+      tes(
+        tes(
+          aa
+          aa
+          aa
+        )
+      )
+    )
+
+  ポイントは、改行は`@\n`で改行する事と、`@[<2>`と `@]` で括る事です。<2>はいくつネストするかを表します。
+
+  ※ `\n` `@.` `@?`を使うとうまく動作しなくなるので注意が必要です。
+
+  formatを使えば奇麗に書く事が出来ます。
+
+### 2.2. 演算子の優先順位をつける
+
+  優先順位を考慮したプリティプリントの方法は[OCamlチュートリアルのChapter 1 OCamlの基本、18. 1.8 Pretty-printing and parsing](http://ocaml.jp/Chapter%201%20OCaml%E3%81%AE%E5%9F%BA%E6%9C%AC#content_1_7)にあります。
+
+  具体的に作ってみた例がこちらです。
+  https://github.com/hsk/gomaj/blob/master/src/gen_java.ml
+
+### 2.3. 位置情報を元にコメントを挿入する
+
+  色々弄っていたので、うごかないのですけど、以下のような感じで追加出来ます。
+
+  - [ocaml/ocaml_src_reading/parsing](ocaml/ocaml_src_reading/parsing) OCamlのパーサにコメントを追加して、プリティプリントにコメントを追加する例
+
+### 2.4. ocaml-jslib
+
+  https://github.com/m2ym/ocaml-jslib
+
+  JavaScriptのプリティプリントの例で、JavaScriptを構文解析しFormatを使って出力します。
+  位置情報もついているので、あとは、コメントを付けるだけの状態です。
+  コメントが消えるのと、演算子の優先順位の判定がないので実験にはちょうど良さそうです。
+
+### 2.5. その他
+
+  論文のリストを以下に示します。
+
+  - http://belle.sourceforge.net/doc/hughes95design.pdf
+  - http://homepages.inf.ed.ac.uk/wadler/papers/prettier/prettier.pdf
+  - http://t0yv0.blogspot.com/2012/04/prettier-printer-in-ml.html
+  - https://github.com/t0yv0/ocaml-pretty/blob/master/pretty_test.ml
+  - http://okmij.org/ftp/continuations/PPYield/yield-pp.pdf
+  - http://rgrig.blogspot.jp/2010/12/more-ocaml-pretty-printing.html
+
+## 3. 基本的な技術
+
+### 3.1. 改行情報を持ち回る
+
+  ここでは省略します。4.2を参照してください。
+
+### 3.2. Formatモジュール
+
+  改行情報を持ち回るのは大変なので、ネストをうまくやってくれる仕組みを使うと便利です。
+  Formatを使うと良いでしょう。
+
+#### 3.2.1. Formatを使った簡単な例
+
+  ex02.ml
+
+    open Format
+
+    type t =
+      | Var of string
+      | Tag of string * t list
+
+    let rec pp ppf = function
+     | Var(s) -> fprintf ppf "%s" s
+     | Tag(s,ts) ->
+       let rec pps ppf = function
+         | [] -> ()
+         | x::xs -> fprintf ppf "@\n%a%a" pp x pps xs
+       in
+       fprintf ppf "%s{@[<2>%a@]@\n}" s pps ts
+
+    let _ =
+      let a = Tag("test",[Var "a";Var "b"]) in
+      let a = Tag("test",[a;a]) in
+      let a = Tag("test",[a;a]) in
+      printf "%a\n" pp a
+
+#### 3.2.2. Formatライブラリ自体の実装の仕組み
+
+  format.jsで実装してみました。
+
+    function print_int(n) {
+      console._stdout.write(""+n);
+    }
+    var print_string = print_int;
+
+    var Format = {
+      level:0,
+      levels:[],
+      fprintf: function(fp,s) {
+        var n = 2;
+        var arg = arguments;
+        return fp(s.replace(/(%.|@\[<([^>])>|@\n|@.)/g, function(a, b ,c) {
+          switch (b.substr(0,2)) {
+            case "%a":
+              var f = arg[n++];
+              return f(function(e){return e;},arg[n++]);
+            case "%f":
+              return arg[n++].toFixed(6);
+            case "@.":
+              return "\n";
+            case "@?":
+              return "";
+            case "@[":
+              var level = c|0;
+              Format.level+=level;
+              Format.levels.push(level);
+              return "";
+            case "@]":
+              Format.level -= Format.levels.pop();
+              return "";
+            case "@\n":
+              var str = "\n";
+              for(var i = 0; i < Format.level;i++) str += " ";
+              return str;
+
+            default: return arg[n++];
+          }
+
+        }));
+      },
+      sprintf: function(s) {
+        var args = Array.prototype.slice.call(arguments);
+          args.unshift(function(i){return i;});
+        return Format.fprintf.apply(this,args);
+      },
+      printf: function() {
+        var args = Array.prototype.slice.call(arguments);
+          args.unshift(print_string);
+        Format.fprintf.apply(this,args);
+      },
+    };
+
+      Format.printf("@[<2>tes(");
+        Format.printf("@\n// test@\n@[<2>tes(");
+          Format.printf("@\n@[<2>tes(");
+            Format.printf("@\naa");
+            Format.printf("@\naa");
+            Format.printf("@\naa");
+          Format.printf("@]@\n)");
+        Format.printf("@]@\n)");
+      Format.printf("@]@\n)");
+      Format.printf("@.");
+
+  format.ml
+
+    module PP = struct
+      let rec to_s a sp = function
+        | "@["::os -> to_s a (sp ^ "  ") os
+        | "@\n"::os -> to_s (a ^ "\n" ^ sp) sp os
+        | "@]"::os ->
+          to_s a
+            (String.sub sp 0 ((String.length sp) - 2))
+            os
+        | o::os -> to_s (a^o) sp os
+        | [] -> a
+
+      let buf = ref []
+
+      let put (s:string) =
+        buf := s::!buf
+
+      let puts ss =
+        List.iter put ss
+
+      let get () =
+        let ls = List.rev !buf in
+        buf := [];
+        to_s "" "" ls
+    end
+
+    let _ =
+      PP.puts["@[";"tes";"("];
+        PP.puts["@\n";"@[";"tes";"(";];
+          PP.puts["@\n"; "1"];
+        PP.puts["@]";"@\n";")"];
+      PP.puts["@]";"@\n";")"];
+      let str = PP.get() in
+      Printf.printf "%s\n" str
+
+### 3.3. 演算子の優先順位
+
+  ここでは具体的に、優先順位をつけたものを見てみましょう。
 
 
-  もう一つはコメントの問題で、コメント情報を何処に残すのかという問題があり、これは構文木に含める手法と、
-  構文木とは別に分けて保存し、ロケーション情報から復元する方法があります。
-  消えたトークンの前後問題は、例えば、以下の式で、
+  優先順位を考慮したプリティプリント[OCamlチュートリアルのChapter 1 OCamlの基本、18. 1.8 Pretty-printing and parsing](http://ocaml.jp/Chapter%201%20OCaml%E3%81%AE%E5%9F%BA%E6%9C%AC#content_1_7)
+
+  - [https://github.com/hsk/docs/tree/master/pp_ast](https://github.com/hsk/docs/tree/master/pp_ast) ここのソースを持ってくれば楽そう。
+
+  - https://github.com/hsk/gomaj/blob/master/src/gen_java.ml  
+
+  ここでは深く触れません。
+
+## 4. コメントの問題
+
+  プリティプリントをする際のコメントには以下の問題点があります。
+
+  1. コメント情報を何処に残すのか問題
+      1. コメント情報を構文木に含める
+      1. コメント情報は別に残して、位置情報から引き出す。
+          1. 消えたトークン前後問題
+  1. コメント何処にかかる問題
+
+  コメント情報を何処に残してどう出力するのかの問題は構文木に含める手法と、構文木とは別に分けて保存し、ロケーション情報から復元する方法があります。
+  また、構文木に全てのトークンが含まれない場合は、消えているトークンの前後どちらにコメントを追加するかが問題になります。
+
+### 4.1. コメント情報を何処に残す
+
+  コメント情報を何処に残してどう出力するのかの問題を詳しく見て行きましょう。
+
+#### 4.1.1. 構文木に残す
+
+  構文木にコメントを演算子の一種であるように、残しておけば、うまく行くかもしれません。
+  構文木にコメントを残す場合の問題は、構文木の構造をそのまま活かせない点にあります。
+  let in let inの連続をパターンマッチで判定する場合に、このコメント情報が残ると困ります。
+
+#### 4.1.2. ロケーション情報に残す
+
+  字句解析の段階でコメント情報の履歴を取っておきます。そして、印字の際にトークン情報を元に復元します。
+
+#### 4.1.2.1. 消えたトークンの前後の問題
+
+  ロケーションから復元する場合、消えたトークンの前後の問題があります。
 
     let a(*1*) = (*2*)1 in a
 
@@ -60,80 +275,32 @@
     Let("a", FCom("1", Int 1), Var "a")
     Let("a", FCom("2", Int 1), Var "a")
 
-  のようにどちらも同じコメントになるので、分かりませんという問題です。
-  コメントが何処にかかるかの問題は、たとえば、
+  のようにどちらも同じコメントになるので、分かりません。
+
+  この問題は、トークン情報も残すことで解決出来るかもしれません。
+  消えるトークンもまた、コメントの一部であると考えればよいのです。
+  問題はどのトークンがコメントであるのかの判断でしょう。たとえば、括弧はそれに該当します。
+
+### 4.2. コメントが何処にかかるかの問題
+
+  たとえば、以下のようにコメントは下を修飾したり、横を修飾したりします。
 
     (* 関数のコメントみたいな物 *)
     let a = 1
     in 
     a (* 式に対するコメント *)
 
-  このようなコメントがあると、手前にかかるのか、後ろにかかるのか分からない事があるわけで、この問題を解決する必要があります。
+## 5. コメントの問題の解決
 
-  この文書では、コメントを構文木に情報を残す方法を考え、解決を試みます。
-  消えたトークン前後問題と、コメント何処にかかる問題の２つがあります。
+  この章では、４章で見て来たコメントの問題点を解決する事を考えます。
+  よりエレガントにコメントをプリントする事を考えれば、ロケーション情報からコメントを復元するのがよいでしょう。
 
-  2章では、簡単なプリティプリントをする実装を行います。
+### 5.1. 構文木にコメント情報を残す
 
-  3章では、構文木にコメントを残す手法を考え、4章では、消えたトークンを残す手法を5章で コメントの前後を判定する手法について考えます。6章では問題ですのでやめます。
+  構文要素を全体を含めて、何番めにコメントがあるかを保存することで再現します。
+  この方法は文法サイズに比例して、パーサの修正作業が必要になります。
 
-## 2. 簡単なプリティプリント
-
-
-  簡単なプリティプリントを実装してみましょう。
-
-  まず、以下のようにデータ定義をしましょう。
-
-    type e =
-      | Int of int
-      | Let of string * e * e
-      | Var of string
-
-
-  3つの構文があります。
-  `let a = let b = 1 in b in let c = a in c`は例えば以下のように表す事が出来ます:
-
-    let e = Let("a",Let("b", Int 1, Var "b"),Let("c", Var "a", Var "c"))
-
-  Letの最初の式は1つネストをさげ、次の式はネストを下げないようにして、再帰的に処理する事で実装出来ます。
-  以下にプリティプリントを実装した関数ppを示します:
-
-    let rec pp sp = function
-      | Int(i) ->
-        Printf.sprintf "%s%d\n" sp i
-      | Var(x) ->
-        Printf.sprintf "%s%s\n" sp x
-      | Let(x,e1,e2) ->
-        Printf.sprintf "%slet %s =\n%s%sin\n%s"
-          sp
-          x
-          (pp (sp ^ "  ") e1)
-          sp
-          (pp sp e2)
-
-  ppの第一引数spはネストの情報で文字列としてもちます。第二引数は構文木データです。
-  この関数を使うには以下のようにして使います。
-
-    let _ =
-      let s = pp "" e in
-      Printf.printf "%s\n" s
-
-  実行すると、以下のように出力されます。
-
-    let a =
-      let b =
-        1
-      in
-      b
-    in
-    let c =
-      1
-    in
-    b
-
-  簡単ですね。
-
-## 3. 構文木にコメントを残す
+#### 5.1.1. 構文要素の前後にコメント情報を残す
 
   コメント情報は、手前と、後ろからの関連付けでうまく行きそうな気がします。
 
@@ -149,7 +316,7 @@
 
     let(*1*)a(*2*)= 1 in a
 
-## 4. 消えたトークンを残す
+#### 5.1.2. 構文要素を子に持つ要素を作り、抽象構文木に残らないトークンの情報を保持する
 
 
   消えたトークンの前後問題は、例えば、以下の式で、
@@ -160,7 +327,7 @@
 
     Let("a", Int 1, Var "a")
 
-  のようになりますが、ここで、仮にコメント情報を構文木に残した場合、
+  のようになります。ここで、仮にコメント情報を構文木に残した場合、
 
     Let("a", FCom("1", Int 1), Var "a")
     Let("a", FCom("2", Int 1), Var "a")
@@ -182,7 +349,7 @@
       | UCom([fx;bx],Var(x)) ->
         Printf.sprintf "%s%s%s%s\n" sp fx x bx
       (* let x = b in c *)
-      (* x = in が追加情報が必要　*)
+      (* x = in に追加情報が必要 *)
       (* Let of string * e * e *)
       | UCom([flet;fx;feq;beq;fin;bin;blet],Let(x,e1,e2)) ->
         Printf.sprintf "%s%slet%s%s%s=%s\n%s%sin%s\n%s%s%s"
@@ -272,16 +439,248 @@
   この例では、追加情報が必要な部分にのみ追加出来ています。
 
 
-  パーサを修正するのも大変そうです。パーサの修正を最小限にするには、やはり、トークン情報の前後から見るのがよい気がします。コメント情報以外のトークンも残すのがポイントな気がしてきます。
+  ここまで考えましたが、やはり、パーサを修正するのも大変そうです。
+  パーサの修正を最小限にするには、トークン情報の前後から見るのがよい気がします。
+  コメント情報以外のトークンも残すのがポイントな気がしてきます。
+
+### 5.2. コメントをロケーション情報に残して解決
+
+  消えたトークンの問題を解決するには、コメント同様に扱うと良さそうです。
+
+  1 + 2 の2項演算子があった場合に、((1) + (2))のように括弧も残るかもしれません。
+  主に、キーワードはコメント扱いすれば良さそうです。
+
+    function a (hoge,huga) {
+      return (hoge + huga);
+    }
+
+  これをトークンのリストにすると以下のようになります:
+
+  1.  function
+  2.  a
+  3.  `(`
+  4.  hoge
+  5.  `,`
+  6.  huga
+  7.  `)`
+  8.  `{`
+  9.  return
+  10. `(`
+  11. hoge
+  12. `+`
+  13. huga
+  14. `)`
+  15. `;`
+  16. `}`
+
+----
+
+  構文木の情報に位置情報を加えると以下のようになるでしょう:
+
+    Fun(1,16,
+      Var(2,"a"),
+      [Var(4,"hoge");Var(6,"huga")],
+      [
+        Ret(9,15,Bin(11,13,Var(11,"hoge"),"+",Var(13,"huga")))
+      ]
+    )
+
+  関数だけを取り上げましょう。
+
+    /* a */
+    function a (?) {
+      ?
+    }
+    /* c */
+    /* d */
+    b
+
+  このトークンリストは
+
+  1.  function
+  2.  a
+  3.  `(`
+  4.  `)`
+  5.  `{`
+  6.  `}`
+  7.  b
+
+----
+
+  6つです。
+  構文木は、
+
+    Fun(1,6,
+      Var(2,"a"),
+      [],
+      []
+    )
+
+  です。
+
+  印字プログラムは以下のようになるでしょう:
+
+    | Fun(sp,ep,Var(p1,x1),ss,es) ->
+      pp_comment fp sp
+      fprintf fp "function"
+      fprintf fp "%s" xs
+      fprintf fp "("
+      pp_ss fp ss
+      fprintf fp ")"
+      fprintf fp "{"
+      pp_es fp es
+      fprintf fp "}"
+      pp_comment fp sp
 
 
-## 位置情報を元にしたコメントとトークン情報の保存と印字
+  ここに位置情報は含まれていませんが、前後関係をうまく印字したいなら、
 
-  パースする場合に、lexerが補助となるコメント、およびトークンを覚えてくれればパーサの変更無しにコメントを残す事が出来ます。
+  1. コメントはすぐ印字する。
+  2. 印字されたものに、含まれていない保存してあるトークンがあれば、その手前に出力する。
 
+----
   
+  1.  /\*a\*/
+  2.  /\*b\*/
+  3.  function
+  4.  /\*c\*/
+  5.  a
+  6.  /\*d\*/
+  7.  `(`
+  8.  /\*e\*/
+  9.  `)`
+  10.  /\*f\*/
+  11.  `{`
+  12.  `}`
+  13.  /\*g\*/
+  14.  b
+  15.  /\*h\*/
 
-## 5. コメントの前後を判定する手法
+----
+
+  計算してみましょう。
+
+    ""
+    1,["/*a*/";"/*b*/";"function";"/*c*/";"a";"/*d*/";"(";"/*e*/";")";"/*f*/";"{";"}";"/*g*/";"b";"/*h*/"]
+    1,3,"function",5,"a","(",")","{","}",14,"b"
+    --
+    "/*a*/";
+    2,["/*b*/","function";"/*c*/";"a";"/*d*/";"(";"/*e*/";")";"/*f*/";"{";"}";"/*g*/";"b";"/*h*/"]
+    2,3,"function",5,"a","(",")","{","}",14,"b"
+    --
+    "/*a*//*b*/";
+    3,["function";"/*c*/";"a";"/*d*/";"(";"/*e*/";")";"/*f*/";"{";"}";"/*g*/";"b";"/*h*/"]
+    3,3,"function",5,"a","(",")","{","}",14,"b"
+    --
+    "/*a*//*b*/";
+    4,["/*c*/";"a";"/*d*/";"(";"/*e*/";")";"/*f*/";"{";"}";"/*g*/";"b";"/*h*/"]
+    4,5,"a","(",")","{","}",14,"b"
+    --
+    "/*a*//*b*/function/*c*/";
+    5,["a";"/*d*/";"(";"/*e*/";")";"/*f*/";"{";"}";"/*g*/";"b";"/*h*/"]
+    5,5,"a","(",")","{","}",14,"b"
+    --
+    "/*a*//*b*/function/*c*/a";
+    6,["/*d*/";"(";"/*e*/";")";"/*f*/";"{";"}";"/*g*/";"b";"/*h*/"]
+    6,"(",")","{","}",14,"b"
+    --
+    "/*a*//*b*/function/*c*/a/*d*/";
+    7,["(";"/*e*/";")";"/*f*/";"{";"}";"/*g*/";"b";"/*h*/"]
+    7,"(",")","{","}",14,"b"
+    --
+    "/*a*//*b*/function/*c*/a/*d*/(";
+    8,["/*e*/";")";"/*f*/";"{";"}";"/*g*/";"b";"/*h*/"]
+    8,")","{","}",14,"b"
+    --
+    "/*a*//*b*/function/*c*/a/*d*/(/*e*/";
+    9,[")";"/*f*/";"{";"}";"/*g*/";"b";"/*h*/"]
+    9,")","{","}",14,"b"
+    --
+    "/*a*//*b*/function/*c*/a/*d*/(/*e*/)";
+    10,["/*f*/";"{";"}";"/*g*/";"b";"/*h*/"]
+    10,"{","}",14,"b"
+    --
+    "/*a*//*b*/function/*c*/a/*d*/(/*e*/)/*f*/";
+    11,["{";"}";"/*g*/";"b";"/*h*/"]
+    11,"{","}",14,"b"
+    --
+    "/*a*//*b*/function/*c*/a/*d*/(/*e*/)/*f*/{";
+    12,["}";"/*g*/";"b";"/*h*/"]
+    12,"}",14,"b"
+    --
+    "/*a*//*b*/function/*c*/a/*d*/(/*e*/)/*f*/{}";
+    13,["/*g*/";"b";"/*h*/"]
+    13,14,"b"
+    --
+    "/*a*//*b*/function/*c*/a/*d*/(/*e*/)/*f*/{}/*g*/";
+    14,["b";"/*h*/"]
+    14,14,"b"
+    --
+    "/*a*//*b*/function/*c*/a/*d*/(/*e*/)/*f*/{}/*g*/b";
+    15,["/*h*/"]
+    15
+    --
+    "/*a*//*b*/function/*c*/a/*d*/(/*e*/)/*f*/{}/*g*/b/*h*/";
+    16,[]
+    16
+    --
+
+  こんなルールで出力すればうまく行きそうな気もします。問題があるとすれば、括弧の対応とかかな。
+  たぶん、全てのトークンリストと位置情報を取っておいて、出力するときにその情報と照合しながら出力すれば良さそうで、トークン番号を位置情報として持てばよさそうで、もしかすると、構文木には、位置情報すらいらないかもしれない。
+
+  位置情報がどうしても必要なケースを考えてみると良さそうです。ネストした括弧が関係あるきがします。
+
+
+  a(/*a*/((1))) というような式は、
+
+    "a","(","/*a*/","(","(","1",")",")",")"
+    "a","@[","(","1",")","@]"
+
+    "a","(","/*a*/","(","(","1",")",")",")"
+    "a","@[","(","1",")","@]"
+
+  というリストだけで扱えそうな気もします。
+
+  実装してみて、実験してみましょう。
+
+  pptest.mlで書いてみましょう。
+  段落処理等も、結構うまく行きました。結構というのは、段落とコメントの問題がまだうまく解決出来ていないからです。
+
+  段落とコメントかぁ。
+
+    @[a(@\n
+      1@]@\n
+    )@\n
+
+    /*b*/a/**/(
+      /*a*/1
+    /**/)/*end*/
+
+    @[/*b*/a/**/(@\n
+      /*a*/1@]\n
+    /**/)/*end*/
+
+  pptest2.mlを作ってみました。pptest2.mlでかなりいいかんじ。
+  でも問題は、
+
+    // aa
+    a(
+      // aa
+      a(
+        2// a
+        // a
+        2// a
+      )
+      // aa
+      a(
+        2// a
+        (2+1
+      )// a
+    ))
+
+  pptest3.mlは対応する括弧のネストレベルを管理してこの問題を解決しています。
+
+### 5.3. コメントの前後を判定する手法
 
   コメントが何処にかかるかの問題は、たとえば、
 
@@ -290,9 +689,110 @@
     in 
     a (* 式に対するコメント *)
 
-  このようなコメントがあると、手前にかかるのか、後ろにかかるのか分からない事があるわけで、この問題を解決する必要があります。この解決にはおそらく、コメントの手前にトークンがあるかどうかで判定出来ます。また、構文木によっては、後ろにかけるしかない場合も有り得るでしょう。その時は、後ろにかけましょう。
+  このようなコメントがあると、手前にかかるのか、後ろにかかるのか分からない事があるわけで、この問題を解決する必要があります。この解決は、コメントの手前にトークンがあるかどうかで判定出来ます。
+  実は5.2の所で考え済みです。字句解析で、 文末にあるコメントは "@\n"を追加し、左側にスペース以外のトークンがあれば@を付けます。
 
-## 6. 実装する
+      "// test";"@\n";
+      "a";"(";
+        "/* aa */";"@\n";
+        "(";"2";"+";"1";")";"@";"// a";"@\n";
+      ")";
 
-  それでは、方針は決まりましたので、実装してみましょう。
 
+### 5.4. 堕胎な構文解析をする方法
+
+  真面目に構文解析するから大変なのです。色を付けるだけなら、構文解析は必要ではありません。
+  構造を表すだけの、大ざっぱな言語を作成して解決出来るならそのほうが楽でしょう。
+  例えば、if() {}とfor(a;b;c) {}は同じ構文要素とみなすのです。
+  function a () {} function() {}はどれも同じ構文要素と扱うのです。
+
+
+## 6. ML固有の問題
+
+  MLの場合は括弧でネストを作らずに、letでネストを作ったりするのでその辺がややこしいのでここではletを使った場合のプリティプリントについて考えます。
+
+    type e =
+      | Int of int
+      | Let of string * e * e
+      | Var of string
+
+  のプリティプリントについて考えます。
+  出来たらここに、コメントを追加して奇麗にプリティプリントする事を考えてみます。
+
+### 6.1. 改行情報を持ち回る
+
+
+  簡単なプリティプリントを実装してみましょう。
+
+  まず、以下のようにデータ定義をしましょう。
+
+    type e =
+      | Int of int
+      | Let of string * e * e
+      | Var of string
+
+
+  3つの構文があります。
+  `let a = let b = 1 in b in let c = a in c`は例えば以下のように表す事が出来ます:
+
+    let e = Let("a",Let("b", Int 1, Var "b"),Let("c", Var "a", Var "c"))
+
+  Letの最初の式は1つネストをさげ、次の式はネストを下げないようにして、再帰的に処理する事で実装出来ます。
+  以下にプリティプリントを実装した関数ppを示します:
+
+    let rec pp sp = function
+      | Int(i) ->
+        Printf.sprintf "%s%d\n" sp i
+      | Var(x) ->
+        Printf.sprintf "%s%s\n" sp x
+      | Let(x,e1,e2) ->
+        Printf.sprintf "%slet %s =\n%s%sin\n%s"
+          sp
+          x
+          (pp (sp ^ "  ") e1)
+          sp
+          (pp sp e2)
+
+  ppの第一引数spはネストの情報で文字列としてもちます。第二引数は構文木データです。
+  この関数を使うには以下のようにして使います。
+
+    let _ =
+      let s = pp "" e in
+      Printf.printf "%s\n" s
+
+  実行すると、以下のように出力されます。
+
+    let a =
+      let b =
+        1
+      in
+      b
+    in
+    let c =
+      1
+    in
+    b
+
+### 6.2. Formatを使って書く
+
+  Formatを使ってみた例が以下です。
+
+  ex03.ml
+
+    open Format
+
+    type t =
+      | Var of string
+      | Let of string * t * t
+
+    let rec pp ppf = function
+     | Var(s) -> fprintf ppf "%s" s
+     | Let(s,(Let _ as ts),s2) ->
+       fprintf ppf "@[<2>let %s = @\n%a@]@\nin@\n%a" s pp ts pp s2
+     | Let(s,ts,s2) ->
+       fprintf ppf "let %s = %a in@\n%a" s pp ts pp s2
+
+    let _ =
+      let a = Let("test",Var "a",Var "b")in
+      let a = Let("test",a,a) in
+      printf "%a\n" pp a
