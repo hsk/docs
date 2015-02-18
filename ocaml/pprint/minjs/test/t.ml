@@ -1,4 +1,4 @@
-if {a} {
+if (a) {
 	1 + 2 /*< test */
 
 	// koko da yo
@@ -11,6 +11,6 @@ if {a} {
 
 		(f + kkk {1 jj { 1 } 2})
 	}
-
+	a ( 2 ) { k }
 	k {  } // aa
 }

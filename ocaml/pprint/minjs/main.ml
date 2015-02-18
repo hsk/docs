@@ -7,9 +7,22 @@ module PP = struct
   let nest = ref 0
 
   let rec ln = function
-    | "@["::os | "@]"::os | "@"::os | "@ "::os -> ln os
+    | "@["::os | "@]"::os | "@"::os | "@ "::os | "@("::os | "@)"::os -> ln os
     | "@\n" :: os -> true
     | os -> false
+
+  let rec tor t os =
+    match os with
+    | [] -> false 
+    | "@)"::os -> false
+    | o::os when t = o -> true
+    | o::os -> tor t os
+
+  let rec torcut os =
+    match os with
+    | [] -> []
+    | "@)"::os -> os
+    | o::os -> torcut os
 
   let rec to_s a sp ts os =
     match(ts,os) with
@@ -24,6 +37,8 @@ module PP = struct
         (String.sub sp 0 ((String.length sp) - 2))
         ts os
     | ("@\n"::ts,os) -> to_s (a^"\n"^ sp) sp ts os
+    | (t::ts,"@("::os) when tor t os ->
+      to_s (a^t) sp ts (torcut os)
     | (t::ts,o::os) when t = o -> to_s (a^t) sp ts os
     | ("(" as t::ts,os) -> nest := !nest + 1; to_s (a^t) sp ts os
     | (t::ts,os) -> to_s (a^t) sp ts os
@@ -48,11 +63,11 @@ end
 let rec pp = function
   | Var i -> PP.put i
   | App(t1,ts) ->
-    pp t1; PP.puts["@[";"@ ";"{"];
+    pp t1; PP.puts["@[";"@ ";"@(";"{";"("; "@)"];
     List.iter begin function t2 ->
       PP.put "@\n"; pp t2;
     end ts;
-    PP.puts["@]";"@\n";"}"]
+    PP.puts["@]";"@\n";"@(";"}";")";"@)"]
   | Bin(t1,op,t2) ->
     pp t1; PP.puts["@ ";"+";"@ "]; pp t2
 
