@@ -6,17 +6,10 @@ type t =
   | Bin of t * string * t
   | Pre of string * t
   | Post of t * string
-  | App of t * t list
 
 let infixs =
   [
     "=",  (1, false);
-    "==", (2, true);
-    "!=", (2, true);
-    "<",  (3, true);
-    ">",  (3, true);
-    "<=", (4, true);
-    ">=", (5, true);
     "+",  (6, true);
     "-",  (6, true);
 
@@ -36,14 +29,6 @@ let postfixs =
     "++", 9;
     "--", 9;
   ]
-
-let rec pp_ls ppf sep print_fun = function
-  | [] -> ()
-  | [x] -> print_fun ppf x
-  | x :: xs ->
-    print_fun ppf x;
-    fprintf ppf "%s" sep;
-    pp_ls ppf sep print_fun xs
 
 let rec pp paren p ppf t = 
   match t with
@@ -83,15 +68,10 @@ let rec pp paren p ppf t =
     pp true p1 ppf e2;
     if paren then fprintf ppf ")"
 
-  | App(e1, es) ->
-    pp true 0 ppf e1;
-    fprintf ppf " ";
-    pp_ls ppf " " (pp true 0) es
-
 let _ =
   let a = Let("test",Var "a",Var "b")in
   let b = Bin(Var "a","*",Var "b") in
   let c = Bin(b,"*",b) in
-  let c = Bin(c,"*",App(Var "a", [Var "c"; Var "d"])) in
+  let c = Bin(c,"*",Var "a") in
   let a = Let("test",a,c) in
   printf "%a\n" (pp true 0 ) a
