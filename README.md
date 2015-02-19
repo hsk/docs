@@ -21,6 +21,7 @@
 - [thih](thih) Haskellの型推論についての論文の翻訳
 - [traittable](traittable) 拡張可能なトレイトの実装
 - [typetheory](typetheory) 型理論入門
+- [scala/ftdop](scala/ftdop) Scalaで書いた、簡単なインタプリタ350行くらいだけど、Cの様な文法でマクロも動きます。
 
 ## プリティプリント
 
