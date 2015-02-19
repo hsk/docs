@@ -14,4 +14,4 @@ run2: mul/plugin.class
 	scala ftdop5.main "@load(mul) @test(10)+mul(2,3)"
 
 clean:
-	rm -rf target ftdop5 mul
+	rm -rf target ftdop5 mul plugin_test
