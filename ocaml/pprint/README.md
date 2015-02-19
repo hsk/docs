@@ -86,36 +86,35 @@
 ### 3.1. 改行情報を持ち回る
 
   簡単なプリティプリントを実装してみましょう。
-  TODO: ツリー状の言語で書き直す。
 
   まず、以下のようにデータ定義をしましょう。
 
-    type e =
-      | Int of int
-      | Let of string * e * e
+    type t =
       | Var of string
+      | Tag of string * t list
 
+  2つの構文があります。
+  `a{1 b{ c d } 2}`は例えば以下のように表す事が出来ます:
 
-  3つの構文があります。
-  `let a = let b = 1 in b in let c = a in c`は例えば以下のように表す事が出来ます:
+    let e = Tag("a",[
+      Var "1";
+      Tag("b",[
+        Var "c";
+        Var "d"
+      ]);
+      Var "2"
+    ])
 
-    let e = Let("a",Let("b", Int 1, Var "b"),Let("c", Var "a", Var "c"))
-
-  Letの最初の式は1つネストをさげ、次の式はネストを下げないようにして、再帰的に処理する事で実装出来ます。
   以下にプリティプリントを実装した関数ppを示します:
 
     let rec pp sp = function
-      | Int(i) ->
-        Printf.sprintf "%s%d\n" sp i
-      | Var(x) ->
-        Printf.sprintf "%s%s\n" sp x
-      | Let(x,e1,e2) ->
-        Printf.sprintf "%slet %s =\n%s%sin\n%s"
-          sp
-          x
-          (pp (sp ^ "  ") e1)
-          sp
-          (pp sp e2)
+     | Var(s) -> Printf.sprintf "%s%s\n" sp s
+     | Tag(s,ts) ->
+       let rec pps sp = function
+         | [] -> ""
+         | x::xs -> (pp sp x) ^ (pps sp xs)
+       in
+       Printf.sprintf "%s%s{\n%s%s}\n" sp s (pps ("  "^sp) ts) sp
 
   ppの第一引数spはネストの情報で文字列としてもちます。第二引数は構文木データです。
   この関数を使うには以下のようにして使います。
@@ -126,16 +125,14 @@
 
   実行すると、以下のように出力されます。
 
-    let a =
-      let b =
-        1
-      in
-      b
-    in
-    let c =
+    a{
       1
-    in
-    b
+      b{
+        c
+        d
+      }
+      2
+    }
 
 ### 3.2. Formatモジュール
 

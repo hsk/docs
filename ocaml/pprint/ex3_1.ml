@@ -2,6 +2,15 @@ type t =
   | Var of string
   | Tag of string * t list
 
+    let e = Tag("a",[
+      Var "1";
+      Tag("b",[
+        Var "c";
+        Var "d"
+      ]);
+      Var "2"
+    ])
+
 let rec pp sp = function
  | Var(s) -> Printf.sprintf "%s%s\n" sp s
  | Tag(s,ts) ->
@@ -12,7 +21,4 @@ let rec pp sp = function
    Printf.sprintf "%s%s{\n%s%s}\n" sp s (pps ("  "^sp) ts) sp
 
 let _ =
-  let a = Tag("test",[Var "a";Var "b"]) in
-  let a = Tag("test",[a;a]) in
-  let a = Tag("test",[a;a]) in
-  Printf.printf "%s" (pp "" a)
+  Printf.printf "%s" (pp "" e)
