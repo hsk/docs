@@ -230,11 +230,100 @@
 
   優先順位を考慮したプリティプリント[OCamlチュートリアルのChapter 1 OCamlの基本、18. 1.8 Pretty-printing and parsing](http://ocaml.jp/Chapter%201%20OCaml%E3%81%AE%E5%9F%BA%E6%9C%AC#content_1_7)
 
-  - [https://github.com/hsk/docs/tree/master/pp_ast](https://github.com/hsk/docs/tree/master/pp_ast) ここのソースを持ってくれば楽そう。
+  ex04.ml
 
-  - https://github.com/hsk/gomaj/blob/master/src/gen_java.ml  
+    open Format
 
-  ここでは深く触れません。
+    type t =
+      | Var of string
+      | Let of string * t * t
+      | Bin of t * string * t
+      | Pre of string * t
+      | Post of t * string
+      | App of t * t list
+
+    let infixs =
+      [
+        "=",  (1, false);
+        "+",  (6, true);
+        "-",  (6, true);
+
+        "/",  (7, true);
+        "*",  (7, true);
+      ]
+
+    let prefixs =
+      [
+        "new", (8, true);
+        "!",   (8, false);
+        "-",   (8, false);
+      ]
+
+    let postfixs =
+      [
+        "++", 9;
+        "--", 9;
+      ]
+
+    let rec pp_ls ppf sep print_fun = function
+      | [] -> ()
+      | [x] -> print_fun ppf x
+      | x :: xs ->
+        print_fun ppf x;
+        fprintf ppf "%s" sep;
+        pp_ls ppf sep print_fun xs
+
+    let rec pp paren p ppf t = 
+      match t with
+      | Var i -> fprintf ppf "%s" i
+      | Let(s,(Let _ as ts),s2) ->
+        fprintf ppf "@[<2>let %s = @\n%a@]@\nin@\n%a"
+          s (pp true 0) ts (pp true 0) s2
+      | Let(s,ts,s2) ->
+        fprintf ppf "let %s = %a in@\n%a" s (pp true 0) ts (pp true 0) s2
+
+      | Pre(op, e1) ->
+
+        let (p1,ident) = (List.assoc op prefixs) in
+        let paren = paren && p1 < p in
+
+        if paren then fprintf ppf "(";
+        fprintf ppf " %s" op;
+        if ident then fprintf ppf " ";
+        pp true p1 ppf e1;
+        if paren then fprintf ppf ")"
+
+      | Post(e1, op) ->
+
+        let p1 = (List.assoc op postfixs) in
+        let paren = paren && p1 <= p in
+
+        if paren then fprintf ppf "(";
+        fprintf ppf " %s%a" op (pp true (p1 - 1)) e1;
+        if paren then fprintf ppf ")"
+
+      | Bin(e1, op, e2) ->
+        let (p1, l) = (List.assoc op infixs) in
+        let paren = paren && (if l then p1 <= p else p1 < p) in
+        if paren then fprintf ppf "(";
+        pp paren (if l then p1 - 1 else p1 + 1) ppf e1;
+        fprintf ppf " %s " op;
+        pp true p1 ppf e2;
+        if paren then fprintf ppf ")"
+
+      | App(e1, es) ->
+        pp true 0 ppf e1;
+        fprintf ppf " ";
+        pp_ls ppf " " (pp true 0) es
+
+    let _ =
+      let a = Let("test",Var "a",Var "b")in
+      let b = Bin(Var "a","*",Var "b") in
+      let c = Bin(b,"*",b) in
+      let c = Bin(c,"*",App(Var "a", [Var "c"; Var "d"])) in
+      let a = Let("test",a,c) in
+      printf "%a\n" (pp true 0 ) a
+
 
 ## 4. コメントの問題
 
@@ -709,14 +798,12 @@
         "(";"2";"+";"1";")";"@";"// a";"@\n";
       ")";
 
-
 ### 5.4. 堕胎な構文解析をする方法
 
   真面目に構文解析するから大変なのです。色を付けるだけなら、構文解析は必要ではありません。
   構造を表すだけの、大ざっぱな言語を作成して解決出来るならそのほうが楽でしょう。
   例えば、if() {}とfor(a;b;c) {}は同じ構文要素とみなすのです。
   function a () {} function() {}はどれも同じ構文要素と扱うのです。
-
 
 ## 6. ML固有の問題
 
