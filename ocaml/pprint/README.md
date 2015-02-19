@@ -144,7 +144,7 @@
 
 #### 3.2.1. Formatを使った簡単な例
 
-  ex3_2.ml
+  ex3_2_1.ml
 
     open Format
 
@@ -276,6 +276,9 @@
 
   優先順位を考慮したプリティプリント[OCamlチュートリアルのChapter 1 OCamlの基本、18. 1.8 Pretty-printing and parsing](http://ocaml.jp/Chapter%201%20OCaml%E3%81%AE%E5%9F%BA%E6%9C%AC#content_1_7)を参考に作成してみます。
 
+
+  TODO:出来たと思っていたのですけど、挙動が怪しいので、要テストです。
+  右再帰の演算子と左再帰の演算子でのテスト等 ((a -> a) -> a) -> a は a -> a -> a -> aにするなどのテストが必要です。イヤ多分良いはず。移植ミスってた。嫌でもテストはあったほうがいいです。 
   FormatとLetと演算子の優先順位を組み合わせた例です:
 
   ex3_3.ml
@@ -284,13 +287,17 @@
 
     type t =
       | Var of string
-      | Let of string * t * t
       | Bin of t * string * t
       | Pre of string * t
       | Post of t * string
+      | Fun of string * string list * t list
+      | App of string * t list
+
+    type prog = t list
 
     let infixs =
       [
+        "->", (1, false);
         "=",  (1, false);
         "+",  (6, true);
         "-",  (6, true);
@@ -301,7 +308,7 @@
 
     let prefixs =
       [
-        "new", (8, true);
+        "return", (0, true);
         "!",   (8, false);
         "-",   (8, false);
       ]
@@ -312,22 +319,20 @@
         "--", 9;
       ]
 
+    let sep = function
+      | Fun _ -> ""
+      | _ -> ";"
+
     let rec pp paren p ppf t = 
       match t with
       | Var i -> fprintf ppf "%s" i
-      | Let(s,(Let _ as ts),s2) ->
-        fprintf ppf "@[<2>let %s = @\n%a@]@\nin@\n%a"
-          s (pp true 0) ts (pp true 0) s2
-      | Let(s,ts,s2) ->
-        fprintf ppf "let %s = %a in@\n%a" s (pp true 0) ts (pp true 0) s2
-
       | Pre(op, e1) ->
 
         let (p1,ident) = (List.assoc op prefixs) in
         let paren = paren && p1 < p in
 
         if paren then fprintf ppf "(";
-        fprintf ppf " %s" op;
+        fprintf ppf "%s" op;
         if ident then fprintf ppf " ";
         pp true p1 ppf e1;
         if paren then fprintf ppf ")"
@@ -345,20 +350,66 @@
         let (p1, l) = (List.assoc op infixs) in
         let paren = paren && (if l then p1 <= p else p1 < p) in
         if paren then fprintf ppf "(";
-        pp paren (if l then p1 - 1 else p1 + 1) ppf e1;
+        pp true (if l then p1 - 1 else p1 + 1) ppf e1;
         fprintf ppf " %s " op;
         pp true p1 ppf e2;
         if paren then fprintf ppf ")"
-
+      | App(x,es) ->
+        fprintf ppf "%s(%a)" x pps2 es
+      | Fun(x, xs, es) ->
+        fprintf ppf "@[<2>function %s(%a) {@\n%a@]@\n}"
+          x pp_ss xs pps es
+    and pps ppf = function
+      | [] -> ()
+      | [e] -> fprintf ppf "%a%s" (pp false 0) e (sep e)
+      | e::es ->
+        fprintf ppf "%a%s@\n%a"
+          (pp false 0) e
+          (sep e)
+          pps es
+    and pps2 ppf = function
+      | [] -> ()
+      | [e] -> fprintf ppf "%a" (pp true 0) e
+      | e::es ->
+        fprintf ppf "%a, %a"
+          (pp true 0) e
+          pps2 es
+    and pp_ss ppf = function
+      | [] -> ()
+      | [s] -> fprintf ppf "%s" s
+      | s::ss ->
+        fprintf ppf "%s, %a" s pp_ss ss
     let _ =
-      let a = Let("test",Var "a",Var "b")in
-      let b = Bin(Var "a","*",Var "b") in
-      let c = Bin(b,"*",b) in
-      let c = Bin(c,"*",Var "a") in
-      let a = Let("test",a,c) in
-      printf "%a\n" (pp true 0 ) a
+      let prog = [
+        Fun("add",["a";"b"],[
+          Pre("return",Bin(Var "a","*",Var "b"));
+        ]);
+        Fun("main",[],[
+          App("add",[Var "1";Var "2"]);
+          Pre("return", Var "0");
+        ]);
+        Fun("f",["a";"b";"c";"d"],[
+          Pre("return",Bin(Bin(Bin(Var "a","+",Var "b"),"*",Var "c"),"*",Var "d"));
+        ]);
+        Fun("f",["a";"b";"c";"d"],[
+          Pre("return",Bin(Var "a","=",Bin(Var "c","=",Bin(Bin(Bin(Var "a","=",Var "b"),"+",Var "c"),"*",Var "d"))));
+        ]);
+        Fun("f",["a";"b";"c";"d"],[
+          Pre("return",Bin(Var "a","=",Bin(Var "c","+",Bin(Bin(Bin(Var "a","=",Var "b"),"+",Var "c"),"+",Var "d"))));
+        ]);
+        Bin(Bin(Var "a","->",Var "b"),"->",Bin(Bin(Var "a","->",Var "b"),"->",Bin(Var "a","->",Bin(Var "a","->",Var "b"))));
+        Bin(Var "moji","+",Bin(Bin(Var "5","*",Var "2"),"+",Var "3"));
+        Bin(Bin(Var "moji","+",Bin(Var "5","*",Var "2")),"+",Var "3");
+        Bin(Bin(Var "moji","+",Var "5"),"+",Var "3");
+        Bin(Var "a","+",Bin(Var "a","+",Var "b"));
+
+      ] in
+      printf "%a\n" pps prog
+
+
 
   優先順位等の情報はリストに持っておき、List.assocで検索して用いています。
+
 
 ## 4. コメントの問題
 
