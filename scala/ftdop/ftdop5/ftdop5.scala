@@ -158,46 +158,17 @@ object main {
     }
     exp(0)(AS(null, tokens)).a
   }
- 
+  val env = new Env(null)
+  env += ("macros" -> new Stack[(Any,Any)]())
+
+
+
+
   def eval(s:String):Any = try {
-    var env = new Env(null)
-    env += ("macros" -> new Stack[(Any,Any)]())
     var exp = Macro.expand(parse(s),env)
-    println(exp)
     eval(exp,env)
   } catch {
   case e:Throwable => println(e);-1
-  }
-  class Env (val parent:Env) {
-    var e:HashMap[Any, Any] = new HashMap
-    def apply(a:Any):Any = {
-      if (e.contains(a)) e(a)
-      else if(parent != null)parent(a)
-      else null
-    }
-    def contains(a:Any) : Boolean = {
-      if(e.contains(a)) true
-      else if(parent == null) false
-      else parent.contains(a)
-    }
-    def +=(kv : (Any, Any)) : Env = {
-
-      def add(env:Env, kv:(Any, Any)) : Boolean = {
-        kv match {
-        case (a, b) =>
-          if(env.e.contains(a)) {
-            env.e += kv; true }
-          else (env.parent != null && add(env.parent, kv))
-        }
-      }
-      if(!add(this, kv)) {
-        e += kv
-      }
-      this
-    }
-    override def toString():String = {
-      e.toString()+"\nparent:"+parent
-    }
   }
  
   case class Fun(prms:Any,body:Any,e:Env) {
@@ -228,7 +199,12 @@ object main {
             val macros = e("macros").asInstanceOf[Stack[(Any,Any)]]
             for((prms,body) <- macros) {
               var env = match5(prms,a,e)
-              if(env != null) return eval(body, env)
+              if(env != null) {
+                body match {
+                  case f:Function1[_,_] => return f.asInstanceOf[Function1[Env,Any]](env)
+                  case _ => return eval(body, env)
+                }
+              }
             }
             a
         }
@@ -281,7 +257,7 @@ object main {
     case ("eval","(",b,")") => eval(eval(Macro.expand(b,e),e),e)
     case (a,"(",b,")") =>
       (eval(a,e),eval(b,e)) match {
-      case (a:Int,b:Int) => a + b
+      case (f:Function1[_,_],b) => f.asInstanceOf[Function1[Any,Any]]((b,e))
       case (Fun(a, body, e),b) =>
         // arguments bind
         var e2 = new Env(e)
@@ -321,5 +297,61 @@ object main {
     case a => throw new Error("runtime error " + a)
     }
   }
+
+  fun("load") {case (Symbol(name),env:Env) =>
+      val systems = this.getClass().getClassLoader()
+      systems.loadClass(name+".plugin$").getField("MODULE$").get(null)
+  }
+
+  mac(("load","(",Symbol("a"),")")){ case (e:Env) =>
+      val systems = this.getClass().getClassLoader()
+      systems.loadClass(e("a")+".plugin$").getField("MODULE$").get(null)
+      0
+  }
 }
 
+class Env (val parent:Env) {
+  var e:HashMap[Any, Any] = new HashMap
+  def apply(a:Any):Any = {
+    if (e.contains(a)) e(a)
+    else if(parent != null)parent(a)
+    else null
+  }
+  def contains(a:Any) : Boolean = {
+    if(e.contains(a)) true
+    else if(parent == null) false
+    else parent.contains(a)
+  }
+  def +=(kv : (Any, Any)) : Env = {
+
+    def add(env:Env, kv:(Any, Any)) : Boolean = {
+      kv match {
+      case (a, b) =>
+        if(env.e.contains(a)) {
+          env.e += kv; true }
+        else (env.parent != null && add(env.parent, kv))
+      }
+    }
+    if(!add(this, kv)) {
+      e += kv
+    }
+    this
+  }
+  override def toString():String = {
+    e.toString()+"\nparent:"+parent
+  }
+}
+
+object fun {
+
+  def apply(a:String)(f:Function[Any,Any]) {
+    main.env += (a -> f)
+  }
+}
+
+object mac {
+
+  def apply(a:Any)(f:Function[Any,Any]) {
+    main.env("macros").asInstanceOf[Stack[(Any,Any)]].push((a,f))
+  }
+}
