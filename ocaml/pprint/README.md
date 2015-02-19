@@ -54,10 +54,7 @@
 
 ### 2.2. 演算子の優先順位をつける
 
-  優先順位を考慮したプリティプリントの方法は[OCamlチュートリアルのChapter 1 OCamlの基本、18. 1.8 Pretty-printing and parsing](http://ocaml.jp/Chapter%201%20OCaml%E3%81%AE%E5%9F%BA%E6%9C%AC#content_1_7)にあります。
-
-  具体的に作ってみた例がこちらです。
-  https://github.com/hsk/gomaj/blob/master/src/gen_java.ml
+  優先順位を考慮したプリティプリントの方法は[OCamlチュートリアルのChapter 1 OCamlの基本、18. 1.8 Pretty-printing and parsing](http://ocaml.jp/Chapter%201%20OCaml%E3%81%AE%E5%9F%BA%E6%9C%AC#content_1_7)が参考になります。
 
 ### 2.3. 位置情報を元にコメントを挿入する
 
@@ -88,7 +85,57 @@
 
 ### 3.1. 改行情報を持ち回る
 
-  ここでは省略します。4.2を参照してください。
+  簡単なプリティプリントを実装してみましょう。
+  TODO: ツリー状の言語で書き直す。
+
+  まず、以下のようにデータ定義をしましょう。
+
+    type e =
+      | Int of int
+      | Let of string * e * e
+      | Var of string
+
+
+  3つの構文があります。
+  `let a = let b = 1 in b in let c = a in c`は例えば以下のように表す事が出来ます:
+
+    let e = Let("a",Let("b", Int 1, Var "b"),Let("c", Var "a", Var "c"))
+
+  Letの最初の式は1つネストをさげ、次の式はネストを下げないようにして、再帰的に処理する事で実装出来ます。
+  以下にプリティプリントを実装した関数ppを示します:
+
+    let rec pp sp = function
+      | Int(i) ->
+        Printf.sprintf "%s%d\n" sp i
+      | Var(x) ->
+        Printf.sprintf "%s%s\n" sp x
+      | Let(x,e1,e2) ->
+        Printf.sprintf "%slet %s =\n%s%sin\n%s"
+          sp
+          x
+          (pp (sp ^ "  ") e1)
+          sp
+          (pp sp e2)
+
+  ppの第一引数spはネストの情報で文字列としてもちます。第二引数は構文木データです。
+  この関数を使うには以下のようにして使います。
+
+    let _ =
+      let s = pp "" e in
+      Printf.printf "%s\n" s
+
+  実行すると、以下のように出力されます。
+
+    let a =
+      let b =
+        1
+      in
+      b
+    in
+    let c =
+      1
+    in
+    b
 
 ### 3.2. Formatモジュール
 
@@ -97,7 +144,7 @@
 
 #### 3.2.1. Formatを使った簡単な例
 
-  ex02.ml
+  ex3_2.ml
 
     open Format
 
@@ -122,7 +169,7 @@
 
 #### 3.2.2. Formatライブラリ自体の実装の仕組み
 
-  format.jsで実装してみました。
+  ex_3_2_2.jsで実装してみました。
 
     function print_int(n) {
       console._stdout.write(""+n);
@@ -225,12 +272,13 @@
 
 ### 3.3. 演算子の優先順位
 
-  ここでは具体的に、優先順位をつけたものを見てみましょう。
+  ここでは具体的に、優先順位をつけたプログラムを作成してみましょう。
 
+  優先順位を考慮したプリティプリント[OCamlチュートリアルのChapter 1 OCamlの基本、18. 1.8 Pretty-printing and parsing](http://ocaml.jp/Chapter%201%20OCaml%E3%81%AE%E5%9F%BA%E6%9C%AC#content_1_7)を参考に作成してみます。
 
-  優先順位を考慮したプリティプリント[OCamlチュートリアルのChapter 1 OCamlの基本、18. 1.8 Pretty-printing and parsing](http://ocaml.jp/Chapter%201%20OCaml%E3%81%AE%E5%9F%BA%E6%9C%AC#content_1_7)
+  FormatとLetと演算子の優先順位を組み合わせた例です:
 
-  ex04.ml
+  ex3_3.ml
 
     open Format
 
@@ -310,6 +358,7 @@
       let a = Let("test",a,c) in
       printf "%a\n" (pp true 0 ) a
 
+  優先順位等の情報はリストに持っておき、List.assocで検索して用いています。
 
 ## 4. コメントの問題
 
@@ -367,6 +416,13 @@
     let a = 1
     in 
     a (* 式に対するコメント *)
+
+### 4.3. 堕胎な構文解析
+
+  真面目に構文解析するから大変なので、コードハイライトをするには、字句解析のみで良いように、
+  インデントを表すだけ言語としてパーサを作成して解決出来るならそのほうが楽でしょう。
+  例えば、if() {}とfor(a;b;c) {}は同じ構文要素とみなすのです。
+  function a () {} function() {}はどれも同じ構文要素と扱えばずっと楽に作成出来るでしょう。
 
 ## 5. コメントの問題の解決
 
@@ -784,13 +840,6 @@
         "(";"2";"+";"1";")";"@";"// a";"@\n";
       ")";
 
-### 5.4. 堕胎な構文解析をする方法
-
-  真面目に構文解析するから大変なのです。色を付けるだけなら、構文解析は必要ではありません。
-  構造を表すだけの、大ざっぱな言語を作成して解決出来るならそのほうが楽でしょう。
-  例えば、if() {}とfor(a;b;c) {}は同じ構文要素とみなすのです。
-  function a () {} function() {}はどれも同じ構文要素と扱うのです。
-
 ## 6. ML固有の問題
 
   MLの場合は括弧でネストを作らずに、letでネストを作ったりするのでその辺がややこしいのでここではletを使った場合のプリティプリントについて考えます。
@@ -805,25 +854,12 @@
 
 ### 6.1. 改行情報を持ち回る
 
-
-  簡単なプリティプリントを実装してみましょう。
-
-  まず、以下のようにデータ定義をしましょう。
+  ex6_1.ml
 
     type e =
       | Int of int
       | Let of string * e * e
       | Var of string
-
-
-  3つの構文があります。
-  `let a = let b = 1 in b in let c = a in c`は例えば以下のように表す事が出来ます:
-
-    let e = Let("a",Let("b", Int 1, Var "b"),Let("c", Var "a", Var "c"))
-
-  Letの最初の式は1つネストをさげ、次の式はネストを下げないようにして、再帰的に処理する事で実装出来ます。
-  以下にプリティプリントを実装した関数ppを示します:
-
     let rec pp sp = function
       | Int(i) ->
         Printf.sprintf "%s%d\n" sp i
@@ -837,10 +873,8 @@
           sp
           (pp sp e2)
 
-  ppの第一引数spはネストの情報で文字列としてもちます。第二引数は構文木データです。
-  この関数を使うには以下のようにして使います。
-
     let _ =
+      let e = Let("a",Let("b", Int 1, Var "b"),Let("c", Int 1, Var "b")) in
       let s = pp "" e in
       Printf.printf "%s\n" s
 
@@ -859,9 +893,9 @@
 
 ### 6.2. Formatを使って書く
 
-  Formatを使ってみた例が以下です。
+  Formatを使ってみましょう:
 
-  ex03.ml
+  ex6_2.ml
 
     open Format
 
@@ -880,3 +914,93 @@
       let a = Let("test",Var "a",Var "b")in
       let a = Let("test",a,a) in
       printf "%a\n" pp a
+
+### 6.3. 演算子の優先順位
+
+  FormatとLetと演算子の優先順位を組み合わせた例です:
+
+  ex6_3.ml
+
+    open Format
+
+    type t =
+      | Var of string
+      | Let of string * t * t
+      | Bin of t * string * t
+      | Pre of string * t
+      | Post of t * string
+
+    let infixs =
+      [
+        "=",  (1, false);
+        "+",  (6, true);
+        "-",  (6, true);
+
+        "/",  (7, true);
+        "*",  (7, true);
+      ]
+
+    let prefixs =
+      [
+        "new", (8, true);
+        "!",   (8, false);
+        "-",   (8, false);
+      ]
+
+    let postfixs =
+      [
+        "++", 9;
+        "--", 9;
+      ]
+
+    let rec pp paren p ppf t = 
+      match t with
+      | Var i -> fprintf ppf "%s" i
+      | Let(s,(Let _ as ts),s2) ->
+        fprintf ppf "@[<2>let %s = @\n%a@]@\nin@\n%a"
+          s (pp true 0) ts (pp true 0) s2
+      | Let(s,ts,s2) ->
+        fprintf ppf "let %s = %a in@\n%a" s (pp true 0) ts (pp true 0) s2
+
+      | Pre(op, e1) ->
+
+        let (p1,ident) = (List.assoc op prefixs) in
+        let paren = paren && p1 < p in
+
+        if paren then fprintf ppf "(";
+        fprintf ppf " %s" op;
+        if ident then fprintf ppf " ";
+        pp true p1 ppf e1;
+        if paren then fprintf ppf ")"
+
+      | Post(e1, op) ->
+
+        let p1 = (List.assoc op postfixs) in
+        let paren = paren && p1 <= p in
+
+        if paren then fprintf ppf "(";
+        fprintf ppf " %s%a" op (pp true (p1 - 1)) e1;
+        if paren then fprintf ppf ")"
+
+      | Bin(e1, op, e2) ->
+        let (p1, l) = (List.assoc op infixs) in
+        let paren = paren && (if l then p1 <= p else p1 < p) in
+        if paren then fprintf ppf "(";
+        pp paren (if l then p1 - 1 else p1 + 1) ppf e1;
+        fprintf ppf " %s " op;
+        pp true p1 ppf e2;
+        if paren then fprintf ppf ")"
+
+    let _ =
+      let a = Let("test",Var "a",Var "b")in
+      let b = Bin(Var "a","*",Var "b") in
+      let c = Bin(b,"*",b) in
+      let c = Bin(c,"*",Var "a") in
+      let a = Let("test",a,c) in
+      printf "%a\n" (pp true 0 ) a
+
+  これも、書きました。どこかで。
+
+### 6.4. コメントを含んだLetとの組み合わせ
+
+### 6.5. 構文解析と組み合わせる
