@@ -276,9 +276,48 @@
 
   優先順位を考慮したプリティプリント[OCamlチュートリアルのChapter 1 OCamlの基本、18. 1.8 Pretty-printing and parsing](http://ocaml.jp/Chapter%201%20OCaml%E3%81%AE%E5%9F%BA%E6%9C%AC#content_1_7)を参考に作成してみます。
 
+  上のURLのアルゴリズムをそのまま使うと以下のようなケースで困ります。
 
-  TODO:出来たと思っていたのですけど、挙動が怪しいので、要テストです。
-  右再帰の演算子と左再帰の演算子でのテスト等 ((a -> a) -> a) -> a は a -> a -> a -> aにするなどのテストが必要です。イヤ多分良いはず。移植ミスってた。嫌でもテストはあったほうがいいです。 
+    (a +  b ) * (c +  d) => (a +  b) *  (c  + d) // OK
+    (a *  b ) + (c *  d) =>  a *  b  +   c  * d  // OK
+    (a + "b") + (c +  d) =>  a + "b" +   c  + d  // NG JavaScriptの文字列結合結果が変わってしまう!
+    (a :: b ) ::(c :: d) =>  a :: b  ::  c :: d  // NG リストの型が変わってしまう!
+
+  左結合の場合は、右側は同じ演算子なら括弧をつけないといけないことがあり、
+  右結合の場合は、右側が同じ演算子なら括弧をつけないことがあるわけです。
+  演算の順番を変更出来ない場合があるので、交換しないのがよい訳です。
+
+  俺は右より強いと、１だけ優先順を大きく右に渡すと右側に括弧がつきます。
+  
+    (a +  b ) * (c +  d) => (a +  b) *  (c  + d) // OK 既に強いので更にパワーアップしても変わらない
+    (a *  b ) + (c *  d) =>  a *  b  +   c  * d  // OK どうあがいても勝てない
+    (a + "b") + (c +  d) =>  a + "b" +  (c  + d) // OK
+    (a :: b ) ::(c :: d) =>  a :: b  :: (c :: d) // NG aは値で、bとcはリストでdはリストのリストなのだ。
+
+  俺は左より強いと、１だけ強く見せると左側に括弧がつきます。
+
+    (a +  b ) * (c +  d) => (a +  b ) *  (c  + d) // OK
+    (a *  b ) + (c *  d) =>  a *  b   +   c  * d  // OK
+    (a + "b") + (c +  d) => (a + "b") +   c  + d  // NG 文字列にc足して、d足すのと、c+dして文字列化するのは違うんだ
+    (a :: b ) ::(c :: d) => (a :: b ) ::  c :: d  // OK
+
+  右結合なら左側に+１、左結合なら、右側に+1をすれば、
+
+    (a +  b ) * (c +  d) => (a +  b) *  (c  + d) // OK
+    (a *  b ) + (c *  d) =>  a *  b  +   c  * d  // OK
+    (a + "b") + (c +  d) =>  a + "b" +  (c  + d) // OK
+    (a :: b ) ::(c :: d) => (a :: b) ::  c :: d  // OK
+
+  うまく行きます。
+
+  前置演算子は、連続して書いても括弧はいらないので、
+
+
+    - - 1
+    string list list
+
+  前置演算子は基本、何もしなくてよいでしょうし、後置演算子も同様でよいでしょう。
+
   FormatとLetと演算子の優先順位を組み合わせた例です:
 
   ex3_3.ml
@@ -298,19 +337,18 @@
     let infixs =
       [
         "->", (1, false);
-        "=",  (1, false);
+        "=",  (5, false);
         "+",  (6, true);
         "-",  (6, true);
-
         "/",  (7, true);
         "*",  (7, true);
       ]
 
     let prefixs =
       [
-        "return", (0, true);
-        "!",   (8, false);
-        "-",   (8, false);
+        "return", 1;
+        "!",      8;
+        "-",      8;
       ]
 
     let postfixs =
@@ -323,37 +361,36 @@
       | Fun _ -> ""
       | _ -> ";"
 
-    let rec pp paren p ppf t = 
+    let rec pp p ppf t = 
       match t with
       | Var i -> fprintf ppf "%s" i
       | Pre(op, e1) ->
 
-        let (p1,ident) = (List.assoc op prefixs) in
-        let paren = paren && p1 < p in
+        let opp = (List.assoc op prefixs) in
 
-        if paren then fprintf ppf "(";
-        fprintf ppf "%s" op;
-        if ident then fprintf ppf " ";
-        pp true p1 ppf e1;
-        if paren then fprintf ppf ")"
+        if p > opp then fprintf ppf "(";
+        fprintf ppf "%s %a" op (pp (opp + 1)) e1;
+        if p > opp then fprintf ppf ")"
 
       | Post(e1, op) ->
 
-        let p1 = (List.assoc op postfixs) in
-        let paren = paren && p1 <= p in
+        let opp = (List.assoc op postfixs) in
 
-        if paren then fprintf ppf "(";
-        fprintf ppf " %s%a" op (pp true (p1 - 1)) e1;
-        if paren then fprintf ppf ")"
+        if p > opp then fprintf ppf "(";
+        fprintf ppf "%a %s" (pp opp) e1 op;
+        if p > opp then fprintf ppf ")"
 
       | Bin(e1, op, e2) ->
-        let (p1, l) = (List.assoc op infixs) in
-        let paren = paren && (if l then p1 <= p else p1 < p) in
-        if paren then fprintf ppf "(";
-        pp true (if l then p1 - 1 else p1 + 1) ppf e1;
-        fprintf ppf " %s " op;
-        pp true p1 ppf e2;
-        if paren then fprintf ppf ")"
+
+        let (opp, l) = (List.assoc op infixs) in
+
+        if p > opp then fprintf ppf "(";
+        fprintf ppf "%a %s %a" 
+          (pp (if l then opp else opp + 1)) e1
+          op
+          (pp (if l then opp + 1 else opp)) e2;
+        if p > opp then fprintf ppf ")"
+
       | App(x,es) ->
         fprintf ppf "%s(%a)" x pps2 es
       | Fun(x, xs, es) ->
@@ -361,18 +398,18 @@
           x pp_ss xs pps es
     and pps ppf = function
       | [] -> ()
-      | [e] -> fprintf ppf "%a%s" (pp false 0) e (sep e)
+      | [e] -> fprintf ppf "%a%s" (pp 0) e (sep e)
       | e::es ->
         fprintf ppf "%a%s@\n%a"
-          (pp false 0) e
+          (pp 0) e
           (sep e)
           pps es
     and pps2 ppf = function
       | [] -> ()
-      | [e] -> fprintf ppf "%a" (pp true 0) e
+      | [e] -> fprintf ppf "%a" (pp 0) e
       | e::es ->
         fprintf ppf "%a, %a"
-          (pp true 0) e
+          (pp 0) e
           pps2 es
     and pp_ss ppf = function
       | [] -> ()
