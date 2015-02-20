@@ -136,9 +136,9 @@
 
 ### 3.2. Formatモジュール
 
-  改行情報を持ち回るのは大変なので、ネストをうまくやってくれる仕組みを使うと便利です。
-  Formatを使うと良いでしょう。
-
+  改行情報を持ち回るのは大変なので、Formatのネストをうまくやってくれる仕組みを使うと便利です。しかし、挙動を変えたい場合は自作する必要があるでしょうから、作成してみます。
+  Formatのprintf等では、型チェックもしますが、ここでは、プリティプリント用の機能のみを再現してみます。
+  
 #### 3.2.1. Formatを使った簡単な例
 
   ex3_2_1.ml
@@ -281,8 +281,10 @@
     (a :: b ) ::(c :: d) =>  a :: b  ::  c :: d  // NG リストの型が変わってしまう!
 
   左結合の場合は、右側は同じ演算子なら括弧をつけないといけないことがあり、
-  右結合の場合は、右側が同じ演算子なら括弧をつけないことがあるわけです。
-  演算の順番を変更出来ない場合があるので、交換しないのがよい訳です。
+  右結合の場合は、右側が同じ演算子なら括弧をつけないことがあります。
+  演算の順番を変更出来ない場合があるので、外さないのがよい訳です。
+
+  考え方としては、上が自分より強ければ括弧をつけないと行けないので、括弧が必要なら本当は同じレベルなのだけど、身分が上だぜと、偉そうにする事で、括弧を付けさせる作戦を取ります。
 
   俺は右より強いと、１だけ優先順を大きく右に渡すと右側に括弧がつきます。
   
@@ -315,7 +317,7 @@
 
   前置演算子は基本、何もしなくてよいでしょうし、後置演算子も同様でよいでしょう。
 
-  FormatとLetと演算子の優先順位を組み合わせた例です:
+  以下のプログラムは二項演算子、前置演算子，後置演算子を最小限の括弧を付けて出力します:
 
   ex3_3.ml
 
@@ -326,121 +328,70 @@
       | Bin of t * string * t
       | Pre of string * t
       | Post of t * string
-      | Fun of string * string list * t list
-      | App of string * t list
 
-    type prog = t list
+    let paren_bin op p =
+      let (opp, l) = match op with
+        | "="  -> (1, false)
+        | "::" -> (5, false)
+        | "+"  -> (6,  true)
+        | "-"  -> (6,  true)
+        | "/"  -> (7,  true)
+        | "*"  -> (7,  true)
+        | _    -> (10, true)
+      in
+      let (p1, p2) = if l then (opp, opp + 1) else (opp + 1, opp) in
+      let (lparen, rparen) = if p > opp then ("(",")") else ("","") in
+      (lparen, rparen, p1, p2)
 
-    let infixs =
-      [
-        "->", (1, false);
-        "=",  (5, false);
-        "+",  (6, true);
-        "-",  (6, true);
-        "/",  (7, true);
-        "*",  (7, true);
-      ]
+    let paren_pre op p =
+      let opp = match op with
+        | "return" -> 1
+        | "!"      -> 8
+        | "-"      -> 8
+        | _        -> 10
+      in
+      let (lparen, rparen) = if p > opp then ("(",")") else ("","") in
+      (lparen, rparen, opp + 1)
 
-    let prefixs =
-      [
-        "return", 1;
-        "!",      8;
-        "-",      8;
-      ]
-
-    let postfixs =
-      [
-        "++", 9;
-        "--", 9;
-      ]
-
-    let sep = function
-      | Fun _ -> ""
-      | _ -> ";"
+    let paren_post op p =
+      let opp = match op with
+        | "++" -> 9
+        | "--" -> 9
+        | _    -> 10
+      in
+      let (lparen, rparen) = if p > opp then ("(",")") else ("","") in
+      (lparen, rparen, opp)
 
     let rec pp p ppf t = 
       match t with
       | Var i -> fprintf ppf "%s" i
-      | Pre(op, e1) ->
-
-        let opp = (List.assoc op prefixs) in
-
-        if p > opp then fprintf ppf "(";
-        fprintf ppf "%s %a" op (pp (opp + 1)) e1;
-        if p > opp then fprintf ppf ")"
-
-      | Post(e1, op) ->
-
-        let opp = (List.assoc op postfixs) in
-
-        if p > opp then fprintf ppf "(";
-        fprintf ppf "%a %s" (pp opp) e1 op;
-        if p > opp then fprintf ppf ")"
-
       | Bin(e1, op, e2) ->
+        let (lparen, rparen, p1, p2) = paren_bin op p in
+        fprintf ppf "%s%a %s %a%s" lparen (pp p1) e1 op (pp p2) e2 rparen
+      | Pre(op, e1) ->
+        let (lparen, rparen, p1) = paren_pre op p in
+        fprintf ppf "%s%s %a%s" lparen op (pp p1) e1 rparen
+      | Post(e1, op) ->
+        let (lparen, rparen, p1) = paren_post op p in
+        fprintf ppf "%s%a %s%s" lparen (pp p1) e1 op rparen
 
-        let (opp, l) = (List.assoc op infixs) in
-
-        if p > opp then fprintf ppf "(";
-        fprintf ppf "%a %s %a" 
-          (pp (if l then opp else opp + 1)) e1
-          op
-          (pp (if l then opp + 1 else opp)) e2;
-        if p > opp then fprintf ppf ")"
-
-      | App(x,es) ->
-        fprintf ppf "%s(%a)" x pps2 es
-      | Fun(x, xs, es) ->
-        fprintf ppf "@[<2>function %s(%a) {@\n%a@]@\n}"
-          x pp_ss xs pps es
-    and pps ppf = function
-      | [] -> ()
-      | [e] -> fprintf ppf "%a%s" (pp 0) e (sep e)
-      | e::es ->
-        fprintf ppf "%a%s@\n%a"
-          (pp 0) e
-          (sep e)
-          pps es
-    and pps2 ppf = function
-      | [] -> ()
-      | [e] -> fprintf ppf "%a" (pp 0) e
-      | e::es ->
-        fprintf ppf "%a, %a"
-          (pp 0) e
-          pps2 es
-    and pp_ss ppf = function
-      | [] -> ()
-      | [s] -> fprintf ppf "%s" s
-      | s::ss ->
-        fprintf ppf "%s, %a" s pp_ss ss
     let _ =
       let prog = [
-        Fun("add",["a";"b"],[
-          Pre("return",Bin(Var "a","*",Var "b"));
-        ]);
-        Fun("main",[],[
-          App("add",[Var "1";Var "2"]);
-          Pre("return", Var "0");
-        ]);
-        Fun("f",["a";"b";"c";"d"],[
-          Pre("return",Bin(Bin(Bin(Var "a","+",Var "b"),"*",Var "c"),"*",Var "d"));
-        ]);
-        Fun("f",["a";"b";"c";"d"],[
-          Pre("return",Bin(Var "a","=",Bin(Var "c","=",Bin(Bin(Bin(Var "a","=",Var "b"),"+",Var "c"),"*",Var "d"))));
-        ]);
-        Fun("f",["a";"b";"c";"d"],[
-          Pre("return",Bin(Var "a","=",Bin(Var "c","+",Bin(Bin(Bin(Var "a","=",Var "b"),"+",Var "c"),"+",Var "d"))));
-        ]);
-        Bin(Bin(Var "a","->",Var "b"),"->",Bin(Bin(Var "a","->",Var "b"),"->",Bin(Var "a","->",Bin(Var "a","->",Var "b"))));
+        Pre("return",Bin(Var "a","*",Var "b"));
+        Pre("return", Var "0");
+        Pre("return",Bin(Bin(Bin(Var "a","+",Var "b"),"*",Var "c"),"*",Var "d"));
+        Pre("return",Bin(Var "a","=",Bin(Var "c","=",Bin(Bin(Bin(Var "a","=",Var "b"),"+",Var "c"),"*",Var "d"))));
+        Pre("return",Bin(Var "a","=",Bin(Var "c","+",Bin(Bin(Bin(Var "a","=",Var "b"),"+",Var "c"),"+",Var "d"))));
+        Bin(Bin(Var "a","::",Var "as"),"::",Bin(Bin(Var "a","::",Var "as"),"::",Bin(Var "as","::",Bin(Var "as","::",Var "ass"))));
         Bin(Var "moji","+",Bin(Bin(Var "5","*",Var "2"),"+",Var "3"));
         Bin(Bin(Var "moji","+",Bin(Var "5","*",Var "2")),"+",Var "3");
         Bin(Bin(Var "moji","+",Var "5"),"+",Var "3");
         Bin(Var "a","+",Bin(Var "a","+",Var "b"));
 
       ] in
-      printf "%a\n" pps prog
-
-
+      List.iter begin fun e ->
+        printf "%a\n" (pp 0) e
+      end prog
 
   優先順位等の情報はリストに持っておき、List.assocで検索して用いています。
 
@@ -662,9 +613,9 @@
   パーサの修正を最小限にするには、トークン情報の前後から見るのがよい気がします。
   コメント情報以外のトークンも残すのがポイントな気がしてきます。
 
-### 5.2. コメントをロケーション情報に残して解決
+### 5.2. コメントをトークン列から生成する
 
-  消えたトークンの問題を解決するには、コメント同様に扱うと良さそうです。
+  消えたトークンの問題を解決するには、コメントも同様に扱うと良さそうです。
 
   1 + 2 の2項演算子があった場合に、((1) + (2))のように括弧も残るかもしれません。
   主に、キーワードはコメント扱いすれば良さそうです。
