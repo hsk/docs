@@ -32,3 +32,13 @@ let _ =
   List.iter begin fun e ->
     printf "%a\n" (pp 0) e
   end prog
+
+let _ =
+  let test t s =
+    fprintf str_formatter "%a" (pp 0) t;
+    assert (s = (flush_str_formatter()))
+  in
+  test (Bin(Bin(Var "a", "+" , Var  "b" ), "*",  Bin(Var "c", "+",  Var "d"))) "(a + b) * (c + d)";
+  test (Bin(Bin(Var "a", "*" , Var  "b" ), "+",  Bin(Var "c", "*",  Var "d"))) "a * b + c * d";
+  test (Bin(Bin(Var "a", "+" , Var "'b'"), "+",  Bin(Var "c", "+",  Var "d"))) "a + 'b' + (c + d)";
+  test (Bin(Bin(Var "a", "::", Var  "b" ), "::", Bin(Var "c", "::", Var "d"))) "(a :: b) :: c :: d";
