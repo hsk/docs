@@ -4,7 +4,7 @@ type t =
   | Var of string
   | Bin of t * string * t
 
-let paren_bin op p =
+let order_of_bin op p =
   let (opp, l) = match op with
     | "::" -> (5, false)
     | "+"  -> (6,  true)
@@ -19,15 +19,15 @@ let rec pp p ppf t =
   match t with
   | Var i -> fprintf ppf "%s" i
   | Bin(e1, op, e2) ->
-    let (lparen, rparen, p1, p2) = paren_bin op p in
+    let (lparen, rparen, p1, p2) = order_of_bin op p in
     fprintf ppf "%s%a %s %a%s" lparen (pp p1) e1 op (pp p2) e2 rparen
 
 let _ =
   let prog = [
-    Bin(Bin(Var "a","+",Var "b"),"*",Bin(Var "c","+",Var "d"));
-    Bin(Bin(Var "a","*",Var "b"),"+",Bin(Var "c","*",Var "d"));
-    Bin(Bin(Var "a","+",Var "'b'"),"+",Bin(Var "c","+",Var "d"));
-    Bin(Bin(Var "a","::",Var "b"),"::",Bin(Var "c","::",Var "d"));
+    Bin(Bin(Var "a", "+" , Var  "b" ), "*",  Bin(Var "c", "+",  Var "d"));
+    Bin(Bin(Var "a", "*" , Var  "b" ), "+",  Bin(Var "c", "*",  Var "d"));
+    Bin(Bin(Var "a", "+" , Var "'b'"), "+",  Bin(Var "c", "+",  Var "d"));
+    Bin(Bin(Var "a", "::", Var  "b" ), "::", Bin(Var "c", "::", Var "d"));
   ] in
   List.iter begin fun e ->
     printf "%a\n" (pp 0) e

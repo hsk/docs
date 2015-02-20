@@ -288,7 +288,7 @@
 
   それでは結合性を考慮したアルゴリズムを考えてみましょう。
 
-  基本的な考え方としては、見に来た人が自分より偉ければカッコをつけます。これを仮に勲章のアルゴリズム(order of algorithm)と呼ぶことにします。
+  基本的な考え方としては、見に来た人が自分より偉ければカッコをつけます。これを仮に勲章のアルゴリズム(order of algorithm)と呼ぶことにしましょう。
 
   普段はダラダラやっていても偉い将軍さまが来たら、カッコつけてみせるとうまくいくわけです。
   本当は同じ階級でも括弧が必要なら身分が上だぜと偉そうにする事で括弧を付けます。
@@ -317,23 +317,24 @@
 
   うまく行きます。知らない人が来たら偉い事にしましょう。お客様は神様です。
 
-  以下の関数は二項演算子を必要な場合にのみ括弧を付ける判定を行います:
+  以下の関数は二項演算子の括弧を付ける判定を行います:
 
-    let paren_bin op p =
+    let order_of_bin op p =
       let (opp, l) = match op with
         | "::" -> (5, false)
         | "+"  -> (6,  true)
         | "*"  -> (7,  true)
-        | _    -> (10000000, true)
+        | _    -> (10, true)
       in
       let (p1, p2) = if l then (opp, opp + 1) else (opp + 1, opp) in
       let (lparen, rparen) = if p > opp then ("(",")") else ("","") in
       (lparen, rparen, p1, p2)
 
-  演算子によって異なる優先順位 opp を取得し、左結合か右結合かによって異なる、左と右に渡す優先順位 p1 p2を計算します。
-  pが opp より大きければ括弧を付けるデータを作成し返却します。
+  演算子の種類から優先順位 opp と結合性 l を求めます。
+  結合性 l から左と右に渡す優先順位 p1, p2 を決めます。
+  pが opp より大きければ括弧を付けます。
 
-  プリティプリントには関数は以下のように組み込みます:
+  プリティプリントには、order_of_bin関数は以下のように組み込みます:
 
     let rec pp ppf t = 
       match t with
@@ -347,14 +348,14 @@
       match t with
       | Var i -> fprintf ppf "%s" i
       | Bin(e1, op, e2) ->
-        let (lparen, rparen, p1, p2) = paren_bin op p in
+        let (lparen, rparen, p1, p2) = order_of_bin op p in
         fprintf ppf "%s%a %s %a%s" lparen (pp p1) e1 op (pp p2) e2 rparen
 
 
 
-  関数に優先順位pを渡し、paren_bin関数を加え、括弧の位置にlparen rparenを渡し、pp関数には優先順位p1, p2を渡します。
+  pp関数に優先順位pを渡し、order_of_bin関数を加え、括弧の位置にlparen rparenを表示し、pp関数には優先順位p1, p2を渡します。
 
-  使い方は以下のようにして使います:
+  関数ppは以下のようにして使います:
 
     let _ =
       let prog = [

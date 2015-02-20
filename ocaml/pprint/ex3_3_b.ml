@@ -33,18 +33,18 @@ let postfixs =
     "--", 9;
   ]
 
-let paren_bin op p =
+let order_of_bin op p =
   let (opp, l) = List.assoc op infixs in
   let (lparen, rparen) = if p > opp then ("(",")") else ("","") in
   let (p1, p2) = if l then (opp, opp + 1) else (opp + 1, opp) in
   (lparen, rparen, p1, p2)
 
-let paren_pre op p =
+let order_of_pre op p =
   let opp = List.assoc op prefixs in
   let (lparen, rparen) = if p > opp then ("(",")") else ("","") in
   (lparen, rparen, opp + 1)
 
-let paren_post op p =
+let order_of_post op p =
   let opp = (List.assoc op postfixs) in
   let (lparen, rparen) = if p > opp then ("(",")") else ("","") in
   (lparen, rparen, opp)
@@ -57,13 +57,13 @@ let rec pp p ppf t =
   match t with
   | Var i -> fprintf ppf "%s" i
   | Bin(e1, op, e2) ->
-    let (lparen, rparen, p1, p2) = paren_bin op p in
+    let (lparen, rparen, p1, p2) = order_of_bin op p in
     fprintf ppf "%s%a %s %a%s" lparen (pp p1) e1 op (pp p2) e2 rparen
   | Pre(op, e1) ->
-    let (lparen, rparen, p1) = paren_pre op p in
+    let (lparen, rparen, p1) = order_of_pre op p in
     fprintf ppf "%s%s %a%s" lparen op (pp p1) e1 rparen
   | Post(e1, op) ->
-    let (lparen, rparen, p1) = paren_post op p in
+    let (lparen, rparen, p1) = order_of_post op p in
     fprintf ppf "%s%a %s%s" lparen (pp p1) e1 op rparen
   | App(x,es) ->
     fprintf ppf "%s(%a)" x pps2 es
