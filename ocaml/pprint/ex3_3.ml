@@ -6,11 +6,8 @@ type t =
 
 let paren_bin op p =
   let (opp, l) = match op with
-    | "="  -> (1, false)
     | "::" -> (5, false)
     | "+"  -> (6,  true)
-    | "-"  -> (6,  true)
-    | "/"  -> (7,  true)
     | "*"  -> (7,  true)
     | _    -> (10, true)
   in
@@ -27,16 +24,10 @@ let rec pp p ppf t =
 
 let _ =
   let prog = [
-    Bin(Var "a","*",Var "b");
-    Bin(Bin(Bin(Var "a","+",Var "b"),"*",Var "c"),"*",Var "d");
-    Bin(Var "a","=",Bin(Var "c","=",Bin(Bin(Bin(Var "a","=",Var "b"),"+",Var "c"),"*",Var "d")));
-    Bin(Var "a","=",Bin(Var "c","+",Bin(Bin(Bin(Var "a","=",Var "b"),"+",Var "c"),"+",Var "d")));
-    Bin(Bin(Var "a","::",Var "as"),"::",Bin(Bin(Var "a","::",Var "as"),"::",Bin(Var "as","::",Bin(Var "as","::",Var "ass"))));
-    Bin(Var "moji","+",Bin(Bin(Var "5","*",Var "2"),"+",Var "3"));
-    Bin(Bin(Var "moji","+",Bin(Var "5","*",Var "2")),"+",Var "3");
-    Bin(Bin(Var "moji","+",Var "5"),"+",Var "3");
-    Bin(Var "a","+",Bin(Var "a","+",Var "b"));
-
+    Bin(Bin(Var "a","+",Var "b"),"*",Bin(Var "c","+",Var "d"));
+    Bin(Bin(Var "a","*",Var "b"),"+",Bin(Var "c","*",Var "d"));
+    Bin(Bin(Var "a","+",Var "'b'"),"+",Bin(Var "c","+",Var "d"));
+    Bin(Bin(Var "a","::",Var "b"),"::",Bin(Var "c","::",Var "d"));
   ] in
   List.iter begin fun e ->
     printf "%a\n" (pp 0) e

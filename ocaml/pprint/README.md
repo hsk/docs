@@ -290,24 +290,87 @@
   
     (a +  b ) * (c +  d) => (a +  b) *  (c  + d) // OK 既に強いので更にパワーアップしても変わらない
     (a *  b ) + (c *  d) =>  a *  b  +   c  * d  // OK どうあがいても勝てない
-    (a + "b") + (c +  d) =>  a + "b" +  (c  + d) // OK
+    (a + 'b') + (c +  d) =>  a + 'b' +  (c  + d) // OK
     (a :: b ) ::(c :: d) =>  a :: b  :: (c :: d) // NG aは値で、bとcはリストでdはリストのリストなのだ。
 
   俺は左より強いと、１だけ強く見せると左側に括弧がつきます。
 
     (a +  b ) * (c +  d) => (a +  b ) *  (c  + d) // OK
     (a *  b ) + (c *  d) =>  a *  b   +   c  * d  // OK
-    (a + "b") + (c +  d) => (a + "b") +   c  + d  // NG 文字列にc足して、d足すのと、c+dして文字列化するのは違うんだ
+    (a + 'b') + (c +  d) => (a + 'b') +   c  + d  // NG 文字列にc足して、d足すのと、c+dして文字列化するのは違うんだ
     (a :: b ) ::(c :: d) => (a :: b ) ::  c :: d  // OK
 
   右結合なら左側に+１、左結合なら、右側に+1をすれば、
 
     (a +  b ) * (c +  d) => (a +  b) *  (c  + d) // OK
     (a *  b ) + (c *  d) =>  a *  b  +   c  * d  // OK
-    (a + "b") + (c +  d) =>  a + "b" +  (c  + d) // OK
+    (a + 'b') + (c +  d) =>  a + 'b' +  (c  + d) // OK
     (a :: b ) ::(c :: d) => (a :: b) ::  c :: d  // OK
 
   うまく行きます。
+
+  以下の関数は二項演算子を必要な場合にのみ括弧を付ける判定を行います:
+
+    let paren_bin op p =
+      let (opp, l) = match op with
+        | "::" -> (5, false)
+        | "+"  -> (6,  true)
+        | "*"  -> (7,  true)
+        | _    -> (10, true)
+      in
+      let (p1, p2) = if l then (opp, opp + 1) else (opp + 1, opp) in
+      let (lparen, rparen) = if p > opp then ("(",")") else ("","") in
+      (lparen, rparen, p1, p2)
+
+  演算子によって異なる優先順位 opp を取得し、左結合か右結合かによって異なる、左と右に渡す優先順位 p1 p2を計算します。
+  pが opp より大きければ括弧を付けるデータを作成し返却します。
+
+  プリティプリントには関数は以下のように組み込みます:
+
+    let rec pp ppf t = 
+      match t with
+      | Var i -> fprintf ppf "%s" i
+      | Bin(e1, op, e2) ->
+        fprintf ppf "(%a %s %a)" pp e1 op pp e2
+
+  ⇩⇩⇩⇩⇩
+
+    let rec pp p ppf t = 
+      match t with
+      | Var i -> fprintf ppf "%s" i
+      | Bin(e1, op, e2) ->
+        let (lparen, rparen, p1, p2) = paren_bin op p in
+        fprintf ppf "%s%a %s %a%s" lparen (pp p1) e1 op (pp p2) e2 rparen
+
+
+
+  関数に優先順位pを渡し、paren_bin関数を加え、括弧の位置にlparen rparenを渡し、pp関数には優先順位p1, p2を渡します。
+
+  使い方は以下のようにして使います:
+
+    let _ =
+      let prog = [
+        Bin(Bin(Var "a", "+" , Var  "b" ), "*" , Bin(Var "c", "+",  Var "d"));
+        Bin(Bin(Var "a", "*" , Var  "b" ), "+" , Bin(Var "c", "*",  Var "d"));
+        Bin(Bin(Var "a", "+" , Var "'b'"), "+" , Bin(Var "c", "+",  Var "d"));
+        Bin(Bin(Var "a", "::", Var  "b" ), "::", Bin(Var "c", "::", Var "d"));
+      ] in
+      List.iter begin fun e ->
+        printf "%a\n" (pp 0) e
+      end prog
+
+  実行してみましょう:
+
+    (a + b) * (c + d)
+    a * b + c * d
+    a + 'b' + (c + d)
+    (a :: b) :: c :: d
+
+  思った通りに動いています。
+
+  このプログラムは ex3_3.mlで全体を見る事が出来ます。
+
+## 3.3.2 前置演算子と後置演算子
 
   前置演算子は、連続して書いても括弧はいらないので、
 
@@ -319,61 +382,7 @@
 
     --1
 
-  しかし、スペースを入れないとうまく行かなくなり得ます。
-
-  以下のプログラムは二項演算子を最小限の括弧を付けて出力します:
-
-  ex3_3.ml
-
-    open Format
-
-    type t =
-      | Var of string
-      | Bin of t * string * t
-
-    let paren_bin op p =
-      let (opp, l) = match op with
-        | "="  -> (1, false)
-        | "::" -> (5, false)
-        | "+"  -> (6,  true)
-        | "-"  -> (6,  true)
-        | "/"  -> (7,  true)
-        | "*"  -> (7,  true)
-        | _    -> (10, true)
-      in
-      let (p1, p2) = if l then (opp, opp + 1) else (opp + 1, opp) in
-      let (lparen, rparen) = if p > opp then ("(",")") else ("","") in
-      (lparen, rparen, p1, p2)
-
-    let rec pp p ppf t = 
-      match t with
-      | Var i -> fprintf ppf "%s" i
-      | Bin(e1, op, e2) ->
-        let (lparen, rparen, p1, p2) = paren_bin op p in
-        fprintf ppf "%s%a %s %a%s" lparen (pp p1) e1 op (pp p2) e2 rparen
-
-    let _ =
-      let prog = [
-        Bin(Var "a","*",Var "b");
-        Bin(Bin(Bin(Var "a","+",Var "b"),"*",Var "c"),"*",Var "d");
-        Bin(Var "a","=",Bin(Var "c","=",Bin(Bin(Bin(Var "a","=",Var "b"),"+",Var "c"),"*",Var "d")));
-        Bin(Var "a","=",Bin(Var "c","+",Bin(Bin(Bin(Var "a","=",Var "b"),"+",Var "c"),"+",Var "d")));
-        Bin(Bin(Var "a","::",Var "as"),"::",Bin(Bin(Var "a","::",Var "as"),"::",Bin(Var "as","::",Bin(Var "as","::",Var "ass"))));
-        Bin(Var "moji","+",Bin(Bin(Var "5","*",Var "2"),"+",Var "3"));
-        Bin(Bin(Var "moji","+",Bin(Var "5","*",Var "2")),"+",Var "3");
-        Bin(Bin(Var "moji","+",Var "5"),"+",Var "3");
-        Bin(Var "a","+",Bin(Var "a","+",Var "b"));
-
-      ] in
-      List.iter begin fun e ->
-        printf "%a\n" (pp 0) e
-      end prog
-
-  優先順位はmatchで検索します。
-  表を使って動的に変更したい場合はList.assocやMap.findを使うと良いでしょうし、
-  数値や代数データ型を使えば、テーブルジャンプに変換され高速になるでしょう。
-
-  優先順位の問題は他の問題と混ぜないように、関数に分けて作成するとプリティプリントの処理は複雑にならず済みます。
+  しかし、スペースを入れないとうまく行かなくなります。 ex3_3_b.mlで実装しています。TODOちゃんと実装する。
 
 
 ## 4. コメントの問題
