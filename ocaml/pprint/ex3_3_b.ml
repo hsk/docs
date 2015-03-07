@@ -49,7 +49,7 @@ let order_of_post op p =
   let (lparen, rparen) = if p > opp then ("(",")") else ("","") in
   (lparen, rparen, opp)
 
-let srparen = function
+let sep = function
   | Fun _ -> ""
   | _ -> ";"
 
