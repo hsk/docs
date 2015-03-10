@@ -225,7 +225,7 @@ type jconstant_raw =
 
 type jclass = {
   cversion : jversion;
-  constants : jconstant_raw array * jconstant array;
+  constants : jconstant array;
   cpath : jpath;
   csuper : jsignature;
   cflags : jaccess;

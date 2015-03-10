@@ -64,7 +64,7 @@
     (String.sub name 0 pos, String.sub name (pos+1) ((String.length name) - (pos+1)))
 
   let back_ch = ref (IO.output_string())
-  let ctx = ref (new_ctx !back_ch ([||],[||]))
+  let ctx = ref (new_ctx !back_ch ([||]))
 
   let sourcefile = ref None
   let cn = ref ([],"_")
@@ -76,6 +76,10 @@
   let throws = ref []
   let label2pos = Hashtbl.create 16
   let pos2label = Hashtbl.create 16
+
+  let init () =
+    back_ch := IO.output_string();
+    ctx := new_ctx !back_ch ([||])
 
   let init_method () =
     back_ch := !ctx.ch;
@@ -193,8 +197,8 @@ jas_file :
     {debug "jasfile@."; $2 $3 $4 $5 }
 
 sep :
-  | SEP { () }
-  | { () }
+  | SEP { init () }
+  |     { init () }
 
 jasmin_header :
   | bytecode_spec /* 1 */
@@ -220,7 +224,7 @@ jasmin_header :
 
           {
             cversion = $1;
-            constants = ([||], (ctx_toArray !ctx));
+            constants = ctx_to_array !ctx;
             cpath = name;
             csuper = $4;
             cflags = access;

@@ -9,7 +9,7 @@ else
 	OCAMLOPT += -package ppx_deriving.show
 endif
 
-all: run2 clean
+all: run2
 
 $(EXE): parser.mly lexer.mll jasc.ml
 ifeq ($(OS),Windows_NT)

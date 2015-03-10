@@ -25,7 +25,7 @@ let _ =
   let methods = a.cmethods in
   List.iter (fun m ->
     let code = JCode.get_code m in
-    let jcode = JCodeReader.parse_code (snd a.constants) code in
+    let jcode = JCodeReader.parse_code a.constants code in
     Format.printf "jcode=%a@." JCode.pp_jcode jcode;
     let ctx = JWriter.new_ctx (IO.output_string ()) a.constants in
     JCodeWriter.encode_code ctx jcode;

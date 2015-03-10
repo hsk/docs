@@ -22,7 +22,7 @@ open IO.BigEndian;;
 open ExtString;;
 open ExtList;;
 
-let debug = debug0
+(*let debug = debug0*)
 
 exception Writer_error_message of string
 
@@ -33,12 +33,6 @@ type context = {
   mutable constants : (jconstant, int) PMap.t;
 }
 
-let ctx_toArray ctx =
-  let arr = Array.create ctx.ccount ConstUnusable in
-  PMap.iter (fun v i ->
-    arr.(i) <- v
-  ) ctx.constants;
-  arr
 let encode_utf8 s = s
 
 let get_reference_type i =
@@ -52,40 +46,6 @@ let get_reference_type i =
   | RInvokeSpecial    -> 7
   | RNewInvokeSpecial -> 8
   | RInvokeInterface  -> 9
-
-let new_ctx ch (consts, _) =
-  let map = ref PMap.empty in
-  let const = ConstClass (["java"; "lang"], "Object") in
-  let p = output_string () in
-  Array.iteri (fun i k ->
-    let c = JReader.expand_constant consts i in
-    map := PMap.add c i !map;
-    if i = 0 then () else
-    match k with
-    | KUnusable                 -> ()
-    | KUtf8String(s)            -> write_byte p 1;  write_ui16 p (String.length s);
-                                                    nwrite p (encode_utf8 s)
-    | KInt(i)                   -> write_byte p 3;  write_real_i32 p i
-    | KFloat(f)                 -> write_byte p 4;  write_real_i32 p (Int32.bits_of_float f)
-    | KLong(i)                  -> write_byte p 5;  write_i64 p i
-    | KDouble(d)                -> write_byte p 6;  write_double p d
-    | KClass(i)                 -> write_byte p 7;  write_i16 p i
-    | KString(i)                -> write_byte p 8;  write_i16 p i
-    | KFieldRef(i, j)           -> write_byte p 9;  write_i16 p i; write_i16 p j
-    | KMethodRef(i, j)          -> write_byte p 10; write_i16 p i; write_i16 p j
-    | KInterfaceMethodRef(i, j) -> write_byte p 11; write_i16 p i; write_i16 p j
-    | KNameAndType(i, j)        -> write_byte p 12; write_i16 p i; write_i16 p j
-    | KMethodHandle(i, j)       -> write_byte p 15; write_i16 p (get_reference_type i);
-                                                                   write_i16 p j
-    | KMethodType(i)            -> write_byte p 16; write_i16 p i
-    | KInvokeDynamic(i, j)      -> write_byte p 18; write_i16 p i; write_i16 p j
-  ) consts;
-  {
-    cpool = p;
-    ccount = Array.length consts;
-    ch = ch;
-    constants = !map;
-  }
 
 let error msg = raise (Writer_error_message msg)
 let error fmt = Printf.ksprintf (fun s -> raise (Writer_error_message s)) fmt
@@ -141,8 +101,13 @@ let rec const ctx c =
     PMap.find c ctx.constants
   with
   | Not_found ->
-    debug "%a@." pp_jconstant c;
-    begin match c with
+    write_constants ctx c;
+    let ret = ctx.ccount in
+    ctx.ccount <- ret + 1;
+    ctx.constants <- PMap.add c ret ctx.constants;
+    ret
+  end
+and write_constants ctx = function
       (** references a class or an interface - jpath must be encoded as StringUtf8 *)
       | ConstClass path -> (* tag = 7 *)
           let path = const ctx (ConstUtf8 (encode_path path)) in
@@ -228,12 +193,30 @@ let rec const ctx c =
           write_ui16 ctx.cpool bootstrap_method;
           write_ui16 ctx.cpool name_and_type
       | ConstUnusable -> ()
-    end;
-    let ret = ctx.ccount in
-    ctx.ccount <- ret + 1;
-    ctx.constants <- PMap.add c ret ctx.constants;
-    ret
-  end
+
+let ctx_to_array ctx =
+  let arr = Array.create ctx.ccount ConstUnusable in
+  PMap.iter (fun c i ->
+    arr.(i) <- c
+  ) ctx.constants;
+  arr
+
+let new_ctx ch consts =
+  let map = ref PMap.empty in
+  let consts = if Array.length consts = 0 then [|ConstUnusable|] else consts in
+  Array.iteri (fun i c ->
+    map := PMap.add c i !map;
+  ) consts;
+  let ctx = {
+    cpool = output_string ();
+    ccount = Array.length consts;
+    ch = ch;
+    constants = !map;
+  } in
+  Array.iter (fun c ->
+    write_constants ctx c
+  ) consts;
+  ctx
 
 (* Acess (and other) flags unparsing *)
 (*************************************)

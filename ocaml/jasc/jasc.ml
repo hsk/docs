@@ -14,6 +14,15 @@ let file f =
   let a = JReader.parse_class (IO.input_channel fp) in
   close_in fp;
   Format.printf "***** original data@. %a@." JData.pp_jclass a;
+
+  List.iter (fun m ->
+    let codestr = JCode.get_code m in
+    let code = JCodeReader.parse_code (a.constants) codestr in
+    Format.printf "%a@." JCode.pp_jcode code;
+  ) a.cmethods;
+
+  Format.printf "***@.";
+
   let inchan = open_in f in
   begin try
     Parser.sourcefile := Some f;
@@ -24,6 +33,12 @@ let file f =
     let fp = open_out_bin (j2class f) in
     JWriter.encode_class (IO.output_channel fp) a;
     close_out fp;
+
+    List.iter (fun m ->
+      let codestr = JCode.get_code m in
+      let code = JCodeReader.parse_code (a.constants) codestr in
+      Format.printf "%a@." JCode.pp_jcode code;
+    ) a.cmethods;
 
     (*Javalib.unparse_class k (open_out (j2class f));*)
     (*JPrint.print_jasmin k stdout;*)

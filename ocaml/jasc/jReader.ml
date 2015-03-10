@@ -625,7 +625,7 @@ let parse_class ch =
 	IO.close_in ch;
   {
     cversion = (majorv, minorv);
-    constants = (consts1, consts);
+    constants = consts;
     cpath = this;
     csuper = !super;
     cflags = flags;
