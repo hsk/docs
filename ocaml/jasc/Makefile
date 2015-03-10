@@ -38,6 +38,10 @@ install:
 	wget http://www.angelfire.com/tx4/cus/jasper/jasper.zip
 	unzip jasper.zip
 
+push:
+	cd win; make
+	git commit -a
+	git push
 
 
 clean:
