@@ -46,7 +46,7 @@ pull:
 	git pull
 
 clean:
-	rm -rf main *.cm* ext/*.cm* ext/*.o $(wildcard *.cmx) $(wildcard *.obj) $(wildcard *.o) $(wildcard *.cmi) $(wildcard *.cmo) *.class
+	rm -rf main lexer.ml parser.ml *.cm* ext/*.cm* ext/*.o $(wildcard *.cmx) $(wildcard *.obj) $(wildcard *.o) $(wildcard *.cmi) $(wildcard *.cmo) *.class
 distclean: clean
 	rm -rf $(EXE)
 
