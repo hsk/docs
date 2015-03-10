@@ -42,29 +42,17 @@ run:
 test:
 
 #	$(EXE) tests/InvokeDynamic.j
-#	java tests.InvokeDynamic
 	$(EXE) tests/Test001.j
-#	java tests.Test001
 	$(EXE) tests/Test002.j
-#	java tests.Test002
 	$(EXE) tests/Test003.j
-	java tests.Test003
 	$(EXE) tests/Test004.j
-	java tests.Test004
 	$(EXE) tests/Test005.j
-	java tests.Test005
 	$(EXE) tests/Test006.j
-	java tests.Test006 aaa
 	$(EXE) tests/Test007.j
-	java tests.Test007
 	$(EXE) tests/Test008.j
-	java tests.Test008
 	$(EXE) tests/Test009.j
-	java tests.Test009
 	$(EXE) tests/Test010.j
-	java tests.Test010
 	$(EXE) tests/Test_b.j
-	java tests.Test_b
 	$(EXE) tests/Test_c.j
 	$(EXE) tests/Test_d.j
 	$(EXE) tests/Test_f.j
@@ -83,6 +71,18 @@ test:
 	$(EXE) tests/jsr.j
 	$(EXE) tests/jsr2.j
 
+#	java tests.InvokeDynamic
+#	java tests.Test001
+#	java tests.Test002
+	java tests.Test003
+	java tests.Test004
+	java tests.Test005
+	java tests.Test006 aaa
+	java tests.Test007
+	java tests.Test008
+	java tests.Test009
+	java tests.Test010
+	java tests.Test_b
 	java tests.Test_c
 	java tests.Test_d
 	java tests.Test_f
