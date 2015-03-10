@@ -1,4 +1,4 @@
-.bytecode 52.0
+.bytecode 49.0
 .source Test009.java
 
 .class  tests/Test009
