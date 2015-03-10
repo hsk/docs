@@ -113,22 +113,22 @@ let encode_instruction ch count length op =
 
     | OpIConst n ->
         if not (-1l <= n && n <= 5l)
-        then error_class "Arguments of iconst should be between -1l and 5l (inclusive)";
+        then error_class "iconst %ld Arguments of iconst should be between -1l and 5l (inclusive)" n;
         if length <> 1 then error_len length op;
         write_byte ch (3 + Int32.to_int n)
     | OpLConst n ->
         if not (0L=n || n=1L)
-        then error_class "Arguments of lconst should be 0L or 1L";
+        then error_class "lconst Arguments of lconst should be 0L or 1L";
         if length <> 1 then error_len length op;
         write_byte ch (9 + Int64.to_int n)
     | OpFConst n ->
         if not (0.=n || n=1. || n=2.)
-        then error_class "Arguments of fconst should be 0., 1. or 2.";
+        then error_class "fconst Arguments of fconst should be 0., 1. or 2.";
         if length <> 1 then error_len length op;
         write_byte ch (11 + int_of_float n)
     | OpDConst n ->
         if not (0.=n || n=1.)
-        then error_class "Arguments of dconst should be 0. or 1.";
+        then error_class "dconst Arguments of dconst should be 0. or 1.";
         if length <> 1 then error_len length op;
         write_byte ch (14 + int_of_float n)
     | OpBIPush n ->

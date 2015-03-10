@@ -1348,7 +1348,7 @@ methods :
                   | "istore", "i", i -> add 2 (JCode.OpStore (`Int2Bool, i))
                   | "istore", "I", i -> add 3 (JCode.OpStore (`Int2Bool, i))
                   (* I *)
-                  | "ldc", "constant", n -> add 2 (JCode.OpIConst( (Int32.of_int n)))
+                  | "ldc", "constant", n -> add 2 (JCode.OpLdc1(const !ctx (ConstInt (Int32.of_int n))))
                   | "ldc2_w", "bigconstant", d -> add 3 (JCode.OpLConst( (Int64.of_int d)))
                   | "lload", _, 0 -> add 1 (JCode.OpLoad (`Long, 0))
                   | "lload", _, 1 -> add 1 (JCode.OpLoad (`Long, 1))
@@ -1374,8 +1374,8 @@ methods :
                 | Insn Num {
                   match(fst $1,snd $1, $2)with
                   (* I *)
-                  | "ldc", "constant", s -> add 2 (JCode.OpFConst( (float_of_string s)))
-                  | "ldc2_w", "bigconstant", d -> add 3 (JCode.OpDConst( (float_of_string d)))
+                  | "ldc", "constant", s -> add 2 (JCode.OpLdc1(const !ctx (ConstFloat (float_of_string s))))
+                  | "ldc2_w", "bigconstant", d -> add 3 (JCode.OpLdc2w(const !ctx (ConstDouble (float_of_string d))))
                   | a,b,s ->
                     Printf.printf "InstNum(%S, %S, %S)@." a b s;
                     assert false
@@ -1442,8 +1442,8 @@ methods :
                   (* J *)
                   | "jsr","label",label -> add 3 (JCode.OpJsr((label2int label)))
                   | "jsr_w","label",label -> add 3 (JCode.OpJsr((label2int label)))
-                  | "ldc", "constant", d -> add 2 (JCode.OpFConst( (float_of_string d)))
-                  | "ldc2_w", "bigconstant", d -> add 3 (JCode.OpDConst( (float_of_string d)))
+                  | "ldc", "constant", d -> add 2 (JCode.OpLdc1(const !ctx (ConstFloat (float_of_string d))))
+                  | "ldc2_w", "bigconstant", d -> add 3 (JCode.OpLdc2w(const !ctx (ConstDouble (float_of_string d))))
                   (* N *)
                   | "new", "class", o -> add 3 (JCode.OpNew (const !ctx (ConstClass (JReader.expand_path (replace_dot o)))))
                   | "newarray", "atype", t ->
