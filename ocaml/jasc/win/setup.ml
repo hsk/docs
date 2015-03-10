@@ -12,7 +12,7 @@ let read src =
 
 let cnv s =
   let str = read s in
-  let str = Str.global_replace (Str.regexp "\\[@@deriving show\\]") "" str in
+  let str = Str.global_replace (Str.regexp "\\[@@deriving[\r\n ]+show\\]") "" str in
   let ch = open_out s in
   Printf.fprintf ch "%s" str;
   close_out ch

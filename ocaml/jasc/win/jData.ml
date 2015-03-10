@@ -373,8 +373,7 @@ let rec pp_jaccess fmt x =
             true) false x);
   Format.fprintf fmt "@]]"
 and show_jaccess x = Format.asprintf "%a" pp_jaccess x
-type jtypes = (string* jsignature option* jsignature list) list[@@deriving
-                                                                 show]
+type jtypes = (string* jsignature option* jsignature list) list
 let rec pp_jtypes fmt x =
   Format.fprintf fmt "[@[<hov>";
   ignore
