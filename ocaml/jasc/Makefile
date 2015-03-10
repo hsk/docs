@@ -38,7 +38,7 @@ install:
 	wget http://www.angelfire.com/tx4/cus/jasper/jasper.zip
 	unzip jasper.zip
 
-push:
+push: clean
 ifeq ($(OS),Windows_NT)
 	git checkout jCode.ml jData.ml
 else
