@@ -28,145 +28,145 @@ Status
 
 This specification is working towards a candidate draft for asm.js version 1. Mozilla's SpiderMonkey JavaScript engine provides an optimizing implementation of this draft.
 
-この仕様はMozillaのSpiderMonkeyのJavaScriptエンジンがこの案の最適化実装を提供しasm.jsバージョン1の候補案に向けて取り組んでいます。
+この仕様はMozillaのSpiderMonkeyのJavaScriptエンジンがこの案の最適化実装を提供しasm.jsバージョン1のドラフト案に向けて取り組んでいます。
 
 ### Changelog
 
-  -   **18 August 2014**
-      -   better "putting it all together" example
-  -   **23 July 2014**
-      -   formatting cleanups
-      -   added variadic function types to the Global Types section
-  -   **22 July 2014**
-      -   clarified formal structure with explicit validation rule names
-      -   moved function table validation from annotations section to validation section
-      -   separated `case` and `default` validation rules
-      -   eliminated unused expected case type parameter
-      -   corrected type checks to subtype checks in *AdditiveExpression*, *BitwiseXORExpression*, *BitwiseANDExpression*, *BitwiseORExpression*, and *ConditionalExpression*
-  -   **8 July 2014**
-      -   minor editorial bugfixes
-      -   non-function foreign imports are `mut`
-      -   tightened the language on linking restrictions
-  -   **7 July 2014**
-      -   added 32-bit floating point types
-      -   renamed `doublish` to [`double?`](#double-2) for symmetry with [`float?`](#float-2)
-      -   separated heap access checking into a separate validation section
-      -   separated load and store types for heap views
-      -   added `Math.fround` and singleton `fround` type
-      -   added a Float Coercions section
-      -   added uncoerced *CallExpression* nodes to *Expression* for float coercions
-      -   added float coercions to initializers, return type annotations, and legal function calls
-      -   added restriction preventing float coercions of FFI calls
-      -   added [`float`](#float-1) support for operators and `Math` functions
-      -   added [`float`](#float-1) to legal result types for *ConditionalExpression*
-      -   added variadic `Math.min` and `Math.max`
-      -   eliminated the allowance for 1-byte views to elide their index shift (to future-proof for large heaps)
-      -   simplified and generalized link-time restrictions on heap size
-  -   **12 December 2013**
-      -   return type of `Math.abs` is [`signed`](#signed-0)
-  -   **11 October 2013**
-      -   [`unsigned`](#unsigned-0) is not an [`extern`](#extern-0) type
-      -   added missing `!` operator to *UnaryExpression* operators
-      -   added note about `~~` to *Unary Operators* section
-      -   added note about parenthesis agnosticism to *Syntax* section
-      -   added note about ASI to *Syntax* section
-      -   added `-NumericLiteral` cases everywhere
-      -   function calls require explicit coercions
-      -   eliminated type `unknown`, which is no longer needed
-      -   return type of integer `%` is [`intish`](#intish-0)
+-   **18 August 2014**
+    -   better "putting it all together" example
+-   **23 July 2014**
+    -   formatting cleanups
+    -   added variadic function types to the Global Types section
+-   **22 July 2014**
+    -   clarified formal structure with explicit validation rule names
+    -   moved function table validation from annotations section to validation section
+    -   separated `case` and `default` validation rules
+    -   eliminated unused expected case type parameter
+    -   corrected type checks to subtype checks in *AdditiveExpression*, *BitwiseXORExpression*, *BitwiseANDExpression*, *BitwiseORExpression*, and *ConditionalExpression*
+-   **8 July 2014**
+    -   minor editorial bugfixes
+    -   non-function foreign imports are `mut`
+    -   tightened the language on linking restrictions
+-   **7 July 2014**
+    -   added 32-bit floating point types
+    -   renamed `doublish` to [`double?`](#double-2) for symmetry with [`float?`](#float-2)
+    -   separated heap access checking into a separate validation section
+    -   separated load and store types for heap views
+    -   added `Math.fround` and singleton `fround` type
+    -   added a Float Coercions section
+    -   added uncoerced *CallExpression* nodes to *Expression* for float coercions
+    -   added float coercions to initializers, return type annotations, and legal function calls
+    -   added restriction preventing float coercions of FFI calls
+    -   added [`float`](#float-1) support for operators and `Math` functions
+    -   added [`float`](#float-1) to legal result types for *ConditionalExpression*
+    -   added variadic `Math.min` and `Math.max`
+    -   eliminated the allowance for 1-byte views to elide their index shift (to future-proof for large heaps)
+    -   simplified and generalized link-time restrictions on heap size
+-   **12 December 2013**
+    -   return type of `Math.abs` is [`signed`](#signed-0)
+-   **11 October 2013**
+    -   [`unsigned`](#unsigned-0) is not an [`extern`](#extern-0) type
+    -   added missing `!` operator to *UnaryExpression* operators
+    -   added note about `~~` to *Unary Operators* section
+    -   added note about parenthesis agnosticism to *Syntax* section
+    -   added note about ASI to *Syntax* section
+    -   added `-NumericLiteral` cases everywhere
+    -   function calls require explicit coercions
+    -   eliminated type `unknown`, which is no longer needed
+    -   return type of integer `%` is [`intish`](#intish-0)
 
 Table of Contents
 -----------------
 
-  1.  [1 Introduction](#introduction)
-  2.  [2 Types](#types)
-      1.  [2.1 Value Types](#value-types)
-          1.  [2.1.1 void](#void)
-          2.  [2.1.2 double](#double)
-          3.  [2.1.3 signed](#signed)
-          4.  [2.1.4 unsigned](#unsigned)
-          5.  [2.1.5 int](#int)
-          6.  [2.1.6 fixnum](#fixnum)
-          7.  [2.1.7 intish](#intish)
-          8.  [2.1.8 double?](#double-0)
-          9.  [2.1.9 float](#float)
-          10. [2.1.10 float?](#float-0)
-          11. [2.1.11 floatish](#floatish)
-          12. [2.1.12 extern](#extern)
+1.  [1 Introduction](#introduction)
+2.  [2 Types](#types)
+    1.  [2.1 Value Types](#value-types)
+        1.  [2.1.1 void](#void)
+        2.  [2.1.2 double](#double)
+        3.  [2.1.3 signed](#signed)
+        4.  [2.1.4 unsigned](#unsigned)
+        5.  [2.1.5 int](#int)
+        6.  [2.1.6 fixnum](#fixnum)
+        7.  [2.1.7 intish](#intish)
+        8.  [2.1.8 double?](#double-0)
+        9.  [2.1.9 float](#float)
+        10. [2.1.10 float?](#float-0)
+        11. [2.1.11 floatish](#floatish)
+        12. [2.1.12 extern](#extern)
 
-      2.  [2.2 Global Types](#global-types)
+    2.  [2.2 Global Types](#global-types)
 
-  3.  [3 Environments](#environments)
-      1.  [3.1 Global Environment](#global-environment)
-      2.  [3.2 Variable Environment](#variable-environment)
-      3.  [3.3 Environment Lookup](#environment-lookup)
+3.  [3 Environments](#environments)
+    1.  [3.1 Global Environment](#global-environment)
+    2.  [3.2 Variable Environment](#variable-environment)
+    3.  [3.3 Environment Lookup](#environment-lookup)
 
-  4.  [4 Syntax](#syntax)
-  5.  [5 Annotations](#annotations)
-      1.  [5.1 Parameter Type Annotations](#parameter-type-annotations)
-      2.  [5.2 Return Type Annotations](#return-type-annotations)
-      3.  [5.3 Function Type Annotations](#function-type-annotations)
-      4.  [5.4 Variable Type Annotations](#variable-type-annotations)
-      5.  [5.5 Global Variable Type Annotations](#global-variable-type-annotations)
-      6.  [5.6 Function Table Types](#function-table-types)
+4.  [4 Syntax](#syntax)
+5.  [5 Annotations](#annotations)
+    1.  [5.1 Parameter Type Annotations](#parameter-type-annotations)
+    2.  [5.2 Return Type Annotations](#return-type-annotations)
+    3.  [5.3 Function Type Annotations](#function-type-annotations)
+    4.  [5.4 Variable Type Annotations](#variable-type-annotations)
+    5.  [5.5 Global Variable Type Annotations](#global-variable-type-annotations)
+    6.  [5.6 Function Table Types](#function-table-types)
 
-  6.  [6 Validation Rules](#validation-rules)
-      1.  [6.1 *ValidateModule*(*f*)](#validatemodule-f)
-      2.  [6.2 *ValidateExport*(Δ, *s*)](#validateexport-s)
-      3.  [6.3 *ValidateFunctionTable*(Δ, *s*)](#validatefunctiontable-s)
-      4.  [6.4 *ValidateFunction*(Δ, *f*)](#validatefunction-f)
-      5.  [6.5 *ValidateStatement*(Δ, Γ, τ, *s*)](#validatestatement-s)
-          1.  [6.5.1 Block](#block)
-          2.  [6.5.2 ExpressionStatement](#expressionstatement)
-          3.  [6.5.3 EmptyStatement](#emptystatement)
-          4.  [6.5.4 IfStatement](#ifstatement)
-          5.  [6.5.5 ReturnStatement](#returnstatement)
-          6.  [6.5.6 IterationStatement](#iterationstatement)
-          7.  [6.5.7 BreakStatement](#breakstatement)
-          8.  [6.5.8 ContinueStatement](#continuestatement)
-          9.  [6.5.9 LabelledStatement](#labelledstatement)
-          10. [6.5.10 SwitchStatement](#switchstatement)
+6.  [6 Validation Rules](#validation-rules)
+    1.  [6.1 *ValidateModule*(*f*)](#validatemodule-f)
+    2.  [6.2 *ValidateExport*(Δ, *s*)](#validateexport-s)
+    3.  [6.3 *ValidateFunctionTable*(Δ, *s*)](#validatefunctiontable-s)
+    4.  [6.4 *ValidateFunction*(Δ, *f*)](#validatefunction-f)
+    5.  [6.5 *ValidateStatement*(Δ, Γ, τ, *s*)](#validatestatement-s)
+        1.  [6.5.1 Block](#block)
+        2.  [6.5.2 ExpressionStatement](#expressionstatement)
+        3.  [6.5.3 EmptyStatement](#emptystatement)
+        4.  [6.5.4 IfStatement](#ifstatement)
+        5.  [6.5.5 ReturnStatement](#returnstatement)
+        6.  [6.5.6 IterationStatement](#iterationstatement)
+        7.  [6.5.7 BreakStatement](#breakstatement)
+        8.  [6.5.8 ContinueStatement](#continuestatement)
+        9.  [6.5.9 LabelledStatement](#labelledstatement)
+        10. [6.5.10 SwitchStatement](#switchstatement)
 
-      6.  [6.6 *ValidateCase*(Δ, Γ, τ, *c*)](#validatecase-c)
-      7.  [6.7 *ValidateDefault*(Δ, Γ, τ, *d*)](#validatedefault-d)
-      8.  [6.8 *ValidateExpression*(Δ, Γ, *e*)](#validateexpression-e)
-          1.  [6.8.1 Expression](#expression)
-          2.  [6.8.2 NumericLiteral](#numericliteral)
-          3.  [6.8.3 Identifier](#identifier)
-          4.  [6.8.4 CallExpression](#callexpression)
-          5.  [6.8.5 MemberExpression](#memberexpression)
-          6.  [6.8.6 AssignmentExpression](#assignmentexpression)
-          7.  [6.8.7 UnaryExpression](#unaryexpression)
-          8.  [6.8.8 MultiplicativeExpression](#multiplicativeexpression)
-          9.  [6.8.9 AdditiveExpression](#additiveexpression)
-          10. [6.8.10 ShiftExpression](#shiftexpression)
-          11. [6.8.11 RelationalExpression](#relationalexpression)
-          12. [6.8.12 EqualityExpression](#equalityexpression)
-          13. [6.8.13 BitwiseANDExpression](#bitwiseandexpression)
-          14. [6.8.14 BitwiseXORExpression](#bitwisexorexpression)
-          15. [6.8.15 BitwiseORExpression](#bitwiseorexpression)
-          16. [6.8.16 ConditionalExpression](#conditionalexpression)
-          17. [6.8.17 Parenthesized Expression](#parenthesized-expression)
+    6.  [6.6 *ValidateCase*(Δ, Γ, τ, *c*)](#validatecase-c)
+    7.  [6.7 *ValidateDefault*(Δ, Γ, τ, *d*)](#validatedefault-d)
+    8.  [6.8 *ValidateExpression*(Δ, Γ, *e*)](#validateexpression-e)
+        1.  [6.8.1 Expression](#expression)
+        2.  [6.8.2 NumericLiteral](#numericliteral)
+        3.  [6.8.3 Identifier](#identifier)
+        4.  [6.8.4 CallExpression](#callexpression)
+        5.  [6.8.5 MemberExpression](#memberexpression)
+        6.  [6.8.6 AssignmentExpression](#assignmentexpression)
+        7.  [6.8.7 UnaryExpression](#unaryexpression)
+        8.  [6.8.8 MultiplicativeExpression](#multiplicativeexpression)
+        9.  [6.8.9 AdditiveExpression](#additiveexpression)
+        10. [6.8.10 ShiftExpression](#shiftexpression)
+        11. [6.8.11 RelationalExpression](#relationalexpression)
+        12. [6.8.12 EqualityExpression](#equalityexpression)
+        13. [6.8.13 BitwiseANDExpression](#bitwiseandexpression)
+        14. [6.8.14 BitwiseXORExpression](#bitwisexorexpression)
+        15. [6.8.15 BitwiseORExpression](#bitwiseorexpression)
+        16. [6.8.16 ConditionalExpression](#conditionalexpression)
+        17. [6.8.17 Parenthesized Expression](#parenthesized-expression)
 
-      9.  [6.9 *ValidateCall*(Δ, Γ, τ, *e*)](#validatecall-e)
-      10. [6.10 *ValidateHeapAccess*(Δ, Γ, *e*)](#validateheapaccess-e)
-      11. [6.11 *ValidateFloatCoercion*(Δ, Γ, *e*)](#validatefloatcoercion-e)
+    9.  [6.9 *ValidateCall*(Δ, Γ, τ, *e*)](#validatecall-e)
+    10. [6.10 *ValidateHeapAccess*(Δ, Γ, *e*)](#validateheapaccess-e)
+    11. [6.11 *ValidateFloatCoercion*(Δ, Γ, *e*)](#validatefloatcoercion-e)
 
-  7.  [7 Linking](#linking-0)
-  8.  [8 Operators](#operators)
-      1.  [8.1 Unary Operators](#unary-operators)
-      2.  [8.2 Binary Operators](#binary-operators)
+7.  [7 Linking](#linking-0)
+8.  [8 Operators](#operators)
+    1.  [8.1 Unary Operators](#unary-operators)
+    2.  [8.2 Binary Operators](#binary-operators)
 
-  9.  [9 Standard Library](#standard-library)
-  10. [10 Heap View Types](#heap-view-types)
-  11. [Acknowledgements](#acknowledgements)
+9.  [9 Standard Library](#standard-library)
+10. [10 Heap View Types](#heap-view-types)
+11. [Acknowledgements](#acknowledgements)
 
 1 Introduction
 --------------
 
-  This specification defines asm.js, a strict subset of JavaScript that can be used as a low-level, efficient target language for compilers. The asm.js language provides an abstraction similar to the C/C++ virtual machine: a large binary heap with efficient loads and stores, integer and floating-point arithmetic, first-order function definitions, and function pointers.
+This specification defines asm.js, a strict subset of JavaScript that can be used as a low-level, efficient target language for compilers. The asm.js language provides an abstraction similar to the C/C++ virtual machine: a large binary heap with efficient loads and stores, integer and floating-point arithmetic, first-order function definitions, and function pointers.
 
-  この仕様はasm.js、低レベル、コンパイラのための効率的なターゲット言語として使用することができるJavaScriptの厳密なサブセットを定義します。効率的なロードとストア、整数と浮動小数点演算、一次関数定義、および関数ポインタを持つ大規模なバイナリヒープ：asm.js言語はC / C++の仮想マシンに似て抽象化を提供します。
+この仕様はasm.js、低レベル、コンパイラのための効率的なターゲット言語として使用することができるJavaScriptの厳密なサブセットを定義します。効率的なロードとストア、整数と浮動小数点演算、一次関数定義、および関数ポインタを持つ大規模なバイナリヒープ：asm.js言語はC / C++の仮想マシンに似て抽象化を提供します。
 
 ### Programming Model
 
@@ -368,13 +368,22 @@ The `int` type is the type of 32-bit integers where the signedness is not known.
 
 The `fixnum` type is the type of integers in the range [0, 2<sup>31</sup>)—that is, the range of integers such that an unboxed 32-bit representation has the same value whether it is interpreted as signed or unsigned.
 
-#### 2.1.7 intish
+#### 2.1.7 intish <a name="intish-0"></a>
 
 Even though JavaScript only supports floating-point arithmetic, most operations can simulate integer arithmetic by coercing their result to an integer. For example, adding two integers may overflow beyond the 32-bit range, but coercing the result back to an integer produces the same 32-bit integer as integer addition in, say, C.
 
 The `intish` type represents the result of a JavaScript integer operation that must be coerced back to an integer with an explicit coercion ([*ToInt32*](http://ecma-international.org/ecma-262/5.1/#sec-9.5) for signed integers and [*ToUint32*](http://ecma-international.org/ecma-262/5.1/#sec-9.6) for unsigned integers). Validation requires all [`intish`](#intish-0) values to be immediately passed to an operator or standard library that performs the appropriate coercion or else dropped via an expression statement. This way, each integer operation can be compiled directly to machine operations.
 
 The one operator that does not support this approach is multiplication. (Multiplying two large integers can result in a large enough double that some lower bits of precision are lost.) So asm.js does not support applying the multiplication operator to integer operands. Instead, the proposed [`Math.imul`](https://mail.mozilla.org/pipermail/es-discuss/2012-November/026126.html) function is recommended as the proper means of implementing integer multiplication.
+
+
+JavaScriptが唯一の浮動小数点演算をサポートしているにもかかわらず、ほとんどの操作は、整数に彼らの結果を強要することにより整数演算をシミュレートすることができます。
+例えば、32ビットの範囲を超えてオーバーフローすることができる2つの整数を追加するが、整数に結果を強要すると、C.、たとえば、整数加算と同じ32ビットの整数を生成する
+
+`intish`タイプは、明示的な強制（[*ToInt32*](http://ecma-international.org/ecma-262/5.1/#sec-9.5) バック整数に強制変換されなければならないJavaScriptの整数演算の結果を表している)符号付き整数と [*ToUint32*](http://ecma-international.org/ecma-262/5.1/#sec-9.6) 用の符号なし整数の場合）。
+検証は、すべての[`intish`](＃intish-0)の値がすぐに適切な強制を行い、あるいは式文を経由してドロップされたオペレータや標準ライブラリに渡すことが必要です。このように、各整数演算は、機械の動作に直接コンパイルすることができる。
+
+このアプローチをサポートしていない1演算子は乗算である。 asm.jsがオペランドを整数に乗算演算子を適用してサポートしていないので（二つの大きな整数を乗算すると、精度のいくつかの下位ビットが失われていることを倍増する。十分な大きさになることができます）。その代わりに、提案された [`Math.imul`](https://mail.mozilla.org/pipermail/es-discuss/2012-November/026126.html) 関数は、整数の乗算を実現する適切な手段として推奨されている。
 
 #### 2.1.8 double?
 
