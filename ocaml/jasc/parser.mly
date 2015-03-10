@@ -228,7 +228,7 @@ jasmin_header :
             constants = ctx_to_array !ctx;
             cpath = name;
             csuper = $4;
-            cflags = access;
+            cflags = JData.JSuper :: access;
             cinterfaces = $5;
             cfields = fields;
             cmethods = methods;
@@ -1498,7 +1498,7 @@ methods :
                 }
                 | Insn Str { 
                   match(fst $1,snd $1, unescape $2)with
-                  | "ldc", "constant", s -> add 2 (JCode.OpLdc1(const !ctx(ConstUtf8 s)))
+                  | "ldc", "constant", s -> add 2 (JCode.OpLdc1(const !ctx(ConstString s)))
                   | a,b,s ->
                     Printf.printf "InstStr(%S, %S, %S)@." a b s;
                     assert false

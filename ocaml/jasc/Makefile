@@ -18,10 +18,12 @@ run2:
 	$(OCAMLOPT) $(EXT) $(SRC) parser.ml lexer.ml jasc.ml -o $(EXE)
 	javac -g:none -target 1.5 -source 1.5 a.java
 	jasmd a > a.j
+	javap -v a > a_org.p
 	cp a.class a_org.txt
 	./$(EXE) a.j
 	cp a.class a_dst.txt
-
+	javap -v a > a_dst.p
+	diff a_org.p a_dst.p
 run:
 	$(OCAMLOPT) $(EXT) $(SRC) main.ml -o main
 	javac a.java
