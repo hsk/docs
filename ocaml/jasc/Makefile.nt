@@ -1,15 +1,16 @@
 OCAMLOPT=ocamlfind ocamlopt -I ext -linkpkg
 SRC=jData.ml jReader.ml jWriter.ml jCode.ml jCodeReader.ml jCodeWriter.ml
 EXT= ext/enum.mli ext/enum.ml ext/extString.mli ext/extString.ml ext/IO.mli ext/IO.ml ext/extList.mli ext/extList.ml ext/pMap.mli ext/pMap.ml
-all: jasc
+EXE=jasc.exe
+all: $(EXE)
 
-jasc: parser.mly lexer.mll jasc.ml
+$(EXE): parser.mly lexer.mll jasc.ml
 	cp win/jCode.ml .
 	cp win/jData.ml .
 	ocamlyacc parser.mly
 	rm parser.mli
 	ocamllex lexer.mll
-	$(OCAMLOPT) $(EXT) $(SRC) parser.ml lexer.ml jasc.ml -o jasc
+	$(OCAMLOPT) $(EXT) $(SRC) parser.ml lexer.ml jasc.ml -o $(EXE)
 
 
 run:
