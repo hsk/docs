@@ -90,7 +90,7 @@
 	.line 26
 		88: 	dload_1
 		89: 	ldc2_w 2.
-		92: 	dmult
+		92: 	dmul
 		93: 	dstore_1
 	.line 27
 		94: 	dload_1

@@ -237,10 +237,24 @@ jasmin_header :
             ctypes = $6;
           }
         )
-      | k -> debug "error %s@." k; assert false
-      (*
       | "interface" ->
         (fun inners fields methods ->
+          ignore (const !ctx (ConstClass name));
+          {
+            cversion = $1;
+            constants = ctx_to_array !ctx;
+            cpath = name;
+            csuper = $4;
+            cflags = JData.JInterface::JData.JSuper :: access;
+            cinterfaces = $5;
+            cfields = fields;
+            cmethods = methods;
+            cattributes = (* $2::$7::$8::$9::$11 @ *) $10;
+            cinner_types = inners;
+            ctypes = $6;
+          }
+
+          (*
           let fields = List.fold_left (fun fields (fs,f) ->
             let f = {
                 if_signature = f.cf_signature ;
@@ -311,7 +325,8 @@ jasmin_header :
             i_fields = fields;
             i_methods = methods;
           }
-        )*)
+          *)
+        )
     }
 
 /* ---- Signature specification */
@@ -836,22 +851,9 @@ methods :
         }
       | defmethod endmethod
         {
+          let(access,(name,md)) = $1 in
+          !ctx.ch <- !back_ch;
           (*
-          let(access,ms) = $1 in
-          let code =[||] in
-          let jmethod = {
-            JCode.c_max_stack = 0;
-            c_max_locals = 0;
-            c_code = code;
-            c_exc_tbl = [];
-            c_line_number_table = None;
-            c_local_variable_table = None;
-            c_local_variable_type_table = None;
-            c_stack_map_midp = None;
-            c_stack_map_java6 = None;
-            c_attributes = []
-          }
-          in
           let m = ConcreteMethod {
             cm_signature = ms;
             cm_class_method_signature = JBasics.make_cms !cn ms;
@@ -860,31 +862,27 @@ methods :
             cm_synchronized = List.mem `Synchronized access;
             cm_strict = List.mem `Strict access;
             cm_access = cf_access access;
-            cm_generic_signature = None;
+            cm_generic_signature = None; *)(* TODO *)(*
             cm_bridge = List.mem `Bridge access;
             cm_varargs = List.mem `Varargs access;
             cm_synthetic = List.mem `Synthetic access;
-            cm_other_flags = [];
-            cm_exceptions = [];
-            cm_attributes = { synthetic = false; deprecated = false; other = [] };
-            cm_annotations = { ma_global = []; ma_parameters = [] };
+            cm_other_flags = []; *)(* TODO *)(*
+            cm_exceptions = throws; *)(* TODO *)(*
+            cm_attributes = { synthetic = false; deprecated = false; other = [] };  *)(* TODO *)(*
+            cm_annotations = { ma_global = []; ma_parameters = [] }; *)(* TODO *)(*
             cm_implementation = Java (lazy jmethod)
-          } in (ms,m)*)
-          { JData.jf_name = "main"; jf_kind = JData.JKMethod;
-                jf_vmsignature = (JData.TMethod
-                                    ([JData.TArray (
-                                        JData.TObject (
-                                          (["java"; "lang"], "String"), [
-                                          ]), None)], None));
-                jf_signature = (JData.TMethod
-                                  ([JData.TArray (
-                                      JData.TObject (
-                                        (["java"; "lang"], "String"), [
-                                        ]), None)], None)); jf_throws = [
-                ]; jf_types = []; jf_flags = [JData.JStatic; JData.JPublic];
-                jf_attributes = [JData.AttrUnknown ("Code",
-                                   "\000\002\000\001\000\000\000\017?\000\002\018\003?\000\004?\000\005Y?\000\006W?\000\000\000\001\000\016\000\000\000\014\000\003\000\000\000\004\000\b\000\005\000\016\000\006")];
-                jf_constant = None; jf_code = None
+          } in (ms,m)
+          *)
+          { JData.jf_name = name;
+            jf_kind = JData.JKMethod;
+            jf_vmsignature = md;
+            jf_signature = md;
+            jf_throws = [];
+            jf_types = [];
+            jf_flags = access;
+            jf_attributes = [];
+            jf_constant = None;
+            jf_code = None
           }
 
         }

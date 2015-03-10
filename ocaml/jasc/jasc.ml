@@ -10,15 +10,19 @@ let lexbuf l =
 	Parser.jas_file Lexer.token l
 
 let file f =
-  let fp = open_in_bin "a_org.txt" in
+  let fp = open_in_bin (j2class f) in
   let a = JReader.parse_class (IO.input_channel fp) in
   close_in fp;
   Format.printf "***** original data@. %a@." JPPData.pp_jclass a;
 
   List.iter (fun m ->
-    let codestr = JCode.get_code m in
-    let code = JCodeReader.parse_code (a.constants) codestr in
-    Format.printf "%a@." JPPCode.pp_jcode code;
+    try
+      let codestr = JCode.get_code m in
+      let code = JCodeReader.parse_code (a.constants) codestr in
+      Format.printf "%a@." JPPCode.pp_jcode code;
+    with
+      | _ -> ()
+    
   ) a.cmethods;
 
   Format.printf "***@.";
@@ -35,9 +39,12 @@ let file f =
     close_out fp;
 
     List.iter (fun m ->
+    try
       let codestr = JCode.get_code m in
       let code = JCodeReader.parse_code (a.constants) codestr in
       Format.printf "%a@." JPPCode.pp_jcode code;
+    with
+      | _ -> ()
     ) a.cmethods;
 
     (*Javalib.unparse_class k (open_out (j2class f));*)

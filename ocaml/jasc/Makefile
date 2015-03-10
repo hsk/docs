@@ -1,6 +1,6 @@
 EXE=jasc
-OCAMLOPT=ocamlfind ocamlopt -I ext
-OCAMLC=ocamlfind ocamlc -I ext
+OCAMLOPT=ocamlfind ocamlopt -I ext -g
+OCAMLC=ocamlfind ocamlc -I ext -g
 SRC=jData.ml jPPData.ml jReader.ml jWriter.ml jCode.ml jPPCode.ml jCodeReader.ml  jCodeWriter.ml
 EXT= ext/enum.mli ext/enum.ml ext/extString.mli ext/extString.ml ext/IO.mli ext/IO.ml ext/extList.mli ext/extList.ml ext/pMap.mli ext/pMap.ml
 ifeq ($(OS),Windows_NT)
