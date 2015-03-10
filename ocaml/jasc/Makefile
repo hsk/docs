@@ -39,7 +39,11 @@ install:
 	unzip jasper.zip
 
 push:
+ifeq ($(OS),Windows_NT)
+	git checkout jCode.ml jData.ml
+else
 	cd win; make
+endif
 	git commit -a
 	git push
 
