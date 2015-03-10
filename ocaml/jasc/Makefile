@@ -22,7 +22,7 @@ run2:
 	rm parser.mli
 	ocamllex lexer.mll
 	$(OCAMLOPT) $(EXT) $(SRC) parser.ml lexer.ml jasc.ml -o $(EXE)
-	javac a.java
+	javac -g:none -target 1.5 -source 1.5 a.java
 	jasmd a > a.j
 	cp a.class a_org.txt
 	./$(EXE) a.j

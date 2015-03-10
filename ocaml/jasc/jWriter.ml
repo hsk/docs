@@ -22,7 +22,7 @@ open IO.BigEndian;;
 open ExtString;;
 open ExtList;;
 
-(*let debug = debug0*)
+let debug = debug0
 
 exception Writer_error_message of string
 

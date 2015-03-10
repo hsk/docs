@@ -790,7 +790,7 @@ let yyact = [|
         debug "class@.";
         (fun inners fields methods ->
           debug "gen@.";
-
+          ignore (const !ctx (ConstClass name));
           {
             cversion = _1;
             constants = ctx_to_array !ctx;
@@ -1980,29 +1980,25 @@ let yyact = [|
             cm_implementation = Java (lazy jmethod)
           } in (ms,m)
           *)
-          { JData.jf_name = name; jf_kind = JData.JKMethod;
-                jf_vmsignature = (JData.TMethod
-                                    ([JData.TArray (
-                                        JData.TObject (
-                                          (["java"; "lang"], "String"), [
-                                          ]), None)], None));
-                jf_signature = (JData.TMethod
-                                  ([JData.TArray (
-                                      JData.TObject (
-                                        (["java"; "lang"], "String"), [
-                                        ]), None)], None)); jf_throws = [
-                ]; jf_types = []; jf_flags = [JData.JStatic; JData.JPublic];
-                jf_attributes = [JData.AttrUnknown ("Code", code)];
-                jf_constant = None; jf_code = None
+          { JData.jf_name = name;
+            jf_kind = JData.JKMethod;
+            jf_vmsignature = (JData.TMethod ([], None));
+            jf_signature = (JData.TMethod ([], None));
+            jf_throws = [];
+            jf_types = [];
+            jf_flags = access;
+            jf_attributes = [JData.AttrUnknown ("Code", code)];
+            jf_constant = None;
+            jf_code = None
           }
         )
-# 2000 "parser.ml"
+# 1996 "parser.ml"
                : 'method_spec))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : 'defmethod) in
     let _2 = (Parsing.peek_val __caml_parser_env 0 : 'endmethod) in
     Obj.repr(
-# 841 "parser.mly"
+# 837 "parser.mly"
         (
           (*
           let(access,ms) = $1 in
@@ -2056,13 +2052,13 @@ let yyact = [|
           }
 
         )
-# 2060 "parser.ml"
+# 2056 "parser.ml"
                : 'method_spec))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 2 : 'access) in
     let _3 = (Parsing.peek_val __caml_parser_env 1 : string) in
     Obj.repr(
-# 897 "parser.mly"
+# 893 "parser.mly"
           (
             init_method();
             let (name, md) = split_method _3 in
@@ -2073,194 +2069,194 @@ let yyact = [|
             *)
             (_2,(name,md))
           )
-# 2077 "parser.ml"
+# 2073 "parser.ml"
                : 'defmethod))
 ; (fun __caml_parser_env ->
     Obj.repr(
-# 909 "parser.mly"
+# 905 "parser.mly"
                           ( () )
-# 2083 "parser.ml"
+# 2079 "parser.ml"
                : 'endmethod))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : 'statements) in
     let _2 = (Parsing.peek_val __caml_parser_env 0 : 'statement) in
     Obj.repr(
-# 913 "parser.mly"
+# 909 "parser.mly"
                                ( _2::_1 )
-# 2091 "parser.ml"
+# 2087 "parser.ml"
                : 'statements))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : 'statement) in
     Obj.repr(
-# 914 "parser.mly"
+# 910 "parser.mly"
                     ( [_1] )
-# 2098 "parser.ml"
+# 2094 "parser.ml"
                : 'statements))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : 'stmnt) in
     Obj.repr(
-# 917 "parser.mly"
+# 913 "parser.mly"
                       ( _1 )
-# 2105 "parser.ml"
+# 2101 "parser.ml"
                : 'statement))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : 'instruction) in
     Obj.repr(
-# 920 "parser.mly"
+# 916 "parser.mly"
                           ( _1 )
-# 2112 "parser.ml"
+# 2108 "parser.ml"
                : 'stmnt))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : 'directive) in
     Obj.repr(
-# 921 "parser.mly"
+# 917 "parser.mly"
                         ( _1 )
-# 2119 "parser.ml"
+# 2115 "parser.ml"
                : 'stmnt))
 ; (fun __caml_parser_env ->
     Obj.repr(
-# 922 "parser.mly"
+# 918 "parser.mly"
                     ( add 0 JCode.OpInvalid )
-# 2125 "parser.ml"
+# 2121 "parser.ml"
                : 'stmnt))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : 'label) in
     Obj.repr(
-# 923 "parser.mly"
+# 919 "parser.mly"
                     ( _1 )
-# 2132 "parser.ml"
+# 2128 "parser.ml"
                : 'stmnt))
 ; (fun __caml_parser_env ->
     Obj.repr(
-# 924 "parser.mly"
+# 920 "parser.mly"
                           ( add 0 JCode.OpInvalid )
-# 2138 "parser.ml"
+# 2134 "parser.ml"
                : 'stmnt))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : string) in
     Obj.repr(
-# 928 "parser.mly"
+# 924 "parser.mly"
                            (
                 addlabel _1 !pos;
                 add 0 JCode.OpInvalid
                )
-# 2148 "parser.ml"
+# 2144 "parser.ml"
                : 'label))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : int) in
     let _3 = (Parsing.peek_val __caml_parser_env 0 : 'instruction) in
     Obj.repr(
-# 932 "parser.mly"
+# 928 "parser.mly"
                                       (
                 let (pos, _) = _3 in
                 addlabel (string_of_int _1) pos;
                 _3
               )
-# 2160 "parser.ml"
+# 2156 "parser.ml"
                : 'label))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : 'var_expr) in
     Obj.repr(
-# 941 "parser.mly"
+# 937 "parser.mly"
                 (
                   failwith "TODO: .var"
                 )
-# 2169 "parser.ml"
+# 2165 "parser.ml"
                : 'directive))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : 'limit_expr) in
     Obj.repr(
-# 944 "parser.mly"
+# 940 "parser.mly"
                                   ( add 0 JCode.OpInvalid )
-# 2176 "parser.ml"
+# 2172 "parser.ml"
                : 'directive))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : 'line_expr) in
     Obj.repr(
-# 945 "parser.mly"
+# 941 "parser.mly"
                                 ( add 0 JCode.OpInvalid )
-# 2183 "parser.ml"
+# 2179 "parser.ml"
                : 'directive))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : 'throws_expr) in
     Obj.repr(
-# 946 "parser.mly"
+# 942 "parser.mly"
                                     ( add 0 JCode.OpInvalid )
-# 2190 "parser.ml"
+# 2186 "parser.ml"
                : 'directive))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : 'catch_expr) in
     Obj.repr(
-# 947 "parser.mly"
+# 943 "parser.mly"
                                   ( add 0 JCode.OpInvalid )
-# 2197 "parser.ml"
+# 2193 "parser.ml"
                : 'directive))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : 'set_expr) in
     Obj.repr(
-# 949 "parser.mly"
+# 945 "parser.mly"
                 (
                   failwith "TODO: .set"
                 )
-# 2206 "parser.ml"
+# 2202 "parser.ml"
                : 'directive))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : 'signature_expr) in
     Obj.repr(
-# 953 "parser.mly"
+# 949 "parser.mly"
                 (
                   failwith "TODO: .signature"
                 )
-# 2215 "parser.ml"
+# 2211 "parser.ml"
                : 'directive))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : 'generic_expr) in
     Obj.repr(
-# 957 "parser.mly"
+# 953 "parser.mly"
                 (
                   failwith "TODO: .attribute"
                 )
-# 2224 "parser.ml"
+# 2220 "parser.ml"
                : 'directive))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : 'deprecated_expr) in
     Obj.repr(
-# 961 "parser.mly"
+# 957 "parser.mly"
                 (
                   failwith "TODO: .deprected"
                 )
-# 2233 "parser.ml"
+# 2229 "parser.ml"
                : 'directive))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 2 : 'ann_met_expr) in
     let _3 = (Parsing.peek_val __caml_parser_env 1 : 'ann_arglist) in
     let _4 = (Parsing.peek_val __caml_parser_env 0 : 'endannotation) in
     Obj.repr(
-# 965 "parser.mly"
+# 961 "parser.mly"
                 (
                   failwith "TODO: .annotation"
                 )
-# 2244 "parser.ml"
+# 2240 "parser.ml"
                : 'directive))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 2 : 'ann_def_spec) in
     let _3 = (Parsing.peek_val __caml_parser_env 1 : 'ann_def_val) in
     let _4 = (Parsing.peek_val __caml_parser_env 0 : 'endannotation) in
     Obj.repr(
-# 969 "parser.mly"
+# 965 "parser.mly"
                 (
                   failwith "TODO: .annotation"
                 )
-# 2255 "parser.ml"
+# 2251 "parser.ml"
                : 'directive))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : 'stackmap) in
     Obj.repr(
-# 973 "parser.mly"
+# 969 "parser.mly"
                 (
                   failwith "TODO: .stack"
                 )
-# 2264 "parser.ml"
+# 2260 "parser.ml"
                : 'directive))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 8 : int) in
@@ -2270,9 +2266,9 @@ let yyact = [|
     let _7 = (Parsing.peek_val __caml_parser_env 2 : string) in
     let _9 = (Parsing.peek_val __caml_parser_env 0 : string) in
     Obj.repr(
-# 983 "parser.mly"
+# 979 "parser.mly"
                   ( ()  (* TODO *))
-# 2276 "parser.ml"
+# 2272 "parser.ml"
                : 'var_expr))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 4 : int) in
@@ -2280,9 +2276,9 @@ let yyact = [|
     let _4 = (Parsing.peek_val __caml_parser_env 1 : string) in
     let _5 = (Parsing.peek_val __caml_parser_env 0 : 'optional_signature) in
     Obj.repr(
-# 985 "parser.mly"
+# 981 "parser.mly"
                   ( ()  (* TODO *))
-# 2286 "parser.ml"
+# 2282 "parser.ml"
                : 'var_expr))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 8 : int) in
@@ -2292,58 +2288,58 @@ let yyact = [|
     let _7 = (Parsing.peek_val __caml_parser_env 2 : int) in
     let _9 = (Parsing.peek_val __caml_parser_env 0 : int) in
     Obj.repr(
-# 987 "parser.mly"
+# 983 "parser.mly"
                   ( ()  (* TODO *))
-# 2298 "parser.ml"
+# 2294 "parser.ml"
                : 'var_expr))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : string) in
     Obj.repr(
-# 991 "parser.mly"
+# 987 "parser.mly"
                                   ( Some _2 )
-# 2305 "parser.ml"
+# 2301 "parser.ml"
                : 'optional_signature))
 ; (fun __caml_parser_env ->
     Obj.repr(
-# 992 "parser.mly"
+# 988 "parser.mly"
                                 ( None )
-# 2311 "parser.ml"
+# 2307 "parser.ml"
                : 'optional_signature))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : int) in
     Obj.repr(
-# 999 "parser.mly"
+# 995 "parser.mly"
                              ( limit_locals := _2 )
-# 2318 "parser.ml"
+# 2314 "parser.ml"
                : 'limit_expr))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : int) in
     Obj.repr(
-# 1000 "parser.mly"
+# 996 "parser.mly"
                             ( limit_stack := _2 )
-# 2325 "parser.ml"
+# 2321 "parser.ml"
                : 'limit_expr))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : string) in
     let _2 = (Parsing.peek_val __caml_parser_env 0 : int) in
     Obj.repr(
-# 1001 "parser.mly"
+# 997 "parser.mly"
                            ( () )
-# 2333 "parser.ml"
+# 2329 "parser.ml"
                : 'limit_expr))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : int) in
     Obj.repr(
-# 1005 "parser.mly"
+# 1001 "parser.mly"
                       ( lines := (!pos, _1) :: !lines )
-# 2340 "parser.ml"
+# 2336 "parser.ml"
                : 'line_expr))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : 'classname) in
     Obj.repr(
-# 1009 "parser.mly"
+# 1005 "parser.mly"
                             ( throws := _1 :: !throws )
-# 2347 "parser.ml"
+# 2343 "parser.ml"
                : 'throws_expr))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 6 : 'classname) in
@@ -2351,7 +2347,7 @@ let yyact = [|
     let _5 = (Parsing.peek_val __caml_parser_env 2 : string) in
     let _7 = (Parsing.peek_val __caml_parser_env 0 : string) in
     Obj.repr(
-# 1014 "parser.mly"
+# 1010 "parser.mly"
                   (
                     excs := {
                       JCode.e_start = label2int _3;
@@ -2360,7 +2356,7 @@ let yyact = [|
                       e_catch_type = Some _1
                     } :: !excs
                   )
-# 2364 "parser.ml"
+# 2360 "parser.ml"
                : 'catch_expr))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 6 : 'classname) in
@@ -2368,7 +2364,7 @@ let yyact = [|
     let _5 = (Parsing.peek_val __caml_parser_env 2 : int) in
     let _7 = (Parsing.peek_val __caml_parser_env 0 : int) in
     Obj.repr(
-# 1023 "parser.mly"
+# 1019 "parser.mly"
                   (
                     excs := {
                       JCode.e_start = _3;
@@ -2377,179 +2373,179 @@ let yyact = [|
                       e_catch_type = Some _1
                     } :: !excs
                   )
-# 2381 "parser.ml"
+# 2377 "parser.ml"
                : 'catch_expr))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : string) in
     let _2 = (Parsing.peek_val __caml_parser_env 0 : 'any_item) in
     Obj.repr(
-# 1034 "parser.mly"
+# 1030 "parser.mly"
                                 ( () )
-# 2389 "parser.ml"
+# 2385 "parser.ml"
                : 'set_expr))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : 'defstack) in
     let _2 = (Parsing.peek_val __caml_parser_env 1 : 'stack_map_frame_desc) in
     let _3 = (Parsing.peek_val __caml_parser_env 0 : 'endstack) in
     Obj.repr(
-# 1042 "parser.mly"
+# 1038 "parser.mly"
                   ( () )
-# 2398 "parser.ml"
+# 2394 "parser.ml"
                : 'stackmap))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 2 : 'defstack_same) in
     let _3 = (Parsing.peek_val __caml_parser_env 1 : 'stack_map_frame_desc) in
     let _4 = (Parsing.peek_val __caml_parser_env 0 : 'endstack) in
     Obj.repr(
-# 1044 "parser.mly"
+# 1040 "parser.mly"
                   ( () )
-# 2407 "parser.ml"
+# 2403 "parser.ml"
                : 'stackmap))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : 'defstack_same_expr) in
     Obj.repr(
-# 1048 "parser.mly"
+# 1044 "parser.mly"
                     ( () )
-# 2414 "parser.ml"
+# 2410 "parser.ml"
                : 'defstack_same))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : int) in
     Obj.repr(
-# 1052 "parser.mly"
+# 1048 "parser.mly"
                     ( () )
-# 2421 "parser.ml"
+# 2417 "parser.ml"
                : 'defstack_same_expr))
 ; (fun __caml_parser_env ->
     Obj.repr(
-# 1054 "parser.mly"
+# 1050 "parser.mly"
                     ( () )
-# 2427 "parser.ml"
+# 2423 "parser.ml"
                : 'defstack_same_expr))
 ; (fun __caml_parser_env ->
     Obj.repr(
-# 1057 "parser.mly"
+# 1053 "parser.mly"
                         ( () )
-# 2433 "parser.ml"
+# 2429 "parser.ml"
                : 'defstack))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : 'stack_offset_def) in
     let _2 = (Parsing.peek_val __caml_parser_env 0 : 'stack_items) in
     Obj.repr(
-# 1061 "parser.mly"
+# 1057 "parser.mly"
                     ( () )
-# 2441 "parser.ml"
+# 2437 "parser.ml"
                : 'stack_map_frame_desc))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 1 : int) in
     Obj.repr(
-# 1065 "parser.mly"
+# 1061 "parser.mly"
                     ( () )
-# 2448 "parser.ml"
+# 2444 "parser.ml"
                : 'stack_offset_def))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 1 : string) in
     Obj.repr(
-# 1067 "parser.mly"
+# 1063 "parser.mly"
                     ( () )
-# 2455 "parser.ml"
+# 2451 "parser.ml"
                : 'stack_offset_def))
 ; (fun __caml_parser_env ->
     Obj.repr(
-# 1069 "parser.mly"
+# 1065 "parser.mly"
                     ( () )
-# 2461 "parser.ml"
+# 2457 "parser.ml"
                : 'stack_offset_def))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : 'stack_items) in
     let _2 = (Parsing.peek_val __caml_parser_env 0 : 'stack_item) in
     Obj.repr(
-# 1072 "parser.mly"
+# 1068 "parser.mly"
                                            ( _2::_1 )
-# 2469 "parser.ml"
+# 2465 "parser.ml"
                : 'stack_items))
 ; (fun __caml_parser_env ->
     Obj.repr(
-# 1073 "parser.mly"
+# 1069 "parser.mly"
                                   ( [] )
-# 2475 "parser.ml"
+# 2471 "parser.ml"
                : 'stack_items))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : 'stack_item_expr) in
     Obj.repr(
-# 1076 "parser.mly"
+# 1072 "parser.mly"
                                         ( _1 )
-# 2482 "parser.ml"
+# 2478 "parser.ml"
                : 'stack_item))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : string) in
     Obj.repr(
-# 1080 "parser.mly"
+# 1076 "parser.mly"
                     ( "" )
-# 2489 "parser.ml"
+# 2485 "parser.ml"
                : 'stack_item_expr))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 1 : string) in
     let _3 = (Parsing.peek_val __caml_parser_env 0 : string) in
     Obj.repr(
-# 1082 "parser.mly"
+# 1078 "parser.mly"
                     ( "" )
-# 2497 "parser.ml"
+# 2493 "parser.ml"
                : 'stack_item_expr))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 1 : string) in
     let _3 = (Parsing.peek_val __caml_parser_env 0 : int) in
     Obj.repr(
-# 1084 "parser.mly"
+# 1080 "parser.mly"
                     ( "" )
-# 2505 "parser.ml"
+# 2501 "parser.ml"
                : 'stack_item_expr))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : string) in
     Obj.repr(
-# 1086 "parser.mly"
+# 1082 "parser.mly"
                     ( "" )
-# 2512 "parser.ml"
+# 2508 "parser.ml"
                : 'stack_item_expr))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 1 : string) in
     let _3 = (Parsing.peek_val __caml_parser_env 0 : string) in
     Obj.repr(
-# 1088 "parser.mly"
+# 1084 "parser.mly"
                     ( "" )
-# 2520 "parser.ml"
+# 2516 "parser.ml"
                : 'stack_item_expr))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 1 : string) in
     let _3 = (Parsing.peek_val __caml_parser_env 0 : int) in
     Obj.repr(
-# 1090 "parser.mly"
+# 1086 "parser.mly"
                     ( "" )
-# 2528 "parser.ml"
+# 2524 "parser.ml"
                : 'stack_item_expr))
 ; (fun __caml_parser_env ->
     Obj.repr(
-# 1093 "parser.mly"
+# 1089 "parser.mly"
                                ( () )
-# 2534 "parser.ml"
+# 2530 "parser.ml"
                : 'endstack))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : 'simple_instruction) in
     Obj.repr(
-# 1096 "parser.mly"
+# 1092 "parser.mly"
                                    ( _1 )
-# 2541 "parser.ml"
+# 2537 "parser.ml"
                : 'instruction))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : 'complex_instruction) in
     Obj.repr(
-# 1097 "parser.mly"
+# 1093 "parser.mly"
                                     ( _1 )
-# 2548 "parser.ml"
+# 2544 "parser.ml"
                : 'instruction))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : string * string) in
     Obj.repr(
-# 1102 "parser.mly"
+# 1098 "parser.mly"
                        (
                   match (fst _1) with
                   (* A *)
@@ -2717,14 +2713,14 @@ let yyact = [|
                   | "swap" -> add 1 (JCode.OpSwap)
                   | a -> Printf.printf "Inst(%S, %S)@." a (snd _1); assert false
                 )
-# 2721 "parser.ml"
+# 2717 "parser.ml"
                : 'simple_instruction))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : string * string) in
     let _2 = (Parsing.peek_val __caml_parser_env 1 : int) in
     let _3 = (Parsing.peek_val __caml_parser_env 0 : int) in
     Obj.repr(
-# 1269 "parser.mly"
+# 1265 "parser.mly"
                                (
                   match(fst _1,snd _1, _2,_3)with
                   | "iinc", "ii", i1, i2 -> add 6 (JCode.OpIInc (i1, i2))
@@ -2733,13 +2729,13 @@ let yyact = [|
                     Printf.printf "InstIntInt(%S, %S, %d, %d)@." a b i1 i2;
                     assert false
                 )
-# 2737 "parser.ml"
+# 2733 "parser.ml"
                : 'simple_instruction))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : string * string) in
     let _2 = (Parsing.peek_val __caml_parser_env 0 : int) in
     Obj.repr(
-# 1277 "parser.mly"
+# 1273 "parser.mly"
                            (
                   match(fst _1,snd _1, _2)with
                   (* A *)
@@ -2839,13 +2835,13 @@ let yyact = [|
                     Printf.printf "InstInt(%S, %S, %d)@." a b i1;
                     assert false
                 )
-# 2843 "parser.ml"
+# 2839 "parser.ml"
                : 'simple_instruction))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : string * string) in
     let _2 = (Parsing.peek_val __caml_parser_env 0 : string) in
     Obj.repr(
-# 1376 "parser.mly"
+# 1372 "parser.mly"
                            (
                   match(fst _1,snd _1, _2)with
                   (* I *)
@@ -2855,13 +2851,13 @@ let yyact = [|
                     Printf.printf "InstNum(%S, %S, %S)@." a b s;
                     assert false
                 )
-# 2859 "parser.ml"
+# 2855 "parser.ml"
                : 'simple_instruction))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : string * string) in
     let _2 = (Parsing.peek_val __caml_parser_env 0 : string) in
     Obj.repr(
-# 1385 "parser.mly"
+# 1381 "parser.mly"
                             ( 
                   match(fst _1,snd _1, _2)with
                   (* A *)
@@ -2935,14 +2931,14 @@ let yyact = [|
                     Printf.printf "InstWord(%S, %S, %S)@." a b s;
                     assert false
                 )
-# 2939 "parser.ml"
+# 2935 "parser.ml"
                : 'simple_instruction))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : string * string) in
     let _2 = (Parsing.peek_val __caml_parser_env 1 : string) in
     let _3 = (Parsing.peek_val __caml_parser_env 0 : int) in
     Obj.repr(
-# 1458 "parser.mly"
+# 1454 "parser.mly"
                                 (
                   match(fst _1,snd _1, _2,_3)with
                   (* I *)
@@ -2960,14 +2956,14 @@ let yyact = [|
                     Printf.printf "InstWordInt(%S, %S, %S, %d)@." a b s i;
                     assert false
                 )
-# 2964 "parser.ml"
+# 2960 "parser.ml"
                : 'simple_instruction))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : string * string) in
     let _2 = (Parsing.peek_val __caml_parser_env 1 : string) in
     let _3 = (Parsing.peek_val __caml_parser_env 0 : string) in
     Obj.repr(
-# 1475 "parser.mly"
+# 1471 "parser.mly"
                                  (
                   match(fst _1, _2,_3)with
                   | "getfield", cf, fd ->
@@ -2994,13 +2990,13 @@ let yyact = [|
                     Printf.printf "InstWordWord(%S, %S, %S, %S)@." a b (snd _1) s2;
                     assert false
                 )
-# 2998 "parser.ml"
+# 2994 "parser.ml"
                : 'simple_instruction))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : string * string) in
     let _2 = (Parsing.peek_val __caml_parser_env 0 : string) in
     Obj.repr(
-# 1501 "parser.mly"
+# 1497 "parser.mly"
                            ( 
                   match(fst _1,snd _1, unescape _2)with
                   | "ldc", "constant", s -> add 2 (JCode.OpLdc1(const !ctx(ConstUtf8 s)))
@@ -3008,41 +3004,41 @@ let yyact = [|
                     Printf.printf "InstStr(%S, %S, %S)@." a b s;
                     assert false
                 )
-# 3012 "parser.ml"
+# 3008 "parser.ml"
                : 'simple_instruction))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : string * string) in
     let _2 = (Parsing.peek_val __caml_parser_env 0 : string) in
     Obj.repr(
-# 1508 "parser.mly"
+# 1504 "parser.mly"
                                 (
                   match(fst _1, snd _1,_2)with
                   | a,b,s ->
                     Printf.printf "InstRelative(%S, %S, %S)@." a b s;
                     assert false
                 )
-# 3025 "parser.ml"
+# 3021 "parser.ml"
                : 'simple_instruction))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : 'lookup) in
     Obj.repr(
-# 1519 "parser.mly"
+# 1515 "parser.mly"
                                       ( _2 )
-# 3032 "parser.ml"
+# 3028 "parser.ml"
                : 'complex_instruction))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : 'table) in
     Obj.repr(
-# 1520 "parser.mly"
+# 1516 "parser.mly"
                                     ( _2 )
-# 3039 "parser.ml"
+# 3035 "parser.ml"
                : 'complex_instruction))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : 'lookup_args) in
     let _2 = (Parsing.peek_val __caml_parser_env 1 : 'lookup_list) in
     let _3 = (Parsing.peek_val __caml_parser_env 0 : 'lookup_default) in
     Obj.repr(
-# 1529 "parser.mly"
+# 1525 "parser.mly"
                     (
                       let a =
                         match _3 with
@@ -3058,65 +3054,65 @@ let yyact = [|
                       add n (JCode.OpLookupSwitch (a, ls))
 
                     )
-# 3062 "parser.ml"
+# 3058 "parser.ml"
                : 'lookup))
 ; (fun __caml_parser_env ->
     Obj.repr(
-# 1546 "parser.mly"
+# 1542 "parser.mly"
                           ( () )
-# 3068 "parser.ml"
+# 3064 "parser.ml"
                : 'lookup_args))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : 'lookup_entry) in
     let _2 = (Parsing.peek_val __caml_parser_env 0 : 'lookup_list) in
     Obj.repr(
-# 1549 "parser.mly"
+# 1545 "parser.mly"
                                                ( _1 :: _2 )
-# 3076 "parser.ml"
+# 3072 "parser.ml"
                : 'lookup_list))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : 'lookup_entry) in
     Obj.repr(
-# 1550 "parser.mly"
+# 1546 "parser.mly"
                                    ( [_1] )
-# 3083 "parser.ml"
+# 3079 "parser.ml"
                : 'lookup_list))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 3 : int) in
     let _3 = (Parsing.peek_val __caml_parser_env 1 : string) in
     Obj.repr(
-# 1553 "parser.mly"
+# 1549 "parser.mly"
                                            ( CaseIntWord(_1,_3) )
-# 3091 "parser.ml"
+# 3087 "parser.ml"
                : 'lookup_entry))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 3 : int) in
     let _3 = (Parsing.peek_val __caml_parser_env 1 : int) in
     Obj.repr(
-# 1554 "parser.mly"
+# 1550 "parser.mly"
                                           ( CaseIntInt(_1,_3) )
-# 3099 "parser.ml"
+# 3095 "parser.ml"
                : 'lookup_entry))
 ; (fun __caml_parser_env ->
     let _3 = (Parsing.peek_val __caml_parser_env 0 : string) in
     Obj.repr(
-# 1557 "parser.mly"
+# 1553 "parser.mly"
                                          ( DefaultWord _3 )
-# 3106 "parser.ml"
+# 3102 "parser.ml"
                : 'lookup_default))
 ; (fun __caml_parser_env ->
     let _3 = (Parsing.peek_val __caml_parser_env 0 : int) in
     Obj.repr(
-# 1558 "parser.mly"
+# 1554 "parser.mly"
                                         ( DefaultInt _3 )
-# 3113 "parser.ml"
+# 3109 "parser.ml"
                : 'lookup_default))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : 'table_args) in
     let _2 = (Parsing.peek_val __caml_parser_env 1 : 'table_list) in
     let _3 = (Parsing.peek_val __caml_parser_env 0 : 'table_default) in
     Obj.repr(
-# 1567 "parser.mly"
+# 1563 "parser.mly"
                     (
                       (* T *)
                       let (low,high,defs,def) = (fst _1,snd _1,_2,_3) in
@@ -3131,65 +3127,65 @@ let yyact = [|
                       let high = if high = -1 then Array.length defs - 1 + low else high in
                       add n (JCode.OpTableSwitch ((default2int def), Int32.of_int low, Int32.of_int high, defs))
                     )
-# 3135 "parser.ml"
+# 3131 "parser.ml"
                : 'table))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : int) in
     Obj.repr(
-# 1583 "parser.mly"
+# 1579 "parser.mly"
                               ( (_1,-1) )
-# 3142 "parser.ml"
+# 3138 "parser.ml"
                : 'table_args))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : int) in
     let _2 = (Parsing.peek_val __caml_parser_env 1 : int) in
     Obj.repr(
-# 1584 "parser.mly"
+# 1580 "parser.mly"
                                   ( (_1, _2) )
-# 3150 "parser.ml"
+# 3146 "parser.ml"
                : 'table_args))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : 'table_entry) in
     let _2 = (Parsing.peek_val __caml_parser_env 0 : 'table_list) in
     Obj.repr(
-# 1587 "parser.mly"
+# 1583 "parser.mly"
                                              ( _1::_2 )
-# 3158 "parser.ml"
+# 3154 "parser.ml"
                : 'table_list))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 0 : 'table_entry) in
     Obj.repr(
-# 1588 "parser.mly"
+# 1584 "parser.mly"
                                   ( [_1] )
-# 3165 "parser.ml"
+# 3161 "parser.ml"
                : 'table_list))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : string) in
     Obj.repr(
-# 1591 "parser.mly"
+# 1587 "parser.mly"
                                  ( DefaultWord(_1) )
-# 3172 "parser.ml"
+# 3168 "parser.ml"
                : 'table_entry))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 1 : int) in
     Obj.repr(
-# 1592 "parser.mly"
+# 1588 "parser.mly"
                                 ( DefaultInt(_1) )
-# 3179 "parser.ml"
+# 3175 "parser.ml"
                : 'table_entry))
 ; (fun __caml_parser_env ->
     let _3 = (Parsing.peek_val __caml_parser_env 0 : string) in
     Obj.repr(
-# 1595 "parser.mly"
+# 1591 "parser.mly"
                                          ( DefaultWord(_3) )
-# 3186 "parser.ml"
+# 3182 "parser.ml"
                : 'table_default))
 ; (fun __caml_parser_env ->
     let _3 = (Parsing.peek_val __caml_parser_env 0 : int) in
     Obj.repr(
-# 1596 "parser.mly"
+# 1592 "parser.mly"
                                         ( DefaultInt(_3) )
-# 3193 "parser.ml"
+# 3189 "parser.ml"
                : 'table_default))
 (* Entry jas_file *)
 ; (fun __caml_parser_env -> raise (Parsing.YYexit (Parsing.peek_val __caml_parser_env 0)))

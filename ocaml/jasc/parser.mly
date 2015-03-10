@@ -221,7 +221,7 @@ jasmin_header :
         debug "class@.";
         (fun inners fields methods ->
           debug "gen@.";
-
+          ignore (const !ctx (ConstClass name));
           {
             cversion = $1;
             constants = ctx_to_array !ctx;
@@ -821,20 +821,16 @@ methods :
             cm_implementation = Java (lazy jmethod)
           } in (ms,m)
           *)
-          { JData.jf_name = name; jf_kind = JData.JKMethod;
-                jf_vmsignature = (JData.TMethod
-                                    ([JData.TArray (
-                                        JData.TObject (
-                                          (["java"; "lang"], "String"), [
-                                          ]), None)], None));
-                jf_signature = (JData.TMethod
-                                  ([JData.TArray (
-                                      JData.TObject (
-                                        (["java"; "lang"], "String"), [
-                                        ]), None)], None)); jf_throws = [
-                ]; jf_types = []; jf_flags = [JData.JStatic; JData.JPublic];
-                jf_attributes = [JData.AttrUnknown ("Code", code)];
-                jf_constant = None; jf_code = None
+          { JData.jf_name = name;
+            jf_kind = JData.JKMethod;
+            jf_vmsignature = (JData.TMethod ([], None));
+            jf_signature = (JData.TMethod ([], None));
+            jf_throws = [];
+            jf_types = [];
+            jf_flags = access;
+            jf_attributes = [JData.AttrUnknown ("Code", code)];
+            jf_constant = None;
+            jf_code = None
           }
         }
       | defmethod endmethod
