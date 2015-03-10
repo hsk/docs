@@ -13,12 +13,12 @@ let file f =
   let fp = open_in_bin "a_org.txt" in
   let a = JReader.parse_class (IO.input_channel fp) in
   close_in fp;
-  Format.printf "***** original data@. %a@." JData.pp_jclass a;
+  Format.printf "***** original data@. %a@." JPPData.pp_jclass a;
 
   List.iter (fun m ->
     let codestr = JCode.get_code m in
     let code = JCodeReader.parse_code (a.constants) codestr in
-    Format.printf "%a@." JCode.pp_jcode code;
+    Format.printf "%a@." JPPCode.pp_jcode code;
   ) a.cmethods;
 
   Format.printf "***@.";
@@ -28,7 +28,7 @@ let file f =
     Parser.sourcefile := Some f;
     let a = lexbuf (Lexing.from_channel inchan) in
     close_in inchan;
-    Format.printf "***** compiled data@. %a@." JData.pp_jclass a;
+    Format.printf "***** compiled data@. %a@." JPPData.pp_jclass a;
 
     let fp = open_out_bin (j2class f) in
     JWriter.encode_class (IO.output_channel fp) a;
@@ -37,7 +37,7 @@ let file f =
     List.iter (fun m ->
       let codestr = JCode.get_code m in
       let code = JCodeReader.parse_code (a.constants) codestr in
-      Format.printf "%a@." JCode.pp_jcode code;
+      Format.printf "%a@." JPPCode.pp_jcode code;
     ) a.cmethods;
 
     (*Javalib.unparse_class k (open_out (j2class f));*)

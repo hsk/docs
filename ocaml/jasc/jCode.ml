@@ -5,14 +5,12 @@ type other_num = [
   | `Float
   | `Double
 ]
-[@@deriving show]
 
 (* JVM basic type (int = short = char = byte = bool). *)
 type jvm_basic_type = [
   | `Int2Bool
   | other_num
 ]
-[@@deriving show]
 
 type java_basic_type = [
   | `Int
@@ -22,7 +20,6 @@ type java_basic_type = [
   | `Bool
   | other_num
 ]
-[@@deriving show]
 
 type jopcode =
   | OpNop
@@ -112,10 +109,8 @@ type jopcode =
       (* if [opcodes.(i) = OpInvalid] it means that there is an opcode
          that starts at position j, with j<i, an covers positions up
          to k, with k>=i. *)
-[@@deriving show]
 
 type jopcodes = jopcode array
-[@@deriving show]
 
 type exc_tbl = {
   e_start : int;
@@ -123,7 +118,6 @@ type exc_tbl = {
   e_handler : int;
   e_catch_type : JData.jpath option; 
 }
-[@@deriving show]
 
 type jcode = {
   max_stack : int;
@@ -132,7 +126,6 @@ type jcode = {
   exc_tbl : exc_tbl list;
   attributes : JData.jattributes;
 }
-[@@deriving show]
 
 exception Class_structure_error of string
 let error_class fmt = Printf.ksprintf (fun s -> raise (Class_structure_error s)) fmt

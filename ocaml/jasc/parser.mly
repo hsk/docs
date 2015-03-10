@@ -83,6 +83,7 @@
 
   let init_method () =
     back_ch := !ctx.ch;
+    !ctx.ch <- IO.output_string();
     limit_stack := 255;
     limit_locals := 255;
     pos := 0;
@@ -823,8 +824,8 @@ methods :
           *)
           { JData.jf_name = name;
             jf_kind = JData.JKMethod;
-            jf_vmsignature = (JData.TMethod ([], None));
-            jf_signature = (JData.TMethod ([], None));
+            jf_vmsignature = md;
+            jf_signature = md;
             jf_throws = [];
             jf_types = [];
             jf_flags = access;
@@ -893,6 +894,7 @@ methods :
           {
             init_method();
             let (name, md) = split_method $3 in
+            let md = JData.TMethod(JReader.parse_method_signature md) in
             (*
             let (vts, ovt) = JParseSignature.parse_method_descriptor md in
             let ms = JBasics.make_ms name vts ovt

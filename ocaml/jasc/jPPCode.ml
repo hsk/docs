@@ -1,17 +1,17 @@
-type other_num = [ `Long | `Float | `Double]
+open JCode
+
 let rec pp_other_num fmt =
   function
   | `Long -> Format.pp_print_string fmt "`Long"
   | `Float -> Format.pp_print_string fmt "`Float"
   | `Double -> Format.pp_print_string fmt "`Double"
 and show_other_num x = Format.asprintf "%a" pp_other_num x
-type jvm_basic_type = [ `Int2Bool | other_num]
+
 let rec pp_jvm_basic_type fmt =
   function
   | `Int2Bool -> Format.pp_print_string fmt "`Int2Bool"
   | #other_num as x -> (pp_other_num fmt) x
 and show_jvm_basic_type x = Format.asprintf "%a" pp_jvm_basic_type x
-type java_basic_type = [ `Int | `Short | `Char | `Byte | `Bool | other_num]
 
 let rec pp_java_basic_type fmt =
   function
@@ -22,126 +22,7 @@ let rec pp_java_basic_type fmt =
   | `Bool -> Format.pp_print_string fmt "`Bool"
   | #other_num as x -> (pp_other_num fmt) x
 and show_java_basic_type x = Format.asprintf "%a" pp_java_basic_type x
-type jopcode =
-  | OpNop
-  | OpAConstNull
-  | OpIConst of int32
-  | OpLConst of int64
-  | OpFConst of float
-  | OpDConst of float
-  | OpBIPush of int
-  | OpSIPush of int
-  | OpLdc1 of int
-  | OpLdc1w of int
-  | OpLdc2w of int
-  | OpLoad of jvm_basic_type* int
-  | OpALoad of int
-  | OpArrayLoad of [ `Int | other_num]
-  | OpAALoad
-  | OpBALoad
-  | OpCALoad
-  | OpSALoad
-  | OpStore of jvm_basic_type* int
-  | OpAStore of int
-  | OpArrayStore of [ `Int | other_num]
-  | OpAAStore
-  | OpBAStore
-  | OpCAStore
-  | OpSAStore
-  | OpPop
-  | OpPop2
-  | OpDup
-  | OpDupX1
-  | OpDupX2
-  | OpDup2
-  | OpDup2X1
-  | OpDup2X2
-  | OpSwap
-  | OpAdd of jvm_basic_type
-  | OpSub of jvm_basic_type
-  | OpMult of jvm_basic_type
-  | OpDiv of jvm_basic_type
-  | OpRem of jvm_basic_type
-  | OpNeg of jvm_basic_type
-  | OpIShl
-  | OpLShl
-  | OpIShr
-  | OpLShr
-  | OpIUShr
-  | OpLUShr
-  | OpIAnd
-  | OpLAnd
-  | OpIOr
-  | OpLOr
-  | OpIXor
-  | OpLXor
-  | OpIInc of int* int
-  | OpI2L
-  | OpI2F
-  | OpI2D
-  | OpL2I
-  | OpL2F
-  | OpL2D
-  | OpF2I
-  | OpF2L
-  | OpF2D
-  | OpD2I
-  | OpD2L
-  | OpD2F
-  | OpI2B
-  | OpI2C
-  | OpI2S
-  | OpLCmp
-  | OpFCmpL
-  | OpFCmpG
-  | OpDCmpL
-  | OpDCmpG
-  | OpIfEq of int
-  | OpIfNe of int
-  | OpIfLt of int
-  | OpIfGe of int
-  | OpIfGt of int
-  | OpIfLe of int
-  | OpICmpEq of int
-  | OpICmpNe of int
-  | OpICmpLt of int
-  | OpICmpGe of int
-  | OpICmpGt of int
-  | OpICmpLe of int
-  | OpACmpEq of int
-  | OpACmpNe of int
-  | OpGoto of int
-  | OpJsr of int
-  | OpRet of int
-  | OpTableSwitch of int* int32* int32* int array
-  | OpLookupSwitch of int* (int32* int) list
-  | OpReturn of jvm_basic_type
-  | OpAReturn
-  | OpReturnVoid
-  | OpGetStatic of int
-  | OpPutStatic of int
-  | OpGetField of int
-  | OpPutField of int
-  | OpInvokeVirtual of int
-  | OpInvokeNonVirtual of int
-  | OpInvokeStatic of int
-  | OpInvokeInterface of int* int
-  | OpNew of int
-  | OpNewArray of java_basic_type
-  | OpANewArray of int
-  | OpArrayLength
-  | OpThrow
-  | OpCheckCast of int
-  | OpInstanceOf of int
-  | OpMonitorEnter
-  | OpMonitorExit
-  | OpAMultiNewArray of int* int
-  | OpIfNull of int
-  | OpIfNonNull of int
-  | OpGotoW of int
-  | OpJsrW of int
-  | OpBreakpoint
-  | OpInvalid
+
 let rec pp_jopcode fmt =
   function
   | OpNop  -> Format.pp_print_string fmt "JCode.OpNop"
@@ -489,7 +370,7 @@ let rec pp_jopcode fmt =
   | OpBreakpoint  -> Format.pp_print_string fmt "JCode.OpBreakpoint"
   | OpInvalid  -> Format.pp_print_string fmt "JCode.OpInvalid"
 and show_jopcode x = Format.asprintf "%a" pp_jopcode x
-type jopcodes = jopcode array
+
 let rec pp_jopcodes fmt x =
   Format.fprintf fmt "[|@[<hov>";
   ignore
@@ -500,12 +381,7 @@ let rec pp_jopcodes fmt x =
        false x);
   Format.fprintf fmt "@]|]"
 and show_jopcodes x = Format.asprintf "%a" pp_jopcodes x
-type exc_tbl =
-  {
-  e_start: int;
-  e_end: int;
-  e_handler: int;
-  e_catch_type: JData.jpath option;}
+
 let rec pp_exc_tbl fmt x =
   Format.fprintf fmt "{ @[<hov>";
   ((((Format.pp_print_string fmt "JCode.e_start = ";
@@ -522,17 +398,11 @@ let rec pp_exc_tbl fmt x =
      | None  -> Format.pp_print_string fmt "None"
      | Some x ->
          (Format.pp_print_string fmt "(Some ";
-          (JData.pp_jpath fmt) x;
+          (JPPData.pp_jpath fmt) x;
           Format.pp_print_string fmt ")"))) x.e_catch_type);
   Format.fprintf fmt "@] }"
 and show_exc_tbl x = Format.asprintf "%a" pp_exc_tbl x
-type jcode =
-  {
-  max_stack: int;
-  max_locals: int;
-  code: jopcodes;
-  exc_tbl: exc_tbl list;
-  attributes: JData.jattributes;}
+
 let rec pp_jcode fmt x =
   Format.fprintf fmt "{ @[<hov>";
   (((((Format.pp_print_string fmt "JCode.max_stack = ";
@@ -557,16 +427,7 @@ let rec pp_jcode fmt x =
         Format.fprintf fmt "@]]")) x.exc_tbl);
    Format.fprintf fmt ";@ ";
    Format.pp_print_string fmt "attributes = ";
-   (JData.pp_jattributes fmt) x.attributes);
+   (JPPData.pp_jattributes fmt) x.attributes);
   Format.fprintf fmt "@] }"
 and show_jcode x = Format.asprintf "%a" pp_jcode x
-exception Class_structure_error of string
-let error_class fmt =
-  Printf.ksprintf (fun s  -> raise (Class_structure_error s)) fmt
-let get_code field =
-  let rec loop =
-    function
-    | [] -> raise Not_found
-    | (JData.AttrUnknown ("Code",s))::xs -> s
-    | _::xs -> loop xs in
-  loop field.JData.jf_attributes
+

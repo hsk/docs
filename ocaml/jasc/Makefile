@@ -1,21 +1,15 @@
 EXE=jasc
 OCAMLOPT=ocamlfind ocamlopt -I ext
 OCAMLC=ocamlfind ocamlc -I ext
-SRC=jData.ml jReader.ml jWriter.ml jCode.ml jCodeReader.ml  jCodeWriter.ml
+SRC=jData.ml jPPData.ml jReader.ml jWriter.ml jCode.ml jPPCode.ml jCodeReader.ml  jCodeWriter.ml
 EXT= ext/enum.mli ext/enum.ml ext/extString.mli ext/extString.ml ext/IO.mli ext/IO.ml ext/extList.mli ext/extList.ml ext/pMap.mli ext/pMap.ml
 ifeq ($(OS),Windows_NT)
 	EXE=jasc.exe
-else
-	OCAMLOPT += -package ppx_deriving.show
 endif
 
 all: run2
 
 $(EXE): parser.mly lexer.mll jasc.ml
-ifeq ($(OS),Windows_NT)
-	cp win/jCode.ml .
-	cp win/jData.ml .
-endif
 
 run2:
 	ocamlyacc parser.mly
@@ -46,17 +40,9 @@ install:
 	unzip jasper.zip
 
 push: clean
-ifeq ($(OS),Windows_NT)
-	git checkout jCode.ml jData.ml
-else
-	cd win; make
-endif
 	git commit -a
 	git push
 pull:
-ifeq ($(OS),Windows_NT)
-	git checkout jCode.ml jData.ml
-endif
 	git pull
 
 clean:

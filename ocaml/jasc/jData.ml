@@ -24,20 +24,16 @@ let debug0 fmt =
       fmt
 
 type jpath = (string list) * string
-[@@deriving show]
 
 type jversion = int * int (* minor + major *)
-[@@deriving show]
 
 (** unqualified names cannot have the characters '.', ';', '[' or '/' *)
 type unqualified_name = string
-[@@deriving show]
 
 type jwildcard =
   | WExtends (* + *)
   | WSuper (* -  *)
   | WNone
-[@@deriving show]
 
 type jtype_argument =
   | TType of jwildcard * jsignature
@@ -60,10 +56,8 @@ and jsignature =
 
 (* ( jsignature list ) ReturnDescriptor (| V | jsignature) *)
 and jmethod_signature = jsignature list * jsignature option
-[@@deriving show]
 
 type jsignatures = jsignature list
-[@@deriving show]
 
 
 (* InvokeDynamic-specific: Method handle *)
@@ -77,11 +71,9 @@ type reference_type =
   | RInvokeSpecial (* constant must be Method *)
   | RNewInvokeSpecial (* constant must be Method with name <init> *)
   | RInvokeInterface (* constant must be InterfaceMethod *)
-[@@deriving show]
 
 (* TODO *)
 type bootstrap_method = int
-[@@deriving show]
 
 type jconstant =
   (** references a class or an interface - jpath must be encoded as StringUtf8 *)
@@ -108,7 +100,6 @@ type jconstant =
   | ConstMethodType of jmethod_signature (* tag = 16 *)
   | ConstInvokeDynamic of (bootstrap_method * unqualified_name * jsignature) (* tag = 18 *)
   | ConstUnusable
-[@@deriving show]
 
 type jcode = unit (* TODO *)
 let pp_jcode fmt code = Format.fprintf fmt "()"
@@ -137,14 +128,11 @@ type jaccess_flag =
   | JVarArgs (* 0x0080 *)
   | JNative (* 0x0100 *)
   | JStrict (* 0x0800 *)
-[@@deriving show]
 
 type jaccess = jaccess_flag list
-[@@deriving show]
 
 (* type parameter name, extends signature, implements signatures *)
 type jtypes = (string * jsignature option * jsignature list) list
-[@@deriving show]
 
 type jannotation = {
   ann_type : jsignature;
@@ -157,22 +145,18 @@ and jannotation_value =
   | ValClass of jsignature (* c *) (* V -> Void *)
   | ValAnnotation of jannotation (* @ *)
   | ValArray of jannotation_value list (* [ *)
-[@@deriving show]
 
 type jattribute =
   | AttrDeprecated
   | AttrVisibleAnnotations of jannotation list
   | AttrInvisibleAnnotations of jannotation list
   | AttrUnknown of string * string
-[@@deriving show]
 
 type jattributes = jattribute list
-[@@deriving show]
 
 type jfield_kind =
   | JKField
   | JKMethod
-[@@deriving show]
 
 type jfield = {
   jf_name : string;
@@ -188,22 +172,15 @@ type jfield = {
   jf_constant : jconstant option;
   jf_code : jcode option;
 }
-[@@deriving show]
 
 type jfields = jfield list
-[@@deriving show]
 
 (* reading/writing *)
 type utf8ref = int
-[@@deriving show]
 type classref = int
-[@@deriving show]
 type nametyperef = int
-[@@deriving show]
 type dynref = int
-[@@deriving show]
 type bootstrapref = int
-[@@deriving show]
 
 type jconstant_raw =
   | KClass of utf8ref (* 7 *)
@@ -221,7 +198,6 @@ type jconstant_raw =
   | KMethodType of utf8ref (* 16 *)
   | KInvokeDynamic of (bootstrapref * nametyperef) (* 18 *)
   | KUnusable
-[@@deriving show]
 
 type jclass = {
   cversion : jversion;
@@ -236,7 +212,6 @@ type jclass = {
   cinner_types : (jpath * jpath option * string option * jaccess) list;
   ctypes : jtypes;
 }
-[@@deriving show]
 
 (* jData debugging *)
 let is_override_attrib = function
