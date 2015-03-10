@@ -227,7 +227,7 @@ let encode_instruction ch count length op =
         write_byte ch (59 + (encode_jvm_basic_type jbt) * 4 + i)
       else
         li (54 + encode_jvm_basic_type jbt) i
-    | OpALoad  i -> if length = 1 && i <= 3 then write_byte ch (42 + i) else li 25 i
+    | OpALoad  i -> debug "OpALoad %d len %d@." i length; if length = 1 && i <= 3 then write_byte ch (42 + i) else li 25 i
     | OpAStore i -> if length = 1 && i <= 3 then write_byte ch (75 + i) else li 58 i
         
 let encode_codes ch code =

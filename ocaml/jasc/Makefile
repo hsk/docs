@@ -8,18 +8,25 @@ ifeq ($(OS),Windows_NT)
 else
 	OCAMLOPT += -package ppx_deriving.show
 endif
-all: $(EXE)
+
+all: run2 clean
 
 $(EXE): parser.mly lexer.mll jasc.ml
 ifeq ($(OS),Windows_NT)
 	cp win/jCode.ml .
 	cp win/jData.ml .
 endif
+
+run2:
 	ocamlyacc parser.mly
 	rm parser.mli
 	ocamllex lexer.mll
 	$(OCAMLOPT) $(EXT) $(SRC) parser.ml lexer.ml jasc.ml -o $(EXE)
-
+	javac a.java
+	jasmd a > a.j
+	cp a.class a_org.txt
+	./$(EXE) a.j
+	cp a.class a_dst.txt
 
 run:
 	$(OCAMLOPT) $(EXT) $(SRC) main.ml -o main
@@ -54,10 +61,8 @@ endif
 
 clean:
 	rm -rf main *.cm* ext/*.cm* ext/*.o $(wildcard *.cmx) $(wildcard *.obj) $(wildcard *.o) $(wildcard *.cmi) $(wildcard *.cmo) *.class
-ifeq ($(OS),Windows_NT)
-else
+distclean: clean
 	rm -rf $(EXE)
-endif
 
 Makefile: ;
 $(SRC): ;

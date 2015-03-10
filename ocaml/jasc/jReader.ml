@@ -21,6 +21,9 @@ open IO.BigEndian;;
 open ExtString;;
 open ExtList;;
 
+let debug = debug0
+
+
 exception Error_message of string
 
 let error fmt = Printf.ksprintf (fun s -> raise (Error_message s)) fmt

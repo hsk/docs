@@ -7,18 +7,26 @@ let j2class src =
     failwith ("filename is bad. " ^ src)
 
 let lexbuf l =
-	print_endline @@ "lexbuf";
 	Parser.jas_file Lexer.token l
 
 let file f =
+  let fp = open_in_bin "a_org.txt" in
+  let a = JReader.parse_class (IO.input_channel fp) in
+  close_in fp;
+  Format.printf "***** original data@. %a@." JData.pp_jclass a;
   let inchan = open_in f in
   begin try
     Parser.sourcefile := Some f;
-    let k = lexbuf (Lexing.from_channel inchan) in
+    let a = lexbuf (Lexing.from_channel inchan) in
+    close_in inchan;
+    Format.printf "***** compiled data@. %a@." JData.pp_jclass a;
+
+    let fp = open_out_bin (j2class f) in
+    JWriter.encode_class (IO.output_channel fp) a;
+    close_out fp;
 
     (*Javalib.unparse_class k (open_out (j2class f));*)
     (*JPrint.print_jasmin k stdout;*)
-    close_in inchan
   with e ->
     close_in inchan;
     raise e

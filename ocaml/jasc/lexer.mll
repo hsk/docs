@@ -53,7 +53,7 @@
         "synthetic", SYNTHETIC;
  ]
   let dbg a = (print_endline a)
-  (*let dbg a = ()*)
+  let dbg a = ()
 }
 (*******************************************************************
  * Helpers                                                         *

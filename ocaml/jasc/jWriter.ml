@@ -22,15 +22,23 @@ open IO.BigEndian;;
 open ExtString;;
 open ExtList;;
 
+let debug = debug0
+
 exception Writer_error_message of string
 
 type context = {
   cpool : string output;
   mutable ccount : int;
-  ch : string output;
+  mutable ch : string output;
   mutable constants : (jconstant, int) PMap.t;
 }
 
+let ctx_toArray ctx =
+  let arr = Array.create ctx.ccount ConstUnusable in
+  PMap.iter (fun v i ->
+    arr.(i) <- v
+  ) ctx.constants;
+  arr
 let encode_utf8 s = s
 
 let get_reference_type i =
@@ -133,7 +141,7 @@ let rec const ctx c =
     PMap.find c ctx.constants
   with
   | Not_found ->
-    Format.printf "%a\n" pp_jconstant c;
+    debug "%a@." pp_jconstant c;
     begin match c with
       (** references a class or an interface - jpath must be encoded as StringUtf8 *)
       | ConstClass path -> (* tag = 7 *)
@@ -500,7 +508,7 @@ let rec encode_attribute_to_strings ctx =
 
 and encode_attribute ctx attr =
   let (name, content) = encode_attribute_to_strings ctx attr in
-  Format.printf "encode_attribute (%S, %S)\n" name content;
+  debug "encode_attribute (%S, %S)@." name content;
   write_utf8 ctx name;
   write_string_with_length write_i32 ctx content
 

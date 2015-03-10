@@ -16,6 +16,12 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *)
+let debug fmt = Format.printf fmt
+let debug0 fmt =
+    Format.kfprintf
+      (fun ppf -> ())
+      (Format.formatter_of_buffer (Buffer.create 16))
+      fmt
 
 type jpath = (string list) * string
 [@@deriving show]
@@ -231,8 +237,6 @@ type jclass = {
   ctypes : jtypes;
 }
 [@@deriving show]
-
-let debug fmt = Format.printf fmt
 
 (* jData debugging *)
 let is_override_attrib = function

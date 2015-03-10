@@ -4,6 +4,8 @@
   open JCode
   open JCodeWriter
 
+(*let debug = debug0*)
+
   type switchcase = 
     | CaseIntWord of int * string
     | CaseIntInt of int * int
@@ -61,8 +63,9 @@
     let pos = String.rindex name '/' in
     (String.sub name 0 pos, String.sub name (pos+1) ((String.length name) - (pos+1)))
 
-  let ctx = ref (new_ctx(IO.output_string()) ([||],[||]))
-  let kconst = ref [||]
+  let back_ch = ref (IO.output_string())
+  let ctx = ref (new_ctx !back_ch ([||],[||]))
+
   let sourcefile = ref None
   let cn = ref ([],"_")
   let limit_stack = ref 0
@@ -75,6 +78,7 @@
   let pos2label = Hashtbl.create 16
 
   let init_method () =
+    back_ch := !ctx.ch;
     limit_stack := 255;
     limit_locals := 255;
     pos := 0;
@@ -186,7 +190,7 @@
 
 jas_file :
   | sep jasmin_header inners fields methods
-    {debug "jasfile\n"; $2 $3 $4 $5 }
+    {debug "jasfile@."; $2 $3 $4 $5 }
 
 sep :
   | SEP { () }
@@ -210,13 +214,13 @@ jasmin_header :
 
       match class_or_interface with
       | "class" ->
-        debug "class\n";
+        debug "class@.";
         (fun inners fields methods ->
-                  debug "gen\n";
+          debug "gen@.";
 
           {
             cversion = $1;
-            constants = (!kconst, [||]);
+            constants = ([||], (ctx_toArray !ctx));
             cpath = name;
             csuper = $4;
             cflags = access;
@@ -228,7 +232,7 @@ jasmin_header :
             ctypes = $6;
           }
         )
-      | k -> debug "error %s\n" k; assert false
+      | k -> debug "error %s@." k; assert false
       (*
       | "interface" ->
         (fun inners fields methods ->
@@ -325,7 +329,7 @@ deprecated_expr :
 bytecode_spec :
   | DBYTECODE Num SEP
     {
-              debug "bytecode\n";
+      debug "bytecode@.";
 
       let (major, minor) =
         begin try
@@ -703,7 +707,7 @@ any_item :
 
 /* ---- Inner classes */
 inners :
-  | inner_list { debug "inners\n"; [] (*List.rev $1*) }
+  | inner_list { debug "inners@."; [] (*List.rev $1*) }
   | /* empty */ { [] }
 
   inner_list :
@@ -764,7 +768,7 @@ inners :
 
 /* ---- Methods */
 methods :
-  | method_list { $1 }
+  | method_list { List.rev $1 }
   | /* empty */ { [] }
 
   method_list :
@@ -774,7 +778,7 @@ methods :
     method_spec :
       | defmethod statements endmethod
         {
-          let(access,ms) = $1 in
+          let(access,(name,md)) = $1 in
           let code,lines,excs,throws = mkcode (List.rev $2) in
           let jmethod = {
             JCode.max_stack = !limit_stack;
@@ -789,6 +793,10 @@ methods :
             attributes = []; (* TODO *)
           }
           in
+          JCodeWriter.encode_code !ctx jmethod;
+          let code = IO.close_out !ctx.ch in
+          !ctx.ch <- !back_ch;
+          Format.printf "name = %S code = %S@."  name code;
           (*
           let m = ConcreteMethod {
             cm_signature = ms;
@@ -809,7 +817,7 @@ methods :
             cm_implementation = Java (lazy jmethod)
           } in (ms,m)
           *)
-          { JData.jf_name = "main"; jf_kind = JData.JKMethod;
+          { JData.jf_name = name; jf_kind = JData.JKMethod;
                 jf_vmsignature = (JData.TMethod
                                     ([JData.TArray (
                                         JData.TObject (
@@ -821,8 +829,7 @@ methods :
                                         (["java"; "lang"], "String"), [
                                         ]), None)], None)); jf_throws = [
                 ]; jf_types = []; jf_flags = [JData.JStatic; JData.JPublic];
-                jf_attributes = [JData.AttrUnknown ("Code",
-                                   "\000\002\000\001\000\000\000\017?\000\002\018\003?\000\004?\000\005Y?\000\006W?\000\000\000\001\000\016\000\000\000\014\000\003\000\000\000\004\000\b\000\005\000\016\000\006")];
+                jf_attributes = [JData.AttrUnknown ("Code", code)];
                 jf_constant = None; jf_code = None
           }
         }
@@ -884,14 +891,14 @@ methods :
       defmethod :
         | DMETHOD access Word SEP
           {
-            (*
             init_method();
             let (name, md) = split_method $3 in
+            (*
             let (vts, ovt) = JParseSignature.parse_method_descriptor md in
             let ms = JBasics.make_ms name vts ovt
             in ($2, ms)
             *)
-"",""
+            ($2,(name,md))
           }
 
       endmethod :
@@ -1253,14 +1260,14 @@ methods :
                   | "saload" -> add 1 (JCode.OpSALoad)
                   | "sastore" -> add 1 (JCode.OpSAStore)
                   | "swap" -> add 1 (JCode.OpSwap)
-                  | a -> Printf.printf "Inst(%S, %S)\n" a (snd $1); assert false
+                  | a -> Printf.printf "Inst(%S, %S)@." a (snd $1); assert false
                 }
                 | Insn Int Int {
                   match(fst $1,snd $1, $2,$3)with
                   | "iinc", "ii", i1, i2 -> add 6 (JCode.OpIInc (i1, i2))
                   | "iinc", "Ii", i1, i2 -> add 6 (JCode.OpIInc (i1, i2))
                   | a,b,i1,i2 ->
-                    Printf.printf "InstIntInt(%S, %S, %d, %d)\n" a b i1 i2;
+                    Printf.printf "InstIntInt(%S, %S, %d, %d)@." a b i1 i2;
                     assert false
                 }
                 | Insn Int {
@@ -1359,7 +1366,7 @@ methods :
                   (* S *)
                   | "sipush", "i", n -> add 3 (JCode.OpSIPush n)
                   | a,b,i1 ->
-                    Printf.printf "InstInt(%S, %S, %d)\n" a b i1;
+                    Printf.printf "InstInt(%S, %S, %d)@." a b i1;
                     assert false
                 }
                 | Insn Num {
@@ -1368,7 +1375,7 @@ methods :
                   | "ldc", "constant", s -> add 2 (JCode.OpFConst( (float_of_string s)))
                   | "ldc2_w", "bigconstant", d -> add 3 (JCode.OpDConst( (float_of_string d)))
                   | a,b,s ->
-                    Printf.printf "InstNum(%S, %S, %S)\n" a b s;
+                    Printf.printf "InstNum(%S, %S, %S)@." a b s;
                     assert false
                 }
                 | Insn Word { 
@@ -1399,17 +1406,17 @@ methods :
                   | "ifne", "label", l -> add 3 (JCode.OpIfNe (label2int l))
                   | "instanceof", "class", o -> add 3 (JCode.OpInstanceOf (const !ctx (ConstClass (JReader.expand_path o))))
                   | "invokenonvirtual", "method", m ->
-                    debug "invoke method\n";
+                    debug "invoke method@.";
                     let (obj,f) = split_method m in
-                    debug "koko1 %s\n" obj;
+                    debug "koko1 %s@." obj;
                     let (name,o) = split_obj obj in
-                    debug "koko2\n";
+                    debug "koko2@.";
                     let jpath = JReader.expand_path name in
-                    debug "koko3\n";
+                    debug "koko3@.";
                     let f = JReader.parse_method_signature f in
-                    debug "koko4\n";
+                    debug "koko4@.";
                     let i = const !ctx (ConstMethod (jpath, o, f)) in
-                    debug "invoke method %d\n" i;
+                    debug "invoke method %d@." i;
                     add 3 (JCode.OpInvokeNonVirtual i)
                   | "invokestatic", "method", m ->
                     let (obj,f) = split_method m in
@@ -1441,7 +1448,7 @@ methods :
                     let a = java_basic_type_of_string t in
                     add 2 (JCode.OpNewArray a)
                   | a,b,s ->
-                    Printf.printf "InstWord(%S, %S, %S)\n" a b s;
+                    Printf.printf "InstWord(%S, %S, %S)@." a b s;
                     assert false
                 }
                 | Insn Word Int {
@@ -1458,7 +1465,7 @@ methods :
                   | "multianewarray", "marray", t, i ->
                     add 4 (JCode.OpAMultiNewArray (const !ctx (ConstClass (JReader.expand_path t)), i))
                   | a,b,s,i ->
-                    Printf.printf "InstWordInt(%S, %S, %S, %d)\n" a b s i;
+                    Printf.printf "InstWordInt(%S, %S, %S, %d)@." a b s i;
                     assert false
                 }
                 | Insn Word Word {
@@ -1484,20 +1491,20 @@ methods :
                     let fd = JReader.parse_signature fd in
                     add 3 (JCode.OpPutStatic (const !ctx (ConstField(jpath,f,fd))))
                   | a, b, s2 ->
-                    Printf.printf "InstWordWord(%S, %S, %S, %S)\n" a b (snd $1) s2;
+                    Printf.printf "InstWordWord(%S, %S, %S, %S)@." a b (snd $1) s2;
                     assert false
                 }
                 | Insn Str { 
                   match(fst $1,snd $1, unescape $2)with
                   | "ldc", "constant", s -> add 2 (JCode.OpLdc1(const !ctx(ConstUtf8 s)))
                   | a,b,s ->
-                    Printf.printf "InstStr(%S, %S, %S)\n" a b s;
+                    Printf.printf "InstStr(%S, %S, %S)@." a b s;
                     assert false
                 }
                 | Insn Relative {
                   match(fst $1, snd $1,$2)with
                   | a,b,s ->
-                    Printf.printf "InstRelative(%S, %S, %S)\n" a b s;
+                    Printf.printf "InstRelative(%S, %S, %S)@." a b s;
                     assert false
                 }
 
