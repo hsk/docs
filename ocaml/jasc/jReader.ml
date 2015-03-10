@@ -22,7 +22,7 @@ open IO.BigEndian;;
 open ExtString;;
 open ExtList;;
 
-let debug = debug0
+(*let debug = debug0*)
 
 
 exception Error_message of string
@@ -57,6 +57,7 @@ let parse_constant max idx ch =
       (n1,n2)
   in
   begin match cid with
+    | 0  -> KUnusable
     | 1  -> let len = read_ui16 ch in
             (* TODO: correctly decode modified UTF8 *)
             KUtf8String (IO.nread ch len)
@@ -548,7 +549,9 @@ let parse_class ch =
   	  | _ -> error "Invalid super index"
   in
   debug "super= %a@." pp_jsignature super;
-  let interfaces = List.init (read_ui16 ch) (fun _ -> TObject (get_class consts ch, [])) in
+  let len = (read_ui16 ch) in
+  debug "interfaces len = %d@.@?" len;
+  let interfaces = List.init len (fun _ -> TObject (get_class consts ch, [])) in
   debug "interfaces %a@." pp_jsignatures interfaces;
   let fields = List.init (read_ui16 ch) (fun _ -> parse_field JKField consts ch) in
   debug "fields ok %a @." pp_jfields fields;

@@ -245,7 +245,7 @@ jasmin_header :
             constants = ctx_to_array !ctx;
             cpath = name;
             csuper = $4;
-            cflags = JData.JInterface::JData.JSuper :: access;
+            cflags = JData.JInterface :: access;
             cinterfaces = $5;
             cfields = fields;
             cmethods = methods;
@@ -612,7 +612,7 @@ fields :
           } in
           (fs,f)
           *)
-          { JData.jf_name = "aa"; jf_kind = JData.JKField;
+          { JData.jf_name = "aaaaaaaaaaaaaaa"; jf_kind = JData.JKField;
             jf_vmsignature = JData.TInt; jf_signature = JData.TInt;
             jf_throws = []; jf_types = []; jf_flags = [JData.JPublic];
             jf_attributes = []; jf_constant = None; jf_code = None
@@ -642,15 +642,16 @@ fields :
           } in
           (fs,f)
           *)
-          { JData.jf_name = "aa"; jf_kind = JData.JKField;
-            jf_vmsignature = JData.TInt; jf_signature = JData.TInt;
-            jf_throws = []; jf_types = []; jf_flags = [JData.JPublic];
+          let jsig = JReader.parse_signature $4 in
+          { JData.jf_name = $3; jf_kind = JData.JKField;
+            jf_vmsignature = jsig; jf_signature = jsig;
+            jf_throws = []; jf_types = []; jf_flags = $2;
             jf_attributes = []; jf_constant = None; jf_code = None
           }
         }
       | DFIELD field_start field_exts endfield
         {
-          { JData.jf_name = "aa"; jf_kind = JData.JKField;
+          { JData.jf_name = "ccccccccccccc"; jf_kind = JData.JKField;
             jf_vmsignature = JData.TInt; jf_signature = JData.TInt;
             jf_throws = []; jf_types = []; jf_flags = [JData.JPublic];
             jf_attributes = []; jf_constant = None; jf_code = None

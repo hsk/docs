@@ -101,9 +101,10 @@ let rec const ctx c =
     PMap.find c ctx.constants
   with
   | Not_found ->
-    write_constants ctx c;
+    let n = write_constants ctx c in
+
     let ret = ctx.ccount in
-    ctx.ccount <- ret + 1;
+    ctx.ccount <- ret + n;
     ctx.constants <- PMap.add c ret ctx.constants;
     ret
   end
@@ -112,7 +113,8 @@ and write_constants ctx = function
       | ConstClass path -> (* tag = 7 *)
           let path = const ctx (ConstUtf8 (encode_path path)) in
           write_byte ctx.cpool 7;
-          write_ui16 ctx.cpool path
+          write_ui16 ctx.cpool path;
+          1
       (** field reference *)
       | ConstField (jpath, unqualified_name, jsignature) (* tag = 9 *) ->
           let jpath = const ctx (ConstClass jpath) in
@@ -120,13 +122,15 @@ and write_constants ctx = function
           write_byte ctx.cpool 9;
           write_ui16 ctx.cpool jpath;
           write_ui16 ctx.cpool name;
+          1
       (** method reference; string can be special "<init>" and "<clinit>" values *)
       | ConstMethod (jpath, unqualified_name, jmethod_signature) (* tag = 10 *) ->
           let jpath = const ctx (ConstClass jpath) in
           let name = const ctx (ConstNameAndType (unqualified_name, TMethod jmethod_signature)) in
           write_byte ctx.cpool 10;
           write_ui16 ctx.cpool jpath;
-          write_ui16 ctx.cpool name
+          write_ui16 ctx.cpool name;
+          1
       
       (** interface method reference *)
       | ConstInterfaceMethod (jpath, unqualified_name, jmethod_signature) (* tag = 11 *) ->
@@ -134,21 +138,24 @@ and write_constants ctx = function
           let name = const ctx (ConstNameAndType (unqualified_name, TMethod jmethod_signature)) in
           write_byte ctx.cpool 11;
           write_ui16 ctx.cpool jpath;
-          write_ui16 ctx.cpool name
+          write_ui16 ctx.cpool name;
+          1
 
       (** constant values *)
       | ConstString s  (* tag = 8 *) ->
           let s = const ctx (ConstUtf8 s) in
           write_byte ctx.cpool 8;
-          write_ui16 ctx.cpool s
+          write_ui16 ctx.cpool s;
+          1
       | ConstInt i (* tag = 3 *) ->
           write_byte ctx.cpool 3;
-          write_real_i32 ctx.cpool i
+          write_real_i32 ctx.cpool i;
+          1
       | ConstFloat f (* tag = 4 *) ->
           write_byte ctx.cpool 4;
       (*    (match classify_float f with
           | FP_normal | FP_subnormal | FP_zero ->*)
-              write_real_i32 ctx.cpool (Int32.bits_of_float f)
+              write_real_i32 ctx.cpool (Int32.bits_of_float f);
       (*    | FP_infinity when f > 0 ->
               write_real_i32 ctx.cpool 0x7f800000l
           | FP_infinity when f < 0 ->
@@ -156,14 +163,15 @@ and write_constants ctx = function
           | FP_nan ->
               write_real_i32 ctx.cpool 0x7f800001l)
       *)
+          1
       | ConstLong i (* tag = 5 *) ->
           write_byte ctx.cpool 5;
           write_i64 ctx.cpool i;
-          ctx.ccount <- ctx.ccount + 1
+          2
       | ConstDouble d (* tag = 6 *) ->
           write_byte ctx.cpool 6;
           write_double ctx.cpool d;
-          ctx.ccount <- ctx.ccount + 1
+          2
       (** name and type: used to represent a field or method, without indicating which class it belongs to *)
       | ConstNameAndType (unqualified_name, jsignature) ->
           let name = (const ctx (ConstUtf8 (unqualified_name))) in
@@ -171,28 +179,32 @@ and write_constants ctx = function
           write_byte ctx.cpool 12;
           write_ui16 ctx.cpool name;
           write_ui16 ctx.cpool jsig;
+          1
       (** UTF8 encoded strings. Note that when reading/writing, take into account Utf8 modifications of java *)
       (* (http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.4.7) *)
       | ConstUtf8 s ->
           write_byte ctx.cpool 1;
           write_ui16 ctx.cpool (String.length s);
-          nwrite ctx.cpool (encode_utf8 s)
-
+          nwrite ctx.cpool (encode_utf8 s);
+          1
       (** invokeDynamic-specific *)
       | ConstMethodHandle (reference_type, jconstant) (* tag = 15 *) ->
           write_byte ctx.cpool 15;
           write_byte ctx.cpool (get_reference_type reference_type);
-          write_ui16 ctx.cpool (const ctx jconstant)
+          write_ui16 ctx.cpool (const ctx jconstant);
+          1
       | ConstMethodType jmethod_signature (* tag = 16 *) ->
           let jsig = (const ctx (ConstUtf8 (encode_sig (TMethod jmethod_signature)))) in
           write_byte ctx.cpool 16;
-          write_ui16 ctx.cpool jsig
+          write_ui16 ctx.cpool jsig;
+          1
       | ConstInvokeDynamic (bootstrap_method, unqualified_name, jsignature) (* tag = 18 *) ->
           let name_and_type = const ctx (ConstNameAndType(unqualified_name, jsignature)) in
           write_byte ctx.cpool 18;
           write_ui16 ctx.cpool bootstrap_method;
-          write_ui16 ctx.cpool name_and_type
-      | ConstUnusable -> ()
+          write_ui16 ctx.cpool name_and_type;
+          1
+      | ConstUnusable -> 1
 
 let ctx_to_array ctx =
   let arr = Array.create ctx.ccount ConstUnusable in
@@ -214,8 +226,9 @@ let new_ctx ch consts =
     constants = !map;
   } in
   Array.iter (fun c ->
-    write_constants ctx c
+    ignore(write_constants ctx c)
   ) consts;
+  ctx.ccount = Array.length consts;
   ctx
 
 (* Acess (and other) flags unparsing *)
@@ -569,9 +582,11 @@ let encode_class ch c =
   | _ -> assert false
   end;
   write_ui16 ctx.ch (List.length c.cinterfaces);
-  List.iter (fun jsig ->
-    write_ui16 ctx.ch (const ctx (ConstClass jsig))
-  );
+  List.iter (function | TObject(aa,bb) ->
+    let jsig = (const ctx (ConstClass (aa))) in
+    write_ui16 ctx.ch jsig
+  | v -> Format.printf "error %a@." JPPData.pp_jsignature v; assert false
+  ) c.cinterfaces;
 
   write_ui16 ctx.ch (List.length c.cfields);
   List.iter (fun field ->
