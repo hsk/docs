@@ -46,11 +46,18 @@ else
 endif
 	git commit -a
 	git push
-
+pull:
+ifeq ($(OS),Windows_NT)
+	git checkout jCode.ml jData.ml
+endif
+	git pull
 
 clean:
-	rm -rf main jasc *.cm* ext/*.cm* ext/*.o $(wildcard *.cmx) $(wildcard *.obj) $(wildcard *.o) $(wildcard *.cmi) $(wildcard *.cmo) *.class
-.PHONY: all bytecode native clean
+	rm -rf main *.cm* ext/*.cm* ext/*.o $(wildcard *.cmx) $(wildcard *.obj) $(wildcard *.o) $(wildcard *.cmi) $(wildcard *.cmo) *.class
+ifeq ($(OS),Windows_NT)
+else
+	rm -rf $(EXE)
+endif
 
 Makefile: ;
 $(SRC): ;
