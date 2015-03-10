@@ -1,7 +1,3 @@
-open JData;;
-open ExtString;;
-open ExtList;;
-open IO.BigEndian;;
 
 (* Numerical types that are not smaller than int. *)
 type other_num = [
@@ -125,7 +121,7 @@ type exc_tbl = {
   e_start : int;
   e_end : int;
   e_handler : int;
-  e_catch_type : jpath option; 
+  e_catch_type : JData.jpath option; 
 }
 [@@deriving show]
 
@@ -134,7 +130,7 @@ type jcode = {
   max_locals: int;
   code : jopcodes;
   exc_tbl : exc_tbl list;
-  attributes : jattributes;
+  attributes : JData.jattributes;
 }
 [@@deriving show]
 
@@ -144,6 +140,6 @@ let error_class fmt = Printf.ksprintf (fun s -> raise (Class_structure_error s))
 let get_code field =
   let rec loop = function
     | [] -> raise Not_found
-    | AttrUnknown("Code",s)::xs -> s
+    | JData.AttrUnknown("Code",s)::xs -> s
     | _::xs -> loop xs
-  in loop field.jf_attributes
+  in loop field.JData.jf_attributes

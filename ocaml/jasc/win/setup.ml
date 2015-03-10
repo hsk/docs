@@ -11,7 +11,7 @@ let read src =
   Buffer.contents buf
 
 let cnv s =
-  let str = read ("../"^s) in
+  let str = read s in
   let str = Str.global_replace (Str.regexp "\\[@@deriving show\\]") "" str in
   let ch = open_out s in
   Printf.fprintf ch "%s" str;
