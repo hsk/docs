@@ -1,18 +1,28 @@
-OCAMLOPT=ocamlfind ocamlopt -I ext -package ppx_deriving.show -linkpkg
-OCAMLC=ocamlfind ocamlc -I ext -package ppx_deriving.show -linkpkg
+EXE=jasc
+OCAMLOPT=ocamlfind ocamlopt -I ext
+OCAMLC=ocamlfind ocamlc -I ext
 SRC=jData.ml jReader.ml jWriter.ml jCode.ml jCodeReader.ml  jCodeWriter.ml
 EXT= ext/enum.mli ext/enum.ml ext/extString.mli ext/extString.ml ext/IO.mli ext/IO.ml ext/extList.mli ext/extList.ml ext/pMap.mli ext/pMap.ml
-all: bytecode native jasc
+ifeq ($(OS),Windows_NT)
+	EXE=jasc.exe
+else
+	OCAMLOPT += " -package ppx_deriving.show"
+endif
+all: $(EXE)
 
-jasc: parser.mly lexer.mll jasc.ml
+$(EXE): parser.mly lexer.mll jasc.ml
+ifeq ($(OS),Windows_NT)
+	cp win/jCode.ml .
+	cp win/jData.ml .
+endif
 	ocamlyacc parser.mly
 	rm parser.mli
 	ocamllex lexer.mll
-	$(OCAMLOPT) -package ppx_deriving.show -linkpkg $(EXT) $(SRC) parser.ml lexer.ml jasc.ml -o jasc
+	$(OCAMLOPT) $(EXT) $(SRC) parser.ml lexer.ml jasc.ml -o $(EXE)
 
 
 run:
-	$(OCAMLOPT) -package ppx_deriving.show -linkpkg $(EXT) $(SRC) main.ml -o main
+	$(OCAMLOPT) $(EXT) $(SRC) main.ml -o main
 	javac a.java
 	#jasmd a -high
 	cp a.class a_org.txt
