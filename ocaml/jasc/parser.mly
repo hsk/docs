@@ -1348,7 +1348,7 @@ methods :
                   | "istore", "I", i -> add 3 (JCode.OpStore (`Int2Bool, i))
                   (* I *)
                   | "ldc", "constant", n -> add 2 (JCode.OpLdc1(const !ctx (ConstInt (Int32.of_int n))))
-                  | "ldc2_w", "bigconstant", d -> add 3 (JCode.OpLConst( (Int64.of_int d)))
+                  | "ldc2_w", "bigconstant", d -> add 3 (JCode.OpLdc2w(const !ctx (ConstLong (Int64.of_int d))))
                   | "lload", _, 0 -> add 1 (JCode.OpLoad (`Long, 0))
                   | "lload", _, 1 -> add 1 (JCode.OpLoad (`Long, 1))
                   | "lload", _, 2 -> add 1 (JCode.OpLoad (`Long, 2))
@@ -1460,7 +1460,7 @@ methods :
                     let (name,o) = split_obj obj in
                     let jpath = JReader.expand_path name in
                     let f = JReader.parse_method_signature f in
-                    let i = const !ctx (ConstMethod (jpath, o, f)) in
+                    let i = const !ctx (ConstInterfaceMethod (jpath, o, f)) in
                     add 5(JCode.OpInvokeInterface (i, i2))
                   (* M *)
                   | "multianewarray", "marray", t, i ->

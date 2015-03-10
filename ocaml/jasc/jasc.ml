@@ -10,10 +10,11 @@ let lexbuf l =
 	Parser.jas_file Lexer.token l
 
 let file f =
+(*
+  Format.printf "***** original data@. %a@." JPPData.pp_jclass a;
   let fp = open_in_bin (j2class f) in
   let a = JReader.parse_class (IO.input_channel fp) in
   close_in fp;
-  Format.printf "***** original data@. %a@." JPPData.pp_jclass a;
 
   List.iter (fun m ->
     try
@@ -22,11 +23,11 @@ let file f =
       Format.printf "%a@." JPPCode.pp_jcode code;
     with
       | _ -> ()
-    
+
   ) a.cmethods;
 
   Format.printf "***@.";
-
+*)
   let inchan = open_in f in
   begin try
     Parser.sourcefile := Some f;

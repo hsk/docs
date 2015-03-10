@@ -1,7 +1,7 @@
 .bytecode 49.0
 .source Test_l.java
 
-.class  tests/Test_l
+.class tests/Test_l
 .super java.lang.Object
 
 
@@ -68,7 +68,7 @@
 	.line 18
 		66: 	lload_1
 		67: 	ldc2_w 4
-		70: 	lmult
+		70: 	lmul
 		71: 	lstore_1
 	.line 19
 		72: 	lload_1
@@ -97,7 +97,7 @@
 	.line 24
 		99: 	lload_1
 		100: 	ldc2_w 1234
-		103: 	ilor
+		103: 	lor
 		104: 	lstore_1
 	.line 25
 		105: 	lload_1
