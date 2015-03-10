@@ -33,12 +33,13 @@ let file f =
     Parser.sourcefile := Some f;
     let a = lexbuf (Lexing.from_channel inchan) in
     close_in inchan;
+(*
     Format.printf "***** compiled data@. %a@." JPPData.pp_jclass a;
-
+*)
     let fp = open_out_bin (j2class f) in
     JWriter.encode_class (IO.output_channel fp) a;
     close_out fp;
-
+(*
     List.iter (fun m ->
     try
       let codestr = JCode.get_code m in
@@ -47,7 +48,7 @@ let file f =
     with
       | _ -> ()
     ) a.cmethods;
-
+*)
     (*Javalib.unparse_class k (open_out (j2class f));*)
     (*JPrint.print_jasmin k stdout;*)
   with e ->

@@ -817,7 +817,6 @@ methods :
           JCodeWriter.encode_code !ctx jmethod;
           let code = IO.close_out !ctx.ch in
           !ctx.ch <- !back_ch;
-          Format.printf "name = %S code = %S@."  name code;
           (*
           let m = ConcreteMethod {
             cm_signature = ms;
