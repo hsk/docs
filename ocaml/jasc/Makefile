@@ -6,7 +6,7 @@ EXT= ext/enum.mli ext/enum.ml ext/extString.mli ext/extString.ml ext/IO.mli ext/
 ifeq ($(OS),Windows_NT)
 	EXE=jasc.exe
 else
-	OCAMLOPT += " -package ppx_deriving.show"
+	OCAMLOPT += -package ppx_deriving.show
 endif
 all: $(EXE)
 
