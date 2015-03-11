@@ -128,7 +128,9 @@ type jcode = {
 }
 
 exception Class_structure_error of string
-let error_class fmt = Printf.ksprintf (fun s -> raise (Class_structure_error s)) fmt
+
+let error_class fmt =
+  Printf.ksprintf (fun s -> raise (Class_structure_error s)) fmt
 
 let get_code field =
   let rec loop = function
