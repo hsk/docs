@@ -10,13 +10,6 @@ let rec pp_jpath fmt (a0,a1) =
     (fun fmt -> Format.fprintf fmt "%S") a1
 and show_jpath x = Format.asprintf "%a" pp_jpath x
 
-let rec pp_jversion fmt (a0,a1) =
-  Format.fprintf fmt "(@[<hov>%d,@ %d@])" a0 a1;
-and show_jversion x = Format.asprintf "%a" pp_jversion x
-
-let rec pp_unqualified_name fmt = Format.fprintf fmt "%S"
-and show_unqualified_name x = Format.asprintf "%a" pp_unqualified_name x
-
 let rec pp_jwildcard fmt =
   function
   | WExtends -> Format.pp_print_string fmt "JData.WExtends"
@@ -121,18 +114,16 @@ let rec pp_jconstant fmt =
       Format.fprintf fmt "(@[<hov2>JData.ConstClass@ %a@])" pp_jpath a0;
   | ConstField (a0,a1,a2) ->
       Format.fprintf fmt "(@[<hov2>JData.ConstField@ ";
-      Format.fprintf fmt "(@[<hov>%a,@ %a,@ %a@])"
-        pp_jpath a0 pp_unqualified_name a1 pp_jsignature a2;
+      Format.fprintf fmt "(@[<hov>%a,@ %S,@ %a@])" pp_jpath a0 a1 pp_jsignature a2;
       Format.fprintf fmt "@])"
   | ConstMethod (a0,a1,a2) ->
       Format.fprintf fmt "(@[<hov2>JData.ConstMethod@ ";
-      Format.fprintf fmt "(@[<hov>%a,@ %a,@ %a@])"
-        pp_jpath a0 pp_unqualified_name a1 pp_jmethod_signature a2;
+      Format.fprintf fmt "(@[<hov>%a,@ %S,@ %a@])"
+        pp_jpath a0 a1 pp_jmethod_signature a2;
       Format.fprintf fmt "@])"
   | ConstInterfaceMethod (a0,a1,a2) ->
       Format.fprintf fmt "(@[<hov2>JData.ConstInterfaceMethod@ ";
-      Format.fprintf fmt "(@[<hov>%a,@ %a,@ %a@])"
-        pp_jpath a0 pp_unqualified_name a1 pp_jmethod_signature a2;
+      Format.fprintf fmt "(@[<hov>%a,@ %S,@ %a@])" pp_jpath a0 a1 pp_jmethod_signature a2;
       Format.fprintf fmt "@])"
   | ConstString a0 -> Format.fprintf fmt "(@[<hov2>JData.ConstString@ %S@])" a0;
   | ConstInt a0 -> Format.fprintf fmt "(@[<hov2>JData.ConstInt@ %ldl@])" a0;
@@ -140,8 +131,8 @@ let rec pp_jconstant fmt =
   | ConstLong a0 -> Format.fprintf fmt "(@[<hov2>JData.ConstLong@ %LdL@])" a0;
   | ConstDouble a0 -> Format.fprintf fmt "(@[<hov2>JData.ConstDouble@ %F@])" a0;
   | ConstNameAndType (a0,a1) ->
-      Format.fprintf fmt "@[<hov2>JData.ConstNameAndType (@,%a,@ %a@])"
-        pp_unqualified_name a0 pp_jsignature a1;
+      Format.fprintf fmt "@[<hov2>JData.ConstNameAndType (@,%S,@ %a@])"
+        a0 pp_jsignature a1;
   | ConstUtf8 a0 ->
       Format.fprintf fmt "(@[<hov2>JData.ConstUtf8@ %S@])" a0;
   | ConstMethodHandle (a0,a1) ->
@@ -149,12 +140,10 @@ let rec pp_jconstant fmt =
       Format.fprintf fmt "(@[<hov>%a,@ %a@])" pp_reference_type a0 pp_jconstant a1;
       Format.fprintf fmt "@])"
   | ConstMethodType a0 ->
-      Format.fprintf fmt "(@[<hov2>JData.ConstMethodType@ %a@])"
-        pp_jmethod_signature a0;
+      Format.fprintf fmt "(@[<hov2>JData.ConstMethodType@ %a@])" pp_jmethod_signature a0;
   | ConstInvokeDynamic (a0,a1,a2) ->
       Format.fprintf fmt "(@[<hov2>JData.ConstInvokeDynamic@ ";
-      Format.fprintf fmt "(@[<hov>%a,@ %a,@ %a@])"
-        pp_bootstrap_method a0 pp_unqualified_name a1 pp_jsignature a2;
+      Format.fprintf fmt "(@[<hov>%a,@ %S,@ %a@])" pp_bootstrap_method a0 a1 pp_jsignature a2;
       Format.fprintf fmt "@])"
   | ConstUnusable -> Format.pp_print_string fmt "JData.ConstUnusable"
 and show_jconstant x = Format.asprintf "%a" pp_jconstant x
@@ -187,9 +176,7 @@ and show_jaccess_flag x = Format.asprintf "%a" pp_jaccess_flag x
 
 let rec pp_jaccess fmt x =
   Format.fprintf fmt "[@[<hov>%a@]]"
-    (fun fmt ->
-      List.iter (Format.fprintf fmt "%a;@ " pp_jaccess_flag)
-    ) x
+    (fun fmt -> List.iter (Format.fprintf fmt "%a;@ " pp_jaccess_flag)) x
 and show_jaccess x = Format.asprintf "%a" pp_jaccess x
 
 let rec pp_jtypes fmt x =
@@ -204,9 +191,7 @@ let rec pp_jtypes fmt x =
           ) a1
           (fun fmt ->
             Format.fprintf fmt "[@[<hov>%a@]]"
-              (fun fmt ->
-                List.iter (Format.fprintf fmt "%a;@ " pp_jsignature)
-              )
+              (fun fmt -> List.iter (Format.fprintf fmt "%a;@ " pp_jsignature))
           ) a2;
       )
     ) x
@@ -217,9 +202,7 @@ let rec pp_jannotation fmt x =
   Format.fprintf fmt "JData.ann_type = %a;@ " pp_jsignature x.ann_type;
   Format.fprintf fmt "ann_elements = [@[<hov>%a@]]@ "
     (fun fmt ->
-      List.iter (fun (a0, a1) ->
-        Format.fprintf fmt "(@[<hov>%S,@ %a@]);@ " a0 pp_jannotation_value a1
-      )
+      List.iter (fun (a0, a1) -> Format.fprintf fmt "(@[<hov>%S,@ %a@]);@ " a0 pp_jannotation_value a1)
     ) x.ann_elements;
   Format.fprintf fmt "@] }"
 and show_jannotation x = Format.asprintf "%a" pp_jannotation x
@@ -236,9 +219,7 @@ and pp_jannotation_value fmt =
   | ValArray a0 ->
       Format.fprintf fmt "(@[<hov2>JData.ValArray@ ";
       Format.fprintf fmt "[@[<hov>%a@]]"
-        (fun fmt ->
-          List.iter (Format.fprintf fmt "%a;@ " pp_jannotation_value)
-        ) a0;
+        (fun fmt -> List.iter (Format.fprintf fmt "%a;@ " pp_jannotation_value)) a0;
       Format.fprintf fmt "@])"
 and show_jannotation_value x = Format.asprintf "%a" pp_jannotation_value x
 
@@ -248,16 +229,12 @@ let rec pp_jattribute fmt = function
       Format.fprintf fmt "(@[<hov2>JData.AttrVisibleAnnotations@ %a@])"
         (fun fmt ->
           Format.fprintf fmt "[@[<hov>%a@]]"
-            (fun fmt ->
-              List.iter (Format.fprintf fmt "%a;@ " pp_jannotation)
-            )
+            (fun fmt -> List.iter (Format.fprintf fmt "%a;@ " pp_jannotation))
         ) a0;
   | AttrInvisibleAnnotations a0 ->
       Format.fprintf fmt "(@[<hov2>JData.AttrInvisibleAnnotations@ ";
       Format.fprintf fmt "[@[<hov>%a@]]"
-        (fun fmt ->
-          List.iter (Format.fprintf fmt "%a;@ " pp_jannotation)
-        ) a0;
+        (fun fmt -> List.iter (Format.fprintf fmt "%a;@ " pp_jannotation)) a0;
       Format.fprintf fmt "@])"
   | AttrUnknown (a0,a1) ->
       Format.fprintf fmt "@[<hov2>JData.AttrUnknown (@,%S,@ %S@])" a0 a1
@@ -281,15 +258,11 @@ let rec pp_jfield fmt x =
   Format.fprintf fmt "jf_vmsignature = %a;@ " pp_jsignature x.jf_vmsignature;
   Format.fprintf fmt "jf_signature = %a;@ " pp_jsignature x.jf_signature;
   Format.fprintf fmt "jf_throws = [@[<hov>%a@]];@ "
-    (fun fmt ->
-      List.iter (Format.fprintf fmt "%a;@ " pp_jsignature)
-    ) x.jf_throws;
+    (fun fmt -> List.iter (Format.fprintf fmt "%a;@ " pp_jsignature)) x.jf_throws;
   Format.fprintf fmt "jf_types = %a;@ " pp_jtypes x.jf_types;
   Format.fprintf fmt "jf_flags = %a;@ " pp_jaccess x.jf_flags;
   Format.fprintf fmt "jf_attributes = [@[<hov>%a@]];@ "
-    (fun fmt ->
-      List.iter (Format.fprintf fmt "%a;@ " pp_jattribute)
-    ) x.jf_attributes;
+    (fun fmt -> List.iter (Format.fprintf fmt "%a;@ " pp_jattribute)) x.jf_attributes;
   Format.fprintf fmt "jf_constant = %a;@ "
     (fun fmt -> function
         | None -> Format.pp_print_string fmt "None"
@@ -309,94 +282,24 @@ let rec pp_jfields fmt x =
   Format.fprintf fmt "@]]"
 and show_jfields x = Format.asprintf "%a" pp_jfields x
 
-let rec pp_utf8ref fmt = Format.fprintf fmt "%d"
-and show_utf8ref x = Format.asprintf "%a" pp_utf8ref x
-
-let rec pp_classref fmt = Format.fprintf fmt "%d"
-and show_classref x = Format.asprintf "%a" pp_classref x
-
-let rec pp_nametyperef fmt = Format.fprintf fmt "%d"
-and show_nametyperef x = Format.asprintf "%a" pp_nametyperef x
-
-let rec pp_dynref fmt = Format.fprintf fmt "%d"
-and show_dynref x = Format.asprintf "%a" pp_dynref x
-
-let rec pp_bootstrapref fmt = Format.fprintf fmt "%d"
-and show_bootstrapref x = Format.asprintf "%a" pp_bootstrapref x
-
-let rec pp_jconstant_raw fmt =
-  function
-  | KClass a0 ->
-      Format.fprintf fmt "(@[<hov2>JData.KClass@ %a@])" pp_utf8ref a0;
-  | KFieldRef (a0, a1) ->
-      Format.fprintf fmt "(@[<hov2>JData.KFieldRef@ ";
-      Format.fprintf fmt "(@[<hov>%a,@ %a@])" pp_classref a0 pp_nametyperef a1;
-      Format.fprintf fmt "@])"
-  | KMethodRef (a0,a1) ->
-      Format.fprintf fmt "(@[<hov2>JData.KMethodRef@ ";
-      Format.fprintf fmt "(@[<hov>%a,@ %a@])" pp_classref a0 pp_nametyperef a1;
-      Format.fprintf fmt "@])"
-  | KInterfaceMethodRef (a0, a1) ->
-      Format.fprintf fmt "(@[<hov2>JData.KInterfaceMethodRef@ ";
-      Format.fprintf fmt "(@[<hov>%a,@ %a@])" pp_classref a0 pp_nametyperef a1;
-      Format.fprintf fmt "@])"
-  | KString a0 ->
-      Format.fprintf fmt "(@[<hov2>JData.KString@ %a@])" pp_utf8ref a0;
-  | KInt a0 ->
-      Format.fprintf fmt "(@[<hov2>JData.KInt@ %ldl@])" a0;
-  | KFloat a0 ->
-      Format.fprintf fmt "(@[<hov2>JData.KFloat@ %F@])" a0;
-  | KLong a0 ->
-      Format.fprintf fmt "(@[<hov2>JData.KLong@ %LdL@])" a0;
-  | KDouble a0 ->
-      Format.fprintf fmt "(@[<hov2>JData.KDouble@ %F@])" a0;
-  | KNameAndType (a0,a1) ->
-      Format.fprintf fmt "(@[<hov2>JData.KNameAndType@ ";
-      Format.fprintf fmt "(@[<hov>%a,@ %a@])" pp_utf8ref a0 pp_utf8ref a1;
-      Format.fprintf fmt "@])"
-  | KUtf8String a0 ->
-      Format.fprintf fmt "(@[<hov2>JData.KUtf8String@ %S@])" a0;
-  | KMethodHandle (a0,a1) ->
-      Format.fprintf fmt "(@[<hov2>JData.KMethodHandle@ ";
-      Format.fprintf fmt "(@[<hov>%a,@ %a@])" pp_reference_type a0 pp_dynref a1;
-      Format.fprintf fmt "@])"
-  | KMethodType a0 ->
-      Format.fprintf fmt "(@[<hov2>JData.KMethodType@ %a@])" pp_utf8ref a0;
-  | KInvokeDynamic (a0,a1) ->
-      Format.fprintf fmt "(@[<hov2>JData.KInvokeDynamic@ ";
-      Format.fprintf fmt "(@[<hov>%a,@ %a@])" pp_bootstrapref a0 pp_nametyperef a1;
-      Format.fprintf fmt "@])"
-  | KUnusable -> Format.pp_print_string fmt "JData.KUnusable"
-and show_jconstant_raw x = Format.asprintf "%a" pp_jconstant_raw x
-
 let rec pp_jclass fmt x =
   Format.fprintf fmt "{ @[<hov>";
-  Format.fprintf fmt "JData.cversion = %a;@ " pp_jversion x.cversion;
+  Format.fprintf fmt "JData.cversion = %d,%d;@ " (fst x.cversion) (snd x.cversion);
   Format.fprintf fmt "constants = [|@[<hov>%a@]|];@ "
     (fun fmt ->
-      Array.iteri (fun i x ->
-        Format.fprintf fmt "(* %3d *) %a;@ " i pp_jconstant x
-      )
+      Array.iteri (fun i x -> Format.fprintf fmt "(* %3d *) %a;@ " i pp_jconstant x)
     ) x.constants;
   Format.fprintf fmt "cpath = %a;@ " pp_jpath x.cpath;
   Format.fprintf fmt "csuper = %a;@ " pp_jsignature x.csuper;
   Format.fprintf fmt "cflags = %a;@ " pp_jaccess x.cflags;
   Format.fprintf fmt "cinterfaces = [@[<hov>%a@]];@ "
-    (fun fmt ->
-      List.iter (Format.fprintf fmt "%a;@ " pp_jsignature)
-    ) x.cinterfaces;
+    (fun fmt -> List.iter (Format.fprintf fmt "%a;@ " pp_jsignature)) x.cinterfaces;
   Format.fprintf fmt "cfields = [@[<hov>%a@]];@ "
-    (fun fmt ->
-      List.iter (Format.fprintf fmt "%a;@ " pp_jfield)
-    ) x.cfields;
+    (fun fmt -> List.iter (Format.fprintf fmt "%a;@ " pp_jfield)) x.cfields;
   Format.fprintf fmt "cmethods = [@[<hov>%a@]];@ "
-    (fun fmt ->
-      List.iter (Format.fprintf fmt "%a;@ " pp_jfield)
-    ) x.cmethods;
+    (fun fmt -> List.iter (Format.fprintf fmt "%a;@ " pp_jfield)) x.cmethods;
   Format.fprintf fmt "cattributes = [@[<hov>%a@]];@ "
-    (fun fmt ->
-      List.iter (Format.fprintf fmt "%a;@ " pp_jattribute)
-    ) x.cattributes;
+    (fun fmt -> List.iter (Format.fprintf fmt "%a;@ " pp_jattribute)) x.cattributes;
   Format.fprintf fmt "cinner_types = [@[<hov>%a@]];@ "
     (fun fmt ->
       List.iter (fun (a0,a1,a2,a3) ->

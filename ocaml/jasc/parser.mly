@@ -67,7 +67,6 @@
   let ctx = ref (new_ctx !back_ch ([||]))
 
   let sourcefile = ref None
-  let cn = ref ([],"_")
   let limit_stack = ref 0
   let limit_locals = ref 0
   let pos = ref 0
@@ -219,9 +218,7 @@ jasmin_header :
 
       match class_or_interface with
       | "class" ->
-        debug "class@.";
         (fun inners fields methods ->
-          debug "gen@.";
           ignore (const !ctx (ConstClass name));
           {
             cversion = $1;
@@ -349,8 +346,6 @@ deprecated_expr :
 bytecode_spec :
   | DBYTECODE Num SEP
     {
-      debug "bytecode@.";
-
       let (major, minor) =
         begin try
           let pos = String.index $2 '.' in
@@ -376,12 +371,10 @@ source_spec :
 class_spec :
   | DCLASS access classname SEP
     {
-      cn := $3;
       ("class",$2,$3)
     }
   | DINTERFACE access classname SEP
     {
-      cn := $3;
       ("interface",$2,$3)
     }
 
@@ -612,7 +605,7 @@ fields :
           } in
           (fs,f)
           *)
-          { JData.jf_name = "aaaaaaaaaaaaaaa"; jf_kind = JData.JKField;
+          { JData.jf_name = "TODO AAAAAAAAA"; jf_kind = JData.JKField;
             jf_vmsignature = JData.TInt; jf_signature = JData.TInt;
             jf_throws = []; jf_types = []; jf_flags = [JData.JPublic];
             jf_attributes = []; jf_constant = None; jf_code = None
@@ -651,7 +644,7 @@ fields :
         }
       | DFIELD field_start field_exts endfield
         {
-          { JData.jf_name = "ccccccccccccc"; jf_kind = JData.JKField;
+          { JData.jf_name = "TODO ccccccccccccc"; jf_kind = JData.JKField;
             jf_vmsignature = JData.TInt; jf_signature = JData.TInt;
             jf_throws = []; jf_types = []; jf_flags = [JData.JPublic];
             jf_attributes = []; jf_constant = None; jf_code = None
@@ -728,7 +721,7 @@ any_item :
 
 /* ---- Inner classes */
 inners :
-  | inner_list { debug "inners@."; [] (*List.rev $1*) }
+  | inner_list { debug "inners@."; [] (* TODO List.rev $1*) }
   | /* empty */ { [] }
 
   inner_list :
@@ -893,12 +886,7 @@ methods :
             init_method();
             let (name, md) = split_method $3 in
             let md = JData.TMethod(JReader.parse_method_signature md) in
-            (*
-            let (vts, ovt) = JParseSignature.parse_method_descriptor md in
-            let ms = JBasics.make_ms name vts ovt
-            in ($2, ms)
-            *)
-            ($2,(name,md))
+            ($2, (name, md))
           }
 
       endmethod :
@@ -990,7 +978,6 @@ methods :
 
               /* .limit stack <val> */
               /* .limit locals <val> */
-
               limit_expr :
                 | LOCALS Int { limit_locals := $2 } /* .limit locals */
                 | STACK Int { limit_stack := $2 } /* .limit stack */
@@ -1180,7 +1167,7 @@ methods :
                   | "i2f" -> add 1 (JCode.OpI2F)
                   | "i2d" -> add 1 (JCode.OpI2D)
                   | "i2l" -> add 1 (JCode.OpI2L)
-                  | "iadd" -> add 1 (JCode.OpAdd `Int2Bool)
+                  | "iadd" -> add 1 (JCode.OpAdd `Int)
                   | "iaload" -> add 1 (JCode.OpArrayLoad `Int)
                   | "iand" -> add 1 (JCode.OpIAnd)
                   | "iastore" -> add 1 (JCode.OpArrayStore `Int)
@@ -1191,13 +1178,13 @@ methods :
                   | "iconst_4" -> add 1 (JCode.OpIConst( (4l)))
                   | "iconst_5" -> add 1 (JCode.OpIConst( (5l)))
                   | "iconst_m1" -> add 1 (JCode.OpIConst( (-1l)))
-                  | "idiv" -> add 1 (JCode.OpDiv `Int2Bool)
-                  | "iload_0" -> add 1 (JCode.OpLoad (`Int2Bool, 0))
-                  | "iload_1" -> add 1 (JCode.OpLoad (`Int2Bool, 1))
-                  | "iload_2" -> add 1 (JCode.OpLoad (`Int2Bool, 2))
-                  | "iload_3" -> add 1 (JCode.OpLoad (`Int2Bool, 3))
-                  | "imul" -> add 1 (JCode.OpMult `Int2Bool)
-                  | "ineg" -> add 1 (JCode.OpNeg `Int2Bool)
+                  | "idiv" -> add 1 (JCode.OpDiv `Int)
+                  | "iload_0" -> add 1 (JCode.OpLoad (`Int, 0))
+                  | "iload_1" -> add 1 (JCode.OpLoad (`Int, 1))
+                  | "iload_2" -> add 1 (JCode.OpLoad (`Int, 2))
+                  | "iload_3" -> add 1 (JCode.OpLoad (`Int, 3))
+                  | "imul" -> add 1 (JCode.OpMult `Int)
+                  | "ineg" -> add 1 (JCode.OpNeg `Int)
                   | "int2byte" -> add 1 (JCode.OpI2B)
                   | "int2char" -> add 1 (JCode.OpI2C)
                   | "int2short" -> add 1 (JCode.OpI2S)
@@ -1205,15 +1192,15 @@ methods :
                   | "invokedynamic", "method" -> add 1 ()
                   *)
                   | "ior" -> add 1 (JCode.OpIOr)
-                  | "irem" -> add 1 (JCode.OpRem `Int2Bool)
-                  | "ireturn" -> add 1 (JCode.OpReturn `Int2Bool)
+                  | "irem" -> add 1 (JCode.OpRem `Int)
+                  | "ireturn" -> add 1 (JCode.OpReturn `Int)
                   | "ishl" -> add 1 (JCode.OpIShl)
                   | "ishr" -> add 1 (JCode.OpIShr)
-                  | "istore_0" -> add 1 (JCode.OpStore (`Int2Bool, 0))
-                  | "istore_1" -> add 1 (JCode.OpStore (`Int2Bool, 1))
-                  | "istore_2" -> add 1 (JCode.OpStore (`Int2Bool, 2))
-                  | "istore_3" -> add 1 (JCode.OpStore (`Int2Bool, 3))
-                  | "isub" -> add 1 (JCode.OpSub `Int2Bool)
+                  | "istore_0" -> add 1 (JCode.OpStore (`Int, 0))
+                  | "istore_1" -> add 1 (JCode.OpStore (`Int, 1))
+                  | "istore_2" -> add 1 (JCode.OpStore (`Int, 2))
+                  | "istore_3" -> add 1 (JCode.OpStore (`Int, 3))
+                  | "isub" -> add 1 (JCode.OpSub `Int)
                   | "iushr" -> add 1 (JCode.OpIUShr)
                   | "ixor" -> add 1 (JCode.OpIXor)
                   (* L *)
@@ -1333,18 +1320,18 @@ methods :
                   | "ifne", "label", n -> add 3 (JCode.OpIfNe n)
                   | "ifnonnull", "label", n -> add 3 (JCode.OpIfNonNull n)
                   | "ifnull", "label", n -> add 3 (JCode.OpIfNull n)
-                  | "iload", _, 0 -> add 1 (JCode.OpLoad (`Int2Bool, 0))
-                  | "iload", _, 1 -> add 1 (JCode.OpLoad (`Int2Bool, 1))
-                  | "iload", _, 2 -> add 1 (JCode.OpLoad (`Int2Bool, 2))
-                  | "iload", _, 3 -> add 1 (JCode.OpLoad (`Int2Bool, 3))
-                  | "iload", "i", n -> add 2 (JCode.OpLoad (`Int2Bool, n))
-                  | "iload", "I", n -> add 3 (JCode.OpLoad (`Int2Bool, n))
-                  | "istore", _, 0 -> add 1 (JCode.OpStore (`Int2Bool, 0))
-                  | "istore", _, 1 -> add 1 (JCode.OpStore (`Int2Bool, 1))
-                  | "istore", _, 2 -> add 1 (JCode.OpStore (`Int2Bool, 2))
-                  | "istore", _, 3 -> add 1 (JCode.OpStore (`Int2Bool, 3))
-                  | "istore", "i", i -> add 2 (JCode.OpStore (`Int2Bool, i))
-                  | "istore", "I", i -> add 3 (JCode.OpStore (`Int2Bool, i))
+                  | "iload", _, 0 -> add 1 (JCode.OpLoad (`Int, 0))
+                  | "iload", _, 1 -> add 1 (JCode.OpLoad (`Int, 1))
+                  | "iload", _, 2 -> add 1 (JCode.OpLoad (`Int, 2))
+                  | "iload", _, 3 -> add 1 (JCode.OpLoad (`Int, 3))
+                  | "iload", "i", n -> add 2 (JCode.OpLoad (`Int, n))
+                  | "iload", "I", n -> add 3 (JCode.OpLoad (`Int, n))
+                  | "istore", _, 0 -> add 1 (JCode.OpStore (`Int, 0))
+                  | "istore", _, 1 -> add 1 (JCode.OpStore (`Int, 1))
+                  | "istore", _, 2 -> add 1 (JCode.OpStore (`Int, 2))
+                  | "istore", _, 3 -> add 1 (JCode.OpStore (`Int, 3))
+                  | "istore", "i", i -> add 2 (JCode.OpStore (`Int, i))
+                  | "istore", "I", i -> add 3 (JCode.OpStore (`Int, i))
                   (* I *)
                   | "ldc", "constant", n -> add 2 (JCode.OpLdc1(const !ctx (ConstInt (Int32.of_int n))))
                   | "ldc2_w", "bigconstant", d -> add 3 (JCode.OpLdc2w(const !ctx (ConstLong (Int64.of_int d))))
@@ -1406,17 +1393,11 @@ methods :
                   | "ifne", "label", l -> add 3 (JCode.OpIfNe (label2int l))
                   | "instanceof", "class", o -> add 3 (JCode.OpInstanceOf (const !ctx (ConstClass (JReader.expand_path o))))
                   | "invokenonvirtual", "method", m ->
-                    debug "invoke method@.";
                     let (obj,f) = split_method m in
-                    debug "koko1 %s@." obj;
                     let (name,o) = split_obj obj in
-                    debug "koko2@.";
                     let jpath = JReader.expand_path name in
-                    debug "koko3@.";
                     let f = JReader.parse_method_signature f in
-                    debug "koko4@.";
                     let i = const !ctx (ConstMethod (jpath, o, f)) in
-                    debug "invoke method %d@." i;
                     add 3 (JCode.OpInvokeNonVirtual i)
                   | "invokestatic", "method", m ->
                     let (obj,f) = split_method m in
@@ -1425,9 +1406,6 @@ methods :
                     let f = JReader.parse_method_signature f in
                     let i = const !ctx (ConstMethod (jpath, o, f)) in
                     add 3 (JCode.OpInvokeStatic i)
-                    (*
-                    add 3(JCode.OpInvoke (`Static (JBasics.make_cn name), JBasics.make_ms o args r))
-                    *)
                   | "invokevirtual", "method", m ->
                     let (obj,f) = split_method m in
                     let (name,o) = split_obj obj in
@@ -1435,8 +1413,6 @@ methods :
                     let f = JReader.parse_method_signature f in
                     let i = const !ctx (ConstMethod (jpath, o, f)) in
                     add 3 (JCode.OpInvokeVirtual i)
-                    
-                    (*add 3(JCode.OpInvoke (`Virtual ((JBasics.TClass (JBasics.make_cn name))), JBasics.make_ms o args r))*)
                   (* J *)
                   | "jsr","label",label -> add 3 (JCode.OpJsr((label2int label)))
                   | "jsr_w","label",label -> add 3 (JCode.OpJsr((label2int label)))

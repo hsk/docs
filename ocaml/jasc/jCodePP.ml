@@ -1,16 +1,11 @@
 open JCode
 
-let rec pp_other_num fmt =
+let rec pp_jvm_basic_type fmt =
   function
+  | `Int -> Format.pp_print_string fmt "`Int"
   | `Long -> Format.pp_print_string fmt "`Long"
   | `Float -> Format.pp_print_string fmt "`Float"
   | `Double -> Format.pp_print_string fmt "`Double"
-and show_other_num x = Format.asprintf "%a" pp_other_num x
-
-let rec pp_jvm_basic_type fmt =
-  function
-  | `Int2Bool -> Format.pp_print_string fmt "`Int2Bool"
-  | #other_num as x -> (pp_other_num fmt) x
 and show_jvm_basic_type x = Format.asprintf "%a" pp_jvm_basic_type x
 
 let rec pp_java_basic_type fmt =
@@ -20,7 +15,9 @@ let rec pp_java_basic_type fmt =
   | `Char -> Format.pp_print_string fmt "`Char"
   | `Byte -> Format.pp_print_string fmt "`Byte"
   | `Bool -> Format.pp_print_string fmt "`Bool"
-  | #other_num as x -> (pp_other_num fmt) x
+  | `Long -> Format.pp_print_string fmt "`Long"
+  | `Float -> Format.pp_print_string fmt "`Float"
+  | `Double -> Format.pp_print_string fmt "`Double"
 and show_java_basic_type x = Format.asprintf "%a" pp_java_basic_type x
 
 let rec pp_jopcode fmt =
@@ -40,10 +37,7 @@ let rec pp_jopcode fmt =
   | OpALoad a0 -> Format.fprintf fmt "(@[<hov2>JCode.OpALoad@ %d@])" a0;
   | OpArrayLoad a0 ->
       Format.fprintf fmt "(@[<hov2>JCode.OpArrayLoad@ ";
-      (function
-        | `Int -> Format.pp_print_string fmt "`Int"
-        | #other_num as x -> pp_other_num fmt x
-      ) a0;
+      pp_jvm_basic_type fmt a0;
       Format.fprintf fmt "@])"
   | OpAALoad -> Format.pp_print_string fmt "JCode.OpAALoad"
   | OpBALoad -> Format.pp_print_string fmt "JCode.OpBALoad"
@@ -53,10 +47,7 @@ let rec pp_jopcode fmt =
   | OpAStore a0 -> Format.fprintf fmt "(@[<hov2>JCode.OpAStore@ %d@])" a0;
   | OpArrayStore a0 ->
       Format.fprintf fmt "(@[<hov2>JCode.OpArrayStore@ ";
-      (function
-        | `Int -> Format.pp_print_string fmt "`Int"
-        | #other_num as x -> pp_other_num fmt x
-      ) a0;
+      pp_jvm_basic_type fmt a0;
       Format.fprintf fmt "@])"
   | OpAAStore -> Format.pp_print_string fmt "JCode.OpAAStore"
   | OpBAStore -> Format.pp_print_string fmt "JCode.OpBAStore"

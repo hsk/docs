@@ -16,19 +16,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *)
-let debug fmt = Format.printf fmt
-let debug0 fmt =
-    Format.kfprintf
-      (fun ppf -> ())
-      (Format.formatter_of_buffer (Buffer.create 16))
-      fmt
 
 type jpath = (string list) * string
-
-type jversion = int * int (* minor + major *)
-
-(** unqualified names cannot have the characters '.', ';', '[' or '/' *)
-type unqualified_name = string
 
 type jwildcard =
   | WExtends (* + *)
@@ -57,9 +46,6 @@ and jsignature =
 (* ( jsignature list ) ReturnDescriptor (| V | jsignature) *)
 and jmethod_signature = jsignature list * jsignature option
 
-type jsignatures = jsignature list
-
-
 (* InvokeDynamic-specific: Method handle *)
 type reference_type =
   | RGetField (* constant must be ConstField *)
@@ -79,11 +65,11 @@ type jconstant =
   (** references a class or an interface - jpath must be encoded as StringUtf8 *)
   | ConstClass of jpath (* tag = 7 *)
   (** field reference *)
-  | ConstField of (jpath * unqualified_name * jsignature) (* tag = 9 *)
+  | ConstField of (jpath * string * jsignature) (* tag = 9 *)
   (** method reference; string can be special "<init>" and "<clinit>" values *)
-  | ConstMethod of (jpath * unqualified_name * jmethod_signature) (* tag = 10 *)
+  | ConstMethod of (jpath * string * jmethod_signature) (* tag = 10 *)
   (** interface method reference *)
-  | ConstInterfaceMethod of (jpath * unqualified_name * jmethod_signature) (* tag = 11 *)
+  | ConstInterfaceMethod of (jpath * string * jmethod_signature) (* tag = 11 *)
   (** constant values *)
   | ConstString of string  (* tag = 8 *)
   | ConstInt of int32 (* tag = 3 *)
@@ -91,14 +77,14 @@ type jconstant =
   | ConstLong of int64 (* tag = 5 *)
   | ConstDouble of float (* tag = 6 *)
   (** name and type: used to represent a field or method, without indicating which class it belongs to *)
-  | ConstNameAndType of unqualified_name * jsignature
+  | ConstNameAndType of string * jsignature
   (** UTF8 encoded strings. Note that when reading/writing, take into account Utf8 modifications of java *)
   (* (http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.4.7) *)
   | ConstUtf8 of string
   (** invokeDynamic-specific *)
   | ConstMethodHandle of (reference_type * jconstant) (* tag = 15 *)
   | ConstMethodType of jmethod_signature (* tag = 16 *)
-  | ConstInvokeDynamic of (bootstrap_method * unqualified_name * jsignature) (* tag = 18 *)
+  | ConstInvokeDynamic of (bootstrap_method * string * jsignature) (* tag = 18 *)
   | ConstUnusable
 
 type jcode = unit (* TODO *)
@@ -152,8 +138,6 @@ type jattribute =
   | AttrInvisibleAnnotations of jannotation list
   | AttrUnknown of string * string
 
-type jattributes = jattribute list
-
 type jfield_kind =
   | JKField
   | JKMethod
@@ -173,34 +157,8 @@ type jfield = {
   jf_code : jcode option;
 }
 
-type jfields = jfield list
-
-(* reading/writing *)
-type utf8ref = int
-type classref = int
-type nametyperef = int
-type dynref = int
-type bootstrapref = int
-
-type jconstant_raw =
-  | KClass of utf8ref (* 7 *)
-  | KFieldRef of (classref * nametyperef) (* 9 *)
-  | KMethodRef of (classref * nametyperef) (* 10 *)
-  | KInterfaceMethodRef of (classref * nametyperef) (* 11 *)
-  | KString of utf8ref (* 8 *)
-  | KInt of int32 (* 3 *)
-  | KFloat of float (* 4 *)
-  | KLong of int64 (* 5 *)
-  | KDouble of float (* 6 *)
-  | KNameAndType of (utf8ref * utf8ref) (* 12 *)
-  | KUtf8String of string (* 1 *)
-  | KMethodHandle of (reference_type * dynref) (* 15 *)
-  | KMethodType of utf8ref (* 16 *)
-  | KInvokeDynamic of (bootstrapref * nametyperef) (* 18 *)
-  | KUnusable
-
 type jclass = {
-  cversion : jversion;
+  cversion : int * int;
   constants : jconstant array;
   cpath : jpath;
   csuper : jsignature;
@@ -212,3 +170,10 @@ type jclass = {
   cinner_types : (jpath * jpath option * string option * jaccess) list;
   ctypes : jtypes;
 }
+
+let debug fmt = Format.printf fmt
+let debug0 fmt =
+    Format.kfprintf
+      (fun ppf -> ())
+      (Format.formatter_of_buffer (Buffer.create 16))
+      fmt

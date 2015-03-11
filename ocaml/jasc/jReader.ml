@@ -16,11 +16,11 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *)
-open JData;;
-open JDataPP;;
 open IO.BigEndian;;
 open ExtString;;
 open ExtList;;
+open JData;;
+open JDataPP;;
 
 (*let debug = debug0*)
 
@@ -41,42 +41,6 @@ let get_reference_type i constid =
     | 8 -> RNewInvokeSpecial
     | 9 -> RInvokeInterface
     | _ -> error "%d: Invalid reference type %d" constid i
-  end
-
-let parse_constant max idx ch =
-  let cid = IO.read_byte ch in
-  let error() = error "%d: Invalid constant %d" idx cid in
-  let index() =
-    let n = read_ui16 ch in
-    if n = 0 || n >= max then error();
-    n
-  in
-  let index2() =
-      let n1 = index() in
-      let n2 = index() in
-      (n1,n2)
-  in
-  begin match cid with
-    | 0  -> KUnusable
-    | 1  -> let len = read_ui16 ch in
-            (* TODO: correctly decode modified UTF8 *)
-            KUtf8String (IO.nread ch len)
-    | 3  -> KInt (read_real_i32 ch)
-    | 4  -> KFloat (Int32.float_of_bits (read_real_i32 ch))
-    | 5  -> KLong (read_i64 ch)
-    | 6  -> KDouble (read_double ch)
-    | 7  -> KClass (index())
-    | 8  -> KString (index())
-    | 9  -> KFieldRef (index2())
-    | 10 -> KMethodRef (index2())
-    | 11 -> KInterfaceMethodRef (index2())
-    | 12 -> KNameAndType (index2())
-    | 15 -> let reft = get_reference_type (IO.read_byte ch) idx in
-    	      KMethodHandle (reft, index())
-    | 16 -> KMethodType (index())
-    | 18 -> let bootstrapref = read_ui16 ch in (* not index *)
-            KInvokeDynamic (bootstrapref, index())
-    | n -> error()
   end
 
 let expand_path s =
@@ -274,73 +238,6 @@ let parse_complete_method_signature s =
   with
     Exit -> error "Invalid method extended signature '%s'" s
 
-
-let rec expand_constant consts i =
-  let unexpected i =
-    error "%d: Unexpected constant type" i
-  in
-  let expand_path n =
-    match Array.get consts n with
-    | KUtf8String s -> expand_path s
-    | _ -> unexpected n
-  in
-  let expand_cls n =
-    match expand_constant consts n with
-    | ConstClass p -> p
-    | _ -> unexpected n
-  in
-  let expand_nametype n =
-    match expand_constant consts n with
-    | ConstNameAndType (s, jsig) -> (s, jsig)
-    | _ -> unexpected n
-  in
-  let expand_string n =
-    match Array.get consts n with
-    | KUtf8String s -> s
-    | _ -> unexpected n
-  in
-  let expand ncls nt =
-    match (expand_cls ncls, expand_nametype nt) with
-    | (path, (n, m)) -> (path, n, m)
-  in
-  let expand_m ncls nt =
-    let expand_nametype_m n =
-      match expand_nametype n with
-      | (n, TMethod m) -> (n, m)
-      | _              -> unexpected n
-    in
-    begin match (expand_cls ncls, expand_nametype_m nt) with
-      | (path, (n, m)) -> (path, n, m)
-    end
-  in
-  begin match Array.get consts i with
-    | KClass utf8ref ->
-      ConstClass (expand_path utf8ref)
-    | KFieldRef (classref, nametyperef) ->
-      ConstField (expand classref nametyperef)
-    | KMethodRef (classref, nametyperef) ->
-      ConstMethod (expand_m classref nametyperef)
-    | KInterfaceMethodRef (classref, nametyperef) ->
-      ConstInterfaceMethod (expand_m classref nametyperef)
-    | KString utf8ref -> ConstString (expand_string utf8ref)
-    | KInt i32 -> ConstInt i32
-    | KFloat f -> ConstFloat f
-    | KLong i64 -> ConstLong i64
-    | KDouble d -> ConstDouble d
-    | KNameAndType (n, t) ->
-      ConstNameAndType(expand_string n, parse_signature (expand_string t))
-    | KUtf8String s ->
-      ConstUtf8 s (* TODO: expand UTF8 characters *)
-    | KMethodHandle (reference_type, dynref) ->
-      ConstMethodHandle (reference_type, expand_constant consts dynref)
-    | KMethodType utf8ref ->
-      ConstMethodType (parse_method_signature (expand_string utf8ref))
-    | KInvokeDynamic (bootstrapref, nametyperef) ->
-      let (n, t) = expand_nametype nametyperef in
-      ConstInvokeDynamic(bootstrapref, n, t)
-    | KUnusable ->
-      ConstUnusable
-  end
 let parse_access_flags ch all_flags =
   let fl = read_ui16 ch in
   let flags = ref [] in
@@ -356,9 +253,156 @@ let parse_access_flags ch all_flags =
     then error "Invalid access flags %d" fl);*)
   !flags
 
-let get_constant c n =
-  if n < 1 || n >= Array.length c then error "Invalid constant index %d" n;
-  match c.(n) with
+module ParseConst = struct
+  (* reading/writing *)
+  type utf8ref = int
+  type classref = int
+  type nametyperef = int
+  type dynref = int
+  type bootstrapref = int
+
+  type jconstant_raw =
+    | KClass of utf8ref (* 7 *)
+    | KFieldRef of (classref * nametyperef) (* 9 *)
+    | KMethodRef of (classref * nametyperef) (* 10 *)
+    | KInterfaceMethodRef of (classref * nametyperef) (* 11 *)
+    | KString of utf8ref (* 8 *)
+    | KInt of int32 (* 3 *)
+    | KFloat of float (* 4 *)
+    | KLong of int64 (* 5 *)
+    | KDouble of float (* 6 *)
+    | KNameAndType of (utf8ref * utf8ref) (* 12 *)
+    | KUtf8String of string (* 1 *)
+    | KMethodHandle of (reference_type * dynref) (* 15 *)
+    | KMethodType of utf8ref (* 16 *)
+    | KInvokeDynamic of (bootstrapref * nametyperef) (* 18 *)
+    | KUnusable
+
+  let parse_constant max idx ch =
+    let cid = IO.read_byte ch in
+    let error() = error "%d: Invalid constant %d" idx cid in
+    let index() =
+      let n = read_ui16 ch in
+      if n = 0 || n >= max then error();
+      n
+    in
+    let index2() =
+        let n1 = index() in
+        let n2 = index() in
+        (n1,n2)
+    in
+    begin match cid with
+      | 0  -> KUnusable
+      | 1  -> let len = read_ui16 ch in
+              (* TODO: correctly decode modified UTF8 *)
+              KUtf8String (IO.nread ch len)
+      | 3  -> KInt (read_real_i32 ch)
+      | 4  -> KFloat (Int32.float_of_bits (read_real_i32 ch))
+      | 5  -> KLong (read_i64 ch)
+      | 6  -> KDouble (read_double ch)
+      | 7  -> KClass (index())
+      | 8  -> KString (index())
+      | 9  -> KFieldRef (index2())
+      | 10 -> KMethodRef (index2())
+      | 11 -> KInterfaceMethodRef (index2())
+      | 12 -> KNameAndType (index2())
+      | 15 -> let reft = get_reference_type (IO.read_byte ch) idx in
+              KMethodHandle (reft, index())
+      | 16 -> KMethodType (index())
+      | 18 -> let bootstrapref = read_ui16 ch in (* not index *)
+              KInvokeDynamic (bootstrapref, index())
+      | n -> error()
+    end
+
+  let rec expand_constant consts i =
+    let unexpected i =
+      error "%d: Unexpected constant type" i
+    in
+    let expand_path n =
+      match Array.get consts n with
+      | KUtf8String s -> expand_path s
+      | _ -> unexpected n
+    in
+    let expand_cls n =
+      match expand_constant consts n with
+      | ConstClass p -> p
+      | _ -> unexpected n
+    in
+    let expand_nametype n =
+      match expand_constant consts n with
+      | ConstNameAndType (s, jsig) -> (s, jsig)
+      | _ -> unexpected n
+    in
+    let expand_string n =
+      match Array.get consts n with
+      | KUtf8String s -> s
+      | _ -> unexpected n
+    in
+    let expand ncls nt =
+      match (expand_cls ncls, expand_nametype nt) with
+      | (path, (n, m)) -> (path, n, m)
+    in
+    let expand_m ncls nt =
+      let expand_nametype_m n =
+        match expand_nametype n with
+        | (n, TMethod m) -> (n, m)
+        | _              -> unexpected n
+      in
+      begin match (expand_cls ncls, expand_nametype_m nt) with
+        | (path, (n, m)) -> (path, n, m)
+      end
+    in
+    begin match Array.get consts i with
+      | KClass utf8ref ->
+        ConstClass (expand_path utf8ref)
+      | KFieldRef (classref, nametyperef) ->
+        ConstField (expand classref nametyperef)
+      | KMethodRef (classref, nametyperef) ->
+        ConstMethod (expand_m classref nametyperef)
+      | KInterfaceMethodRef (classref, nametyperef) ->
+        ConstInterfaceMethod (expand_m classref nametyperef)
+      | KString utf8ref -> ConstString (expand_string utf8ref)
+      | KInt i32 -> ConstInt i32
+      | KFloat f -> ConstFloat f
+      | KLong i64 -> ConstLong i64
+      | KDouble d -> ConstDouble d
+      | KNameAndType (n, t) ->
+        ConstNameAndType(expand_string n, parse_signature (expand_string t))
+      | KUtf8String s ->
+        ConstUtf8 s (* TODO: expand UTF8 characters *)
+      | KMethodHandle (reference_type, dynref) ->
+        ConstMethodHandle (reference_type, expand_constant consts dynref)
+      | KMethodType utf8ref ->
+        ConstMethodType (parse_method_signature (expand_string utf8ref))
+      | KInvokeDynamic (bootstrapref, nametyperef) ->
+        let (n, t) = expand_nametype nametyperef in
+        ConstInvokeDynamic(bootstrapref, n, t)
+      | KUnusable ->
+        ConstUnusable
+    end
+
+  let parse_const ch =
+    let constant_count = read_ui16 ch in
+
+    debug "count=%d %x\n" constant_count  constant_count;
+    let const_big = ref true in
+    let consts = Array.init constant_count (fun idx ->
+      if !const_big then begin
+        const_big := false;
+        KUnusable
+      end else
+      let c = parse_constant constant_count idx ch in
+      (match c with KLong _ | KDouble _ -> const_big := true | _ -> ());
+      c
+    ) in
+    Array.mapi (fun i _ -> expand_constant consts i) consts
+end
+
+let parse_const = ParseConst.parse_const
+
+let get_constant consts n =
+  if n < 1 || n >= Array.length consts then error "Invalid constant index %d" n;
+  match consts.(n) with
   | ConstUnusable -> error "Unusable constant index";
   | x -> x
 
@@ -516,20 +560,8 @@ let parse_class ch =
   if read_real_i32 ch <> 0xCAFEBABEl then error "Invalid header";
   let minorv = read_ui16 ch in
   let majorv = read_ui16 ch in
-  let constant_count = read_ui16 ch in
 
-  debug "count=%d %x\n" constant_count  constant_count;
-  let const_big = ref true in
-  let consts1 = Array.init constant_count (fun idx ->
-  	if !const_big then begin
-  	  const_big := false;
-  	  KUnusable
-  	end else
-    let c = parse_constant constant_count idx ch in
-    (match c with KLong _ | KDouble _ -> const_big := true | _ -> ());
-    c
-  ) in
-  let consts = Array.mapi (fun i _ -> expand_constant consts1 i) consts1 in
+  let consts = parse_const ch in
 
   debug "parse_access_flags\n";
 

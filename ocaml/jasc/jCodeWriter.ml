@@ -1,15 +1,13 @@
-open JData;;
-open ExtString;;
-open ExtList;;
 open IO;;
 open IO.BigEndian;;
+open JData;;
 open JCode;;
 
 exception Opcode_length_error of int * JCode.jopcode
 let error_len length op = raise (Opcode_length_error (length, op))
 
 let encode_jvm_basic_type = function
-  | `Int2Bool -> 0
+  | `Int -> 0
   | `Long -> 1
   | `Float -> 2
   | `Double -> 3
@@ -80,8 +78,8 @@ let encode_instruction ch count length op =
     | OpMonitorEnter -> wb 194 | OpMonitorExit -> wb 195
     | OpBreakpoint   -> wb 202
 
-    | OpArrayLoad  k -> jb 46 (match k with `Int -> `Int2Bool | #other_num as k -> k)
-    | OpArrayStore k -> jb 79 (match k with `Int -> `Int2Bool | #other_num as k -> k)
+    | OpArrayLoad  k -> jb 46 k
+    | OpArrayStore k -> jb 79 k
 
     | OpAdd    i -> jb  96 i
     | OpSub    i -> jb 100 i

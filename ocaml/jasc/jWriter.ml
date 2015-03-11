@@ -16,11 +16,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *)
-open JData;;
 open IO;;
 open IO.BigEndian;;
-open ExtString;;
-open ExtList;;
+open JData;;
 
 let debug = debug0
 
@@ -116,26 +114,26 @@ and write_constants ctx = function
           write_ui16 ctx.cpool path;
           1
       (** field reference *)
-      | ConstField (jpath, unqualified_name, jsignature) (* tag = 9 *) ->
+      | ConstField (jpath, string, jsignature) (* tag = 9 *) ->
           let jpath = const ctx (ConstClass jpath) in
-          let name = const ctx (ConstNameAndType (unqualified_name, jsignature)) in
+          let name = const ctx (ConstNameAndType (string, jsignature)) in
           write_byte ctx.cpool 9;
           write_ui16 ctx.cpool jpath;
           write_ui16 ctx.cpool name;
           1
       (** method reference; string can be special "<init>" and "<clinit>" values *)
-      | ConstMethod (jpath, unqualified_name, jmethod_signature) (* tag = 10 *) ->
+      | ConstMethod (jpath, string, jmethod_signature) (* tag = 10 *) ->
           let jpath = const ctx (ConstClass jpath) in
-          let name = const ctx (ConstNameAndType (unqualified_name, TMethod jmethod_signature)) in
+          let name = const ctx (ConstNameAndType (string, TMethod jmethod_signature)) in
           write_byte ctx.cpool 10;
           write_ui16 ctx.cpool jpath;
           write_ui16 ctx.cpool name;
           1
       
       (** interface method reference *)
-      | ConstInterfaceMethod (jpath, unqualified_name, jmethod_signature) (* tag = 11 *) ->
+      | ConstInterfaceMethod (jpath, string, jmethod_signature) (* tag = 11 *) ->
           let jpath = const ctx (ConstClass jpath) in
-          let name = const ctx (ConstNameAndType (unqualified_name, TMethod jmethod_signature)) in
+          let name = const ctx (ConstNameAndType (string, TMethod jmethod_signature)) in
           write_byte ctx.cpool 11;
           write_ui16 ctx.cpool jpath;
           write_ui16 ctx.cpool name;
@@ -173,8 +171,8 @@ and write_constants ctx = function
           write_double ctx.cpool d;
           2
       (** name and type: used to represent a field or method, without indicating which class it belongs to *)
-      | ConstNameAndType (unqualified_name, jsignature) ->
-          let name = (const ctx (ConstUtf8 (unqualified_name))) in
+      | ConstNameAndType (string, jsignature) ->
+          let name = (const ctx (ConstUtf8 (string))) in
           let jsig = (const ctx (ConstUtf8 (encode_sig jsignature))) in
           write_byte ctx.cpool 12;
           write_ui16 ctx.cpool name;
@@ -198,8 +196,8 @@ and write_constants ctx = function
           write_byte ctx.cpool 16;
           write_ui16 ctx.cpool jsig;
           1
-      | ConstInvokeDynamic (bootstrap_method, unqualified_name, jsignature) (* tag = 18 *) ->
-          let name_and_type = const ctx (ConstNameAndType(unqualified_name, jsignature)) in
+      | ConstInvokeDynamic (bootstrap_method, string, jsignature) (* tag = 18 *) ->
+          let name_and_type = const ctx (ConstNameAndType(string, jsignature)) in
           write_byte ctx.cpool 18;
           write_ui16 ctx.cpool bootstrap_method;
           write_ui16 ctx.cpool name_and_type;

@@ -1,18 +1,10 @@
-open JData;;
-open ExtString;;
 open ExtList;;
 open IO.BigEndian;;
+open JData;;
 open JCode;;
 open JReader;;
 
 let jvm_basic_type place = function
-    | 0 -> `Int2Bool
-    | 1 -> `Long
-    | 2 -> `Float
-    | 3 -> `Double
-    | n -> error_class "Illegal type of %s: %d" place n
-
-let jvm_basic_type' place = function
     | 0 -> `Int
     | 1 -> `Long
     | 2 -> `Float
@@ -45,24 +37,24 @@ let parse_opcode op ch wide =
   (* ---- load ----------------------------------- *)
   | 21 | 22 | 23 | 24 -> OpLoad (jvm_basic_type "load" (op - 21),read_unsigned ch wide)
   | 25                -> OpALoad (read_unsigned ch wide)
-  | 26 | 27 | 28 | 29 -> OpLoad (`Int2Bool,op - 26)
+  | 26 | 27 | 28 | 29 -> OpLoad (`Int,op - 26)
   | 30 | 31 | 32 | 33 -> OpLoad (`Long,op - 30)
   | 34 | 35 | 36 | 37 -> OpLoad (`Float,op - 34)
   | 38 | 39 | 40 | 41 -> OpLoad (`Double,op - 38)
   | 42 | 43 | 44 | 45 -> OpALoad (op - 42)
   (* ---- array load ---------------------------- *)
-  | 46 | 47 | 48 | 49 -> OpArrayLoad (jvm_basic_type' "arrayload" (op - 46))
+  | 46 | 47 | 48 | 49 -> OpArrayLoad (jvm_basic_type "arrayload" (op - 46))
   | 50 -> OpAALoad | 51 -> OpBALoad | 52 -> OpCALoad | 53 -> OpSALoad
   (* ---- store ----------------------------------- *)
   | 54 | 55 | 56 | 57 -> OpStore (jvm_basic_type "store" (op - 54),read_unsigned ch wide)
   | 58                -> OpAStore (read_unsigned ch wide)
-  | 59 | 60 | 61 | 62 -> OpStore (`Int2Bool , op - 59)
+  | 59 | 60 | 61 | 62 -> OpStore (`Int , op - 59)
   | 63 | 64 | 65 | 66 -> OpStore (`Long , op - 63)
   | 67 | 68 | 69 | 70 -> OpStore (`Float , op - 67)
   | 71 | 72 | 73 | 74 -> OpStore (`Double , op - 71)
   | 75 | 76 | 77 | 78 -> OpAStore (op - 75)
   (* ---- array store ---------------------------- *)
-  | 79 | 80 | 81 | 82 -> OpArrayStore (jvm_basic_type' "arraystore" (op - 79))
+  | 79 | 80 | 81 | 82 -> OpArrayStore (jvm_basic_type "arraystore" (op - 79))
   | 83 -> OpAAStore | 84 -> OpBAStore | 85 -> OpCAStore | 86 -> OpSAStore
   (* ---- stack ---------------------------------- *)
   | 87 -> OpPop  | 88 -> OpPop2
@@ -191,7 +183,6 @@ let parse_code constants code =
     then ignore(IO.really_nread ch (4 - offsetmod4));
     codes.(p) <- parse_opcode op ch false
   done;
-  debug "codes ok\n";
   let len = read_ui16 ch in
   let exc_tbl = List.init len begin fun _ ->
     {
@@ -210,9 +201,7 @@ let parse_code constants code =
     }
   end in
   let attrib_count = read_ui16 ch in
-  debug "attrib_count %d ok@." attrib_count;
   let attribs = parse_attributes ~on_special:(fun _ _ aname alen do_default ->
-    debug "aname %s alen %d@." aname alen;
     match aname with
     | _ -> do_default()
   ) constants ch attrib_count in {

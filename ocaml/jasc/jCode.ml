@@ -1,24 +1,23 @@
 
 (* Numerical types that are not smaller than int. *)
-type other_num = [
+
+(* JVM basic type (int = short = char = byte = bool). *)
+type jvm_basic_type = [
+  | `Int
   | `Long
   | `Float
   | `Double
 ]
 
-(* JVM basic type (int = short = char = byte = bool). *)
-type jvm_basic_type = [
-  | `Int2Bool
-  | other_num
-]
-
 type java_basic_type = [
-  | `Int
   | `Short
   | `Char
   | `Byte
   | `Bool
-  | other_num
+  | `Int
+  | `Long
+  | `Float
+  | `Double
 ]
 
 type jopcode =
@@ -31,13 +30,13 @@ type jopcode =
   | OpLoad of jvm_basic_type * int
   | OpALoad of int
 
-  | OpArrayLoad of [`Int | other_num]
+  | OpArrayLoad of jvm_basic_type
   | OpAALoad | OpBALoad | OpCALoad | OpSALoad
 
   | OpStore of jvm_basic_type * int
   | OpAStore of int
 
-  | OpArrayStore of [`Int | other_num]
+  | OpArrayStore of jvm_basic_type
   | OpAAStore | OpBAStore | OpCAStore | OpSAStore
 
   | OpPop  | OpPop2
@@ -124,7 +123,7 @@ type jcode = {
   max_locals: int;
   code : jopcodes;
   exc_tbl : exc_tbl list;
-  attributes : JData.jattributes;
+  attributes : JData.jattribute list;
 }
 
 exception Class_structure_error of string
