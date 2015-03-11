@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *)
 open JData;;
-open JPPData;;
+open JDataPP;;
 open IO.BigEndian;;
 open ExtString;;
 open ExtList;;

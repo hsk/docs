@@ -11,7 +11,7 @@ let lexbuf l =
 
 let file f =
 (*
-  Format.printf "***** original data@. %a@." JPPData.pp_jclass a;
+  Format.printf "***** original data@. %a@." JDataPP.pp_jclass a;
   let fp = open_in_bin (j2class f) in
   let a = JReader.parse_class (IO.input_channel fp) in
   close_in fp;
@@ -20,7 +20,7 @@ let file f =
     try
       let codestr = JCode.get_code m in
       let code = JCodeReader.parse_code (a.constants) codestr in
-      Format.printf "%a@." JPPCode.pp_jcode code;
+      Format.printf "%a@." JCodePP.pp_jcode code;
     with
       | _ -> ()
 
@@ -34,7 +34,7 @@ let file f =
     let a = lexbuf (Lexing.from_channel inchan) in
     close_in inchan;
 (*
-    Format.printf "***** compiled data@. %a@." JPPData.pp_jclass a;
+    Format.printf "***** compiled data@. %a@." JDataPP.pp_jclass a;
 *)
     let fp = open_out_bin (j2class f) in
     JWriter.encode_class (IO.output_channel fp) a;
@@ -44,7 +44,7 @@ let file f =
     try
       let codestr = JCode.get_code m in
       let code = JCodeReader.parse_code (a.constants) codestr in
-      Format.printf "%a@." JPPCode.pp_jcode code;
+      Format.printf "%a@." JCodePP.pp_jcode code;
     with
       | _ -> ()
     ) a.cmethods;

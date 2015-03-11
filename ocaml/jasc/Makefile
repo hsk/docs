@@ -1,7 +1,7 @@
 EXE=jasc
 OCAMLOPT=ocamlfind ocamlopt -I ext -g
 OCAMLC=ocamlfind ocamlc -I ext -g
-SRC=jData.ml jPPData.ml jReader.ml jWriter.ml jCode.ml jPPCode.ml jCodeReader.ml  jCodeWriter.ml
+SRC=jData.ml jDataPP.ml jReader.ml jWriter.ml jCode.ml jCodePP.ml jCodeReader.ml  jCodeWriter.ml
 EXT= ext/enum.mli ext/enum.ml ext/extString.mli ext/extString.ml ext/IO.mli ext/IO.ml ext/extList.mli ext/extList.ml ext/pMap.mli ext/pMap.ml
 ifeq ($(OS),Windows_NT)
 	EXE=jasc.exe
@@ -94,7 +94,7 @@ pull:
 	git pull
 
 clean:
-	rm -rf main lexer.ml parser.ml *.cm* ext/*.cm* ext/*.o $(wildcard *.cmx) $(wildcard *.obj) $(wildcard *.o) $(wildcard *.cmi) $(wildcard *.cmo) *.class
+	rm -rf main tests/*.class lexer.ml parser.ml *.cm* ext/*.cm* ext/*.o $(wildcard *.cmx) $(wildcard *.obj) $(wildcard *.o) $(wildcard *.cmi) $(wildcard *.cmo) *.class
 distclean: clean
 	rm -rf $(EXE)
 

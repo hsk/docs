@@ -585,7 +585,7 @@ let encode_class ch c =
   List.iter (function | TObject(aa,bb) ->
     let jsig = (const ctx (ConstClass (aa))) in
     write_ui16 ctx.ch jsig
-  | v -> Format.printf "error %a@." JPPData.pp_jsignature v; assert false
+  | v -> Format.printf "error %a@." JDataPP.pp_jsignature v; assert false
   ) c.cinterfaces;
 
   write_ui16 ctx.ch (List.length c.cfields);
