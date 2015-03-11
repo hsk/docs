@@ -5,8 +5,10 @@ SRC=jData.ml jPPData.ml jReader.ml jWriter.ml jCode.ml jPPCode.ml jCodeReader.ml
 EXT= ext/enum.mli ext/enum.ml ext/extString.mli ext/extString.ml ext/IO.mli ext/IO.ml ext/extList.mli ext/extList.ml ext/pMap.mli ext/pMap.ml
 ifeq ($(OS),Windows_NT)
 	EXE=jasc.exe
+	INSTALL_PATH=/usr/bin/
 else
 	EXE=./jasc
+	INSTALL_PATH=/usr/local/bin/
 endif
 
 all: run
@@ -83,7 +85,7 @@ test:
 
 
 install:
-	cp jasc /usr/local/bin/
+	cp jasc $(INSTALL_PATH)
 
 push: clean
 	git commit -a
