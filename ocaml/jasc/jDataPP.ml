@@ -190,16 +190,16 @@ let rec pp_jtypes fmt x =
     ) x
 and show_jtypes x = Format.asprintf "%a" pp_jtypes x
 
-let rec pp_jannotation fmt x =
+let rec pp_jannot fmt x =
   Format.fprintf fmt "{ @[<hov>";
   Format.fprintf fmt "JData.ann_type = %a;@ " pp_jty x.ann_type;
-  Format.fprintf fmt "ann_elements = [@[<hov>%a@]]@ "
+  Format.fprintf fmt "ann_elems = [@[<hov>%a@]]@ "
     (fun fmt ->
-      List.iter (fun (a0, a1) -> Format.fprintf fmt "(@[<hov>%S,@ %a@]);@ " a0 pp_jannotation_value a1)
-    ) x.ann_elements;
+      List.iter (fun (a0, a1) -> Format.fprintf fmt "(@[<hov>%S,@ %a@]);@ " a0 pp_jannot_val a1)
+    ) x.ann_elems;
   Format.fprintf fmt "@] }"
-and show_jannotation x = Format.asprintf "%a" pp_jannotation x
-and pp_jannotation_value fmt =
+and show_jannot x = Format.asprintf "%a" pp_jannot x
+and pp_jannot_val fmt =
   function
   | ValConst (a0,a1) ->
       Format.fprintf fmt "@[<hov2>JData.ValConst (@,%d,@ %a@])" a0 pp_jconst a1
@@ -208,13 +208,13 @@ and pp_jannotation_value fmt =
   | ValClass a0 ->
       Format.fprintf fmt "(@[<hov2>JData.ValClass@ %a@])" pp_jty a0;
   | ValAnnotation a0 ->
-      Format.fprintf fmt "(@[<hov2>JData.ValAnnotation@ %a@])" pp_jannotation a0
+      Format.fprintf fmt "(@[<hov2>JData.ValAnnotation@ %a@])" pp_jannot a0
   | ValArray a0 ->
       Format.fprintf fmt "(@[<hov2>JData.ValArray@ ";
       Format.fprintf fmt "[@[<hov>%a@]]"
-        (fun fmt -> List.iter (Format.fprintf fmt "%a;@ " pp_jannotation_value)) a0;
+        (fun fmt -> List.iter (Format.fprintf fmt "%a;@ " pp_jannot_val)) a0;
       Format.fprintf fmt "@])"
-and show_jannotation_value x = Format.asprintf "%a" pp_jannotation_value x
+and show_jannot_val x = Format.asprintf "%a" pp_jannot_val x
 
 let rec pp_jattr fmt = function
   | AttrDeprecated -> Format.pp_print_string fmt "JData.AttrDeprecated"
@@ -222,13 +222,20 @@ let rec pp_jattr fmt = function
       Format.fprintf fmt "(@[<hov2>JData.AttrVisibleAnnotations@ %a@])"
         (fun fmt ->
           Format.fprintf fmt "[@[<hov>%a@]]"
-            (fun fmt -> List.iter (Format.fprintf fmt "%a;@ " pp_jannotation))
+            (fun fmt -> List.iter (Format.fprintf fmt "%a;@ " pp_jannot))
         ) a0;
   | AttrInvisibleAnnotations a0 ->
       Format.fprintf fmt "(@[<hov2>JData.AttrInvisibleAnnotations@ ";
       Format.fprintf fmt "[@[<hov>%a@]]"
-        (fun fmt -> List.iter (Format.fprintf fmt "%a;@ " pp_jannotation)) a0;
+        (fun fmt -> List.iter (Format.fprintf fmt "%a;@ " pp_jannot)) a0;
       Format.fprintf fmt "@])"
+  | AttrLineNumberTable a0 ->
+      Format.fprintf fmt "(@[<hov2>JData.AttrLineNumberTable@ ";
+      Format.fprintf fmt "[@[<hov>%a@]]"
+        (fun fmt -> List.iter (fun (a,b) -> Format.fprintf fmt "(%d,%d);@ " a b)) a0;
+      Format.fprintf fmt "@])"
+  | AttrSourceFile a0 ->
+      Format.fprintf fmt "@[<hov2>JData.AttrSourceFile (@,%S@])" a0
   | AttrUnknown (a0,a1) ->
       Format.fprintf fmt "@[<hov2>JData.AttrUnknown (@,%S,@ %S@])" a0 a1
 and show_jattr x = Format.asprintf "%a" pp_jattr x

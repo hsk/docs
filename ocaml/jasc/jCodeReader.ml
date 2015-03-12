@@ -183,7 +183,7 @@ let parse_code consts code =
     codes.(p) <- parse_opcode op ch false
   done;
   let len = read_ui16 ch in
-  let exc_tbl = List.init len begin fun _ ->
+  let try_catches = List.init len begin fun _ ->
     {
       e_start = read_ui16 ch;
       e_end = read_ui16 ch;
@@ -207,6 +207,6 @@ let parse_code consts code =
     max_stack = max_stack;
     max_locals = max_locals;
     code = codes;
-    exc_tbl = exc_tbl;
+    try_catches = try_catches;
     attrs = attribs;
   }

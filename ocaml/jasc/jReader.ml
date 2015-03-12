@@ -251,28 +251,22 @@ let parse_access_flags ch all_flags =
   !flags
 
 module ParseConst = struct
-  (* reading/writing *)
-  type utf8ref = int
-  type classref = int
-  type nametyperef = int
-  type dynref = int
-  type bootstrapref = int
 
   type jconst_raw =
-    | KClass of utf8ref (* 7 *)
-    | KFieldRef of (classref * nametyperef) (* 9 *)
-    | KMethodRef of (classref * nametyperef) (* 10 *)
-    | KInterfaceMethodRef of (classref * nametyperef) (* 11 *)
-    | KString of utf8ref (* 8 *)
+    | KClass of int (* 7 *)
+    | KFieldRef of (int * int) (* 9 *)
+    | KMethodRef of (int * int) (* 10 *)
+    | KInterfaceMethodRef of (int * int) (* 11 *)
+    | KString of int (* 8 *)
     | KInt of int32 (* 3 *)
     | KFloat of float (* 4 *)
     | KLong of int64 (* 5 *)
     | KDouble of float (* 6 *)
-    | KNameAndType of (utf8ref * utf8ref) (* 12 *)
+    | KNameAndType of (int * int) (* 12 *)
     | KUtf8String of string (* 1 *)
-    | KMethodHandle of (ref_type * dynref) (* 15 *)
-    | KMethodType of utf8ref (* 16 *)
-    | KInvokeDynamic of (bootstrapref * nametyperef) (* 18 *)
+    | KMethodHandle of (ref_type * int) (* 15 *)
+    | KMethodType of int (* 16 *)
+    | KInvokeDynamic of (int * int) (* 18 *)
     | KUnusable
 
   let parse_constant max idx ch =
@@ -312,28 +306,28 @@ module ParseConst = struct
     end
 
   let rec expand_constant consts i =
-    let unexpected i =
+    let error i =
       error "%d: Unexpected constant type" i
     in
     let expand_path n =
       match Array.get consts n with
       | KUtf8String s -> expand_path s
-      | _ -> unexpected n
+      | _ -> error n
     in
     let expand_cls n =
       match expand_constant consts n with
       | ConstClass p -> p
-      | _ -> unexpected n
+      | _ -> error n
     in
     let expand_nametype n =
       match expand_constant consts n with
       | ConstNameAndType (s, jty) -> (s, jty)
-      | _ -> unexpected n
+      | _ -> error n
     in
     let expand_string n =
       match Array.get consts n with
       | KUtf8String s -> s
-      | _ -> unexpected n
+      | _ -> error n
     in
     let expand ncls nt =
       match (expand_cls ncls, expand_nametype nt) with
@@ -343,39 +337,30 @@ module ParseConst = struct
       let expand_nametype_m n =
         match expand_nametype n with
         | (n, TMethod m) -> (n, m)
-        | _              -> unexpected n
+        | _              -> error n
       in
       begin match (expand_cls ncls, expand_nametype_m nt) with
         | (path, (n, m)) -> (path, n, m)
       end
     in
     begin match Array.get consts i with
-      | KClass utf8ref ->
-        ConstClass (expand_path utf8ref)
-      | KFieldRef (classref, nametyperef) ->
-        ConstField (expand classref nametyperef)
-      | KMethodRef (classref, nametyperef) ->
-        ConstMethod (expand_m classref nametyperef)
-      | KInterfaceMethodRef (classref, nametyperef) ->
-        ConstInterfaceMethod (expand_m classref nametyperef)
-      | KString utf8ref -> ConstString (expand_string utf8ref)
+      | KClass n -> ConstClass (expand_path n)
+      | KFieldRef (ncls, nt) -> ConstField (expand ncls nt)
+      | KMethodRef (ncls, nt) -> ConstMethod (expand_m ncls nt)
+      | KInterfaceMethodRef (ncls, nt) -> ConstInterfaceMethod (expand_m ncls nt)
+      | KString n -> ConstString (expand_string n)
       | KInt i32 -> ConstInt i32
       | KFloat f -> ConstFloat f
       | KLong i64 -> ConstLong i64
       | KDouble d -> ConstDouble d
-      | KNameAndType (n, t) ->
-        ConstNameAndType(expand_string n, parse_ty (expand_string t))
-      | KUtf8String s ->
-        ConstUtf8 s (* TODO: expand UTF8 characters *)
-      | KMethodHandle (ref_type, dynref) ->
-        ConstMethodHandle (ref_type, expand_constant consts dynref)
-      | KMethodType utf8ref ->
-        ConstMethodType (parse_mty (expand_string utf8ref))
-      | KInvokeDynamic (bootstrapref, nametyperef) ->
-        let (n, t) = expand_nametype nametyperef in
-        ConstInvokeDynamic(bootstrapref, n, t)
-      | KUnusable ->
-        ConstUnusable
+      | KNameAndType (n, t) -> ConstNameAndType(expand_string n, parse_ty (expand_string t))
+      | KUtf8String s -> ConstUtf8 s (* TODO: expand UTF8 characters *)
+      | KMethodHandle (ref_type, nd) -> ConstMethodHandle (ref_type, expand_constant consts nd)
+      | KMethodType n -> ConstMethodType (parse_mty (expand_string n))
+      | KInvokeDynamic (nbootstrap, nt) ->
+        let (n, t) = expand_nametype nt in
+        ConstInvokeDynamic(nbootstrap, n, t)
+      | KUnusable -> ConstUnusable
     end
 
   let parse_const ch =
@@ -448,7 +433,7 @@ and parse_annotation consts ch =
   let count = read_ui16 ch in
   {
     ann_type = anntype;
-    ann_elements = List.init count (fun _ -> parse_ann_element consts ch)
+    ann_elems = List.init count (fun _ -> parse_ann_element consts ch)
   }
 
 let parse_attr on_special consts ch =
@@ -494,18 +479,18 @@ let parse_field kind consts ch =
   debug "acc %a ok@." pp_jaccesses !acc;
   let name = get_string consts ch in
   debug "name %s ok@." name;
-  let sign = parse_ty (get_string consts ch) in
+  let vmty = parse_ty (get_string consts ch) in
   debug "sig ok@.";
 
-  let jty = ref sign in
+  let ty = ref vmty in
   let throws = ref [] in
   let types = ref [] in
   let constant = ref None in
   let code = ref None in
 
-  let attrib_count = read_ui16 ch in
-  debug "attrib_count %d ok@." attrib_count;
-  let attribs = parse_attrs consts ch attrib_count
+  let attr_count = read_ui16 ch in
+  debug "attr_count %d ok@." attr_count;
+  let attrs = parse_attrs consts ch attr_count
     ~on_special:begin fun _ _ aname alen do_default ->
     debug "special kind %a aname %S@." pp_jfield_kind kind aname;
     match (kind, aname) with
@@ -516,8 +501,7 @@ let parse_field kind consts ch =
       if not (List.mem JSynthetic !acc) then acc := !acc @ [JSynthetic];
       None
     | JKField, "Signature" ->
-      let s = get_string consts ch in
-      jty := parse_ty s;
+      ty := parse_ty (get_string consts ch);
       None
     | JKMethod, "Code" -> (* TODO *)
       Some (AttrUnknown (aname, IO.nread ch alen))
@@ -529,26 +513,26 @@ let parse_field kind consts ch =
       None
     | JKMethod, "Signature" ->
       let s = get_string consts ch in
-      let (tp, sgn, thr) = parse_complete_mty s in
-      if thr <> [] then throws := thr;
-      types := tp;
-      jty := TMethod(sgn);
+      let (typ, mty, throw) = parse_complete_mty s in
+      if throw <> [] then throws := throw;
+      types := typ;
+      ty := TMethod(mty);
       None
     | _ -> do_default()
   end in
-  debug "attribs %a ok@." pp_jattrs attribs;
+  debug "attrs %a ok@." pp_jattrs attrs;
 
   {
     jf_name = name;
     jf_kind = kind;
     (* signature, as used by the vm *)
-    jf_vmty = sign;
+    jf_vmty = vmty;
     (* actual signature, as used in java code *)
-    jf_ty = !jty;
+    jf_ty = !ty;
     jf_throws = !throws;
     jf_types = !types;
     jf_accs = !acc;
-    jf_attrs = attribs;
+    jf_attrs = attrs;
     jf_const = !constant;
     jf_code = !code;
   }
@@ -592,9 +576,9 @@ let parse_class ch =
   let super = ref super in
   let interfaces = ref interfaces in
 
-  let attribs = read_ui16 ch in
-  debug "attribs %d\n" attribs;
-  let attribs = parse_attrs ~on_special:(fun _ _ aname alen do_default ->
+  let attrs_count = read_ui16 ch in
+  debug "attrs_count %d\n" attrs_count;
+  let attrs = parse_attrs ~on_special:(fun _ _ aname alen do_default ->
     match aname with
     | "InnerClasses" ->
       debug "innerclasses\n";
@@ -654,7 +638,7 @@ let parse_class ch =
       super := sup;
       None
     | _ -> do_default()
-  ) consts ch attribs in
+  ) consts ch attrs_count in
 	IO.close_in ch;
   {
     cversion = (majorv, minorv);
@@ -665,7 +649,7 @@ let parse_class ch =
     cinterfaces = !interfaces;
     cfields = fields;
     cmethods = methods;
-    cattrs = attribs;
+    cattrs = attrs;
     cinner_types = !inner;
     ctypes = !types;
   }

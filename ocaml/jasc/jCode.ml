@@ -106,7 +106,7 @@ type jopcode =
 
 type jopcodes = jopcode array
 
-type exc_tbl = {
+type try_catch = {
   e_start : int;
   e_end : int;
   e_handler : int;
@@ -117,7 +117,7 @@ type jcode = {
   max_stack : int;
   max_locals: int;
   code : jopcodes;
-  exc_tbl : exc_tbl list;
+  try_catches : try_catch list;
   attrs : JData.jattr list;
 }
 

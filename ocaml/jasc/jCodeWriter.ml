@@ -241,13 +241,13 @@ let encode_codes ch code =
   if not (count () = Array.length code)
   then error_class "unparsing Badly alligned low level bytecode"
 
-let encode_code ctx { max_stack; max_locals; code; exc_tbl; attrs } =
+let encode_code ctx { max_stack; max_locals; code; try_catches; attrs } =
   let ch = ctx.JWriter.ch in
   write_i16 ch max_stack;
   write_i16 ch max_locals;
   write_i32 ch (Array.length code);
   encode_codes ch code;
-  write_ui16 ch (List.length exc_tbl);
+  write_ui16 ch (List.length try_catches);
   List.iter (fun {e_start;e_end;e_handler;e_catch_type} ->
     write_ui16 ch e_start;
     write_ui16 ch e_end;
@@ -255,9 +255,8 @@ let encode_code ctx { max_stack; max_locals; code; exc_tbl; attrs } =
     match e_catch_type with
     | None -> write_ui16 ch 0
     | Some e -> write_ui16 ch (JWriter.const ctx (ConstClass e))
-  ) exc_tbl;
+  ) try_catches;
+
   write_ui16 ch (List.length attrs);
-  List.iter (fun attr ->
-    JWriter.encode_attr ctx attr
-  ) attrs
+  List.iter (fun attr -> JWriter.encode_attr ctx attr) attrs
 

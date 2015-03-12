@@ -201,14 +201,14 @@ and write_const ctx = function
           1
       | ConstUnusable -> 1
 
-let ctx_to_array ctx =
+let ctx_to_consts ctx =
   let arr = Array.create ctx.ccount ConstUnusable in
   PMap.iter (fun c i ->
     arr.(i) <- c
   ) ctx.consts;
   arr
 
-let new_ctx ch consts =
+let new_ctx consts =
   let map = ref PMap.empty in
   let consts = if Array.length consts = 0 then [|ConstUnusable|] else consts in
   Array.iteri (fun i c ->
@@ -217,7 +217,7 @@ let new_ctx ch consts =
   let ctx = {
     cpool = output_string ();
     ccount = Array.length consts;
-    ch = ch;
+    ch = output_string ();
     consts = !map;
   } in
   Array.iter (fun c ->
@@ -225,6 +225,12 @@ let new_ctx ch consts =
   ) consts;
   ctx.ccount = Array.length consts;
   ctx
+let open_ctx ctx f =
+  let back_ch = ctx.ch in
+  ctx.ch <- output_string ();
+  let r = f ctx in
+  ctx.ch <- back_ch;
+  r
 
 (* Acess (and other) flags unparsing *)
 (*************************************)
@@ -326,58 +332,81 @@ let stackmap_table_attr consts stackmap_attr =
 let write_utf8 ctx str = 
   write_ui16 ctx.ch (const ctx (ConstUtf8 str))
 
-let write_string_with_length f ctx str =
-  f ctx.ch (String.length str);
-  nwrite ctx.ch str
-
-let rec encode_element_value ctx v =
-  let char_e = Char.code 'e' in
-  let char_c = Char.code 'c' in
-  let char_at = Char.code '@' in
-  let char_sqbraket = Char.code '[' in
+let rec encode_val ctx v =
   begin match v with
     | ValConst(c, cst) ->
         write_byte ctx.ch c;
         write_ui16 ctx.ch (const ctx cst)
     | ValEnum (cn, constructor) ->
-        write_byte ctx.ch char_e;
+        write_byte ctx.ch (Char.code 'e');
         write_utf8 ctx (encode_ty cn);
         write_utf8 ctx constructor
     | ValClass sign ->
-        write_byte ctx.ch char_c;
+        write_byte ctx.ch (Char.code 'c');
         write_utf8 ctx (encode_ty sign)
     | ValAnnotation annot ->
-        write_byte ctx.ch char_at;
-        encode_annotation ctx annot
+        write_byte ctx.ch (Char.code '@');
+        encode_annot ctx annot
     | ValArray elements ->
-        write_byte ctx.ch char_sqbraket;
+        write_byte ctx.ch (Char.code '[');
         write_ui16 ctx.ch (List.length elements);
-        List.iter (encode_element_value ctx) elements
+        List.iter (encode_val ctx) elements
   end
 
-and encode_annotation ctx annot =
+and encode_annot ctx annot =
     write_utf8 ctx (encode_ty annot.ann_type);
-    write_ui16 ctx.ch (List.length annot.ann_elements);
+    write_ui16 ctx.ch (List.length annot.ann_elems);
     List.iter begin fun (name, value) ->
       write_utf8 ctx name;
-      encode_element_value ctx value
-    end annot.ann_elements
+      encode_val ctx value
+    end annot.ann_elems
 
-let encode_annotations ctx annots =
+let encode_annots ctx annots =
   write_ui16 ctx.ch (List.length annots);
-  List.iter (encode_annotation ctx) annots
+  List.iter (encode_annot ctx) annots
 
-let encode_parameter_annotations ctx param_annots =
+let encode_parameter_annots ctx param_annots =
   write_byte ctx.ch (List.length param_annots);
-  List.iter (encode_annotations ctx) param_annots
+  List.iter (encode_annots ctx) param_annots
 
-let rec encode_attr_to_strings ctx =
-  let ch = output_string () in
-    function
-    (*
-      | AttrSignature s ->
-      write_string ctx s;
-      ("Signature", close_out ch)
+let rec encode_attr_to_strings ctx = function
+      | AttrDeprecated -> ("Deprecated", "")
+      | AttrUnknown (name, contents) -> (name, contents)
+      | AttrVisibleAnnotations annots ->
+          open_ctx ctx (fun ctx ->
+            encode_annots ctx annots;
+            ("RuntimeVisibleAnnotations", close_out ctx.ch)
+          )
+      | AttrInvisibleAnnotations annots ->
+          open_ctx ctx (fun ctx ->
+            encode_annots ctx annots;
+            ("RuntimeInvisibleAnnotations", close_out ctx.ch)
+          )
+      | AttrLineNumberTable l ->
+          open_ctx ctx (fun ctx ->
+            write_ui16 ctx.ch (List.length l);
+            List.iter(fun (pc, line) ->
+               write_ui16 ctx.ch pc;
+               write_ui16 ctx.ch line
+            ) l;
+            ("LineNumberTable", close_out ctx.ch)
+          )
+      | AttrSourceFile s ->
+          open_ctx ctx (fun ctx ->
+            write_utf8 ctx s;
+            ("SourceFile", close_out ctx.ch)
+          )
+      (*
+      | AttrSynthetic ->
+      ("Synthetic", close_out ch)
+      | AttrVisibleParameterAnnotations param_annots ->
+          encode_parameter_annots ctx param_annots;
+          ("RuntimeVisibleParameterAnnotations", close_out ch)
+      | AttrInvisibleParameterAnnotations param_annots ->
+          encode_parameter_annots ctx param_annots;
+          ("RuntimeInvisibleParameterAnnotations", close_out ch)
+      *)
+      (*
       | AttrEnclosingMethod (cn, mso) ->
       write_class ctx cn;
       (match mso with
@@ -388,42 +417,9 @@ let rec encode_attr_to_strings ctx =
       ("EnclosingMethod", close_out ch)
       | AttrSourceDebugExtension s ->
       ("SourceDebugExtension", s)
-      | AttrSourceFile s ->
-      write_string ctx s;
-      ("SourceFile", close_out ch)
       | AttrConstant c ->
       write_value ctx c;
       ("ConstantValue", close_out ch)
-      | AttrExceptions l ->
-      write_with_size write_ui16 ch
-        (function c -> write_class ctx c)
-        l;
-      ("Exceptions", close_out ch)
-      | AttrInnerClasses l ->
-      write_with_size write_ui16 ch
-        (function inner, outer, inner_name, flags ->
-           (match inner with
-          | None -> write_ui16 ch 0
-          | Some inner -> write_class ctx inner);
-           (match outer with
-          | None -> write_ui16 ch 0
-          | Some outer -> write_class ctx outer);
-           (match inner_name with
-          | None -> write_ui16 ch 0
-          | Some inner_name ->
-              write_string ctx inner_name);
-           write_ui16 ch (encode_access innerclass_flags flags))
-        l;
-      ("InnerClasses", close_out ch)
-      | AttrSynthetic ->
-      ("Synthetic", close_out ch)
-      | AttrLineNumberTable l ->
-      write_with_size write_ui16 ch
-        (function pc, line ->
-           write_ui16 ch pc;
-           write_ui16 ch line)
-        l;
-      ("LineNumberTable", close_out ch)
       | AttrLocalVariableTable l ->
       write_with_size write_ui16 ch
         (function start_pc, length, name, signature, index ->
@@ -445,8 +441,6 @@ let rec encode_attr_to_strings ctx =
             l;
           ("LocalVariableTypeTable", close_out ch)
       *)
-      | AttrDeprecated ->
-      ("Deprecated", close_out ch)
 
       (*
       | AttrStackMap s ->
@@ -455,77 +449,40 @@ let rec encode_attr_to_strings ctx =
       | AttrStackMapTable s ->
       ignore (close_out ch);
       stackmap_table_attr consts s
-      | AttrUnknown (name, contents) ->
-      (name, contents)
       | AttrAnnotationDefault ev ->
-          encode_element_value ctx ev;
+          encode_val ctx ev;
           ("AnnotationDefault", close_out ch)
-    *)
-      | AttrVisibleAnnotations annots ->
-          encode_annotations ctx annots;
-          ("RuntimeVisibleAnnotations", close_out ch)
-      | AttrInvisibleAnnotations annots ->
-          encode_annotations ctx annots;
-          ("RuntimeInvisibleAnnotations", close_out ch)
-          (*
-      | AttrVisibleParameterAnnotations param_annots ->
-          encode_parameter_annotations ctx param_annots;
-          ("RuntimeVisibleParameterAnnotations", close_out ch)
-      | AttrInvisibleParameterAnnotations param_annots ->
-          encode_parameter_annotations ctx param_annots;
-          ("RuntimeInvisibleParameterAnnotations", close_out ch)
-      | AttrCode code ->
-      let code = Lazy.force code in
-        write_ui16 ch code.c_max_stack;
-        write_ui16 ch code.c_max_locals;
-        write_with_length write_i32 ch
-          (function ch ->
-         JParseCode.encode_code ch code.c_code);
-        write_with_size write_ui16 ch
-          (function e ->
-         write_ui16 ch e.JCode.e_start;
-         write_ui16 ch e.JCode.e_end;
-         write_ui16 ch e.JCode.e_handler;
-         match e.JCode.e_catch_type with
-           | Some cl -> write_class ctx cl
-           | None -> write_ui16 ch 0)
-          code.c_exc_tbl;
-        write_with_size write_ui16 ch
-          (encode_attr ctx)
-          code.c_attrs;
-        ("Code", close_out ch)
-    *)
-      | AttrUnknown(a, b) -> (a, b ^ close_out ch)
+      *)
 
 and encode_attr ctx attr =
   let (name, content) = encode_attr_to_strings ctx attr in
   debug "encode_attr (%S, %S)@." name content;
   write_utf8 ctx name;
-  write_string_with_length write_i32 ctx content
-
-(* Fields, methods and classes *)
-(*******************************)
+  write_i32 ctx.ch (String.length content);
+  nwrite ctx.ch content
 
 let encode_field ctx field =
   write_ui16 ctx.ch (encode_access field.jf_accs);
   write_utf8 ctx field.jf_name;
-  write_utf8 ctx (encode_ty field.jf_ty);
+  write_utf8 ctx (encode_ty field.jf_vmty);
   let attrs = field.jf_attrs in
   let attrs =
     begin match field.jf_const with
     | None -> attrs
-    | Some(constant) ->
-      let ch = output_string () in
-      write_ui16 ch (const ctx constant);
-      AttrUnknown("ConstantValue", close_out ch) :: attrs
+    | Some(c) ->
+      open_ctx ctx (fun ctx ->
+        write_ui16 ctx.ch (const ctx c);
+        AttrUnknown("ConstantValue", close_out ctx.ch) :: attrs
+      )
     end
   in
-  (*let attrs =
-    let ch = output_string () in
-    let jty = field.jf_ty in
-    write_ui16 ch (const ctx (ConstUtf8 (encode_ty jty)));
-    AttrUnknown("Signature", close_out ch) :: attrs
-  in *)
+  let attrs =
+    if field.jf_ty = field.jf_vmty then attrs else
+    open_ctx ctx (fun ctx ->
+      write_ui16 ctx.ch (const ctx (ConstUtf8 (encode_ty field.jf_ty)));
+      AttrUnknown("Signature", close_out ctx.ch) :: attrs
+    )
+  in
   write_ui16 ctx.ch (List.length attrs);
   List.iter (encode_attr ctx) attrs
 
@@ -534,30 +491,28 @@ let encode_method ctx field =
   write_utf8 ctx field.jf_name;
   write_utf8 ctx (encode_ty field.jf_ty);
   let attrs = field.jf_attrs in
-  (*let attrs = match field.jf_code with
-    | None -> attrs
-    | Some(code) -> AttrUnknown("Code", code) :: attrs
-  in*)
   let attrs =
-    let exts = field.jf_throws in
-    let len = List.length exts in
+    let throws = field.jf_throws in
+    let len = List.length throws in
     if len = 0 then attrs else
-    let ch = output_string () in
-    write_ui16 ch len;
-    List.iter (function
-      | TObject(e, _) ->
-        let n = const ctx (ConstClass e) in
-        write_ui16 ch n
-      | _ -> assert false   
-    ) exts;
-    AttrUnknown("Exceptions", close_out ch) :: attrs
+    open_ctx ctx (fun ctx ->
+      write_ui16 ctx.ch len;
+      List.iter (function
+        | TObject(e, _) ->
+          let n = const ctx (ConstClass e) in
+          write_ui16 ctx.ch n
+        | _ -> assert false   
+      ) throws;
+      AttrUnknown("Exceptions", close_out ctx.ch) :: attrs
+    )
   in
-  (*let attrs =
-    let ch = output_string () in
-    let jty = field.jf_ty in
-    write_ui16 ch (const ctx (ConstUtf8 (encode_ty jty)));
-    AttrUnknown("Signature", close_out ch) :: attrs
-  in *)
+  let attrs =
+    if field.jf_ty = field.jf_vmty then attrs else
+    open_ctx ctx (fun ctx ->
+      write_ui16 ctx.ch (const ctx (ConstUtf8 (encode_ty field.jf_ty)));
+      AttrUnknown("Signature", close_out ctx.ch) :: attrs
+    )
+  in
   write_ui16 ctx.ch (List.length attrs);
   List.iter (encode_attr ctx) attrs
 
@@ -566,58 +521,48 @@ let encode_class ch c =
   write_ui16 ch (snd c.cversion);
   write_ui16 ch (fst c.cversion);
 
-  let ctx = new_ctx (output_string ()) c.consts in
-  (*let _ = const ctx (ConstUtf8 "tetete") in*)
+  let ctx = new_ctx c.consts in
 
   write_ui16 ctx.ch (encode_access c.caccs);
   write_ui16 ctx.ch (const ctx (ConstClass c.cpath));
   begin match c.csuper with
-  | TObject(path, []) ->
-    write_ui16 ctx.ch (const ctx (ConstClass path));
-  | _ -> assert false
+    | TObject(path, []) -> write_ui16 ctx.ch (const ctx (ConstClass path))
+    | _ -> assert false
   end;
   write_ui16 ctx.ch (List.length c.cinterfaces);
-  List.iter (function | TObject(aa,bb) ->
-    let jty = (const ctx (ConstClass (aa))) in
-    write_ui16 ctx.ch jty
-  | v -> Format.printf "error %a@." JDataPP.pp_jty v; assert false
+  List.iter (function
+    | TObject(path, []) -> write_ui16 ctx.ch (const ctx (ConstClass path))
+    | v -> Format.printf "error interface type %a@." JDataPP.pp_jty v; assert false
   ) c.cinterfaces;
 
   write_ui16 ctx.ch (List.length c.cfields);
-  List.iter (fun field ->
-    encode_field ctx field
-  ) c.cfields;
+  List.iter (fun field -> encode_field ctx field) c.cfields;
 
   write_ui16 ctx.ch (List.length c.cmethods);
-  List.iter (fun field ->
-    encode_method ctx field
-  ) c.cmethods;
+  List.iter (fun field -> encode_method ctx field) c.cmethods;
   
-  let inner =
-    let ch = output_string () in
-    write_ui16 ch (List.length c.cinner_types);
+  let inner = open_ctx ctx (fun ctx ->
+    write_ui16 ctx.ch (List.length c.cinner_types);
     List.iter (fun (inner, outer, inner_name, accs) ->
       let n = const ctx (ConstClass inner) in
-      write_ui16 ch n;
+      write_ui16 ctx.ch n;
 
       begin match outer with
-      | None -> write_ui16 ch 0
-      | Some path -> let n = const ctx (ConstClass path) in write_ui16 ch n
+      | None -> write_ui16 ctx.ch 0
+      | Some path -> let n = const ctx (ConstClass path) in write_ui16 ctx.ch n
       end;
       begin match inner_name with
-      | None -> write_ui16 ch 0
-      | Some name -> write_ui16 ch (const ctx (ConstUtf8 name))
+      | None -> write_ui16 ctx.ch 0
+      | Some name -> write_ui16 ctx.ch (const ctx (ConstUtf8 name))
       end;
-      write_ui16 ch (encode_access accs);
+      write_ui16 ctx.ch (encode_access accs);
     ) c.cinner_types;
-    AttrUnknown("InnerClasses", close_out ch)
-  in
+    AttrUnknown("InnerClasses", close_out ctx.ch)
+  ) in
 
-  let cattrs = c.cattrs @ [inner] in
-  write_ui16 ctx.ch (List.length cattrs);
-  List.iter (fun attrubute ->
-    encode_attr ctx attrubute
-  ) cattrs;
+  let attrs = c.cattrs @ [inner] in
+  write_ui16 ctx.ch (List.length attrs);
+  List.iter (fun attr -> encode_attr ctx attr) attrs;
 
   write_ui16 ch ctx.ccount;
   nwrite ch (close_out ctx.cpool);

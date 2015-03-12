@@ -113,23 +113,25 @@ type jaccess =
 (* type parameter name, extends signature, implements signatures *)
 type jtypes = (string * jty option * jty list) list
 
-type jannotation = {
+type jannot = {
   ann_type : jty;
-  ann_elements : (string * jannotation_value) list;
+  ann_elems : (string * jannot_val) list;
 }
 
-and jannotation_value =
+and jannot_val =
   | ValConst of int * jconst (* B, C, D, E, F, I, J, S, Z, s *)
   | ValEnum of jty * string (* e *)
   | ValClass of jty (* c *) (* V -> Void *)
-  | ValAnnotation of jannotation (* @ *)
-  | ValArray of jannotation_value list (* [ *)
+  | ValAnnotation of jannot (* @ *)
+  | ValArray of jannot_val list (* [ *)
 
 type jattr =
   | AttrDeprecated
-  | AttrVisibleAnnotations of jannotation list
-  | AttrInvisibleAnnotations of jannotation list
+  | AttrVisibleAnnotations of jannot list
+  | AttrInvisibleAnnotations of jannot list
+  | AttrLineNumberTable of (int * int) list
   | AttrUnknown of string * string
+  | AttrSourceFile of string
 
 type jfield_kind =
   | JKField

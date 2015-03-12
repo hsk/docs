@@ -45,22 +45,22 @@
     let pos = String.rindex name '/' in
     (String.sub name 0 pos, String.sub name (pos+1) ((String.length name) - (pos+1)))
 
-  let back_ch = ref (IO.output_string())
-  let ctx = ref (new_ctx !back_ch ([||]))
+  let ctx = ref (new_ctx [||])
+  let back_ch = ref !ctx.ch
 
   let sourcefile = ref None
   let limit_stack = ref 0
   let limit_locals = ref 0
   let pos = ref 0
   let lines = ref []
-  let excs = ref []
+  let try_catches = ref []
   let throws = ref []
   let label2pos = Hashtbl.create 16
   let pos2label = Hashtbl.create 16
 
   let init () =
-    back_ch := IO.output_string();
-    ctx := new_ctx !back_ch ([||])
+    ctx := new_ctx [||];
+    back_ch := !ctx.ch
 
   let init_method () =
     back_ch := !ctx.ch;
@@ -69,7 +69,7 @@
     limit_locals := 255;
     pos := 0;
     lines := [];
-    excs := [];
+    try_catches := [];
     throws := [];
     Hashtbl.clear label2pos;
     Hashtbl.clear pos2label
@@ -124,16 +124,16 @@
       | (p, c) -> code.(p) <- c
     ) codes;
     let lines = if !lines = [] then None else Some (List.rev !lines) in
-    let excs = List.map (fun {e_start;e_end;e_handler;e_catch_type} ->
+    let try_catches = List.map (fun {e_start;e_end;e_handler;e_catch_type} ->
         {
           e_start = realloc 0 e_start;
           e_end = realloc 0 e_end;
           e_handler = realloc 0 e_handler;
           e_catch_type = e_catch_type;
         }
-    ) (List.rev !excs) in
+    ) (List.rev !try_catches) in
     let throws = List.rev !throws in
-    (code,lines, excs, throws)
+    (code,lines, try_catches, throws)
 %}
 
 /* Directives (words beginning with a '.') */
@@ -197,21 +197,25 @@ jasmin_header :
     {
 
       let (class_or_interface, access, name) = $3 in
-
+      let attrs = $10 in
+      let attrs = match $2 with
+      | None -> attrs
+      | Some filename -> AttrSourceFile filename :: attrs
+      in
       match class_or_interface with
       | "class" ->
         (fun inners fields methods ->
           ignore (const !ctx (ConstClass name));
           {
             cversion = $1;
-            consts = ctx_to_array !ctx;
+            consts = ctx_to_consts !ctx;
             cpath = name;
             csuper = $4;
             caccs = JSuper :: access;
             cinterfaces = $5;
             cfields = fields;
             cmethods = methods;
-            cattrs = (* $2::$7::$8::$9::$11 @ *) $10;
+            cattrs = (* $2::$7::$8::$9::$11 @ *) attrs;
             cinner_types = inners;
             ctypes = $6;
           }
@@ -221,14 +225,14 @@ jasmin_header :
           ignore (const !ctx (ConstClass name));
           {
             cversion = $1;
-            consts = ctx_to_array !ctx;
+            consts = ctx_to_consts !ctx;
             cpath = name;
             csuper = $4;
             caccs = JInterface :: access;
             cinterfaces = $5;
             cfields = fields;
             cmethods = methods;
-            cattrs = (* $2::$7::$8::$9::$11 @ *) $10;
+            cattrs = (* $2::$7::$8::$9::$11 @ *) attrs;
             cinner_types = inners;
             ctypes = $6;
           }
@@ -717,18 +721,23 @@ methods :
       | defmethod statements endmethod
         {
           let(access,(name,ty)) = $1 in
-          let code,lines,excs,throws = mkcode (List.rev $2) in
+          let code,lines,try_catches,throws = mkcode (List.rev $2) in
+          let attrs = [] in
+          let attrs = match lines with
+            | None -> attrs
+            | Some lines -> AttrLineNumberTable lines::attrs
+          in
           let jmethod = {
             max_stack = !limit_stack;
             max_locals = !limit_locals;
             code = code;
-            exc_tbl = excs;
+            try_catches = try_catches;
             (*c_line_number_table = lines; TODO *)
             (*c_local_variable_table = None;  TODO *)
             (*c_local_variable_type_table = None;  TODO *)
             (*c_stack_map_midp = None;  TODO *)
             (*c_stack_map_java6 = None;  TODO *)
-            attrs = []; (* TODO *)
+            attrs = attrs; (* TODO *)
           }
           in
           JCodeWriter.encode_code !ctx jmethod;
@@ -899,21 +908,21 @@ methods :
               catch_expr :
                 | classname FROM Word TO Word USING Word
                   {
-                    excs := {
+                    try_catches := {
                       e_start   = label2int $3;
                       e_end     = label2int $5;
                       e_handler = label2int $7;
                       e_catch_type = Some $1
-                    } :: !excs
+                    } :: !try_catches
                   }
                 | classname FROM Int TO Int USING Int
                   {
-                    excs := {
+                    try_catches := {
                       e_start   = $3;
                       e_end     = $5;
                       e_handler = $7;
                       e_catch_type = Some $1
-                    } :: !excs
+                    } :: !try_catches
                   }
 
               /* .set <var> = <val> */

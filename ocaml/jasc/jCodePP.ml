@@ -170,7 +170,7 @@ let rec pp_jopcodes fmt x =
   Format.fprintf fmt "@]|]"
 and show_jopcodes x = Format.asprintf "%a" pp_jopcodes x
 
-let rec pp_exc_tbl fmt x =
+let rec pp_try_catch fmt x =
   Format.fprintf fmt "{ @[<hov>";
   Format.fprintf fmt "JCode.e_start = %d;@ " x.e_start;
   Format.fprintf fmt "e_end = %d;@ " x.e_end;
@@ -181,17 +181,17 @@ let rec pp_exc_tbl fmt x =
         | Some x -> Format.fprintf fmt "(Some %a)" JDataPP.pp_jpath x
     ) x.e_catch_type;
   Format.fprintf fmt "@] }"
-and show_exc_tbl x = Format.asprintf "%a" pp_exc_tbl x
+and show_try_catch x = Format.asprintf "%a" pp_try_catch x
 
 let rec pp_jcode fmt x =
   Format.fprintf fmt "{ @[<hov>";
   Format.fprintf fmt "JCode.max_stack = %d;@ " x.max_stack;
   Format.fprintf fmt "max_locals = %d;@ " x.max_locals;
   Format.fprintf fmt "code = %a;@ " pp_jopcodes x.code;
-  Format.fprintf fmt "exc_tbl = [@[<hov>%a@]];@ "
+  Format.fprintf fmt "try_catches = [@[<hov>%a@]];@ "
     (fun fmt ->
-      List.iter (Format.fprintf fmt "%a;@ " pp_exc_tbl)
-    ) x.exc_tbl;
+      List.iter (Format.fprintf fmt "%a;@ " pp_try_catch)
+    ) x.try_catches;
   Format.fprintf fmt "attrs = %a" JDataPP.pp_jattrs x.attrs;
   Format.fprintf fmt "@] }"
 and show_jcode x = Format.asprintf "%a" pp_jcode x
