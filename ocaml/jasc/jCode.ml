@@ -2,14 +2,14 @@
 (* Numerical types that are not smaller than int. *)
 
 (* JVM basic type (int = short = char = byte = bool). *)
-type jvm_basic_type = [
+type jvmprim = [
   | `Int
   | `Long
   | `Float
   | `Double
 ]
 
-type java_basic_type = [
+type jprim = [
   | `Short
   | `Char
   | `Byte
@@ -27,16 +27,16 @@ type jopcode =
   | OpBIPush of int   | OpSIPush of int
   | OpLdc1 of int | OpLdc1w of int | OpLdc2w of int
 
-  | OpLoad of jvm_basic_type * int
+  | OpLoad of jvmprim * int
   | OpALoad of int
 
-  | OpArrayLoad of jvm_basic_type
+  | OpArrayLoad of jvmprim
   | OpAALoad | OpBALoad | OpCALoad | OpSALoad
 
-  | OpStore of jvm_basic_type * int
+  | OpStore of jvmprim * int
   | OpAStore of int
 
-  | OpArrayStore of jvm_basic_type
+  | OpArrayStore of jvmprim
   | OpAAStore | OpBAStore | OpCAStore | OpSAStore
 
   | OpPop  | OpPop2
@@ -44,12 +44,9 @@ type jopcode =
   | OpDup2 | OpDup2X1 | OpDup2X2
   | OpSwap
 
-  | OpAdd of jvm_basic_type
-  | OpSub of jvm_basic_type
-  | OpMult of jvm_basic_type
-  | OpDiv of jvm_basic_type
-  | OpRem of jvm_basic_type
-  | OpNeg of jvm_basic_type
+  | OpAdd of jvmprim | OpSub of jvmprim
+  | OpMul of jvmprim | OpDiv of jvmprim
+  | OpRem of jvmprim | OpNeg of jvmprim
 
   | OpIShl  | OpLShl
   | OpIShr  | OpLShr
@@ -81,19 +78,17 @@ type jopcode =
   | OpTableSwitch of int * int32 * int32 * int array
   | OpLookupSwitch of int * (int32 * int) list
 
-  | OpReturn of jvm_basic_type
+  | OpReturn of jvmprim
   | OpAReturn
   | OpReturnVoid
 
   | OpGetStatic of int | OpPutStatic of int
   | OpGetField of int  | OpPutField of int
-  | OpInvokeVirtual of int
-  | OpInvokeNonVirtual of int
-  | OpInvokeStatic of int
-  | OpInvokeInterface of int * int (** count *)
+  | OpInvokeVirtual of int | OpInvokeSpecial of int
+  | OpInvokeStatic of int  | OpInvokeInterface of int * int (** count *)
 
   | OpNew of int
-  | OpNewArray of java_basic_type
+  | OpNewArray of jprim
   | OpANewArray of int
   | OpArrayLength
   | OpThrow
@@ -123,7 +118,7 @@ type jcode = {
   max_locals: int;
   code : jopcodes;
   exc_tbl : exc_tbl list;
-  attributes : JData.jattribute list;
+  attrs : JData.jattr list;
 }
 
 exception Class_structure_error of string
@@ -136,4 +131,4 @@ let get_code field =
     | [] -> raise Not_found
     | JData.AttrUnknown("Code",s)::xs -> s
     | _::xs -> loop xs
-  in loop field.JData.jf_attributes
+  in loop field.JData.jf_attrs

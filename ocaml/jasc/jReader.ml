@@ -29,7 +29,7 @@ exception Error_message of string
 
 let error fmt = Printf.ksprintf (fun s -> raise (Error_message s)) fmt
 
-let get_reference_type i constid =
+let get_ref_type i constid =
   begin match i with
     | 1 -> RGetField
     | 2 -> RGetStatic
@@ -49,19 +49,16 @@ let expand_path s =
   | [] -> assert false
 
 let rec parse_type_parameter_part s =
+  let get_ty i =
+    parse_ty_part (String.sub s i (String.length s - 1))
+  in
   match s.[0] with
   | '*' -> (TAny, 1)
-  | c   ->
-    let (wildcard, i) =
-      match c with
-      | '+' -> (WExtends, 1)
-      | '-' -> (WSuper,   1)
-      | _   -> (WNone,    0)
-    in
-    let (jsig, l) = parse_signature_part (String.sub s i (String.length s - 1)) in
-    (TType (wildcard, jsig), l + i)
+  | '+' -> let (jty, l) = get_ty 1 in (TExtends jty, l + 1)
+  | '-' -> let (jty, l) = get_ty 1 in (TSuper jty, l + 1)
+  | _   -> let (jty, l) = parse_ty_part s in (TType jty, l)
 
-and parse_signature_part s =
+and parse_ty_part s =
   let len = String.length s in
   if len = 0 then raise Exit;
   match s.[0] with
@@ -124,13 +121,13 @@ and parse_signature_part s =
       then Some (int_of_string (String.sub s 1 (!p - 1)))
       else None
     in
-    let (s, l) = parse_signature_part (String.sub s !p (String.length s - !p)) in
+    let (s, l) = parse_ty_part (String.sub s !p (String.length s - !p)) in
     (TArray (s, size), l + !p)
   | '(' ->
     let p = ref 1 in
     let args = ref [] in
     while !p < String.length s && s.[!p] <> ')' do
-      let (a , l) = parse_signature_part (String.sub s !p (String.length s - !p)) in
+      let (a , l) = parse_ty_part (String.sub s !p (String.length s - !p)) in
       args := a :: !args;
       p := !p + l
     done;
@@ -140,7 +137,7 @@ and parse_signature_part s =
       begin match s.[!p] with
       | 'V' -> (None, 1)
       | _   ->
-        let (s, l) = parse_signature_part (String.sub s !p (String.length s - !p)) in
+        let (s, l) = parse_ty_part (String.sub s !p (String.length s - !p)) in
         (Some s, l)
       end
     in
@@ -156,17 +153,17 @@ and parse_signature_part s =
   | _ ->
     raise Exit
 
-let parse_signature s =
+let parse_ty s =
   begin try
-    let (sign, l) = parse_signature_part s in
+    let (sign, l) = parse_ty_part s in
     if String.length s <> l then raise Exit;
     sign
   with
     Exit -> error "Invalid signature '%s'" s
   end
 
-let parse_method_signature s =
-  begin match parse_signature s with
+let parse_mty s =
+  begin match parse_ty s with
     | (TMethod m) -> m
     | _ -> error "Unexpected signature '%s'. Expecting method" s
   end
@@ -194,13 +191,13 @@ let parse_formal_type_params s =
         match s.[idi + 1] with
         | ':' | '>' -> (None, idi + 1)
         | _ ->
-          let (sgn, l) = parse_signature_part (String.sub s (idi + 1) (len - idi - 1)) in
+          let (sgn, l) = parse_ty_part (String.sub s (idi + 1) (len - idi - 1)) in
           (Some sgn, l + idi + 1)
       in
       let rec loop idx acc =
         match s.[idx] with
         | ':' ->
-          let (ifacesig, ifacei) = parse_signature_part (String.sub s (idx + 1) (len - idx - 1)) in
+          let (ifacesig, ifacei) = parse_ty_part (String.sub s (idx + 1) (len - idx - 1)) in
           loop (idx + ifacei + 1) (ifacesig :: acc)
         | _ -> (acc, idx)
       in
@@ -219,21 +216,21 @@ let parse_throws s =
     if idx = len then (acc, idx) else
     match s.[idx] with
     | '^' ->
-      let (tsig, l) = parse_signature_part (String.sub s (idx+1) (len - idx - 1)) in
+      let (tsig, l) = parse_ty_part (String.sub s (idx+1) (len - idx - 1)) in
       loop (idx + l + 1) (tsig :: acc)
     | _ -> (acc, idx)
   in
   loop 0 []
 
-let parse_complete_method_signature s =
+let parse_complete_mty s =
   try
     let len = String.length s in
     let (tparams, i) = parse_formal_type_params s in
-    let (sign, l) = parse_signature_part (String.sub s i (len - i)) in
+    let (ty, l) = parse_ty_part (String.sub s i (len - i)) in
     let (throws, l2) = parse_throws (String.sub s (i+l) (len - i - l)) in
     if (i + l + l2) <> len then raise Exit;
-    match sign with
-    | TMethod msig -> (tparams, msig, throws)
+    match ty with
+    | TMethod mty -> (tparams, mty, throws)
     | _ -> raise Exit
   with
     Exit -> error "Invalid method extended signature '%s'" s
@@ -261,7 +258,7 @@ module ParseConst = struct
   type dynref = int
   type bootstrapref = int
 
-  type jconstant_raw =
+  type jconst_raw =
     | KClass of utf8ref (* 7 *)
     | KFieldRef of (classref * nametyperef) (* 9 *)
     | KMethodRef of (classref * nametyperef) (* 10 *)
@@ -273,7 +270,7 @@ module ParseConst = struct
     | KDouble of float (* 6 *)
     | KNameAndType of (utf8ref * utf8ref) (* 12 *)
     | KUtf8String of string (* 1 *)
-    | KMethodHandle of (reference_type * dynref) (* 15 *)
+    | KMethodHandle of (ref_type * dynref) (* 15 *)
     | KMethodType of utf8ref (* 16 *)
     | KInvokeDynamic of (bootstrapref * nametyperef) (* 18 *)
     | KUnusable
@@ -306,7 +303,7 @@ module ParseConst = struct
       | 10 -> KMethodRef (index2())
       | 11 -> KInterfaceMethodRef (index2())
       | 12 -> KNameAndType (index2())
-      | 15 -> let reft = get_reference_type (IO.read_byte ch) idx in
+      | 15 -> let reft = get_ref_type (IO.read_byte ch) idx in
               KMethodHandle (reft, index())
       | 16 -> KMethodType (index())
       | 18 -> let bootstrapref = read_ui16 ch in (* not index *)
@@ -330,7 +327,7 @@ module ParseConst = struct
     in
     let expand_nametype n =
       match expand_constant consts n with
-      | ConstNameAndType (s, jsig) -> (s, jsig)
+      | ConstNameAndType (s, jty) -> (s, jty)
       | _ -> unexpected n
     in
     let expand_string n =
@@ -367,13 +364,13 @@ module ParseConst = struct
       | KLong i64 -> ConstLong i64
       | KDouble d -> ConstDouble d
       | KNameAndType (n, t) ->
-        ConstNameAndType(expand_string n, parse_signature (expand_string t))
+        ConstNameAndType(expand_string n, parse_ty (expand_string t))
       | KUtf8String s ->
         ConstUtf8 s (* TODO: expand UTF8 characters *)
-      | KMethodHandle (reference_type, dynref) ->
-        ConstMethodHandle (reference_type, expand_constant consts dynref)
+      | KMethodHandle (ref_type, dynref) ->
+        ConstMethodHandle (ref_type, expand_constant consts dynref)
       | KMethodType utf8ref ->
-        ConstMethodType (parse_method_signature (expand_string utf8ref))
+        ConstMethodType (parse_mty (expand_string utf8ref))
       | KInvokeDynamic (bootstrapref, nametyperef) ->
         let (n, t) = expand_nametype nametyperef in
         ConstInvokeDynamic(bootstrapref, n, t)
@@ -424,16 +421,16 @@ let rec parse_element_value consts ch =
   | 'B' | 'C' | 'D' | 'E' | 'F' | 'I' | 'J' | 'S' | 'Z' | 's' ->
     ValConst (tag, get_constant consts (read_ui16 ch))
   | 'e' ->
-    let path = parse_signature (get_string consts ch) in
+    let path = parse_ty (get_string consts ch) in
     let name = get_string consts ch in
     ValEnum (path, name)
   | 'c' ->
     let name = get_string consts ch in
-    let jsig =
+    let jty =
       if name = "V" then TObject(([], "Void"), []) else
-      parse_signature name
+      parse_ty name
     in
-    ValClass jsig
+    ValClass jty
   | '@' ->
     ValAnnotation (parse_annotation consts ch)
   | '[' ->
@@ -447,14 +444,14 @@ and parse_ann_element consts ch =
   (name, element_value)
 
 and parse_annotation consts ch =
-  let anntype = parse_signature (get_string consts ch) in
+  let anntype = parse_ty (get_string consts ch) in
   let count = read_ui16 ch in
   {
     ann_type = anntype;
     ann_elements = List.init count (fun _ -> parse_ann_element consts ch)
   }
 
-let parse_attribute on_special consts ch =
+let parse_attr on_special consts ch =
   let aname = get_string consts ch in
   let error() = error "Malformed attribute %s" aname in
   let alen = read_i32 ch in
@@ -474,10 +471,10 @@ let parse_attribute on_special consts ch =
     | None -> do_default()
     | Some fn -> fn consts ch aname alen do_default
 
-let parse_attributes ?on_special consts ch count =
+let parse_attrs ?on_special consts ch count =
   let rec loop i acc =
     if i >= count then List.rev acc else
-    match parse_attribute on_special consts ch with
+    match parse_attr on_special consts ch with
     | None -> loop (i + 1) acc
     | Some attrib -> loop (i + 1) (attrib :: acc)
   in
@@ -494,13 +491,13 @@ let parse_field kind consts ch =
         JBridge; JVarArgs; JNative; JUnusable; JAbstract; JStrict; JSynthetic ]
   in
   let acc = ref (parse_access_flags ch all_flags) in
-  debug "acc %a ok@." pp_jaccess !acc;
+  debug "acc %a ok@." pp_jaccesses !acc;
   let name = get_string consts ch in
   debug "name %s ok@." name;
-  let sign = parse_signature (get_string consts ch) in
+  let sign = parse_ty (get_string consts ch) in
   debug "sig ok@.";
 
-  let jsig = ref sign in
+  let jty = ref sign in
   let throws = ref [] in
   let types = ref [] in
   let constant = ref None in
@@ -508,7 +505,7 @@ let parse_field kind consts ch =
 
   let attrib_count = read_ui16 ch in
   debug "attrib_count %d ok@." attrib_count;
-  let attribs = parse_attributes consts ch attrib_count
+  let attribs = parse_attrs consts ch attrib_count
     ~on_special:begin fun _ _ aname alen do_default ->
     debug "special kind %a aname %S@." pp_jfield_kind kind aname;
     match (kind, aname) with
@@ -520,7 +517,7 @@ let parse_field kind consts ch =
       None
     | JKField, "Signature" ->
       let s = get_string consts ch in
-      jsig := parse_signature s;
+      jty := parse_ty s;
       None
     | JKMethod, "Code" -> (* TODO *)
       Some (AttrUnknown (aname, IO.nread ch alen))
@@ -532,27 +529,27 @@ let parse_field kind consts ch =
       None
     | JKMethod, "Signature" ->
       let s = get_string consts ch in
-      let (tp, sgn, thr) = parse_complete_method_signature s in
+      let (tp, sgn, thr) = parse_complete_mty s in
       if thr <> [] then throws := thr;
       types := tp;
-      jsig := TMethod(sgn);
+      jty := TMethod(sgn);
       None
     | _ -> do_default()
   end in
-  debug "attribs %a ok@." pp_jattributes attribs;
+  debug "attribs %a ok@." pp_jattrs attribs;
 
   {
     jf_name = name;
     jf_kind = kind;
     (* signature, as used by the vm *)
-    jf_vmsignature = sign;
+    jf_vmty = sign;
     (* actual signature, as used in java code *)
-    jf_signature = !jsig;
+    jf_ty = !jty;
     jf_throws = !throws;
     jf_types = !types;
-    jf_flags = !acc;
-    jf_attributes = attribs;
-    jf_constant = !constant;
+    jf_accs = !acc;
+    jf_attrs = attribs;
+    jf_const = !constant;
     jf_code = !code;
   }
 
@@ -580,11 +577,11 @@ let parse_class ch =
   	  | ConstClass path -> TObject(path, [])
   	  | _ -> error "Invalid super index"
   in
-  debug "super= %a@." pp_jsignature super;
+  debug "super= %a@." pp_jty super;
   let len = (read_ui16 ch) in
   debug "interfaces len = %d@.@?" len;
   let interfaces = List.init len (fun _ -> TObject (get_class consts ch, [])) in
-  debug "interfaces %a@." pp_jsignatures interfaces;
+  debug "interfaces %a@." pp_jtys interfaces;
   let fields = List.init (read_ui16 ch) (fun _ -> parse_field JKField consts ch) in
   debug "fields ok %a @." pp_jfields fields;
   let methods = List.init (read_ui16 ch) (fun _ -> parse_field JKMethod consts ch) in
@@ -597,7 +594,7 @@ let parse_class ch =
 
   let attribs = read_ui16 ch in
   debug "attribs %d\n" attribs;
-  let attribs = parse_attributes ~on_special:(fun _ _ aname alen do_default ->
+  let attribs = parse_attrs ~on_special:(fun _ _ aname alen do_default ->
     match aname with
     | "InnerClasses" ->
       debug "innerclasses\n";
@@ -646,11 +643,11 @@ let parse_class ch =
       types := formal;
       let s = String.sub s idx (String.length s - idx) in
       let len = String.length s in
-      let (sup, idx) = parse_signature_part s in
+      let (sup, idx) = parse_ty_part s in
       let rec loop idx acc =
         if idx = len then acc else
         let s = String.sub s idx (len - idx) in
-        let (iface, i2) = parse_signature_part s in
+        let (iface, i2) = parse_ty_part s in
         loop (idx + i2) (iface :: acc)
       in
       interfaces := loop idx [];
@@ -661,14 +658,14 @@ let parse_class ch =
 	IO.close_in ch;
   {
     cversion = (majorv, minorv);
-    constants = consts;
+    consts = consts;
     cpath = this;
     csuper = !super;
-    cflags = flags;
+    caccs = flags;
     cinterfaces = !interfaces;
     cfields = fields;
     cmethods = methods;
-    cattributes = attribs;
+    cattrs = attribs;
     cinner_types = !inner;
     ctypes = !types;
   }

@@ -28,12 +28,12 @@ type context = {
   cpool : string output;
   mutable ccount : int;
   mutable ch : string output;
-  mutable constants : (jconstant, int) PMap.t;
+  mutable consts : (jconst, int) PMap.t;
 }
 
 let encode_utf8 s = s
 
-let get_reference_type i =
+let get_ref_type i =
   match i with
   | RGetField         -> 1
   | RGetStatic        -> 2
@@ -51,20 +51,17 @@ let error fmt = Printf.ksprintf (fun s -> raise (Writer_error_message s)) fmt
 let encode_path (pack, name) =
   String.concat "/" (pack @ [name])
 
-let rec encode_sig s =
-  let encode_type_parameter s =
-    match s with
+let rec encode_ty s =
+  let encode_type_parameter = function
     | TAny  -> "*"
-    | TType (wildcard, jsig) ->
-        match wildcard with
-        | WExtends -> "+" ^ (encode_sig jsig)
-        | WSuper -> "-" ^ (encode_sig jsig)
-        | WNone -> (encode_sig jsig)
+    | TExtends ty -> "+" ^ (encode_ty ty)
+    | TSuper ty -> "-" ^ (encode_ty ty)
+    | TType ty -> encode_ty ty
   in
   let encode_params params =
     match params with
     | [] -> ""
-    | _ -> Printf.sprintf "<%s>" ( String.concat "" (List.map (encode_type_parameter) params))
+    | _ -> Printf.sprintf "<%s>" (String.concat "" (List.map (encode_type_parameter) params))
   in
   match s with
   | TByte   -> "B"
@@ -75,8 +72,8 @@ let rec encode_sig s =
   | TLong   -> "J"
   | TShort  -> "S"
   | TBool   -> "Z"
-  | TArray (s, Some size) -> Printf.sprintf "[%d%s" size (encode_sig s)
-  | TArray (s, None)      -> Printf.sprintf "[%s" (encode_sig s)
+  | TArray (s, Some size) -> Printf.sprintf "[%d%s" size (encode_ty s)
+  | TArray (s, None)      -> Printf.sprintf "[%s" (encode_ty s)
   | TObject((pack, name), params) ->
     Printf.sprintf "L%s%s;" (encode_path (pack, name)) (encode_params params)
   | TObjectInner (pack, inners) ->
@@ -89,24 +86,24 @@ let rec encode_sig s =
     let ret =
       match ret with
       | None   -> "V"
-      | Some v -> encode_sig v
+      | Some v -> encode_ty v
     in
-    Printf.sprintf "(%s)%s" (String.concat "" (List.map (encode_sig) args)) ret
+    Printf.sprintf "(%s)%s" (String.concat "" (List.map (encode_ty) args)) ret
   | TTypeParameter s -> Printf.sprintf "T%s;" s
 
 let rec const ctx c =
   begin try
-    PMap.find c ctx.constants
+    PMap.find c ctx.consts
   with
   | Not_found ->
-    let n = write_constants ctx c in
+    let n = write_const ctx c in
 
     let ret = ctx.ccount in
     ctx.ccount <- ret + n;
-    ctx.constants <- PMap.add c ret ctx.constants;
+    ctx.consts <- PMap.add c ret ctx.consts;
     ret
   end
-and write_constants ctx = function
+and write_const ctx = function
       (** references a class or an interface - jpath must be encoded as StringUtf8 *)
       | ConstClass path -> (* tag = 7 *)
           let path = const ctx (ConstUtf8 (encode_path path)) in
@@ -114,26 +111,26 @@ and write_constants ctx = function
           write_ui16 ctx.cpool path;
           1
       (** field reference *)
-      | ConstField (jpath, string, jsignature) (* tag = 9 *) ->
+      | ConstField (jpath, string, jty) (* tag = 9 *) ->
           let jpath = const ctx (ConstClass jpath) in
-          let name = const ctx (ConstNameAndType (string, jsignature)) in
+          let name = const ctx (ConstNameAndType (string, jty)) in
           write_byte ctx.cpool 9;
           write_ui16 ctx.cpool jpath;
           write_ui16 ctx.cpool name;
           1
       (** method reference; string can be special "<init>" and "<clinit>" values *)
-      | ConstMethod (jpath, string, jmethod_signature) (* tag = 10 *) ->
+      | ConstMethod (jpath, string, jmty) (* tag = 10 *) ->
           let jpath = const ctx (ConstClass jpath) in
-          let name = const ctx (ConstNameAndType (string, TMethod jmethod_signature)) in
+          let name = const ctx (ConstNameAndType (string, TMethod jmty)) in
           write_byte ctx.cpool 10;
           write_ui16 ctx.cpool jpath;
           write_ui16 ctx.cpool name;
           1
       
       (** interface method reference *)
-      | ConstInterfaceMethod (jpath, string, jmethod_signature) (* tag = 11 *) ->
+      | ConstInterfaceMethod (jpath, string, jmty) (* tag = 11 *) ->
           let jpath = const ctx (ConstClass jpath) in
-          let name = const ctx (ConstNameAndType (string, TMethod jmethod_signature)) in
+          let name = const ctx (ConstNameAndType (string, TMethod jmty)) in
           write_byte ctx.cpool 11;
           write_ui16 ctx.cpool jpath;
           write_ui16 ctx.cpool name;
@@ -171,12 +168,12 @@ and write_constants ctx = function
           write_double ctx.cpool d;
           2
       (** name and type: used to represent a field or method, without indicating which class it belongs to *)
-      | ConstNameAndType (string, jsignature) ->
+      | ConstNameAndType (string, jty) ->
           let name = (const ctx (ConstUtf8 (string))) in
-          let jsig = (const ctx (ConstUtf8 (encode_sig jsignature))) in
+          let jty = (const ctx (ConstUtf8 (encode_ty jty))) in
           write_byte ctx.cpool 12;
           write_ui16 ctx.cpool name;
-          write_ui16 ctx.cpool jsig;
+          write_ui16 ctx.cpool jty;
           1
       (** UTF8 encoded strings. Note that when reading/writing, take into account Utf8 modifications of java *)
       (* (http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.4.7) *)
@@ -186,18 +183,18 @@ and write_constants ctx = function
           nwrite ctx.cpool (encode_utf8 s);
           1
       (** invokeDynamic-specific *)
-      | ConstMethodHandle (reference_type, jconstant) (* tag = 15 *) ->
+      | ConstMethodHandle (ref_type, jconst) (* tag = 15 *) ->
           write_byte ctx.cpool 15;
-          write_byte ctx.cpool (get_reference_type reference_type);
-          write_ui16 ctx.cpool (const ctx jconstant);
+          write_byte ctx.cpool (get_ref_type ref_type);
+          write_ui16 ctx.cpool (const ctx jconst);
           1
-      | ConstMethodType jmethod_signature (* tag = 16 *) ->
-          let jsig = (const ctx (ConstUtf8 (encode_sig (TMethod jmethod_signature)))) in
+      | ConstMethodType jmty (* tag = 16 *) ->
+          let jty = (const ctx (ConstUtf8 (encode_ty (TMethod jmty)))) in
           write_byte ctx.cpool 16;
-          write_ui16 ctx.cpool jsig;
+          write_ui16 ctx.cpool jty;
           1
-      | ConstInvokeDynamic (bootstrap_method, string, jsignature) (* tag = 18 *) ->
-          let name_and_type = const ctx (ConstNameAndType(string, jsignature)) in
+      | ConstInvokeDynamic (bootstrap_method, string, jty) (* tag = 18 *) ->
+          let name_and_type = const ctx (ConstNameAndType(string, jty)) in
           write_byte ctx.cpool 18;
           write_ui16 ctx.cpool bootstrap_method;
           write_ui16 ctx.cpool name_and_type;
@@ -208,7 +205,7 @@ let ctx_to_array ctx =
   let arr = Array.create ctx.ccount ConstUnusable in
   PMap.iter (fun c i ->
     arr.(i) <- c
-  ) ctx.constants;
+  ) ctx.consts;
   arr
 
 let new_ctx ch consts =
@@ -221,10 +218,10 @@ let new_ctx ch consts =
     cpool = output_string ();
     ccount = Array.length consts;
     ch = ch;
-    constants = !map;
+    consts = !map;
   } in
   Array.iter (fun c ->
-    ignore(write_constants ctx c)
+    ignore(write_const ctx c)
   ) consts;
   ctx.ccount = Array.length consts;
   ctx
@@ -232,7 +229,7 @@ let new_ctx ch consts =
 (* Acess (and other) flags unparsing *)
 (*************************************)
 
-let encode_flags flags =
+let encode_access accs =
   List.fold_left begin fun acc -> function
     | JPublic       -> acc lor 0x0001
     | JPrivate      -> acc lor 0x0002
@@ -256,7 +253,7 @@ let encode_flags flags =
     | JVarArgs      -> acc lor 0x0080
     | JNative       -> acc lor 0x0100
     | JStrict       -> acc lor 0x0800
-  end 0 flags
+  end 0 accs
 
 (* Attributes unparsing *)
 (************************)
@@ -278,7 +275,7 @@ let verification_type ctx vtype =
 let verification_type_list ctx =
   write_with_size write_ui16 ch (verification_type ctx)
 
-let stackmap_attribute consts stackmap =
+let stackmap_attr consts stackmap =
   let ch = output_string ()
   in
     write_with_size write_ui16 ch
@@ -289,7 +286,7 @@ let stackmap_attribute consts stackmap =
       stackmap;
     ("StackMap", close_out ch)
 
-let stackmap_table_attribute consts stackmap_attribute =
+let stackmap_table_attr consts stackmap_attr =
   let ch = output_string ()
   in
     write_with_size write_ui16 ch
@@ -322,7 +319,7 @@ let stackmap_table_attribute consts stackmap_attribute =
            write_ui16 ch offset_delta;
            verification_type_list ctx lvtypes;
            verification_type_list ctx svtypes
-      ) stackmap_attribute;
+      ) stackmap_attr;
     ("StackMapTable", close_out ch)
 *)
 
@@ -344,11 +341,11 @@ let rec encode_element_value ctx v =
         write_ui16 ctx.ch (const ctx cst)
     | ValEnum (cn, constructor) ->
         write_byte ctx.ch char_e;
-        write_utf8 ctx (encode_sig cn);
+        write_utf8 ctx (encode_ty cn);
         write_utf8 ctx constructor
     | ValClass sign ->
         write_byte ctx.ch char_c;
-        write_utf8 ctx (encode_sig sign)
+        write_utf8 ctx (encode_ty sign)
     | ValAnnotation annot ->
         write_byte ctx.ch char_at;
         encode_annotation ctx annot
@@ -359,7 +356,7 @@ let rec encode_element_value ctx v =
   end
 
 and encode_annotation ctx annot =
-    write_utf8 ctx (encode_sig annot.ann_type);
+    write_utf8 ctx (encode_ty annot.ann_type);
     write_ui16 ctx.ch (List.length annot.ann_elements);
     List.iter begin fun (name, value) ->
       write_utf8 ctx name;
@@ -374,7 +371,7 @@ let encode_parameter_annotations ctx param_annots =
   write_byte ctx.ch (List.length param_annots);
   List.iter (encode_annotations ctx) param_annots
 
-let rec encode_attribute_to_strings ctx =
+let rec encode_attr_to_strings ctx =
   let ch = output_string () in
     function
     (*
@@ -415,7 +412,7 @@ let rec encode_attribute_to_strings ctx =
           | None -> write_ui16 ch 0
           | Some inner_name ->
               write_string ctx inner_name);
-           write_ui16 ch (encode_flags innerclass_flags flags))
+           write_ui16 ch (encode_access innerclass_flags flags))
         l;
       ("InnerClasses", close_out ch)
       | AttrSynthetic ->
@@ -433,7 +430,7 @@ let rec encode_attribute_to_strings ctx =
            write_ui16 ch start_pc;
            write_ui16 ch length;
            write_string ctx name;
-           write_string ctx (encode_sig signature);
+           write_string ctx (encode_ty signature);
            write_ui16 ch index)
         l;
       ("LocalVariableTable", close_out ch)
@@ -454,10 +451,10 @@ let rec encode_attribute_to_strings ctx =
       (*
       | AttrStackMap s ->
       ignore (close_out ch);
-      stackmap_attribute consts s
+      stackmap_attr consts s
       | AttrStackMapTable s ->
       ignore (close_out ch);
-      stackmap_table_attribute consts s
+      stackmap_table_attr consts s
       | AttrUnknown (name, contents) ->
       (name, contents)
       | AttrAnnotationDefault ev ->
@@ -494,15 +491,15 @@ let rec encode_attribute_to_strings ctx =
            | None -> write_ui16 ch 0)
           code.c_exc_tbl;
         write_with_size write_ui16 ch
-          (encode_attribute ctx)
-          code.c_attributes;
+          (encode_attr ctx)
+          code.c_attrs;
         ("Code", close_out ch)
     *)
       | AttrUnknown(a, b) -> (a, b ^ close_out ch)
 
-and encode_attribute ctx attr =
-  let (name, content) = encode_attribute_to_strings ctx attr in
-  debug "encode_attribute (%S, %S)@." name content;
+and encode_attr ctx attr =
+  let (name, content) = encode_attr_to_strings ctx attr in
+  debug "encode_attr (%S, %S)@." name content;
   write_utf8 ctx name;
   write_string_with_length write_i32 ctx content
 
@@ -510,12 +507,12 @@ and encode_attribute ctx attr =
 (*******************************)
 
 let encode_field ctx field =
-  write_ui16 ctx.ch (encode_flags field.jf_flags);
+  write_ui16 ctx.ch (encode_access field.jf_accs);
   write_utf8 ctx field.jf_name;
-  write_utf8 ctx (encode_sig field.jf_signature);
-  let attrs = field.jf_attributes in
+  write_utf8 ctx (encode_ty field.jf_ty);
+  let attrs = field.jf_attrs in
   let attrs =
-    begin match field.jf_constant with
+    begin match field.jf_const with
     | None -> attrs
     | Some(constant) ->
       let ch = output_string () in
@@ -525,18 +522,18 @@ let encode_field ctx field =
   in
   (*let attrs =
     let ch = output_string () in
-    let jsig = field.jf_signature in
-    write_ui16 ch (const ctx (ConstUtf8 (encode_sig jsig)));
+    let jty = field.jf_ty in
+    write_ui16 ch (const ctx (ConstUtf8 (encode_ty jty)));
     AttrUnknown("Signature", close_out ch) :: attrs
   in *)
   write_ui16 ctx.ch (List.length attrs);
-  List.iter (encode_attribute ctx) attrs
+  List.iter (encode_attr ctx) attrs
 
 let encode_method ctx field =
-  write_ui16 ctx.ch (encode_flags field.jf_flags);
+  write_ui16 ctx.ch (encode_access field.jf_accs);
   write_utf8 ctx field.jf_name;
-  write_utf8 ctx (encode_sig field.jf_signature);
-  let attrs = field.jf_attributes in
+  write_utf8 ctx (encode_ty field.jf_ty);
+  let attrs = field.jf_attrs in
   (*let attrs = match field.jf_code with
     | None -> attrs
     | Some(code) -> AttrUnknown("Code", code) :: attrs
@@ -557,22 +554,22 @@ let encode_method ctx field =
   in
   (*let attrs =
     let ch = output_string () in
-    let jsig = field.jf_signature in
-    write_ui16 ch (const ctx (ConstUtf8 (encode_sig jsig)));
+    let jty = field.jf_ty in
+    write_ui16 ch (const ctx (ConstUtf8 (encode_ty jty)));
     AttrUnknown("Signature", close_out ch) :: attrs
   in *)
   write_ui16 ctx.ch (List.length attrs);
-  List.iter (encode_attribute ctx) attrs
+  List.iter (encode_attr ctx) attrs
 
 let encode_class ch c =
   write_real_i32 ch 0xCAFEBABEl;
   write_ui16 ch (snd c.cversion);
   write_ui16 ch (fst c.cversion);
 
-  let ctx = new_ctx (output_string ()) c.constants in
+  let ctx = new_ctx (output_string ()) c.consts in
   (*let _ = const ctx (ConstUtf8 "tetete") in*)
 
-  write_ui16 ctx.ch (encode_flags c.cflags);
+  write_ui16 ctx.ch (encode_access c.caccs);
   write_ui16 ctx.ch (const ctx (ConstClass c.cpath));
   begin match c.csuper with
   | TObject(path, []) ->
@@ -581,9 +578,9 @@ let encode_class ch c =
   end;
   write_ui16 ctx.ch (List.length c.cinterfaces);
   List.iter (function | TObject(aa,bb) ->
-    let jsig = (const ctx (ConstClass (aa))) in
-    write_ui16 ctx.ch jsig
-  | v -> Format.printf "error %a@." JDataPP.pp_jsignature v; assert false
+    let jty = (const ctx (ConstClass (aa))) in
+    write_ui16 ctx.ch jty
+  | v -> Format.printf "error %a@." JDataPP.pp_jty v; assert false
   ) c.cinterfaces;
 
   write_ui16 ctx.ch (List.length c.cfields);
@@ -599,7 +596,7 @@ let encode_class ch c =
   let inner =
     let ch = output_string () in
     write_ui16 ch (List.length c.cinner_types);
-    List.iter (fun (inner, outer, inner_name, flags) ->
+    List.iter (fun (inner, outer, inner_name, accs) ->
       let n = const ctx (ConstClass inner) in
       write_ui16 ch n;
 
@@ -611,16 +608,16 @@ let encode_class ch c =
       | None -> write_ui16 ch 0
       | Some name -> write_ui16 ch (const ctx (ConstUtf8 name))
       end;
-      write_ui16 ch (encode_flags flags);
+      write_ui16 ch (encode_access accs);
     ) c.cinner_types;
     AttrUnknown("InnerClasses", close_out ch)
   in
 
-  let cattributes = c.cattributes @ [inner] in
-  write_ui16 ctx.ch (List.length cattributes);
+  let cattrs = c.cattrs @ [inner] in
+  write_ui16 ctx.ch (List.length cattrs);
   List.iter (fun attrubute ->
-    encode_attribute ctx attrubute
-  ) cattributes;
+    encode_attr ctx attrubute
+  ) cattrs;
 
   write_ui16 ch ctx.ccount;
   nwrite ch (close_out ctx.cpool);

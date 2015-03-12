@@ -4,7 +4,7 @@ open JData;;
 open JCode;;
 open JReader;;
 
-let jvm_basic_type place = function
+let jvmprim place = function
     | 0 -> `Int
     | 1 -> `Long
     | 2 -> `Float
@@ -27,15 +27,14 @@ let parse_opcode op ch wide =
   | 9  -> OpLConst Int64.zero
   | 10 -> OpLConst Int64.one
   | 11 | 12 | 13 -> OpFConst (float_of_int (op - 11))
-  | 14 -> OpDConst 0.
-  | 15 -> OpDConst 1.
+  | 14 -> OpDConst 0. | 15 -> OpDConst 1.
   | 16 -> OpBIPush (IO.read_signed_byte ch)
   | 17 -> OpSIPush (read_i16 ch)
   | 18 -> OpLdc1 (IO.read_byte ch)
   | 19 -> OpLdc1w (read_ui16 ch)
   | 20 -> OpLdc2w (read_ui16 ch)
   (* ---- load ----------------------------------- *)
-  | 21 | 22 | 23 | 24 -> OpLoad (jvm_basic_type "load" (op - 21),read_unsigned ch wide)
+  | 21 | 22 | 23 | 24 -> OpLoad (jvmprim "load" (op - 21),read_unsigned ch wide)
   | 25                -> OpALoad (read_unsigned ch wide)
   | 26 | 27 | 28 | 29 -> OpLoad (`Int,op - 26)
   | 30 | 31 | 32 | 33 -> OpLoad (`Long,op - 30)
@@ -43,10 +42,10 @@ let parse_opcode op ch wide =
   | 38 | 39 | 40 | 41 -> OpLoad (`Double,op - 38)
   | 42 | 43 | 44 | 45 -> OpALoad (op - 42)
   (* ---- array load ---------------------------- *)
-  | 46 | 47 | 48 | 49 -> OpArrayLoad (jvm_basic_type "arrayload" (op - 46))
+  | 46 | 47 | 48 | 49 -> OpArrayLoad (jvmprim "arrayload" (op - 46))
   | 50 -> OpAALoad | 51 -> OpBALoad | 52 -> OpCALoad | 53 -> OpSALoad
   (* ---- store ----------------------------------- *)
-  | 54 | 55 | 56 | 57 -> OpStore (jvm_basic_type "store" (op - 54),read_unsigned ch wide)
+  | 54 | 55 | 56 | 57 -> OpStore (jvmprim "store" (op - 54),read_unsigned ch wide)
   | 58                -> OpAStore (read_unsigned ch wide)
   | 59 | 60 | 61 | 62 -> OpStore (`Int , op - 59)
   | 63 | 64 | 65 | 66 -> OpStore (`Long , op - 63)
@@ -54,7 +53,7 @@ let parse_opcode op ch wide =
   | 71 | 72 | 73 | 74 -> OpStore (`Double , op - 71)
   | 75 | 76 | 77 | 78 -> OpAStore (op - 75)
   (* ---- array store ---------------------------- *)
-  | 79 | 80 | 81 | 82 -> OpArrayStore (jvm_basic_type "arraystore" (op - 79))
+  | 79 | 80 | 81 | 82 -> OpArrayStore (jvmprim "arraystore" (op - 79))
   | 83 -> OpAAStore | 84 -> OpBAStore | 85 -> OpCAStore | 86 -> OpSAStore
   (* ---- stack ---------------------------------- *)
   | 87 -> OpPop  | 88 -> OpPop2
@@ -62,12 +61,12 @@ let parse_opcode op ch wide =
   | 92 -> OpDup2 | 93 -> OpDup2X1 | 94 -> OpDup2X2
   | 95 -> OpSwap
   (* ---- arithmetics ---------------------------- *)
-  | 96  | 97  | 98  | 99  -> OpAdd (jvm_basic_type "add" (op - 96))
-  | 100 | 101 | 102 | 103 -> OpSub (jvm_basic_type "sub" (op - 100))
-  | 104 | 105 | 106 | 107 -> OpMult (jvm_basic_type "mult" (op - 104))
-  | 108 | 109 | 110 | 111 -> OpDiv (jvm_basic_type "div" (op - 108))
-  | 112 | 113 | 114 | 115 -> OpRem (jvm_basic_type "rem" (op - 112))
-  | 116 | 117 | 118 | 119 -> OpNeg (jvm_basic_type "neg" (op - 116))
+  | 96  | 97  | 98  | 99  -> OpAdd (jvmprim "add" (op - 96))
+  | 100 | 101 | 102 | 103 -> OpSub (jvmprim "sub" (op - 100))
+  | 104 | 105 | 106 | 107 -> OpMul (jvmprim "mul" (op - 104))
+  | 108 | 109 | 110 | 111 -> OpDiv (jvmprim "div" (op - 108))
+  | 112 | 113 | 114 | 115 -> OpRem (jvmprim "rem" (op - 112))
+  | 116 | 117 | 118 | 119 -> OpNeg (jvmprim "neg" (op - 116))
   (* ---- logicals ------------------------------- *)
   | 120 -> OpIShl  | 121 -> OpLShl
   | 122 -> OpIShr  | 123 -> OpLShr 
@@ -119,7 +118,7 @@ let parse_opcode op ch wide =
       ) in
       OpLookupSwitch (def,tbl)
   (* ---- returns --------------------------------- *)
-  | 172 | 173 | 174 | 175 -> OpReturn (jvm_basic_type "return" (op - 172))
+  | 172 | 173 | 174 | 175 -> OpReturn (jvmprim "return" (op - 172))
   | 176 -> OpAReturn
   | 177 -> OpReturnVoid
   (* ---- OO ------------------------------------- *)
@@ -127,7 +126,7 @@ let parse_opcode op ch wide =
   | 180 -> OpGetField  (read_ui16 ch) | 181 -> OpPutField  (read_ui16 ch)
 
   | 182 -> OpInvokeVirtual (read_ui16 ch)
-  | 183 -> OpInvokeNonVirtual (read_ui16 ch)
+  | 183 -> OpInvokeSpecial (read_ui16 ch)
   | 184 -> OpInvokeStatic (read_ui16 ch)
   | 185 ->
       let index = read_ui16 ch in
@@ -166,7 +165,7 @@ let parse_opcode op ch wide =
 
   | _ -> error_class "Illegal opcode: %d" op
 
-let parse_code constants code =
+let parse_code consts code =
   let ch = IO.input_string code in
   let max_stack = read_i16 ch in
   let max_locals = read_i16 ch in
@@ -194,20 +193,20 @@ let parse_code constants code =
         | 0 -> None
         | ct ->
           debug "ct %d\n" ct;
-          match get_constant constants ct with
+          match get_constant consts ct with
           | ConstClass c -> Some c
           | _ -> error_class "Illegal class index (does not refer to a constant class)"
         end;
     }
   end in
   let attrib_count = read_ui16 ch in
-  let attribs = parse_attributes ~on_special:(fun _ _ aname alen do_default ->
+  let attribs = parse_attrs ~on_special:(fun _ _ aname alen do_default ->
     match aname with
     | _ -> do_default()
-  ) constants ch attrib_count in {
+  ) consts ch attrib_count in {
     max_stack = max_stack;
     max_locals = max_locals;
     code = codes;
     exc_tbl = exc_tbl;
-    attributes = attribs;
+    attrs = attribs;
   }

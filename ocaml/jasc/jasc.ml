@@ -19,7 +19,7 @@ let file f =
   List.iter (fun m ->
     try
       let codestr = JCode.get_code m in
-      let code = JCodeReader.parse_code (a.constants) codestr in
+      let code = JCodeReader.parse_code (a.consts) codestr in
       Format.printf "%a@." JCodePP.pp_jcode code;
     with
       | _ -> ()
@@ -43,7 +43,7 @@ let file f =
     List.iter (fun m ->
     try
       let codestr = JCode.get_code m in
-      let code = JCodeReader.parse_code (a.constants) codestr in
+      let code = JCodeReader.parse_code (a.consts) codestr in
       Format.printf "%a@." JCodePP.pp_jcode code;
     with
       | _ -> ()

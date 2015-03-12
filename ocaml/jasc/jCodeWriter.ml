@@ -6,7 +6,7 @@ open JCode;;
 exception Opcode_length_error of int * JCode.jopcode
 let error_len length op = raise (Opcode_length_error (length, op))
 
-let encode_jvm_basic_type = function
+let encode_jvm_prim = function
   | `Int -> 0
   | `Long -> 1
   | `Float -> 2
@@ -23,9 +23,9 @@ let encode_instruction ch count length op =
     if length <> 1 then error_len length op;
     write_byte ch opcode
   in
-  let jb opcode jvm_basic_type =
+  let jb opcode jvm_prim =
     if length <> 1 then error_len length op;
-    let opcode = opcode + encode_jvm_basic_type jvm_basic_type in
+    let opcode = opcode + encode_jvm_prim jvm_prim in
     write_byte ch opcode
   in
   let i16 opcode i =
@@ -73,21 +73,17 @@ let encode_instruction ch count length op =
     | OpLCmp    -> wb 148
     | OpFCmpL   -> wb 149 | OpFCmpG   -> wb 150
     | OpDCmpL   -> wb 151 | OpDCmpG   -> wb 152
-    | OpAReturn      -> wb 176 | OpReturnVoid  -> wb 177
-    | OpArrayLength  -> wb 190 | OpThrow       -> wb 191
-    | OpMonitorEnter -> wb 194 | OpMonitorExit -> wb 195
+    | OpAReturn      -> wb 176   | OpReturnVoid   -> wb 177
+    | OpArrayLength  -> wb 190   | OpThrow        -> wb 191
+    | OpMonitorEnter -> wb 194   | OpMonitorExit  -> wb 195
     | OpBreakpoint   -> wb 202
 
-    | OpArrayLoad  k -> jb 46 k
-    | OpArrayStore k -> jb 79 k
+    | OpArrayLoad  k -> jb  46 k | OpArrayStore k -> jb 79 k
 
-    | OpAdd    i -> jb  96 i
-    | OpSub    i -> jb 100 i
-    | OpMult   i -> jb 104 i
-    | OpDiv    i -> jb 108 i
-    | OpRem    i -> jb 112 i
-    | OpNeg    i -> jb 116 i
-    | OpReturn i -> jb 172 i
+    | OpAdd        i -> jb  96 i | OpSub        i -> jb 100 i
+    | OpMul        i -> jb 104 i | OpDiv        i -> jb 108 i
+    | OpRem        i -> jb 112 i | OpNeg        i -> jb 116 i
+    | OpReturn     i -> jb 172 i
 
     | OpSIPush i -> i16  17 i
     | OpIfEq   i -> i16 153 i | OpIfNe   i -> i16 154 i
@@ -100,14 +96,14 @@ let encode_instruction ch count length op =
     | OpGoto   i -> i16 167 i | OpJsr    i -> i16 168 i
     | OpIfNull i -> i16 198 i | OpIfNonNull i -> i16 199 i
 
-    | OpLdc1w            i -> ui16 19  i | OpLdc2w      i -> ui16 20  i
-    | OpNew              i -> ui16 187 i | OpANewArray  i -> ui16 189 i 
-    | OpCheckCast        i -> ui16 192 i | OpInstanceOf i -> ui16 193 i
-    | OpGetStatic        i -> ui16 178 i | OpPutStatic  i -> ui16 179 i
-    | OpGetField         i -> ui16 180 i | OpPutField   i -> ui16 181 i
-    | OpInvokeVirtual    i -> ui16 182 i
-    | OpInvokeNonVirtual i -> ui16 183 i
-    | OpInvokeStatic     i -> ui16 184 i
+    | OpLdc1w         i -> ui16 19  i | OpLdc2w      i -> ui16 20  i
+    | OpNew           i -> ui16 187 i | OpANewArray  i -> ui16 189 i 
+    | OpCheckCast     i -> ui16 192 i | OpInstanceOf i -> ui16 193 i
+    | OpGetStatic     i -> ui16 178 i | OpPutStatic  i -> ui16 179 i
+    | OpGetField      i -> ui16 180 i | OpPutField   i -> ui16 181 i
+    | OpInvokeVirtual i -> ui16 182 i
+    | OpInvokeSpecial i -> ui16 183 i
+    | OpInvokeStatic  i -> ui16 184 i
 
     | OpIConst n ->
         if not (-1l <= n && n <= 5l)
@@ -217,14 +213,14 @@ let encode_instruction ch count length op =
     | OpInvalid -> ()
     | OpLoad (jbt, i) ->
       if length = 1 && i <= 3 then
-        write_byte ch (26 + (encode_jvm_basic_type jbt) * 4 + i)
+        write_byte ch (26 + (encode_jvm_prim jbt) * 4 + i)
       else
-        li (21 + encode_jvm_basic_type jbt) i
+        li (21 + encode_jvm_prim jbt) i
     | OpStore (jbt, i) ->
       if length = 1 && i <= 3 then
-        write_byte ch (59 + (encode_jvm_basic_type jbt) * 4 + i)
+        write_byte ch (59 + (encode_jvm_prim jbt) * 4 + i)
       else
-        li (54 + encode_jvm_basic_type jbt) i
+        li (54 + encode_jvm_prim jbt) i
     | OpALoad  i -> if length = 1 && i <= 3 then write_byte ch (42 + i) else li 25 i
     | OpAStore i -> if length = 1 && i <= 3 then write_byte ch (75 + i) else li 58 i
         
@@ -245,7 +241,7 @@ let encode_codes ch code =
   if not (count () = Array.length code)
   then error_class "unparsing Badly alligned low level bytecode"
 
-let encode_code ctx { max_stack; max_locals; code; exc_tbl; attributes } =
+let encode_code ctx { max_stack; max_locals; code; exc_tbl; attrs } =
   let ch = ctx.JWriter.ch in
   write_i16 ch max_stack;
   write_i16 ch max_locals;
@@ -260,8 +256,8 @@ let encode_code ctx { max_stack; max_locals; code; exc_tbl; attributes } =
     | None -> write_ui16 ch 0
     | Some e -> write_ui16 ch (JWriter.const ctx (ConstClass e))
   ) exc_tbl;
-  write_ui16 ch (List.length attributes);
-  List.iter (fun attrib ->
-    JWriter.encode_attribute ctx attrib
-  ) attributes
+  write_ui16 ch (List.length attrs);
+  List.iter (fun attr ->
+    JWriter.encode_attr ctx attr
+  ) attrs
 

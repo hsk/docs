@@ -19,16 +19,13 @@
 
 type jpath = (string list) * string
 
-type jwildcard =
-  | WExtends (* + *)
-  | WSuper (* -  *)
-  | WNone
-
-type jtype_argument =
-  | TType of jwildcard * jsignature
+type jty_arg =
+  | TExtends of jty (* + *)
+  | TSuper of jty (* - *)
+  | TType of jty
   | TAny (* * *)
 
-and jsignature =
+and jty =
   | TByte (* B *)
   | TChar (* C *)
   | TDouble (* D *)
@@ -37,17 +34,17 @@ and jsignature =
   | TLong (* J *)
   | TShort (* S *)
   | TBool (* Z *)
-  | TObject of jpath * jtype_argument list (* L Classname *)
-  | TObjectInner of (string list) * (string * jtype_argument list) list (* L Classname ClassTypeSignatureSuffix *)
-  | TArray of jsignature * int option (* [ *)
-  | TMethod of jmethod_signature (* ( *)
+  | TObject of jpath * jty_arg list (* L Classname *)
+  | TObjectInner of (string list) * (string * jty_arg list) list (* L Classname ClassTypeSignatureSuffix *)
+  | TArray of jty * int option (* [ *)
+  | TMethod of jmty (* ( *)
   | TTypeParameter of string (* T *)
 
-(* ( jsignature list ) ReturnDescriptor (| V | jsignature) *)
-and jmethod_signature = jsignature list * jsignature option
+(* ( jty list ) ReturnDescriptor (| V | jty) *)
+and jmty = jty list * jty option
 
 (* InvokeDynamic-specific: Method handle *)
-type reference_type =
+type ref_type =
   | RGetField (* constant must be ConstField *)
   | RGetStatic (* constant must be ConstField *)
   | RPutField (* constant must be ConstField *)
@@ -61,15 +58,15 @@ type reference_type =
 (* TODO *)
 type bootstrap_method = int
 
-type jconstant =
+type jconst =
   (** references a class or an interface - jpath must be encoded as StringUtf8 *)
   | ConstClass of jpath (* tag = 7 *)
   (** field reference *)
-  | ConstField of (jpath * string * jsignature) (* tag = 9 *)
+  | ConstField of (jpath * string * jty) (* tag = 9 *)
   (** method reference; string can be special "<init>" and "<clinit>" values *)
-  | ConstMethod of (jpath * string * jmethod_signature) (* tag = 10 *)
+  | ConstMethod of (jpath * string * jmty) (* tag = 10 *)
   (** interface method reference *)
-  | ConstInterfaceMethod of (jpath * string * jmethod_signature) (* tag = 11 *)
+  | ConstInterfaceMethod of (jpath * string * jmty) (* tag = 11 *)
   (** constant values *)
   | ConstString of string  (* tag = 8 *)
   | ConstInt of int32 (* tag = 3 *)
@@ -77,23 +74,21 @@ type jconstant =
   | ConstLong of int64 (* tag = 5 *)
   | ConstDouble of float (* tag = 6 *)
   (** name and type: used to represent a field or method, without indicating which class it belongs to *)
-  | ConstNameAndType of string * jsignature
+  | ConstNameAndType of string * jty
   (** UTF8 encoded strings. Note that when reading/writing, take into account Utf8 modifications of java *)
   (* (http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.4.7) *)
   | ConstUtf8 of string
   (** invokeDynamic-specific *)
-  | ConstMethodHandle of (reference_type * jconstant) (* tag = 15 *)
-  | ConstMethodType of jmethod_signature (* tag = 16 *)
-  | ConstInvokeDynamic of (bootstrap_method * string * jsignature) (* tag = 18 *)
+  | ConstMethodHandle of (ref_type * jconst) (* tag = 15 *)
+  | ConstMethodType of jmty (* tag = 16 *)
+  | ConstInvokeDynamic of (bootstrap_method * string * jty) (* tag = 18 *)
   | ConstUnusable
 
 type jcode = unit (* TODO *)
-let pp_jcode fmt code = Format.fprintf fmt "()"
-let show_jcode code = "()"
 
-type jaccess_flag =
+type jaccess =
   | JPublic (* 0x0001 *)
-  | JPrivate (* 0x0002 *)
+  | JPrivate (* 0x0002 *) 
   | JProtected (* 0x0004 *)
   | JStatic (* 0x0008 *)
   | JFinal (* 0x0010 *)
@@ -115,24 +110,22 @@ type jaccess_flag =
   | JNative (* 0x0100 *)
   | JStrict (* 0x0800 *)
 
-type jaccess = jaccess_flag list
-
 (* type parameter name, extends signature, implements signatures *)
-type jtypes = (string * jsignature option * jsignature list) list
+type jtypes = (string * jty option * jty list) list
 
 type jannotation = {
-  ann_type : jsignature;
+  ann_type : jty;
   ann_elements : (string * jannotation_value) list;
 }
 
 and jannotation_value =
-  | ValConst of int * jconstant (* B, C, D, E, F, I, J, S, Z, s *)
-  | ValEnum of jsignature * string (* e *)
-  | ValClass of jsignature (* c *) (* V -> Void *)
+  | ValConst of int * jconst (* B, C, D, E, F, I, J, S, Z, s *)
+  | ValEnum of jty * string (* e *)
+  | ValClass of jty (* c *) (* V -> Void *)
   | ValAnnotation of jannotation (* @ *)
   | ValArray of jannotation_value list (* [ *)
 
-type jattribute =
+type jattr =
   | AttrDeprecated
   | AttrVisibleAnnotations of jannotation list
   | AttrInvisibleAnnotations of jannotation list
@@ -146,28 +139,28 @@ type jfield = {
   jf_name : string;
   jf_kind : jfield_kind;
   (* signature, as used by the vm *)
-  jf_vmsignature : jsignature;
+  jf_vmty : jty;
   (* actual signature, as used in java code *)
-  jf_signature : jsignature;
-  jf_throws : jsignature list;
+  jf_ty : jty;
+  jf_throws : jty list;
   jf_types : jtypes;
-  jf_flags : jaccess;
-  jf_attributes : jattribute list;
-  jf_constant : jconstant option;
+  jf_accs : jaccess list;
+  jf_attrs : jattr list;
+  jf_const : jconst option;
   jf_code : jcode option;
 }
 
 type jclass = {
   cversion : int * int;
-  constants : jconstant array;
+  consts : jconst array;
   cpath : jpath;
-  csuper : jsignature;
-  cflags : jaccess;
-  cinterfaces : jsignature list;
+  csuper : jty;
+  caccs : jaccess list;
+  cinterfaces : jty list;
   cfields : jfield list;
   cmethods : jfield list;
-  cattributes : jattribute list;
-  cinner_types : (jpath * jpath option * string option * jaccess) list;
+  cattrs : jattr list;
+  cinner_types : (jpath * jpath option * string option * jaccess list) list;
   ctypes : jtypes;
 }
 
