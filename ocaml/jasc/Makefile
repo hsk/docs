@@ -24,34 +24,22 @@ run:
 test:
 
 #	$(EXE) tests/InvokeDynamic.j
-	$(EXE) tests/Test001.j
-	$(EXE) tests/Test002.j
-	$(EXE) tests/Test003.j
-	$(EXE) tests/Test004.j
-	$(EXE) tests/Test005.j
-	$(EXE) tests/Test006.j
-	$(EXE) tests/Test007.j
-	$(EXE) tests/Test008.j
-	$(EXE) tests/Test009.j
-	$(EXE) tests/Test010.j
-	$(EXE) tests/Test_b.j
-	$(EXE) tests/Test_c.j
-	$(EXE) tests/Test_d.j
-	$(EXE) tests/Test_f.j
-	$(EXE) tests/Test_g.j
-	$(EXE) tests/Test_i.j
-	$(EXE) tests/Test_interface.j
-	$(EXE) tests/Test_interface2.j
-	$(EXE) tests/Test_l.j
-	$(EXE) tests/Test_m.j
-	$(EXE) tests/Test_s.j
-	$(EXE) tests/Test_switch.j
-	$(EXE) tests/Test_switch2.j
-	$(EXE) tests/Test_switch3.j
-	$(EXE) tests/Test_throws.j
-	$(EXE) tests/Test_while.j
-	$(EXE) tests/jsr.j
-	$(EXE) tests/jsr2.j
+	$(EXE) tests/*.j examples/*.j
+	java examples.ANewArray
+#	java examples.AnInterface
+	java examples.Arrays a
+	java examples.Catch
+	java examples.Checkcast
+	java examples.Count
+#	java examples.HelloWorld # error ok
+	java examples.Implementor
+	java examples.InvokeInterface
+	java examples.MultiANewArray
+	java examples.NewArray
+	java examples.Switch
+#	java examples.Uncaught # exception ok
+#	java examples.VerifyTest # error ok
+#	java examples.VerifyTest1 # error ok
 
 #	java tests.InvokeDynamic
 #	java tests.Test001
