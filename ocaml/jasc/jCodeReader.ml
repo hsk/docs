@@ -17,7 +17,7 @@ let read_unsigned ch wide =
 let read_signed ch wide =
   if wide then read_i16 ch else IO.read_signed_byte ch
 
-let parse_opcode op ch wide =
+let parse_opcode p op ch wide =
   match op with
   | 0 -> OpNop
   (* ---- push ----------------------------------- *)
@@ -34,24 +34,24 @@ let parse_opcode op ch wide =
   | 19 -> OpLdc1w (read_ui16 ch)
   | 20 -> OpLdc2w (read_ui16 ch)
   (* ---- load ----------------------------------- *)
-  | 21 | 22 | 23 | 24 -> OpLoad (jvmprim "load" (op - 21),read_unsigned ch wide)
-  | 25                -> OpALoad (read_unsigned ch wide)
-  | 26 | 27 | 28 | 29 -> OpLoad (`Int,op - 26)
-  | 30 | 31 | 32 | 33 -> OpLoad (`Long,op - 30)
-  | 34 | 35 | 36 | 37 -> OpLoad (`Float,op - 34)
-  | 38 | 39 | 40 | 41 -> OpLoad (`Double,op - 38)
-  | 42 | 43 | 44 | 45 -> OpALoad (op - 42)
+  | 21 | 22 | 23 | 24 -> OpLoad (jvmprim "load" (op - 21),read_unsigned ch wide, wide)
+  | 25                -> OpALoad (read_unsigned ch wide, wide)
+  | 26 | 27 | 28 | 29 -> OpLoad1 (`Int,op - 26)
+  | 30 | 31 | 32 | 33 -> OpLoad1 (`Long,op - 30)
+  | 34 | 35 | 36 | 37 -> OpLoad1 (`Float,op - 34)
+  | 38 | 39 | 40 | 41 -> OpLoad1 (`Double,op - 38)
+  | 42 | 43 | 44 | 45 -> OpALoad1 (op - 42)
   (* ---- array load ---------------------------- *)
   | 46 | 47 | 48 | 49 -> OpArrayLoad (jvmprim "arrayload" (op - 46))
   | 50 -> OpAALoad | 51 -> OpBALoad | 52 -> OpCALoad | 53 -> OpSALoad
   (* ---- store ----------------------------------- *)
-  | 54 | 55 | 56 | 57 -> OpStore (jvmprim "store" (op - 54),read_unsigned ch wide)
-  | 58                -> OpAStore (read_unsigned ch wide)
-  | 59 | 60 | 61 | 62 -> OpStore (`Int , op - 59)
-  | 63 | 64 | 65 | 66 -> OpStore (`Long , op - 63)
-  | 67 | 68 | 69 | 70 -> OpStore (`Float , op - 67)
-  | 71 | 72 | 73 | 74 -> OpStore (`Double , op - 71)
-  | 75 | 76 | 77 | 78 -> OpAStore (op - 75)
+  | 54 | 55 | 56 | 57 -> OpStore (jvmprim "store" (op - 54),read_unsigned ch wide, wide)
+  | 58                -> OpAStore (read_unsigned ch wide, wide)
+  | 59 | 60 | 61 | 62 -> OpStore1 (`Int , op - 59)
+  | 63 | 64 | 65 | 66 -> OpStore1 (`Long , op - 63)
+  | 67 | 68 | 69 | 70 -> OpStore1 (`Float , op - 67)
+  | 71 | 72 | 73 | 74 -> OpStore1 (`Double , op - 71)
+  | 75 | 76 | 77 | 78 -> OpAStore1 (op - 75)
   (* ---- array store ---------------------------- *)
   | 79 | 80 | 81 | 82 -> OpArrayStore (jvmprim "arraystore" (op - 79))
   | 83 -> OpAAStore | 84 -> OpBAStore | 85 -> OpCAStore | 86 -> OpSAStore
@@ -78,7 +78,7 @@ let parse_opcode op ch wide =
   | 132 ->
       let idx = read_unsigned ch wide in
       let c = read_signed ch wide in
-      OpIInc (idx,c)
+      OpIInc (idx,c, wide)
   (* ---- conversions ---------------------------- *)
   | 133 -> OpI2L | 134 -> OpI2F | 135 -> OpI2D
   | 136 -> OpL2I | 137 -> OpL2F | 138 -> OpL2D
@@ -101,14 +101,18 @@ let parse_opcode op ch wide =
 
   | 167 -> OpGoto (read_i16 ch)
   | 168 -> OpJsr (read_i16 ch)
-  | 169 -> OpRet (read_unsigned ch wide)
+  | 169 -> OpRet (read_unsigned ch wide, wide)
   | 170 ->
+      let offsetmod4 = (p + 1) mod 4 in
+      if offsetmod4 > 0 then ignore(IO.really_nread ch (4 - offsetmod4));
       let def = read_i32 ch in
       let low = read_real_i32 ch in
       let high = read_real_i32 ch in
       let tbl = Array.init (Int32.to_int (Int32.sub high low) + 1) (fun _ -> read_i32 ch) in
       OpTableSwitch (def,low,high,tbl)
   | 171 ->
+      let offsetmod4 = (p + 1) mod 4 in
+      if offsetmod4 > 0 then ignore(IO.really_nread ch (4 - offsetmod4));
       let def = read_i32 ch in
       let npairs = read_i32 ch in
       let tbl = List.init npairs (fun _ ->
@@ -170,17 +174,14 @@ let parse_code consts code =
   let max_stack = read_i16 ch in
   let max_locals = read_i16 ch in
   let len = read_i32 ch in
-  let ch , pos = IO.pos_in ch in
+  let ch, pos = IO.pos_in ch in
   let codes = Array.create len OpInvalid in
   while pos() < len do
     let p = pos() in
     let op = IO.read_byte ch in
-    if op = 196 then
-      codes.(p) <- parse_opcode (IO.read_byte ch) ch true else
-    let offsetmod4 = (p + 1) mod 4 in
-    if (op = 170 || op = 171) && offsetmod4 > 0
-    then ignore(IO.really_nread ch (4 - offsetmod4));
-    codes.(p) <- parse_opcode op ch false
+    if op = 196
+    then codes.(p) <- parse_opcode p (IO.read_byte ch) ch true
+    else codes.(p) <- parse_opcode p op ch false
   done;
   let len = read_ui16 ch in
   let try_catches = List.init len begin fun _ ->

@@ -27,14 +27,14 @@ type jopcode =
   | OpBIPush of int   | OpSIPush of int
   | OpLdc1 of int | OpLdc1w of int | OpLdc2w of int
 
-  | OpLoad of jvmprim * int
-  | OpALoad of int
+  | OpLoad  of jvmprim * int * bool | OpALoad  of int * bool
+  | OpLoad1 of jvmprim * int        | OpALoad1 of int
 
   | OpArrayLoad of jvmprim
   | OpAALoad | OpBALoad | OpCALoad | OpSALoad
 
-  | OpStore of jvmprim * int
-  | OpAStore of int
+  | OpStore  of jvmprim * int * bool | OpAStore  of int * bool
+  | OpStore1 of jvmprim * int        | OpAStore1 of int
 
   | OpArrayStore of jvmprim
   | OpAAStore | OpBAStore | OpCAStore | OpSAStore
@@ -55,7 +55,7 @@ type jopcode =
   | OpIOr   | OpLOr
   | OpIXor  | OpLXor
 
-  | OpIInc of int * int (** index, increment *)
+  | OpIInc of int * int * bool (** index, increment *)
 
   | OpI2L | OpI2F | OpI2D
   | OpL2I | OpL2F | OpL2D
@@ -73,8 +73,8 @@ type jopcode =
   | OpICmpLt of int | OpICmpGe of int
   | OpICmpGt of int | OpICmpLe of int
   | OpACmpEq of int | OpACmpNe of int
-  | OpGoto of int | OpJsr of int | OpRet of int
-
+  | OpGoto of int | OpJsr of int | OpRet of int * bool
+  
   | OpTableSwitch of int * int32 * int32 * int array
   | OpLookupSwitch of int * (int32 * int) list
 

@@ -33,8 +33,9 @@ let rec pp_jopcode fmt =
   | OpLdc1 a0 -> Format.fprintf fmt "(@[<hov2>JCode.OpLdc1@ %d@])" a0
   | OpLdc1w a0 -> Format.fprintf fmt "(@[<hov2>JCode.OpLdc1w@ %d@])" a0
   | OpLdc2w a0 -> Format.fprintf fmt "(@[<hov2>JCode.OpLdc2w@ %d@])" a0
-  | OpLoad (a0,a1) -> Format.fprintf fmt "@[<hov2>JCode.OpLoad (@,%a,@ %d@])" pp_jvmprim a0 a1
-  | OpALoad a0 -> Format.fprintf fmt "(@[<hov2>JCode.OpALoad@ %d@])" a0
+  | OpLoad (a0,a1,a2) -> Format.fprintf fmt "@[<hov2>JCode.OpLoad (@,%a,@ %d,@ %b@])" pp_jvmprim a0 a1 a2
+  | OpALoad (a0, a1) -> Format.fprintf fmt "@[<hov2>JCode.OpALoad (@,%d,@ %b@])" a0 a1
+
   | OpArrayLoad a0 ->
       Format.fprintf fmt "(@[<hov2>JCode.OpArrayLoad@ ";
       pp_jvmprim fmt a0;
@@ -43,8 +44,8 @@ let rec pp_jopcode fmt =
   | OpBALoad -> Format.pp_print_string fmt "JCode.OpBALoad"
   | OpCALoad -> Format.pp_print_string fmt "JCode.OpCALoad"
   | OpSALoad -> Format.pp_print_string fmt "JCode.OpSALoad"
-  | OpStore (a0,a1) -> Format.fprintf fmt "@[<hov2>JCode.OpStore (@,%a,@ %d@])" pp_jvmprim a0 a1
-  | OpAStore a0 -> Format.fprintf fmt "(@[<hov2>JCode.OpAStore@ %d@])" a0
+  | OpStore (a0,a1,a2) -> Format.fprintf fmt "@[<hov2>JCode.OpStore (@,%a,@ %d,@ %b@])" pp_jvmprim a0 a1 a2
+  | OpAStore (a0, a1) -> Format.fprintf fmt "@[<hov2>JCode.OpAStore (@,%d,@ %b@])" a0 a1
   | OpArrayStore a0 ->
       Format.fprintf fmt "(@[<hov2>JCode.OpArrayStore@ ";
       pp_jvmprim fmt a0;
@@ -80,7 +81,7 @@ let rec pp_jopcode fmt =
   | OpLOr -> Format.pp_print_string fmt "JCode.OpLOr"
   | OpIXor -> Format.pp_print_string fmt "JCode.OpIXor"
   | OpLXor -> Format.pp_print_string fmt "JCode.OpLXor"
-  | OpIInc (a0,a1) -> Format.fprintf fmt "@[<hov2>JCode.OpIInc (@,%d,@ %d@])" a0 a1
+  | OpIInc (a0,a1,a2) -> Format.fprintf fmt "@[<hov2>JCode.OpIInc (@,%d,@ %d,@ %b@])" a0 a1 a2
   | OpI2L -> Format.pp_print_string fmt "JCode.OpI2L"
   | OpI2F -> Format.pp_print_string fmt "JCode.OpI2F"
   | OpI2D -> Format.pp_print_string fmt "JCode.OpI2D"
@@ -117,7 +118,7 @@ let rec pp_jopcode fmt =
   | OpACmpNe a0 -> Format.fprintf fmt "(@[<hov2>JCode.OpACmpNe@ %d@])" a0
   | OpGoto a0 -> Format.fprintf fmt "(@[<hov2>JCode.OpGoto@ %d@])" a0
   | OpJsr a0 -> Format.fprintf fmt "(@[<hov2>JCode.OpJsr@ %d@])" a0
-  | OpRet a0 -> Format.fprintf fmt "(@[<hov2>JCode.OpRet@ %d@])" a0
+  | OpRet (a0, a1) -> Format.fprintf fmt "@[<hov2>JCode.OpRet@ (%d,@ %b@])" a0 a1
   | OpTableSwitch (a0,a1,a2,a3) ->
       Format.fprintf fmt "@[<hov2>JCode.OpTableSwitch (@,%d,@ " a0;
       Format.fprintf fmt "%ldl,@ " a1;
