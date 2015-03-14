@@ -3,55 +3,69 @@ open IO.BigEndian;;
 open JData;;
 open JCode;;
 
-exception Opcode_length_error of int * JCode.jopcode
-let error_len length op = raise (Opcode_length_error (length, op))
+exception Opcode_length_error of int * int * JCode.jopcode
 
 let encode_jvm_prim = function
-  | `Int -> 0
-  | `Long -> 1
-  | `Float -> 2
+  | `Int    -> 0
+  | `Long   -> 1
+  | `Float  -> 2
   | `Double -> 3
 
-let padding ch count =
-  flush ch;
-  for i = 1 + (count () - 1) mod 4 to 3 do
-    write_byte ch 0
-  done
+let encode_prim = function
+  | `Bool   -> 4
+  | `Char   -> 5
+  | `Float  -> 6
+  | `Double -> 7
+  | `Byte   -> 8
+  | `Short  -> 9
+  | `Int    -> 10
+  | `Long   -> 11
+
+let rec padding ch count =
+  if (count ()) mod 4 > 0 then (
+    write_byte ch 0;
+    padding ch count
+  )
 
 let encode_instruction ch count length op =
+  let check_length len =
+    if length <> len then raise (Opcode_length_error (len, length, op));
+  in
   let wb opcode =
-    if length <> 1 then error_len length op;
+    check_length 1;
     write_byte ch opcode
   in
   let jb opcode jvm_prim =
-    if length <> 1 then error_len length op;
+    check_length 1;
     let opcode = opcode + encode_jvm_prim jvm_prim in
     write_byte ch opcode
   in
   let i16 opcode i =
-    if length <> 3 then error_len length op;
+    check_length 3;
     write_byte ch opcode;
     write_i16 ch i
   in
   let ui16 opcode i =
-    if length <> 3 then error_len length op;
+    check_length 3;
     write_byte ch opcode;
     write_ui16 ch i
   in
-  let li opcode i w =
-    if length = 2 && i <= 0xFF && (not w) then (
-      write_byte ch opcode;
-      write_byte ch i
-    ) else if length = 4 && w then (
-      write_byte ch 196;
-      write_byte ch opcode;
-      write_ui16 ch i
-    ) else (
-      error_len length op
-    )
+  let li16 opcode i =
+    check_length 4;
+    write_byte ch 196;
+    write_byte ch opcode;
+    write_ui16 ch i
+  in
+  let lb opcode i =
+    check_length 2;
+    if i >= 0xFF then error_class "Argument error %d > 255 " i;
+    write_byte ch opcode;
+    write_byte ch i
   in
 
   match op with
+    (* length 0 *)
+    | OpInvalid -> ()
     (* length 1 *)
     | OpNop     -> wb 0   | OpAConstNull -> wb 1
     | OpAALoad  -> wb 50  | OpBALoad  -> wb 51 | OpCALoad  -> wb 52 | OpSALoad  -> wb 53
@@ -86,6 +100,57 @@ let encode_instruction ch count length op =
     | OpRem        i -> jb 112 i | OpNeg        i -> jb 116 i
     | OpReturn     i -> jb 172 i
 
+    | OpIConst n ->
+        if not (-1l <= n && n <= 5l)
+        then error_class "iconst %ld Arguments of iconst should be between -1l and 5l (inclusive)" n;
+        check_length 1;
+        write_byte ch (3 + Int32.to_int n)
+    | OpLConst n ->
+        if not (0L=n || n=1L)
+        then error_class "lconst Arguments of lconst should be 0L or 1L";
+        check_length 1;
+        write_byte ch (9 + Int64.to_int n)
+    | OpFConst n ->
+        if not (0.=n || n=1. || n=2.)
+        then error_class "fconst Arguments of fconst should be 0., 1. or 2.";
+        check_length 1;
+        write_byte ch (11 + int_of_float n)
+    | OpDConst n ->
+        if not (0.=n || n=1.)
+        then error_class "dconst Arguments of dconst should be 0. or 1.";
+        check_length 1;
+        write_byte ch (14 + int_of_float n)
+    | OpLoad1 (jbt, i) ->
+        if not (0 <= i && i <= 3)
+        then error_class "load_%d Arguments of load should be between 0 and 3 (inclusive)" i;
+        check_length 1;
+        write_byte ch (26 + (encode_jvm_prim jbt) * 4 + i)
+    | OpStore1 (jbt, i) ->
+        if not (0 <= i && i <= 3)
+        then error_class "store_%d Arguments of store should be between 0 and 3 (inclusive)" i;
+        check_length 1;
+        write_byte ch (59 + (encode_jvm_prim jbt) * 4 + i)
+    | OpALoad1  (i) ->
+        if not (0 <= i && i <= 3)
+        then error_class "store_%d Arguments of store should be between 0 and 3 (inclusive)" i;
+        check_length 1;
+        write_byte ch (42 + i)
+    | OpAStore1 (i) ->
+        if not (0 <= i && i <= 3)
+        then error_class "astore_%d Arguments of astore should be between 0 and 3 (inclusive)" i;
+        check_length 1;
+        write_byte ch (75 + i)
+    
+    (* length 2 *)
+    | OpBIPush n -> lb 16 n
+    | OpLdc1 index -> lb 18 index
+    | OpLoad  (jbt, i, false) -> lb (21 + encode_jvm_prim jbt) i
+    | OpStore (jbt, i, false) -> lb (54 + encode_jvm_prim jbt) i
+    | OpALoad  (i, false)     -> lb 25 i
+    | OpAStore (i, false)     -> lb 58 i
+    | OpRet    (i, false)     -> lb 169 i
+    | OpNewArray t            -> lb 188 (encode_prim t)
+
     (* length 3 *)
     | OpSIPush i -> i16  17 i
     | OpIfEq   i -> i16 153 i | OpIfNe   i -> i16 154 i
@@ -107,89 +172,58 @@ let encode_instruction ch count length op =
     | OpInvokeSpecial i -> ui16 183 i
     | OpInvokeStatic  i -> ui16 184 i
 
-    (* length 1 *)
-    | OpIConst n ->
-        if not (-1l <= n && n <= 5l)
-        then error_class "iconst %ld Arguments of iconst should be between -1l and 5l (inclusive)" n;
-        if length <> 1 then error_len length op;
-        write_byte ch (3 + Int32.to_int n)
-    | OpLConst n ->
-        if not (0L=n || n=1L)
-        then error_class "lconst Arguments of lconst should be 0L or 1L";
-        if length <> 1 then error_len length op;
-        write_byte ch (9 + Int64.to_int n)
-    | OpFConst n ->
-        if not (0.=n || n=1. || n=2.)
-        then error_class "fconst Arguments of fconst should be 0., 1. or 2.";
-        if length <> 1 then error_len length op;
-        write_byte ch (11 + int_of_float n)
-    | OpDConst n ->
-        if not (0.=n || n=1.)
-        then error_class "dconst Arguments of dconst should be 0. or 1.";
-        if length <> 1 then error_len length op;
-        write_byte ch (14 + int_of_float n)
-    | OpLoad1 (jbt, i) ->
-        if not (0 <= i && i <= 3)
-        then error_class "load_%d Arguments of load should be between 0 and 3 (inclusive)" i;
-        if length <> 1 then error_len length op;
-        write_byte ch (26 + (encode_jvm_prim jbt) * 4 + i)
-    | OpStore1 (jbt, i) ->
-        if not (0 <= i && i <= 3)
-        then error_class "store_%d Arguments of store should be between 0 and 3 (inclusive)" i;
-        if length <> 1 then error_len length op;
-        write_byte ch (59 + (encode_jvm_prim jbt) * 4 + i)
-    | OpALoad1  (i) ->
-        if not (0 <= i && i <= 3)
-        then error_class "store_%d Arguments of store should be between 0 and 3 (inclusive)" i;
-        if length <> 1 then error_len length op;
-        write_byte ch (42 + i)
-    | OpAStore1 (i) ->
-        if not (0 <= i && i <= 3)
-        then error_class "astore_%d Arguments of astore should be between 0 and 3 (inclusive)" i;
-        if length <> 1 then error_len length op;
-        write_byte ch (75 + i)
-    
-    (* length 2 *)
-    | OpBIPush n ->
-        if length <> 2 then error_len length op;
-        write_byte ch 16;
-        write_byte ch n
-    | OpLdc1 index ->
-        if length <> 2 then error_len length op;
-        write_byte ch 18;
-        write_byte ch index
-    
-    (* length 3 or 6 *)
-    | OpIInc (index, incr, w) ->
-        if length = 3 && index <= 0xFF && - 0x80 <= incr && incr <= 0x7F
-        then (
-          write_byte ch 132; write_byte ch index; write_byte ch incr
-        ) else
-        if length = 6 then (
-          write_byte ch 196;
-          write_byte ch 132; write_ui16 ch index; write_i16 ch incr
-        ) else
-        error_len length op
+    | OpIInc (index, incr, false) ->
+        check_length 3;
+        if not (index <= 0xFF && - 0x80 <= incr && incr <= 0x7F)
+        then error_class "iinc arguments error %d %d" index incr;
+        write_byte ch 132; write_byte ch index; write_byte ch incr
 
+    (* length 4 *)
+    | OpALoad  (i, true)     -> li16 25 i
+    | OpAStore (i, true)     -> li16 58 i
+    | OpRet    (i, true)     -> li16 169 i
+    | OpLoad  (jbt, i, true) -> li16 (21 + encode_jvm_prim jbt) i
+    | OpStore (jbt, i, true) -> li16 (54 + encode_jvm_prim jbt) i
 
+    | OpAMultiNewArray (c, dims) ->
+        check_length 4;
+        write_byte ch 197;
+        write_ui16 ch c;
+        write_byte ch dims
+
+    (* length 5 *)
+    | OpInvokeInterface (index, nargs) ->
+        check_length 5;
+        write_byte ch 185;
+        write_ui16 ch index;
+        write_byte ch nargs;
+        write_byte ch 0
+    | OpGotoW i ->
+        check_length 5;
+        write_byte ch 200;
+        write_i32 ch i
+    | OpJsrW i ->
+        check_length 5;
+        write_byte ch 201;
+        write_i32 ch i
+    
+    (* length 6 *)
+    | OpIInc (index, incr, true) ->
+        check_length 6;
+        write_byte ch 196;
+        write_byte ch 132; write_ui16 ch index; write_i16 ch incr
     (* length n *)
     | OpTableSwitch (def, low, high, tbl) ->
-        flush ch;
         let c = count () in
-        let padding_size = (4 - ((c + 1) mod 4)) mod 4 in
-        if length <> 13 + padding_size + 4 * (Array.length tbl)
-        then error_len length op;
         write_byte ch 170;
         padding ch count;
         write_i32 ch def;
         write_real_i32 ch low;
         write_real_i32 ch high;
-        Array.iter (write_i32 ch) tbl
+        Array.iter (write_i32 ch) tbl;
+        check_length ((count()) - c)
     | OpLookupSwitch (def, tbl) ->
-        flush ch;
-        let padding_size = (4 - (count () + 1) mod 4) mod 4 in
-        if length <> 9 + padding_size + 8 * (List.length tbl)
-        then error_len length op;
+        let c = count () in
         write_byte ch 171;
         padding ch count;
         write_i32 ch def;
@@ -197,69 +231,19 @@ let encode_instruction ch count length op =
         List.iter begin function v, j ->
           write_real_i32 ch v;
           write_i32 ch j
-        end tbl
+        end tbl;
+        check_length ((count()) - c)
 
-    (* length 5 *)
-    | OpInvokeInterface (index, nargs) ->
-        if length <> 5 then error_len length op;
-        write_byte ch 185;
-        write_ui16 ch index;
-        write_byte ch nargs;
-        write_byte ch 0
-
-    (* length 2 *)
-    | OpNewArray t ->
-        if length <> 2 then error_len length op;
-        write_byte ch 188;
-        begin match t with
-          | `Bool   -> write_byte ch 4
-          | `Char   -> write_byte ch 5
-          | `Float  -> write_byte ch 6
-          | `Double -> write_byte ch 7
-          | `Byte   -> write_byte ch 8
-          | `Short  -> write_byte ch 9
-          | `Int    -> write_byte ch 10
-          | `Long   -> write_byte ch 11
-        end
-    (* length 4 *)
-    | OpAMultiNewArray (c, dims) ->
-        if length <> 4 then error_len length op;
-        write_byte ch 197;
-        write_ui16 ch c;
-        write_byte ch dims
-    (* length 5 *)
-    | OpGotoW i ->
-        if length <> 5 then error_len length op;
-        write_byte ch 200;
-        write_i32 ch i
-    | OpJsrW i ->
-        if length <> 5 then error_len length op;
-        write_byte ch 201;
-        write_i32 ch i
-
-    (* length 2 or 4 *)
-    | OpRet (i, w) -> li 169 i w
-    | OpLoad  (jbt, i, w) -> li (21 + encode_jvm_prim jbt) i w
-    | OpStore (jbt, i, w) -> li (54 + encode_jvm_prim jbt) i w
-    | OpALoad  (i, w)     -> li 25 i w
-    | OpAStore (i, w)     -> li 58 i w
-
-    (* length 0 *)
-    | OpInvalid -> ()
-        
 let encode_codes ch code =
   let ch, count = pos_out ch in
-  Array.iteri (fun i opcode ->
-    let length =
-      let j = ref (i + 1) in
-      while !j < Array.length code && code.(!j) = OpInvalid do
-        incr j
-      done;
-      !j - i
-    in
-    if not (opcode = OpInvalid || count () = i)
+  Array.iteri (fun i op ->
+    if not (op = OpInvalid || count () = i)
     then error_class "unparsing Badly alligned low level bytecode";
-    encode_instruction ch count length opcode
+    let rec get_len p =
+      if not (p < Array.length code && code.(p) = OpInvalid) then p - i
+      else get_len (p + 1)
+    in
+    encode_instruction ch count (get_len (i + 1)) op
   ) code;
   if not (count () = Array.length code)
   then error_class "unparsing Badly alligned low level bytecode"

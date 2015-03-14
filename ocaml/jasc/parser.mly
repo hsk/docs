@@ -20,14 +20,14 @@
 
   let jprim_of_string = function
       | "boolean" -> `Bool
-      | "char" -> `Char
-      | "float" -> `Float
-      | "double" -> `Double
-      | "byte" -> `Byte
-      | "short" -> `Short
-      | "int" -> `Int
-      | "long" -> `Long
-      | _ -> assert false
+      | "char"    -> `Char
+      | "float"   -> `Float
+      | "double"  -> `Double
+      | "byte"    -> `Byte
+      | "short"   -> `Short
+      | "int"     -> `Int
+      | "long"    -> `Long
+      | _         -> assert false
 
   let replace_dot s =
     let s = String.copy s in
@@ -92,12 +92,10 @@
     (p, c)
 
   let mkcode codes =
-
     let realloc p l =
       if l >= 0 then l - p else
       let label = Hashtbl.find pos2label l in
       (Hashtbl.find label2pos label) - p
-
     in
     let code = Array.create !pos OpInvalid in
     List.iter (function 
@@ -724,7 +722,7 @@ methods :
       | defmethod statements endmethod
         {
           let(access,(name,ty)) = $1 in
-          let code,lines,try_catches,throws = mkcode (List.rev $2) in
+          let code,lines,try_catches,throws = mkcode $2 in
           let attrs = [] in
           let attrs = match lines with
             | None -> attrs
@@ -1167,7 +1165,7 @@ methods :
                 }
                 | Insn Int Int {
                   match(fst $1,snd $1, $2,$3)with
-                  | "iinc", "ii", i1, i2 -> add 6 (OpIInc (i1, i2, true))
+                  | "iinc", "ii", i1, i2 -> add 3 (OpIInc (i1, i2, false))
                   | "iinc", "Ii", i1, i2 -> add 6 (OpIInc (i1, i2, true))
                   | a,b,i1,i2 ->
                     Printf.printf "InstIntInt(%S, %S, %d, %d)@." a b i1 i2;

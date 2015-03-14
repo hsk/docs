@@ -5,11 +5,22 @@ open JCode;;
 open JReader;;
 
 let jvmprim place = function
-    | 0 -> `Int
-    | 1 -> `Long
-    | 2 -> `Float
-    | 3 -> `Double
-    | n -> error_class "Illegal type of %s: %d" place n
+  | 0 -> `Int
+  | 1 -> `Long
+  | 2 -> `Float
+  | 3 -> `Double
+  | n -> error_class "Illegal type of %s: %d" place n
+
+let jprim place = function
+  | 4 -> `Bool
+  | 5 -> `Char
+  | 6 -> `Float
+  | 7 -> `Double
+  | 8 -> `Byte
+  | 9 -> `Short
+  | 10 -> `Int
+  | 11 -> `Long
+  | n -> error_class "Illegal type of %s: %d" place n
 
 let read_unsigned ch wide =
   if wide then read_ui16 ch else IO.read_byte ch
@@ -139,18 +150,8 @@ let parse_opcode p op ch wide =
       OpInvokeInterface (index, nargs)
   (* ---- others --------------------------------- *)
   | 187 -> OpNew (read_ui16 ch)
-  | 188 ->
-      OpNewArray begin match IO.read_byte ch with
-        | 4 -> `Bool
-        | 5 -> `Char
-        | 6 -> `Float
-        | 7 -> `Double
-        | 8 -> `Byte
-        | 9 -> `Short
-        | 10 -> `Int
-        | 11 -> `Long
-        | n -> error_class "Illegal type of newarray: %d" n
-      end
+  | 188 -> OpNewArray (jprim "newarray" (IO.read_byte ch))
+
   | 189 -> OpANewArray (read_ui16 ch)
   | 190 -> OpArrayLength
 
