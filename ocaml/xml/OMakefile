@@ -1,0 +1,25 @@
+.PHONY: all install clean
+
+# OCAMLFLAGS    +=
+# OCAMLCFLAGS   +=
+# OCAMLOPTFLAGS +=
+# OCAML_LINK_FLAGS +=
+# OCAML_BYTE_LINK_FLAGS +=
+# OCAML_NATIVE_LINK_FLAGS +=
+
+OCamlGeneratedFiles(parser.ml lexer.ml)
+
+FILES[] =
+  parser
+  lexer
+  main
+
+PROGRAM = main
+# OCAML_LIBS +=
+# OCAML_CLIBS +=
+# OCAML_OTHER_LIBS +=
+# OCAML_LIB_FLAGS +=
+
+.DEFAULT: $(OCamlProgram $(PROGRAM), $(FILES))
+	rm -f *.o *.cm* .omakedb* *.omc parser.ml parser.mli lexer.ml
+	./main
