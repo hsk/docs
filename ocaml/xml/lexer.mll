@@ -13,7 +13,7 @@ rule token = parse
       | l,true -> SINGLE(s, l)
     }
   | "</" (['a'-'z'] ['a'-'z' '0'-'9']* as s) '>' { STOP s }
-  | "<!--" as s { let c = comment lexbuf in Printf.printf "%s\n" c; COMMENT (s ^ c) }
+  | "<!--" as s { COMMENT (s ^ comment lexbuf) }
   | [^ '>' '<']+ as s { STR s }
   | eof { EOF }
 
@@ -26,6 +26,6 @@ and attributes = parse
       ((a,s)::l,r)
     }
 and comment = parse
-  | "-->" as s { Printf.printf "comment end\n";s }
-  | _ as s { Printf.printf "comment\n";(String.make 1 s) ^ (comment lexbuf) }
+  | "-->" as s { s }
+  | _ as s { (String.make 1 s) ^ (comment lexbuf) }
   | eof { assert false }
