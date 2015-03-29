@@ -1,9 +1,12 @@
 %{
+	let rec attrs = function
+	  | [] -> ""
+	  | (k,v)::xs -> Printf.sprintf " %s=%S" k v ^ attrs xs
 %}
 
-%token <string> START
+%token <string*(string*string)list> START
 %token <string> STOP
-%token <string> SINGLE
+%token <string*(string*string)list> SINGLE
 %token <string> STR
 %token EOF
 
@@ -13,11 +16,13 @@
 %%
 main        : | xml_tag EOF { $1 }
 xml_tag     : | START value STOP {
-	              if $1 <> $3 then failwith "end tag error";
-	              "<"^$1^">" ^ $2 ^ "</"^$3^">"
+				  let (a, ls) = $1 in
+	              if a <> $3 then failwith "end tag error";
+	              "<"^a^(attrs ls)^ ">" ^ $2 ^ "</"^a^">"
 	            }
 	          | SINGLE {
-	              "<"^$1^"/>"
+				  let (a, ls) = $1 in
+	              "<"^a^(attrs ls)^"/>"
 	            }
 value       : | xml_tag { $1 }
               | STR { $1 }
