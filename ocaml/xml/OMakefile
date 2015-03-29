@@ -1,5 +1,8 @@
 .PHONY: all install clean
 
+USE_OCAMLFIND = true
+OCAMLPACKS[] = ppx_deriving.show
+
 # OCAMLFLAGS    +=
 # OCAMLCFLAGS   +=
 # OCAMLOPTFLAGS +=
@@ -10,6 +13,7 @@
 OCamlGeneratedFiles(parser.ml lexer.ml)
 
 FILES[] =
+  ast
   parser
   lexer
   main

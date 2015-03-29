@@ -1,9 +1,16 @@
 let parse str =
-  Parser.main Lexer.token (Lexing.from_string str)
+  Parser.main Lexer.xml_token (Lexing.from_string str)
+
+let parse_exp str =
+  Parser.exp Lexer.token (Lexing.from_string str)
 
 let test str =
-  let str = parse str in
-  print_endline str
+  let xml = parse str in
+  Printf.printf "%s\n" (Ast.show_xml xml)
+
+let teste str =
+  let e = parse_exp str in
+  Printf.printf "%s\n" (Ast.show_e e)
 
 let () =
   test "<a>b</a>";
@@ -16,6 +23,10 @@ let () =
   test "<a k=\"v\" aa=\"aa\"><![CDATA[aa]]> bb&amp;</a>";
   test "<a k=\"v\" aa=\"aa\"><![CDATA[aa]]> bb&#128;</a>";
   test "<a k=\"v\" aa=\"aa\"><![CDATA[aa]]> bb&#xaaff;</a>";
+  teste "1";
+  teste "1*2+3*4+ <a k=\"k\">{1}</a>";
+  teste "1*2+3*4+ <a k={1}>{1}</a>";
+  teste "1*2+3*4+ <a {2+1}={1}>{1}</a>";
 
   print_endline "ok";
   ()

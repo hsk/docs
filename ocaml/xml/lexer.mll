@@ -6,41 +6,82 @@ let space = [' ' '\t']
 let identchar = ['A'-'Z' 'a'-'z' '_' '0'-'9' ':' '-']
 
 rule token = parse
+  | space+ { token lexbuf }
+  | ['0' - '9']+ as s { INT (int_of_string s) }
+  | '+' { ADD }
+  | '-' { SUB }
+  | '*' { MUL }
+  | '/' { DIV }
+  | '%' { MOD }
+  | '(' { LPAREN }
+  | ')' { RPAREN }
+  | '<' {  lexbuf.Lexing.lex_curr_pos <- lexbuf.Lexing.lex_curr_pos - 1;
+    LT (Parser.xml_tag xml_token lexbuf) }
+  | '}' { RBRACE }
+  | eof { EOF }
+
+and xml_token = parse
   | '<' (['a'-'z'] ['a'-'z' '0'-'9']* as s) space*
     {
-      match attributes lexbuf with
-      | l,false -> START(s, l)
-      | l,true -> SINGLE(s, l)
+      match xml_attributes lexbuf with
+      | l,false -> XML_START(s, l)
+      | l,true -> XML_SINGLE(s, l)
     }
-  | "</" (['a'-'z'] ['a'-'z' '0'-'9']* as s) '>' { STOP s }
-  | "<!--" as s { COMMENT (s ^ comment lexbuf) }
-  | "<![CDATA[" as s { CDATA (s ^ cdata lexbuf) }
+  | "</" (['a'-'z'] ['a'-'z' '0'-'9']* as s) '>' { XML_STOP s }
+  | "<!--" as s { XML_COMMENT (s ^ xml_comment lexbuf) }
+  | "<![CDATA[" as s { XML_CDATA (s ^ xml_cdata lexbuf) }
   | eof { EOF }
-  | "" { STR (str lexbuf) }
+  | '{' { XML_EXP (Parser.exp_rparen token lexbuf)}
+  | "" { XML_STR (xml_str lexbuf) }
 
-and attributes = parse
+and xml_attributes = parse
+  | space+ { xml_attributes lexbuf }
   | '>' { [], false }
   | "/>" { [], true }
-  | (identchar+ as a) space* '=' space* '"' (([^ '"' '\\'] | '\\' ['"' '\''])* as s) '"' space*
+  | '{'
     {
-      let l,r = attributes lexbuf in
-      ((a,s)::l,r)
+      let a = Parser.exp_rparen token lexbuf in
+      let s = xml_eq_value lexbuf in
+      let l,r = xml_attributes lexbuf in
+      ((a,s)::l, r)
     }
-and comment = parse
+  | (identchar+ as a)
+    {
+      let s = xml_eq_value lexbuf in
+      let l,r = xml_attributes lexbuf in
+      ((Ast.EStr a,s)::l, r)
+    }
+
+and xml_eq_value = parse
+  | space* '=' space* '"' (([^ '"' '\\'] | '\\' ['"' '\''])* as s) '"'
+    {
+      Ast.EStr s
+    }
+  | space* '=' space* '{'
+    {
+      Parser.exp_rparen token lexbuf
+    }
+
+and xml_spaces = parse
+  | space* { () }
+
+and xml_comment = parse
   | "-->" as s { s }
-  | _ as s { (String.make 1 s) ^ (comment lexbuf) }
+  | _ as s { (String.make 1 s) ^ (xml_comment lexbuf) }
   | eof { assert false }
-and cdata = parse
+
+and xml_cdata = parse
   | "]]>" as s { s }
-  | _ as s { (String.make 1 s) ^ (cdata lexbuf) }
+  | _ as s { (String.make 1 s) ^ (xml_cdata lexbuf) }
   | eof { assert false }
-and str = parse
-  | "&amp;" { "&" ^ str lexbuf }
-  | "&lt;"  { "<" ^ str lexbuf }
-  | "&gt;"  { ">" ^ str lexbuf }
-  | "&apos;" { "'" ^ str lexbuf } 
-  | "&quot;" { "\"" ^ str lexbuf  }
-  | "&#" ['0'-'9']+ ";" as s { s ^ str lexbuf }
-  | "&#" ['X' 'x'] ['0'-'9' 'a'-'f' 'A'-'F']+ ";" as s { s ^ str lexbuf }
-  | [^ '<' ] as s { (String.make 1 s) ^ str lexbuf }
+
+and xml_str = parse
+  | "&amp;" { "&" ^ xml_str lexbuf }
+  | "&lt;"  { "<" ^ xml_str lexbuf }
+  | "&gt;"  { ">" ^ xml_str lexbuf }
+  | "&apos;" { "'" ^ xml_str lexbuf } 
+  | "&quot;" { "\"" ^ xml_str lexbuf  }
+  | "&#" ['0'-'9']+ ";" as s { s ^ xml_str lexbuf }
+  | "&#" ['X' 'x'] ['0'-'9' 'a'-'f' 'A'-'F']+ ";" as s { s ^ xml_str lexbuf }
+  | [^ '<' ] as s { (String.make 1 s) ^ xml_str lexbuf }
   | "" { "" }
