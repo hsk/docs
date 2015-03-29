@@ -15,8 +15,8 @@ rule token = parse
   | "</" (['a'-'z'] ['a'-'z' '0'-'9']* as s) '>' { STOP s }
   | "<!--" as s { COMMENT (s ^ comment lexbuf) }
   | "<![CDATA[" as s { CDATA (s ^ cdata lexbuf) }
-  | [^ '>' '<']+ as s { STR s }
   | eof { EOF }
+  | "" { STR (str lexbuf) }
 
 and attributes = parse
   | '>' { [], false }
@@ -34,3 +34,13 @@ and cdata = parse
   | "]]>" as s { s }
   | _ as s { (String.make 1 s) ^ (cdata lexbuf) }
   | eof { assert false }
+and str = parse
+  | "&amp;" { "&" ^ str lexbuf }
+  | "&lt;"  { "<" ^ str lexbuf }
+  | "&gt;"  { ">" ^ str lexbuf }
+  | "&apos;" { "'" ^ str lexbuf } 
+  | "&quot;" { "\"" ^ str lexbuf  }
+  | "&#" ['0'-'9']+ ";" as s { s ^ str lexbuf }
+  | "&#" ['X' 'x'] ['0'-'9' 'a'-'f' 'A'-'F']+ ";" as s { s ^ str lexbuf }
+  | [^ '<' ] as s { (String.make 1 s) ^ str lexbuf }
+  | "" { "" }
