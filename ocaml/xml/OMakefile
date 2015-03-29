@@ -21,5 +21,4 @@ PROGRAM = main
 # OCAML_LIB_FLAGS +=
 
 .DEFAULT: $(OCamlProgram $(PROGRAM), $(FILES))
-	rm -f *.o *.cm* .omakedb* *.omc parser.ml parser.mli lexer.ml
 	./main

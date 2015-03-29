@@ -12,6 +12,6 @@ let () =
   test "<a><c/><d/></a>";
   test "<a/>";
   test "<a k=\"v\" />";
-  test "<a k=\"v\" aa=\"aa\">bb</a>";
+  test "<a k=\"v\" aa=\"aa\"><!--aa--> bb</a>";
   print_endline "ok";
   ()

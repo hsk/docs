@@ -8,6 +8,7 @@
 %token <string> STOP
 %token <string*(string*string)list> SINGLE
 %token <string> STR
+%token <string> COMMENT
 %token EOF
 
 %start main
@@ -15,15 +16,17 @@
 
 %%
 main        : | xml_tag EOF { $1 }
-xml_tag     : | START value STOP {
+xml_tag     : | START values STOP {
 				  let (a, ls) = $1 in
 	              if a <> $3 then failwith "end tag error";
-	              "<"^a^(attrs ls)^ ">" ^ $2 ^ "</"^a^">"
+	              "<"^a^(attrs ls)^ ">" ^ (String.concat "" $2) ^ "</"^a^">"
 	            }
 	          | SINGLE {
 				  let (a, ls) = $1 in
 	              "<"^a^(attrs ls)^"/>"
 	            }
+values      : | { [] }
+              | value values { $1::$2 }
 value       : | xml_tag { $1 }
               | STR { $1 }
-              | value xml_tag { $1 ^ $2 }
+              | COMMENT { $1 }
