@@ -14,6 +14,7 @@ rule token = parse
     }
   | "</" (['a'-'z'] ['a'-'z' '0'-'9']* as s) '>' { STOP s }
   | "<!--" as s { COMMENT (s ^ comment lexbuf) }
+  | "<![CDATA[" as s { CDATA (s ^ cdata lexbuf) }
   | [^ '>' '<']+ as s { STR s }
   | eof { EOF }
 
@@ -28,4 +29,8 @@ and attributes = parse
 and comment = parse
   | "-->" as s { s }
   | _ as s { (String.make 1 s) ^ (comment lexbuf) }
+  | eof { assert false }
+and cdata = parse
+  | "]]>" as s { s }
+  | _ as s { (String.make 1 s) ^ (cdata lexbuf) }
   | eof { assert false }

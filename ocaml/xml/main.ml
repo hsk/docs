@@ -13,5 +13,7 @@ let () =
   test "<a/>";
   test "<a k=\"v\" />";
   test "<a k=\"v\" aa=\"aa\"><!--aa--> bb</a>";
+  test "<a k=\"v\" aa=\"aa\"><![CDATA[aa]]> bb</a>";
+
   print_endline "ok";
   ()

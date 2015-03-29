@@ -9,6 +9,7 @@
 %token <string*(string*string)list> SINGLE
 %token <string> STR
 %token <string> COMMENT
+%token <string> CDATA
 %token EOF
 
 %start main
@@ -30,3 +31,4 @@ values      : | { [] }
 value       : | xml_tag { $1 }
               | STR { $1 }
               | COMMENT { $1 }
+              | CDATA { $1 }
