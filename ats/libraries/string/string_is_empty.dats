@@ -1,4 +1,4 @@
-// string_get_at_size.dats
+// string_is_empty.dats
 
 #include "share/atspre_staload.hats"
 

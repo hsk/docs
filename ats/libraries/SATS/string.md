@@ -313,7 +313,7 @@ fun{
 ### example
 
 ```
-// string_get_at_size.dats
+// string_is_empty.dats
 
 #include "share/atspre_staload.hats"
 
@@ -340,6 +340,16 @@ fun{
 ### example
 
 ```
+// string_isnot_empty.dats
+
+#include "share/atspre_staload.hats"
+
+implement main0() = {
+  val a = "add"
+  val () = println!("'", a, "' is not empty? ", string_isnot_empty(a) )
+  val b = ""
+  val () = println!("'", b, "' is not empty? ", string_isnot_empty(b) )
+}
 ```
 
 ### output
@@ -458,16 +468,28 @@ string\_isnot\_atend
 
 ## string\_head
 
+```
 fun{
 } string\_head{n:pos} (str: string(n)):<> charNZ
+```
 
 ### example
 
 ```
+// string_head.dats
+
+#include "share/atspre_staload.hats"
+
+implement main0() = {
+  val a = "add"
+  val () = println!("'", a, "' head is ", string_head(a) )
+}
 ```
 
 ### output
 
+```
+'add' head is a
 ```
 ```
 
@@ -479,11 +501,20 @@ fun{
 ### example
 
 ```
+// string_tail.dats
+
+#include "share/atspre_staload.hats"
+
+implement main0() = {
+  val a = "add"
+  val () = println!("'", a, "' tail is ", string_tail(a) )
+}
 ```
 
 ### output
 
 ```
+'add' tail is dd
 ```
 
 ## string\_get\_at\_size
