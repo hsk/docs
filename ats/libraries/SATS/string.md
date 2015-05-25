@@ -491,7 +491,6 @@ implement main0() = {
 ```
 'add' head is a
 ```
-```
 
 ## string\_tail
 
