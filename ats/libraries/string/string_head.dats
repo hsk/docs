@@ -4,5 +4,5 @@
 
 implement main0() = {
 	val a = "add"
-	val () = println!("'", a, "' head is ", string_head(a) )
+	val () = println!("'", a, "' head is ", string_head(a))
 }

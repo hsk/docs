@@ -733,22 +733,12 @@ overload string\_test\_at with string\_test\_at\_guint of 0
 
 ## 
 
+```
 fun lt\_string\_string
   (x1: string, x2: string):<> bool = "mac#%"
 
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## 
-
 overload < with lt\_string\_string
+```
 
 #### example
 
@@ -760,53 +750,45 @@ overload < with lt\_string\_string
 ```
 ```
 
-## 
+## lte\_string\_string
 
+```
 fun lte\_string\_string
   (x1: string, x2: string):<> bool = "mac#%"
 
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## 
-
 overload <= with lte\_string\_string
+```
 
 #### example
 
 ```
+// lte_string_string.dats
+
+#include "share/atspre_staload.hats"
+
+implement main0() = {
+        val a = "add"
+        val b = "mul"
+        val () = println!("'", a, "' <= '", b, "'? ", lte_string_string(a, b))
+        val () = println!("'", a, "' <= '", b, "'? ", a <= b)
+}
 ```
 
 #### output
 
 ```
+'add' <= 'mul'? true
+'add' <= 'mul'? true
 ```
 
-## 
+## gt\_string\_string
 
+```
 fun gt\_string\_string
   (x1: string, x2: string):<> bool = "mac#%"
 
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## 
-
 overload > with gt\_string\_string
+```
 
 #### example
 
@@ -818,24 +800,14 @@ overload > with gt\_string\_string
 ```
 ```
 
-## 
+## gte\_string\_string
 
+```
 fun gte\_string\_string
   (x1: string, x2: string):<> bool = "mac#%"
 
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## 
-
 overload >= with gte\_string\_string
+```
 
 #### example
 
@@ -847,24 +819,14 @@ overload >= with gte\_string\_string
 ```
 ```
 
-## 
+## eq\_string\_string
 
+```
 fun eq\_string\_string
   (x1: string, x2: string):<> bool = "mac#%"
 
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## 
-
 overload = with eq\_string\_string
+```
 
 #### example
 
@@ -876,38 +838,15 @@ overload = with eq\_string\_string
 ```
 ```
 
-## 
+## neq\_string\_string
 
+```
 fun neq\_string\_string
   (x1: string, x2: string):<> bool = "mac#%"
 
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## 
-
 overload != with neq\_string\_string
-
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## 
-
 overload <> with neq\_string\_string
+```
 
 #### example
 
@@ -921,22 +860,12 @@ overload <> with neq\_string\_string
 
 ## 
 
+```
 fun compare\_string\_string
   (x1: string, x2: string):<> Sgn = "mac#%"
 
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## 
-
 overload compare with compare\_string\_string
+```
 
 #### example
 
@@ -948,10 +877,12 @@ overload compare with compare\_string\_string
 ```
 ```
 
-## 
+## strcmp
 
+```
 fun{
 } strcmp (x1: string, x2: string):<> int
+```
 
 #### example
 
@@ -963,12 +894,14 @@ fun{
 ```
 ```
 
-## 
+## strintcmp
 
+```
 fun{
 } strintcmp
   {n1,n2:int | n2 >=0}
   (x1: string n1, n2: int n2):<> int(sgn(n1-n2))
+```
 
 #### example
 
@@ -980,12 +913,14 @@ fun{
 ```
 ```
 
-## 
+## strlencmp
 
+```
 fun{
 } strlencmp
   {n1,n2:int}
   (x1: string n1, x2: string n2):<> int(sgn(n1-n2))
+```
 
 #### example
 
@@ -997,11 +932,13 @@ fun{
 ```
 ```
 
-## 
+## string\_make\_list
 
+```
 fun{}
 string\_make\_list
   {n:int} (cs: list(charNZ, n)):<!wrt> strnptr (n)
+```
 
 #### example
 
@@ -1013,11 +950,13 @@ string\_make\_list
 ```
 ```
 
-## 
+## string\_make\_listlen
 
+```
 fun{}
 string\_make\_listlen
   {n:int} (cs: list(charNZ, n), n: int n):<!wrt> strnptr (n)
+```
 
 #### example
 
@@ -1029,11 +968,13 @@ string\_make\_listlen
 ```
 ```
 
-## 
+## string\_make\_rlist
 
+```
 fun{
 } string\_make\_rlist
   {n:int} (cs: list(charNZ, n)):<!wrt> strnptr (n)
+```
 
 #### example
 
@@ -1045,11 +986,13 @@ fun{
 ```
 ```
 
-## 
+## string\_make\_rlistlen
 
+```
 fun{
 } string\_make\_rlistlen
   {n:int} (cs: list(charNZ, n), n: int n):<!wrt> strnptr (n)
+```
 
 #### example
 
@@ -1063,10 +1006,12 @@ fun{
 
 ## 
 
+```
 fun{
 } string\_make\_substring
   {n:int}{st,ln:nat | st+ln <= n}
   (str: string (n), st: size\_t st, ln: size\_t ln):<!wrt> strnptr (ln)
+```
 
 #### example
 
@@ -1080,7 +1025,9 @@ fun{
 
 ## 
 
+```
 fun print\_string (x: string): void = "mac#%"
+```
 
 #### example
 
@@ -1094,7 +1041,9 @@ fun print\_string (x: string): void = "mac#%"
 
 ## 
 
+```
 fun prerr\_string (x: string): void = "mac#%"
+```
 
 #### example
 
@@ -1108,7 +1057,9 @@ fun prerr\_string (x: string): void = "mac#%"
 
 ## 
 
+```
 fun fprint\_string (out: FILEref, x: string): void = "mac#%"
+```
 
 #### example
 
@@ -1122,11 +1073,13 @@ fun fprint\_string (out: FILEref, x: string): void = "mac#%"
 
 ## 
 
+```
 fun fprint\_substring
   {n:int}{st,ln:nat | st+ln <= n}
 (
   out: FILEref, str: string(n), st: size\_t(st), ln: size\_t(ln)
 ) : void = "mac#%" // end of [fprint\_substring]
+```
 
 #### example
 
@@ -1140,9 +1093,11 @@ fun fprint\_substring
 
 ## 
 
+```
 fun{
 } strchr{n:int}
   (str: string (n), c0: char):<> ssizeBtwe (~1, n)
+```
 
 #### example
 
@@ -1156,9 +1111,11 @@ fun{
 
 ## 
 
+```
 fun{
 } strrchr{n:int}
   (str: string (n), c0: char):<> ssizeBtwe (~1, n)
+```
 
 #### example
 
@@ -1172,9 +1129,11 @@ fun{
 
 ## 
 
+```
 fun{
 } strstr{n:int}
   (haystack: string (n), needle: string):<> ssizeBtw (~1, n)
+```
 
 #### example
 
@@ -1188,9 +1147,11 @@ fun{
 
 ## 
 
+```
 fun{
 } strspn{n:int} // spanning
   (str: string (n), accept: string):<> sizeLte (n)
+```
 
 #### example
 
@@ -1204,9 +1165,11 @@ fun{
 
 ## 
 
+```
 fun{
 } strcspn{n:int} // complement spanning
   (str: string (n), accept: string):<> sizeLte (n)
+```
 
 #### example
 
@@ -1218,11 +1181,13 @@ fun{
 ```
 ```
 
-## 
+## string\_index
 
+```
 fun{
 } string\_index{n:int}
   (str: string (n), c0: charNZ):<> ssizeBtw (~1, n)
+```
 
 #### example
 
@@ -1234,11 +1199,13 @@ fun{
 ```
 ```
 
-## 
+## string\_rindex
 
+```
 fun{
 } string\_rindex{n:int}
   (str: string (n), c0: charNZ):<> ssizeBtw (~1, n)
+```
 
 #### example
 
@@ -1250,186 +1217,56 @@ fun{
 ```
 ```
 
-## 
-
-symintr strlen
-
-#### example
+## string\_length
 
 ```
-```
-
-#### output
-
-```
-```
-
-## 
-
-symintr string\_length
-
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## 
-
 fun{
 } string0\_length
   (x: NSH(string)):<> size\_t
-
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## 
-
 fun{
 } string1\_length
   {n:int} (x: NSH(string(n))):<> size\_t(n)
 
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## 
-
 overload strlen with string0\_length of 0
-
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## 
-
 overload strlen with string1\_length of 10
-
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## 
-
 overload string\_length with string0\_length of 0
-
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## 
-
 overload string\_length with string1\_length of 10
+```
 
 #### example
 
 ```
+// strlen.dats
+
+#include "share/atspre_staload.hats"
+
+implement main0() = {
+  val a = "add"
+  val () = println!("'", a, "' length = ", strlen(a))
+  val () = println!("'", a, "' length = ", string_length(a))
+}
 ```
 
 #### output
 
 ```
+'add' length = 3
+'add' length = 3
 ```
 
-## 
-
-symintr string\_nlength
-
-#### example
+## string_nlength
 
 ```
-```
-
-#### output
-
-```
-```
-
-## 
-
 fun{
 } string0\_nlength
   (x: NSH(string), n: size\_t):<> size\_t
-
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## 
-
 fun{
 } string1\_nlength
   {n1,n2:int}
   (NSH(string(n1)), size\_t(n2)):<> size\_t(min(n1,n2))
-
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## 
-
 overload string\_nlength with string0\_nlength of 0
-
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## 
-
 overload string\_nlength with string1\_nlength of 10
+```
 
 #### example
 
@@ -1443,9 +1280,11 @@ overload string\_nlength with string1\_nlength of 10
 
 ## 
 
+```
 fun{
 } string0\_copy
   (xs: NSH(string)):<!wrt> Strptr1
+```
 
 #### example
 
@@ -1459,9 +1298,11 @@ fun{
 
 ## 
 
+```
 fun{
 } string1\_copy
   {n:int} (xs: NSH(string(n))):<!wrt> strnptr (n)
+```
 
 #### example
 
@@ -1475,7 +1316,9 @@ fun{
 
 ## 
 
+```
 symintr string\_append
+```
 
 #### example
 
@@ -1489,11 +1332,13 @@ symintr string\_append
 
 ## 
 
+```
 fun{
 } string0\_append
 (
   x1: NSH(string), x2: NSH(string)
 ) :<!wrt> Strptr1 // end-of-fun
+```
 
 #### example
 
@@ -1507,11 +1352,13 @@ fun{
 
 ## 
 
+```
 fun{
 } string1\_append
   {n1,n2:int} (
   x1: NSH(string(n1)), x2: NSH(string(n2))
 ) :<!wrt> strnptr (n1+n2) // end of [string1\_append]
+```
 
 #### example
 
@@ -1525,7 +1372,9 @@ fun{
 
 ## 
 
+```
 overload string\_append with string0\_append of 0
+```
 
 #### example
 
@@ -1539,9 +1388,11 @@ overload string\_append with string0\_append of 0
 
 ## 
 
+```
 (*
 overload string\_append with string1\_append of 20
 *)
+```
 
 #### example
 
@@ -1555,7 +1406,9 @@ overload string\_append with string1\_append of 20
 
 ## 
 
+```
 symintr string\_append3
+```
 
 #### example
 
@@ -1569,11 +1422,13 @@ symintr string\_append3
 
 ## 
 
+```
 fun{
 } string0\_append3
 (
   x1: NSH(string), x2: NSH(string), x3: NSH(string)
 ) :<!wrt> Strptr1 // end-of-fun
+```
 
 #### example
 
@@ -1587,7 +1442,9 @@ fun{
 
 ## 
 
+```
 overload string\_append3 with string0\_append3 of 0
+```
 
 #### example
 
