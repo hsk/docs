@@ -7,12 +7,12 @@ HX: a string is a null-terminated arrayref of characters
 
 sortdef tk = tkind
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -21,12 +21,12 @@ sortdef tk = tkind
 
 typedef SHR(a:type) = a // for commenting purpose
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -35,12 +35,12 @@ typedef SHR(a:type) = a // for commenting purpose
 
 typedef NSH(a:type) = a // for commenting purpose
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -49,12 +49,12 @@ typedef NSH(a:type) = a // for commenting purpose
 
 typedef stringLt (n:int) = [k:nat | k < n] string (k)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -63,12 +63,12 @@ typedef stringLt (n:int) = [k:nat | k < n] string (k)
 
 typedef stringLte (n:int) = [k:nat | k <= n] string (k)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -77,12 +77,12 @@ typedef stringLte (n:int) = [k:nat | k <= n] string (k)
 
 typedef stringGt (n:int) = [k:int | k > n] string (k)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -91,12 +91,12 @@ typedef stringGt (n:int) = [k:int | k > n] string (k)
 
 typedef stringGte (n:int) = [k:int | k >= n] string (k)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -105,12 +105,12 @@ typedef stringGte (n:int) = [k:int | k >= n] string (k)
 
 typedef stringBtw (m:int, n:int) = [k:int | m <= k; k < n] string (k)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -119,12 +119,12 @@ typedef stringBtw (m:int, n:int) = [k:int | m <= k; k < n] string (k)
 
 typedef stringBtwe (m:int, n:int) = [k:int | m <= k; k <= n] string (k)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -133,12 +133,12 @@ typedef stringBtwe (m:int, n:int) = [k:int | m <= k; k <= n] string (k)
 
 typedef stringlst = List0 (string)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -148,12 +148,12 @@ typedef stringlst = List0 (string)
 vtypedef stringlst\_vt = List0\_vt (string)
 
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -175,12 +175,12 @@ string_index_p
 
 exception StringSubscriptExn of ((*void*))
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -190,12 +190,12 @@ praxi
 lemma_string_param{n:int}(string n): [n >= 0] void
 
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -207,12 +207,12 @@ string2ptr (x: string):<> Ptr1
 overload ptrcast with string2ptr
 
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -223,12 +223,12 @@ overload ptrcast with string2ptr
 // HX: [string2string] = [string1_of_string0]
 //
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -237,12 +237,12 @@ overload ptrcast with string2ptr
 
 castfn g0ofg1_string (x: String):<> string
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -252,12 +252,12 @@ castfn g0ofg1_string (x: String):<> string
 castfn g1ofg0_string (x: string):<> String0
 
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -266,12 +266,12 @@ castfn g1ofg0_string (x: string):<> String0
 
 overload g0ofg1 with g0ofg1_string // index-erasing
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -280,12 +280,12 @@ overload g0ofg1 with g0ofg1_string // index-erasing
 
 overload g1ofg0 with g1ofg0_string // index-inducing
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -295,12 +295,12 @@ overload g1ofg0 with g1ofg0_string // index-inducing
 fun{}
 string_sing (c: charNZ):<!wrt> strnptr (1)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -310,7 +310,7 @@ string_sing (c: charNZ):<!wrt> strnptr (1)
 fun{
 } string\_is\_empty{n:int} (str: string(n)):<> bool(n==0)
 
-### example
+#### example
 
 ```
 // string_is_empty.dats
@@ -325,7 +325,7 @@ implement main0() = {
 }
 ```
 
-### output
+#### output
 
 ```
 'add' is empty? false
@@ -337,7 +337,7 @@ implement main0() = {
 fun{
 } string\_isnot\_empty{n:int} (str: string(n)):<> bool(n > 0)
 
-### example
+#### example
 
 ```
 // string_isnot_empty.dats
@@ -352,7 +352,7 @@ implement main0() = {
 }
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -361,12 +361,12 @@ implement main0() = {
 
 symintr string\_is\_atend
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -378,12 +378,12 @@ string\_is\_atend\_size
   {n:int}{i:nat | i <= n}
   (s: string (n), i: size\_t (i)):<> bool (i==n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -395,12 +395,12 @@ string\_is\_atend\_gint
   {n:int}{i:nat | i <= n}
   (s: string (n), i: g1int (tk, i)):<> bool (i==n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -409,12 +409,12 @@ string\_is\_atend\_gint
 
 overload string\_is\_atend with string\_is\_atend\_gint
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -426,12 +426,12 @@ string\_is\_atend\_guint
   {n:int}{i:nat | i <= n}
   (s: string (n), i: g1uint (tk, i)):<> bool (i==n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -440,12 +440,12 @@ string\_is\_atend\_guint
 
 overload string\_is\_atend with string\_is\_atend\_guint
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -456,12 +456,12 @@ macdef
 string\_isnot\_atend
   (string, index) = ~string\_is\_atend (,(string), ,(index))
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -473,7 +473,7 @@ fun{
 } string\_head{n:pos} (str: string(n)):<> charNZ
 ```
 
-### example
+#### example
 
 ```
 // string_head.dats
@@ -486,7 +486,7 @@ implement main0() = {
 }
 ```
 
-### output
+#### output
 
 ```
 'add' head is a
@@ -497,7 +497,7 @@ implement main0() = {
 fun{
 } string\_tail{n:pos} (str: string(n)):<> string(n-1)
 
-### example
+#### example
 
 ```
 // string_tail.dats
@@ -510,7 +510,7 @@ implement main0() = {
 }
 ```
 
-### output
+#### output
 
 ```
 'add' tail is dd
@@ -523,12 +523,12 @@ string\_get\_at\_size
   {n:int}{i:nat | i < n}
   (s: string (n), i: size\_t (i)):<> charNZ
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -540,12 +540,12 @@ string\_get\_at\_gint
   {n:int}{i:nat | i < n}
   (s: string (n), i: g1int (tk, i)):<> charNZ
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -558,12 +558,12 @@ string\_get\_at\_guint
   {n:int}{i:nat | i < n}
   (s: string (n), i: g1uint (tk, i)):<> charNZ
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -572,12 +572,12 @@ string\_get\_at\_guint
 
 symintr string\_get\_at
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -586,12 +586,12 @@ symintr string\_get\_at
 
 overload string\_get\_at with string\_get\_at\_size of 1
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -600,12 +600,12 @@ overload string\_get\_at with string\_get\_at\_size of 1
 
 overload string\_get\_at with string\_get\_at\_gint of 0
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -614,12 +614,12 @@ overload string\_get\_at with string\_get\_at\_gint of 0
 
 overload string\_get\_at with string\_get\_at\_guint of 0
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -631,12 +631,12 @@ string\_test\_at\_size
   {n:int}{i:nat | i <= n}
   (s: string (n), i: size\_t (i)):<> [c:int] (string\_index\_p (n, i, c) | char (c))
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -648,12 +648,12 @@ string\_test\_at\_gint
   {n:int}{i:nat | i <= n}
   (s: string (n), i: g1int (tk, i)):<> [c:int] (string\_index\_p (n, i, c) | char (c))
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -665,12 +665,12 @@ string\_test\_at\_guint
   {n:int}{i:nat | i <= n}
   (s: string (n), i: g1uint (tk, i)):<> [c:int] (string\_index\_p (n, i, c) | char (c))
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -679,12 +679,12 @@ string\_test\_at\_guint
 
 symintr string\_test\_at
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -693,12 +693,12 @@ symintr string\_test\_at
 
 overload string\_test\_at with string\_test\_at\_size of 1
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -707,12 +707,12 @@ overload string\_test\_at with string\_test\_at\_size of 1
 
 overload string\_test\_at with string\_test\_at\_gint of 0
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -721,12 +721,12 @@ overload string\_test\_at with string\_test\_at\_gint of 0
 
 overload string\_test\_at with string\_test\_at\_guint of 0
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -736,12 +736,12 @@ overload string\_test\_at with string\_test\_at\_guint of 0
 fun lt\_string\_string
   (x1: string, x2: string):<> bool = "mac#%"
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -750,12 +750,12 @@ fun lt\_string\_string
 
 overload < with lt\_string\_string
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -765,12 +765,12 @@ overload < with lt\_string\_string
 fun lte\_string\_string
   (x1: string, x2: string):<> bool = "mac#%"
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -779,12 +779,12 @@ fun lte\_string\_string
 
 overload <= with lte\_string\_string
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -794,12 +794,12 @@ overload <= with lte\_string\_string
 fun gt\_string\_string
   (x1: string, x2: string):<> bool = "mac#%"
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -808,12 +808,12 @@ fun gt\_string\_string
 
 overload > with gt\_string\_string
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -823,12 +823,12 @@ overload > with gt\_string\_string
 fun gte\_string\_string
   (x1: string, x2: string):<> bool = "mac#%"
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -837,12 +837,12 @@ fun gte\_string\_string
 
 overload >= with gte\_string\_string
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -852,12 +852,12 @@ overload >= with gte\_string\_string
 fun eq\_string\_string
   (x1: string, x2: string):<> bool = "mac#%"
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -866,12 +866,12 @@ fun eq\_string\_string
 
 overload = with eq\_string\_string
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -881,12 +881,12 @@ overload = with eq\_string\_string
 fun neq\_string\_string
   (x1: string, x2: string):<> bool = "mac#%"
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -895,12 +895,12 @@ fun neq\_string\_string
 
 overload != with neq\_string\_string
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -909,12 +909,12 @@ overload != with neq\_string\_string
 
 overload <> with neq\_string\_string
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -924,12 +924,12 @@ overload <> with neq\_string\_string
 fun compare\_string\_string
   (x1: string, x2: string):<> Sgn = "mac#%"
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -938,12 +938,12 @@ fun compare\_string\_string
 
 overload compare with compare\_string\_string
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -953,12 +953,12 @@ overload compare with compare\_string\_string
 fun{
 } strcmp (x1: string, x2: string):<> int
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -970,12 +970,12 @@ fun{
   {n1,n2:int | n2 >=0}
   (x1: string n1, n2: int n2):<> int(sgn(n1-n2))
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -987,12 +987,12 @@ fun{
   {n1,n2:int}
   (x1: string n1, x2: string n2):<> int(sgn(n1-n2))
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1003,12 +1003,12 @@ fun{}
 string\_make\_list
   {n:int} (cs: list(charNZ, n)):<!wrt> strnptr (n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1019,12 +1019,12 @@ fun{}
 string\_make\_listlen
   {n:int} (cs: list(charNZ, n), n: int n):<!wrt> strnptr (n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1035,12 +1035,12 @@ fun{
 } string\_make\_rlist
   {n:int} (cs: list(charNZ, n)):<!wrt> strnptr (n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1051,12 +1051,12 @@ fun{
 } string\_make\_rlistlen
   {n:int} (cs: list(charNZ, n), n: int n):<!wrt> strnptr (n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1068,12 +1068,12 @@ fun{
   {n:int}{st,ln:nat | st+ln <= n}
   (str: string (n), st: size\_t st, ln: size\_t ln):<!wrt> strnptr (ln)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1082,12 +1082,12 @@ fun{
 
 fun print\_string (x: string): void = "mac#%"
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1096,12 +1096,12 @@ fun print\_string (x: string): void = "mac#%"
 
 fun prerr\_string (x: string): void = "mac#%"
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1110,12 +1110,12 @@ fun prerr\_string (x: string): void = "mac#%"
 
 fun fprint\_string (out: FILEref, x: string): void = "mac#%"
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1128,12 +1128,12 @@ fun fprint\_substring
   out: FILEref, str: string(n), st: size\_t(st), ln: size\_t(ln)
 ) : void = "mac#%" // end of [fprint\_substring]
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1144,12 +1144,12 @@ fun{
 } strchr{n:int}
   (str: string (n), c0: char):<> ssizeBtwe (~1, n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1160,12 +1160,12 @@ fun{
 } strrchr{n:int}
   (str: string (n), c0: char):<> ssizeBtwe (~1, n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1176,12 +1176,12 @@ fun{
 } strstr{n:int}
   (haystack: string (n), needle: string):<> ssizeBtw (~1, n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1192,12 +1192,12 @@ fun{
 } strspn{n:int} // spanning
   (str: string (n), accept: string):<> sizeLte (n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1208,12 +1208,12 @@ fun{
 } strcspn{n:int} // complement spanning
   (str: string (n), accept: string):<> sizeLte (n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1224,12 +1224,12 @@ fun{
 } string\_index{n:int}
   (str: string (n), c0: charNZ):<> ssizeBtw (~1, n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1240,12 +1240,12 @@ fun{
 } string\_rindex{n:int}
   (str: string (n), c0: charNZ):<> ssizeBtw (~1, n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1254,12 +1254,12 @@ fun{
 
 symintr strlen
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1268,12 +1268,12 @@ symintr strlen
 
 symintr string\_length
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1284,12 +1284,12 @@ fun{
 } string0\_length
   (x: NSH(string)):<> size\_t
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1300,12 +1300,12 @@ fun{
 } string1\_length
   {n:int} (x: NSH(string(n))):<> size\_t(n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1314,12 +1314,12 @@ fun{
 
 overload strlen with string0\_length of 0
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1328,12 +1328,12 @@ overload strlen with string0\_length of 0
 
 overload strlen with string1\_length of 10
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1342,12 +1342,12 @@ overload strlen with string1\_length of 10
 
 overload string\_length with string0\_length of 0
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1356,12 +1356,12 @@ overload string\_length with string0\_length of 0
 
 overload string\_length with string1\_length of 10
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1370,12 +1370,12 @@ overload string\_length with string1\_length of 10
 
 symintr string\_nlength
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1386,12 +1386,12 @@ fun{
 } string0\_nlength
   (x: NSH(string), n: size\_t):<> size\_t
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1403,12 +1403,12 @@ fun{
   {n1,n2:int}
   (NSH(string(n1)), size\_t(n2)):<> size\_t(min(n1,n2))
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1417,12 +1417,12 @@ fun{
 
 overload string\_nlength with string0\_nlength of 0
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1431,12 +1431,12 @@ overload string\_nlength with string0\_nlength of 0
 
 overload string\_nlength with string1\_nlength of 10
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1447,12 +1447,12 @@ fun{
 } string0\_copy
   (xs: NSH(string)):<!wrt> Strptr1
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1463,12 +1463,12 @@ fun{
 } string1\_copy
   {n:int} (xs: NSH(string(n))):<!wrt> strnptr (n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1477,12 +1477,12 @@ fun{
 
 symintr string\_append
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1495,12 +1495,12 @@ fun{
   x1: NSH(string), x2: NSH(string)
 ) :<!wrt> Strptr1 // end-of-fun
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1513,12 +1513,12 @@ fun{
   x1: NSH(string(n1)), x2: NSH(string(n2))
 ) :<!wrt> strnptr (n1+n2) // end of [string1\_append]
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1527,12 +1527,12 @@ fun{
 
 overload string\_append with string0\_append of 0
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1543,12 +1543,12 @@ overload string\_append with string0\_append of 0
 overload string\_append with string1\_append of 20
 *)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1557,12 +1557,12 @@ overload string\_append with string1\_append of 20
 
 symintr string\_append3
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1575,12 +1575,12 @@ fun{
   x1: NSH(string), x2: NSH(string), x3: NSH(string)
 ) :<!wrt> Strptr1 // end-of-fun
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1589,12 +1589,12 @@ fun{
 
 overload string\_append3 with string0\_append3 of 0
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1605,12 +1605,12 @@ fun{
 } stringarr\_concat{n:int}
   (xs: arrayref(string, n), size\_t n):<!wrt> Strptr1
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1620,12 +1620,12 @@ fun{
 fun{
 } stringlst\_concat (xs: List(string)):<!wrt> Strptr1
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1636,12 +1636,12 @@ fun{
 } string\_explode
   {n:int} (x: string(n)):<!wrt> list\_vt (charNZ, n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1651,12 +1651,12 @@ fun{
 fun{
 } string\_tabulate$fopr (size\_t): charNZ
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1666,12 +1666,12 @@ fun{
 fun{
 } string\_tabulate{n:int} (n: size\_t(n)): strnptr(n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1681,12 +1681,12 @@ fun{
 fun{env:vt0p}
 string\_foreach$cont (c: char, env: &env): bool
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1696,12 +1696,12 @@ string\_foreach$cont (c: char, env: &env): bool
 fun{env:vt0p}
 string\_foreach$fwork (c: char, env: &(env) >> \_): void
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1711,12 +1711,12 @@ string\_foreach$fwork (c: char, env: &(env) >> \_): void
 fun{
 } string\_foreach {n:int} (str: string(n)): sizeLte(n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1728,12 +1728,12 @@ env:vt0p
 } string\_foreach\_env
   {n:int} (str: string(n), env: &(env) >> \_): sizeLte(n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1743,12 +1743,12 @@ env:vt0p
 fun{env:vt0p}
 string\_rforeach$cont (c: char, env: &env): bool
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1758,12 +1758,12 @@ string\_rforeach$cont (c: char, env: &env): bool
 fun{env:vt0p}
 string\_rforeach$fwork (c: char, env: &(env) >> \_): void
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1773,12 +1773,12 @@ string\_rforeach$fwork (c: char, env: &(env) >> \_): void
 fun{
 } string\_rforeach {n:int} (str: string(n)): sizeLte(n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1790,12 +1790,12 @@ env:vt0p
 } string\_rforeach\_env
   {n:int} (str: string(n), env: &(env) >> \_): sizeLte(n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1807,12 +1807,12 @@ env:vt0p
 *)
 fun stropt\_none (): stropt (~1) = "mac#%"
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1821,12 +1821,12 @@ fun stropt\_none (): stropt (~1) = "mac#%"
 
 symintr stropt\_some
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1835,12 +1835,12 @@ symintr stropt\_some
 
 castfn stropt0\_some (x: SHR(string)): Stropt1
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1849,12 +1849,12 @@ castfn stropt0\_some (x: SHR(string)): Stropt1
 
 overload stropt\_some with stropt0\_some of 0
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1863,12 +1863,12 @@ overload stropt\_some with stropt0\_some of 0
 
 castfn stropt1\_some {n:int} (x: SHR(string n)): stropt (n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1877,12 +1877,12 @@ castfn stropt1\_some {n:int} (x: SHR(string n)): stropt (n)
 
 overload stropt\_some with stropt1\_some of 10
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1892,12 +1892,12 @@ overload stropt\_some with stropt1\_some of 10
 fun{
 } stropt\_is\_none{n:int} (stropt(n)):<> bool (n < 0)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1907,12 +1907,12 @@ fun{
 fun{
 } stropt\_is\_some{n:int} (stropt(n)):<> bool (n >= 0)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1922,12 +1922,12 @@ fun{
 castfn
 stropt\_unsome {n:nat} (x: stropt n):<> string (n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1938,12 +1938,12 @@ fun{
 } stropt\_length
   {n:int} (x: stropt (n)):<> ssize\_t (n)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1952,12 +1952,12 @@ fun{
 
 fun print\_stropt (opt: Stropt0): void = "mac#%"
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1966,12 +1966,12 @@ fun print\_stropt (opt: Stropt0): void = "mac#%"
 
 fun prerr\_stropt (opt: Stropt0): void = "mac#%"
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1980,12 +1980,12 @@ fun prerr\_stropt (opt: Stropt0): void = "mac#%"
 
 fun fprint\_stropt (out: FILEref, opt: Stropt0): void = "mac#%"
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -1994,12 +1994,12 @@ fun fprint\_stropt (out: FILEref, opt: Stropt0): void = "mac#%"
 
 // overloading for certain symbols
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -2009,12 +2009,12 @@ fun fprint\_stropt (out: FILEref, opt: Stropt0): void = "mac#%"
 overload
 [] with string\_get\_at\_size of 1
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -2024,12 +2024,12 @@ overload
 overload
 [] with string\_get\_at\_gint of 0
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -2039,12 +2039,12 @@ overload
 overload
 [] with string\_get\_at\_guint of 0
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -2053,12 +2053,12 @@ overload
 
 overload iseqz with string\_is\_empty
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -2067,12 +2067,12 @@ overload iseqz with string\_is\_empty
 
 overload isneqz with string\_isnot\_empty
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -2081,12 +2081,12 @@ overload isneqz with string\_isnot\_empty
 
 overload .head with string\_head
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -2095,12 +2095,12 @@ overload .head with string\_head
 
 overload .tail with string\_tail
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -2109,12 +2109,12 @@ overload .tail with string\_tail
 
 overload length with string\_length
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -2123,12 +2123,12 @@ overload length with string\_length
 
 overload copy with string0\_copy of 0
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -2142,12 +2142,12 @@ overload copy with string0\_copy of 0
 overload copy with string1\_copy of 10
 *)
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -2156,12 +2156,12 @@ overload copy with string1\_copy of 10
 
 overload print with print\_string of 0
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -2170,12 +2170,12 @@ overload print with print\_string of 0
 
 overload prerr with prerr\_string of 0
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -2184,12 +2184,12 @@ overload prerr with prerr\_string of 0
 
 overload fprint with fprint\_string of 0
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -2198,12 +2198,12 @@ overload fprint with fprint\_string of 0
 
 overload iseqz with stropt\_is\_none
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -2212,12 +2212,12 @@ overload iseqz with stropt\_is\_none
 
 overload isneqz with stropt\_is\_some
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -2226,12 +2226,12 @@ overload isneqz with stropt\_is\_some
 
 overload length with stropt\_length
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -2240,12 +2240,12 @@ overload length with stropt\_length
 
 overload print with print\_stropt of 0
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
@@ -2254,12 +2254,12 @@ overload print with print\_stropt of 0
 
 overload prerr with prerr\_stropt of 0
 
-### example
+#### example
 
 ```
 ```
 
-### output
+#### output
 
 ```
 ```
