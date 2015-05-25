@@ -8,7 +8,7 @@ let test str =
   let xml = parse str in
   Printf.printf "%s\n" (Ast.show_xml xml)
 
-let teste str =
+let test_exp str =
   let e = parse_exp str in
   Printf.printf "%s\n" (Ast.show_e e)
 
@@ -23,10 +23,18 @@ let () =
   test "<a k=\"v\" aa=\"aa\"><![CDATA[aa]]> bb&amp;</a>";
   test "<a k=\"v\" aa=\"aa\"><![CDATA[aa]]> bb&#128;</a>";
   test "<a k=\"v\" aa=\"aa\"><![CDATA[aa]]> bb&#xaaff;</a>";
-  teste "1";
-  teste "1*2+3*4+ <a k=\"k\">{1}</a>";
-  teste "1*2+3*4+ <a k={1}>{1}</a>";
-  teste "1*2+3*4+ <a {2+1}={1}>{1}</a>";
+  test_exp "1";
+  test_exp "1*2+3*4+ <a k=\"k\">{1}</a>";
+  test_exp "1*2+3*4+ <a k={1}>{1}</a>";
+  test_exp "1*2+3*4+ <a {2+1}={1}>{1}</a>";
+  test_exp "1*2+3*4+{1 ; 2;}";
 
-  print_endline "ok";
+  test_exp "(10)";
+  test_exp "(10, 20)";
+  test_exp "10(10, 20)(20)";
+
+  test_exp "10{20;}";
+  test_exp "aaa(20, 30){30}{1;2;a+b}";
+
+  print_endline "ok2";
   ()

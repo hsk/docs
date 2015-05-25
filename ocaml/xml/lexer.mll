@@ -17,7 +17,11 @@ rule token = parse
   | ')' { RPAREN }
   | '<' {  lexbuf.Lexing.lex_curr_pos <- lexbuf.Lexing.lex_curr_pos - 1;
     LT (Parser.xml_tag xml_token lexbuf) }
+  | '{' { LBRACE }
   | '}' { RBRACE }
+  | ';' { SEMI }
+  | ',' { COMMA }
+  | ['A'-'Z' 'a'-'z' '_'] ['A'-'Z' 'a'-'z' '_' '0'-'9']* as s { ID s }
   | eof { EOF }
 
 and xml_token = parse
