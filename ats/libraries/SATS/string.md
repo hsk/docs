@@ -5,7 +5,9 @@ HX: a string is a null-terminated arrayref of characters
 
 ## tk
 
+```
 sortdef tk = tkind
+```
 
 #### example
 
@@ -19,7 +21,9 @@ sortdef tk = tkind
 
 ## SHR
 
+```
 typedef SHR(a:type) = a // for commenting purpose
+```
 
 #### example
 
@@ -33,7 +37,9 @@ typedef SHR(a:type) = a // for commenting purpose
 
 ## NSH
 
+```
 typedef NSH(a:type) = a // for commenting purpose
+```
 
 #### example
 
@@ -47,77 +53,14 @@ typedef NSH(a:type) = a // for commenting purpose
 
 ## stringLt
 
+```
 typedef stringLt (n:int) = [k:nat | k < n] string (k)
-
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## stringLte
-
 typedef stringLte (n:int) = [k:nat | k <= n] string (k)
-
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## stringGt
-
 typedef stringGt (n:int) = [k:int | k > n] string (k)
-
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## stringGte
-
 typedef stringGte (n:int) = [k:int | k >= n] string (k)
-
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## stringBtw
-
 typedef stringBtw (m:int, n:int) = [k:int | m <= k; k < n] string (k)
-
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## stringBtwe
-
 typedef stringBtwe (m:int, n:int) = [k:int | m <= k; k <= n] string (k)
+```
 
 #### example
 
@@ -131,7 +74,9 @@ typedef stringBtwe (m:int, n:int) = [k:int | m <= k; k <= n] string (k)
 
 ## stringlst
 
+```
 typedef stringlst = List0 (string)
+```
 
 #### example
 
@@ -145,7 +90,9 @@ typedef stringlst = List0 (string)
 
 ## stringlst\_vt
 
-vtypedef stringlst\_vt = List0\_vt (string)
+```
+vtypedef stringlst_vt = List0_vt (string)
+```
 
 
 #### example
@@ -160,6 +107,7 @@ vtypedef stringlst\_vt = List0\_vt (string)
 
 ## string\_index\_p
 
+```
 dataprop
 string_index_p
 (
@@ -169,11 +117,13 @@ string_index_p
   | {i:int | n > i}
     {c:int8 | c != 0}
     string_index_p_neqz (n, i, c)
-
+```
 
 # StringSubscriptExn
 
+```
 exception StringSubscriptExn of ((*void*))
+```
 
 #### example
 
@@ -186,9 +136,11 @@ exception StringSubscriptExn of ((*void*))
 ```
 
 ## lemma\_string\_param
+
+```
 praxi
 lemma_string_param{n:int}(string n): [n >= 0] void
-
+```
 
 #### example
 
@@ -202,10 +154,11 @@ lemma_string_param{n:int}(string n): [n >= 0] void
 
 ## string2ptr
 
+```
 castfn
 string2ptr (x: string):<> Ptr1
 overload ptrcast with string2ptr
-
+```
 
 #### example
 
@@ -219,9 +172,11 @@ overload ptrcast with string2ptr
 
 ## string1\_of\_string0
 
+```
 //
 // HX: [string2string] = [string1_of_string0]
 //
+```
 
 #### example
 
@@ -233,52 +188,14 @@ overload ptrcast with string2ptr
 ```
 ```
 
-## g0ofg1_string
+## g0ofg1\_string g1ofg0\_string
 
+```
 castfn g0ofg1_string (x: String):<> string
-
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## g1ofg0_string
-
 castfn g1ofg0_string (x: string):<> String0
-
-
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## g0ofg1
-
 overload g0ofg1 with g0ofg1_string // index-erasing
-
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## g1ofg0
-
 overload g1ofg0 with g1ofg0_string // index-inducing
+```
 
 #### example
 
@@ -290,19 +207,30 @@ overload g1ofg0 with g1ofg0_string // index-inducing
 ```
 ```
 
-## string_sing
+## string\_sing
 
+```
 fun{}
 string_sing (c: charNZ):<!wrt> strnptr (1)
+```
 
 #### example
 
 ```
+// string_sing.dats
+// patscc -DATS_MEMALLOC_LIBC string_sing.dats 
+#include "share/atspre_staload.hats"
+
+implement main0() = {
+  val a = 'a'
+  val () = println!("'", a, "' sing is ", strnptr2string(string_sing(a)))
+}
 ```
 
 #### output
 
 ```
+'a' sing is a
 ```
 
 ## string\_is\_empty
@@ -357,26 +285,17 @@ implement main0() = {
 ```
 ```
 
-## string\_is\_atend
+# string\_is\_atend
 
-symintr string\_is\_atend
-
-#### example
-
-```
-```
-
-#### output
-
-```
-```
 
 ## string\_is\_atend\_size
 
+```
 fun{}
-string\_is\_atend\_size
+string_is_atend_size
   {n:int}{i:nat | i <= n}
-  (s: string (n), i: size\_t (i)):<> bool (i==n)
+  (s: string (n), i: size_t (i)):<> bool (i==n)
+```
 
 #### example
 
@@ -390,24 +309,14 @@ string\_is\_atend\_size
 
 ## string\_is\_atend\_gint
 
+```
 fun{tk:tk}
-string\_is\_atend\_gint
+string_is_atend_gint
   {n:int}{i:nat | i <= n}
   (s: string (n), i: g1int (tk, i)):<> bool (i==n)
 
-#### example
-
+overload string_is_atend with string_is_atend_gint
 ```
-```
-
-#### output
-
-```
-```
-
-## string\_is\_atend
-
-overload string\_is\_atend with string\_is\_atend\_gint
 
 #### example
 
@@ -421,24 +330,14 @@ overload string\_is\_atend with string\_is\_atend\_gint
 
 ## string\_is\_atend\_guint
 
+```
 fun{tk:tk}
-string\_is\_atend\_guint
+string_is_atend_guint
   {n:int}{i:nat | i <= n}
   (s: string (n), i: g1uint (tk, i)):<> bool (i==n)
 
-#### example
-
+overload string_is_atend with string_is_atend_guint
 ```
-```
-
-#### output
-
-```
-```
-
-## string\_is\_atend
-
-overload string\_is\_atend with string\_is\_atend\_guint
 
 #### example
 
@@ -452,9 +351,11 @@ overload string\_is\_atend with string\_is\_atend\_guint
 
 ## string\_isnot\_atend
 
+```
 macdef
-string\_isnot\_atend
-  (string, index) = ~string\_is\_atend (,(string), ,(index))
+string_isnot_atend
+  (string, index) = ~string_is_atend (,(string), ,(index))
+```
 
 #### example
 
@@ -470,7 +371,7 @@ string\_isnot\_atend
 
 ```
 fun{
-} string\_head{n:pos} (str: string(n)):<> charNZ
+} string_head{n:pos} (str: string(n)):<> charNZ
 ```
 
 #### example
@@ -494,8 +395,10 @@ implement main0() = {
 
 ## string\_tail
 
+```
 fun{
-} string\_tail{n:pos} (str: string(n)):<> string(n-1)
+} string_tail{n:pos} (str: string(n)):<> string(n-1)
+```
 
 #### example
 
@@ -506,7 +409,7 @@ fun{
 
 implement main0() = {
   val a = "add"
-  val () = println!("'", a, "' tail is ", string_tail(a) )
+  val () = println!("'", a, "' tail is ", string_tail(a))
 }
 ```
 
@@ -518,10 +421,12 @@ implement main0() = {
 
 ## string\_get\_at\_size
 
+```
 fun{}
-string\_get\_at\_size
+string_get_at_size
   {n:int}{i:nat | i < n}
-  (s: string (n), i: size\_t (i)):<> charNZ
+  (s: string (n), i: size_t (i)):<> charNZ
+```
 
 #### example
 
@@ -568,9 +473,7 @@ string\_get\_at\_guint
 ```
 ```
 
-## 
-
-symintr string\_get\_at
+# symintr string\_get\_at
 
 #### example
 
@@ -691,7 +594,11 @@ symintr string\_test\_at
 
 ## 
 
-overload string\_test\_at with string\_test\_at\_size of 1
+```
+overload string_test_at with string_test_at_size of 1
+overload string_test_at with string_test_at_gint of 0
+overload string_test_at with string_test_at_guint of 0
+```
 
 #### example
 
@@ -703,41 +610,13 @@ overload string\_test\_at with string\_test\_at\_size of 1
 ```
 ```
 
-## 
-
-overload string\_test\_at with string\_test\_at\_gint of 0
-
-#### example
+## lt\_string\_string
 
 ```
-```
-
-#### output
-
-```
-```
-
-## 
-
-overload string\_test\_at with string\_test\_at\_guint of 0
-
-#### example
-
-```
-```
-
-#### output
-
-```
-```
-
-## 
-
-```
-fun lt\_string\_string
+fun lt_string_string
   (x1: string, x2: string):<> bool = "mac#%"
 
-overload < with lt\_string\_string
+overload < with lt_string_string
 ```
 
 #### example
@@ -753,10 +632,10 @@ overload < with lt\_string\_string
 ## lte\_string\_string
 
 ```
-fun lte\_string\_string
+fun lte_string_string
   (x1: string, x2: string):<> bool = "mac#%"
 
-overload <= with lte\_string\_string
+overload <= with lte_string_string
 ```
 
 #### example
@@ -784,10 +663,10 @@ implement main0() = {
 ## gt\_string\_string
 
 ```
-fun gt\_string\_string
+fun gt_string_string
   (x1: string, x2: string):<> bool = "mac#%"
 
-overload > with gt\_string\_string
+overload > with gt_string_string
 ```
 
 #### example
@@ -803,10 +682,10 @@ overload > with gt\_string\_string
 ## gte\_string\_string
 
 ```
-fun gte\_string\_string
+fun gte_string_string
   (x1: string, x2: string):<> bool = "mac#%"
 
-overload >= with gte\_string\_string
+overload >= with gte_string_string
 ```
 
 #### example
@@ -822,10 +701,10 @@ overload >= with gte\_string\_string
 ## eq\_string\_string
 
 ```
-fun eq\_string\_string
+fun eq_string_string
   (x1: string, x2: string):<> bool = "mac#%"
 
-overload = with eq\_string\_string
+overload = with eq_string_string
 ```
 
 #### example
@@ -841,11 +720,11 @@ overload = with eq\_string\_string
 ## neq\_string\_string
 
 ```
-fun neq\_string\_string
+fun neq_string_string
   (x1: string, x2: string):<> bool = "mac#%"
 
-overload != with neq\_string\_string
-overload <> with neq\_string\_string
+overload != with neq_string_string
+overload <> with neq_string_string
 ```
 
 #### example
@@ -861,10 +740,10 @@ overload <> with neq\_string\_string
 ## 
 
 ```
-fun compare\_string\_string
+fun compare_string_string
   (x1: string, x2: string):<> Sgn = "mac#%"
 
-overload compare with compare\_string\_string
+overload compare with compare_string_string
 ```
 
 #### example
@@ -936,13 +815,22 @@ fun{
 
 ```
 fun{}
-string\_make\_list
+string_make_list
   {n:int} (cs: list(charNZ, n)):<!wrt> strnptr (n)
 ```
 
 #### example
 
 ```
+// string_make_list.dats
+// patscc -DATS_MEMALLOC_LIBC string_make_list.dats 
+#include "share/atspre_staload.hats"
+
+implement main0() = {
+  val xs = $list{char}('a','b','c')
+
+  val () = println!("'", xs, "' string is ", strnptr2string(string_make_list(xs)))
+}
 ```
 
 #### output
@@ -954,7 +842,7 @@ string\_make\_list
 
 ```
 fun{}
-string\_make\_listlen
+string_make_listlen
   {n:int} (cs: list(charNZ, n), n: int n):<!wrt> strnptr (n)
 ```
 
@@ -972,7 +860,7 @@ string\_make\_listlen
 
 ```
 fun{
-} string\_make\_rlist
+} string_make_rlist
   {n:int} (cs: list(charNZ, n)):<!wrt> strnptr (n)
 ```
 
@@ -1300,7 +1188,7 @@ fun{
 
 ```
 fun{
-} string1\_copy
+} string1_copy
   {n:int} (xs: NSH(string(n))):<!wrt> strnptr (n)
 ```
 
@@ -1474,8 +1362,28 @@ fun{
 
 ## 
 
+```
 fun{
-} stringlst\_concat (xs: List(string)):<!wrt> Strptr1
+} stringlst_concat (xs: List(string)):<!wrt> Strptr1
+```
+
+#### example
+
+```
+```
+
+#### output
+
+```
+```
+
+## string_explode
+
+```
+fun{
+} string_explode
+  {n:int} (x: string(n)):<!wrt> list_vt (charNZ, n)
+```
 
 #### example
 
@@ -1489,9 +1397,10 @@ fun{
 
 ## 
 
+```
 fun{
-} string\_explode
-  {n:int} (x: string(n)):<!wrt> list\_vt (charNZ, n)
+} string_tabulate$fopr (size_t): charNZ
+```
 
 #### example
 
@@ -1505,8 +1414,10 @@ fun{
 
 ## 
 
+```
 fun{
-} string\_tabulate$fopr (size\_t): charNZ
+} string_tabulate{n:int} (n: size_t(n)): strnptr(n)
+```
 
 #### example
 
@@ -1518,25 +1429,12 @@ fun{
 ```
 ```
 
-## 
-
-fun{
-} string\_tabulate{n:int} (n: size\_t(n)): strnptr(n)
-
-#### example
+## string_foreach$cont
 
 ```
-```
-
-#### output
-
-```
-```
-
-## 
-
 fun{env:vt0p}
-string\_foreach$cont (c: char, env: &env): bool
+string_foreach$cont (c: char, env: &env): bool
+```
 
 #### example
 
@@ -1548,10 +1446,12 @@ string\_foreach$cont (c: char, env: &env): bool
 ```
 ```
 
-## 
+## string\_foreach$fwork
 
+```
 fun{env:vt0p}
-string\_foreach$fwork (c: char, env: &(env) >> \_): void
+string_foreach$fwork (c: char, env: &(env) >> _): void
+```
 
 #### example
 
@@ -1563,10 +1463,12 @@ string\_foreach$fwork (c: char, env: &(env) >> \_): void
 ```
 ```
 
-## 
+## string\_foreach
 
+```
 fun{
-} string\_foreach {n:int} (str: string(n)): sizeLte(n)
+} string_foreach {n:int} (str: string(n)): sizeLte(n)
+```
 
 #### example
 
@@ -1578,12 +1480,14 @@ fun{
 ```
 ```
 
-## 
+## string\_foreach\_env
 
+```
 fun{
 env:vt0p
-} string\_foreach\_env
-  {n:int} (str: string(n), env: &(env) >> \_): sizeLte(n)
+} string_foreach_env
+  {n:int} (str: string(n), env: &(env) >> _): sizeLte(n)
+```
 
 #### example
 
@@ -1595,10 +1499,12 @@ env:vt0p
 ```
 ```
 
-## 
+## string\_rforeach$cont
 
+```
 fun{env:vt0p}
-string\_rforeach$cont (c: char, env: &env): bool
+string_rforeach$cont (c: char, env: &env): bool
+```
 
 #### example
 
@@ -1610,10 +1516,12 @@ string\_rforeach$cont (c: char, env: &env): bool
 ```
 ```
 
-## 
+## string\_rforeach$fwork
 
+```
 fun{env:vt0p}
-string\_rforeach$fwork (c: char, env: &(env) >> \_): void
+string_rforeach$fwork (c: char, env: &(env) >> _): void
+```
 
 #### example
 
@@ -1627,8 +1535,10 @@ string\_rforeach$fwork (c: char, env: &(env) >> \_): void
 
 ## 
 
+```
 fun{
-} string\_rforeach {n:int} (str: string(n)): sizeLte(n)
+} string_rforeach {n:int} (str: string(n)): sizeLte(n)
+```
 
 #### example
 
@@ -1640,12 +1550,14 @@ fun{
 ```
 ```
 
-## 
+## string\_rforeach\_env
 
+```
 fun{
 env:vt0p
-} string\_rforeach\_env
-  {n:int} (str: string(n), env: &(env) >> \_): sizeLte(n)
+} string_rforeach_env
+  {n:int} (str: string(n), env: &(env) >> _): sizeLte(n)
+```
 
 #### example
 
@@ -1659,10 +1571,12 @@ env:vt0p
 
 ## 
 
+```
 (*
-** HX: [stropt\_none] is just the null pointer
+** HX: [stropt_none] is just the null pointer
 *)
-fun stropt\_none (): stropt (~1) = "mac#%"
+fun stropt_none (): stropt (~1) = "mac#%"
+```
 
 #### example
 
@@ -1674,9 +1588,11 @@ fun stropt\_none (): stropt (~1) = "mac#%"
 ```
 ```
 
-## 
+## stropt_some
 
-symintr stropt\_some
+```
+symintr stropt_some
+```
 
 #### example
 
@@ -1688,9 +1604,11 @@ symintr stropt\_some
 ```
 ```
 
-## 
+## stropt0\_some
 
-castfn stropt0\_some (x: SHR(string)): Stropt1
+```
+castfn stropt0_some (x: SHR(string)): Stropt1
+```
 
 #### example
 

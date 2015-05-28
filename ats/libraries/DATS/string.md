@@ -46,6 +46,9 @@ string_is_empty
 in
   $UN.cast{bool(n==0)}($UN.ptr1_get<char>(p) = CNUL)
 end // end of [string_is_empty]
+
+##
+
 implement{}
 string_isnot_empty
   {n} (str) = let
