@@ -66,3 +66,9 @@
 * [DATS/gprint](DATS/gprint.md)
 * [DATS/tostring](DATS/tostring.md)
 * [ATSPRE_all_i](ATSPRE_all_in_one.md)
+
+http://www.ats-lang.org/Libraries.html
+
+http://ats-lang.sourceforge.net/LIBRARY/#ATSLIB\_libats\_ML
+
+* [ML/string](ML/string.md)
