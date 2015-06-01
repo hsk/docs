@@ -2,7 +2,7 @@
 
 このパッケージで宣言された関数は、関数型プログラミングでCスタイルの文字列を処理するために主にあります。
 
-* itoa
+* [iota](#itoa)
 * string_sing
 * string_copy
 * string\_make\_substring
@@ -17,7 +17,7 @@
 
 参考URL: [libats_ML_string.dats](https://github.com/githwxi/ATS-Postiats/blob/master/doc/EXAMPLE/ATSLIB/libats_ML_string.dats)
 
-## itoa
+## <a name="iota"></a>itoa
 
 ### 概要
 
