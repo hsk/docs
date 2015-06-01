@@ -60,6 +60,26 @@ fun{
 } string_sing (c: charNZ):<> string
 ```
 
+### 例
+
+```
+// string_sing.dats
+// patscc string_sing.dats -DATS_MEMALLOC_LIBC -latslib -o string_sing
+
+#include "share/atspre_staload.hats"
+staload "libats/ML/SATS/string.sats"
+staload "libats/ML/DATS/string.dats"
+implement main0 () = {
+  val ()  = print(string_sing('a')+"\n")
+}
+```
+
+### 結果
+
+```
+a
+```
+
 ### 説明
 
 null以外の文字を指定すると、この関数は、文字からなるシングルトン文字列を返します。
@@ -79,7 +99,7 @@ fun{
 
 ### 例
 
-次のコードをテストstring_copy実際に指定された文字列のコピーを返します。
+次のコードはstring\_copyで文字列のコピーを取って、印字します。
 
 ```
 // string_copy.dats
@@ -193,11 +213,17 @@ fun{
 
 ### 例
 
-次のコードはシングルトン文字列のリストを連結した文字列「こんにちは」を形成する方法を示しています。
+次のコードはシングルトン文字列のリストを連結した文字列「Hello」を形成する方法を示しています。
 
 ```
+// stringlst_concat.dats
+// patscc stringlst_concat.dats -DATS_MEMALLOC_LIBC -latslib -o stringlst_concat
+
+#include "share/atspre_staload.hats"
 staload "libats/ML/SATS/list0.sats"
+staload "libats/ML/DATS/list0.dats"
 staload "libats/ML/SATS/string.sats"
+staload "libats/ML/DATS/string.dats"
 
 implement main0 () = {
   val Hello = stringlst_concat ((list0)$arrpsz{string}("H","e","l","l","o"))
@@ -205,7 +231,13 @@ implement main0 () = {
 }
 ```
 
-を呼び出していることに注意してくださいstringlst_concatは、文字列「こんにちは」を構築することなく、任意の中間部分文字列を生成します。
+を呼び出していることに注意してくださいstringlst_concatは、文字列「Hello」を構築することなく、任意の中間部分文字列を生成します。
+
+### 結果
+
+```
+Hello, world!
+```
 
 ## <a name="string_explode"></a>string\_explode
 
@@ -224,13 +256,30 @@ fun{
 次のコードは、呼び出し元から取得したリストの長さかどうかをチェックし string_explodeを与えられた文字列には文字列の長さに等しいです。
 
 ```
-staload "libats/ML/SATS/list0.sats"
-staload "libats/ML/SATS/string.sats"
+// string_explode.dats
+// patscc string_explode.dats -DATS_MEMALLOC_LIBC -latslib -o string_explode
 
-implement main () = {
+#include "share/atspre_staload.hats"
+staload "libats/ML/SATS/basis.sats"
+staload "libats/ML/SATS/list0.sats"
+staload "libats/ML/DATS/list0.dats"
+staload "libats/ML/SATS/string.sats"
+staload "libats/ML/DATS/string.dats"
+
+fun print_lst (xs: list0 (char)): void =
+  case+ xs of
+  | list0_nil () => ()
+  | list0_cons (x, xs) =>
+    {
+      val () = println!(x)
+      val () = print_lst (xs)
+    }
+
+implement main0 () = {
   val str = "abcdefg"
   val cs = string_explode (str)
   val () = assertloc (string_length (str) = g0i2u(list0_length (cs)))
+  val () = print_lst(cs)
 }
 ```
 
