@@ -2,7 +2,7 @@
 
 このパッケージで宣言された関数は、関数型プログラミングでCスタイルの文字列を処理するために主にあります。
 
-* [iota](#itoa)
+* [itoa](#itoa)
 * [string\_sing](#string_sing)
 * [string\_copy](#string_copy)
 * [string\_make\_substring](#string_make_substring)
@@ -17,7 +17,7 @@
 
 参考URL: [libats_ML_string.dats](https://github.com/githwxi/ATS-Postiats/blob/master/doc/EXAMPLE/ATSLIB/libats_ML_string.dats)
 
-## <a name="iota"></a>itoa
+## <a name="itoa"></a>itoa
 
 ### 概要
 
@@ -29,6 +29,27 @@ fun{
 ### 説明
 
 この関数は、整数を文字列表現に変換するためのものです。
+
+### 例
+
+```
+// itoa.dats
+// patscc itoa.dats -DATS_MEMALLOC_LIBC -latslib -o itoa
+
+#include "share/atspre_staload.hats"
+staload "libats/ML/SATS/string.sats"
+staload "libats/ML/DATS/string.dats"
+implement main0 () = {
+  val ()  = print(itoa(10)+"\n")
+}
+```
+
+### 結果
+
+```
+10
+```
+
 
 ## <a name="string_sing"></a>string\_sing
 
