@@ -3,17 +3,17 @@
 このパッケージで宣言された関数は、関数型プログラミングでCスタイルの文字列を処理するために主にあります。
 
 * [iota](#itoa)
-* string_sing
-* string_copy
-* string\_make\_substring
-* string_append
-* stringlst\_concat
-* string\_explode
-* string\_implode
-* string\_tabulate
-* string\_foreach
-* オーバーロードのシンボル
-* +
+* [string\_sing](#string_sing)
+* [string\_copy](#string_copy)
+* [string\_make\_substring](#string_make_substring)
+* [string\_append](#string_append)
+* [stringlst\_concat](#stringlst_concat)
+* [string\_explode](#string_explode)
+* [string\_implode](#string_implode)
+* [string\_tabulate](#string_tabulate)
+* [string\_foreach](#string_foreach)
+* [オーバーロードのシンボル](#オーバーロードのシンボル)
+* [+](#+)
 
 参考URL: [libats_ML_string.dats](https://github.com/githwxi/ATS-Postiats/blob/master/doc/EXAMPLE/ATSLIB/libats_ML_string.dats)
 
@@ -30,7 +30,7 @@ fun{
 
 この関数は、整数を文字列表現に変換するためのものです。
 
-## string_sing
+## <a name="string_sing"></a>string\_sing
 
 ### 概要
 
@@ -43,7 +43,7 @@ fun{
 
 null以外の文字を指定すると、この関数は、文字からなるシングルトン文字列を返します。
 
-## string_copy
+## <a name="string_copy"></a>string\_copy
 
 ### 概要
 
@@ -79,7 +79,7 @@ implement main0 () = {
 abcdefg
 ```
 
-## string\_make\_substring
+## <a name="string_make_substring"></a>string\_make\_substring
 
 ### 概要
 
@@ -118,7 +118,7 @@ implement main0() = {
 abcdefg
 ```
 
-## string_append
+## <a name="string_append"></a>string\_append
 
 ### 概要
 
@@ -157,7 +157,7 @@ implement main0() = {
 Hello, world!
 ```
 
-## stringlst_concat
+## <a name="stringlst_concat"></a>stringlst\_concat
 
 ### 概要
 
@@ -186,7 +186,7 @@ implement main0 () = {
 
 を呼び出していることに注意してくださいstringlst_concatは、文字列「こんにちは」を構築することなく、任意の中間部分文字列を生成します。
 
-## string_explode
+## <a name="string_explode"></a>string\_explode
 
 ### 概要
 
@@ -213,7 +213,7 @@ implement main () = {
 }
 ```
 
-## string_implode
+## <a name="string_implode"></a>string\_implode
 
 ### 概要
 
@@ -241,7 +241,7 @@ implement main () = {
 }
 ```
 
-## string_tabulate
+## <a name="string_tabulate"></a>string\_tabulate
 
 ### 概要
 
@@ -284,9 +284,9 @@ implement main0 () = {
 abcdeg
 ```
 
-## オーバーロードのシンボル
+## <a name="オーバーロードのシンボル"></a>オーバーロードのシンボル
 
-## +
+## <a name="+"></a>+
 
 ### 概要
 
