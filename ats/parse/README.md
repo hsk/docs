@@ -10,18 +10,42 @@ main.datsにコンパイルする内容も書いてあるので、実行する�
 $ make
 ```
 
+### a.txt
+
+```
+/* test programming language */
+let a = 10 in
+let b = 100 in
+let c =
+  let a = 2 in
+  let b = 1 in
+  a - b
+in
+let d = a + b + c in
+d
+```
+
 ### 実行
 
 ```
-$ ./main
+$ ./main a.txt
 ```
 
 ### 結果
 
 ```
-i=1234
-i=Bin(Bin(Int(10), *,Int(2)), +,Bin(Int(200), /,Bin(Int(15), -,Int(5))))
-i=40
+AST=Let( "a",Int(10), Let( "b",Int(100), Let( "c",Let( "a",Int(2), Let( "b",Int(1), Bin(Var("a"), "-", Var("b")))), Let( "d",Bin(Bin(Var("a"), "+", Var("b")), "+", Var("c")), Var("d")))))
+
+/* test programming language */
+let a = 10 in
+let b = 100 in
+let c =
+  let a = 2 in
+  let b = 1 in
+  a - b
+in
+let d = a + b + c in
+d=111
 ```
 
 ### クリーン
