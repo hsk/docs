@@ -5,7 +5,9 @@ overload print with show_e
 implement show_e(e) =
   begin case e of
   | Int(i) => print!("Int(",i,")")
+  | Var(i) => print!("Var(\"",i,"\")")
   | Bin(e1,op1,e2) => print!("Bin(",e1,", \"",op1,"\", ", e2,")")
+  | Let(id,e1,e2) => print!("Let( \"",id,"\",",e1,", ", e2,")")
   end
 
 implement read_charlst(filename:string):list0(char) =
@@ -27,5 +29,7 @@ implement read_all(filename:string):string =
     val ss:list0(string) = fileref_get_lines_stringlst (filr)
     val () = fileref_close(filr)
   in
-    stringlst_concat(ss)
+    list0_foldleft(ss, "", lam (a,b) =>
+      string_append(string_append(a,"\n"), b)
+    )
   end

@@ -1,3 +1,10 @@
 /* test programming language */
-1 * 2 + 3 * 4 / 3 - 555
-
+let a = 10 in
+let b = 100 in
+let c =
+  let a = 2 in
+  let b = 1 in
+  a - b
+in
+let d = a + b + c in
+d

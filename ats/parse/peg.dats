@@ -1,5 +1,6 @@
 #include "peg.hats"
 //#define ATS_DYNLOADFLAG 0
+macdef r a = (lam i =<cloref1> ,(a) i)
 
 implement startsWith(i:string, param:string):bool =
   let
