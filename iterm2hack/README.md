@@ -1,5 +1,7 @@
 # iTerm2 hack
 
+## 1. Introduction
+
 iTerm2 はカッコイイMacのターミナルアプリです。
 コマンドラインツールを使う場合は、iTerm2を使うとより便利でカッコイイのですが、よりかっこ良くしてみようというのがこのコンテンツです。
 
@@ -19,7 +21,7 @@ FlashのAIRでそのようなエディタを作ってみた事はありました
 当たり前だけど、vimやemacsがかっこ良くなる。その他の作業もかっこいい！
 ムービーを背景で再生させながら、作業する事も出来ます。
 
-## iTermの弄り方
+## 2. iTermの弄り方
 
 xcodeがインストールしてあれば、以下のコマンドでビルドする事が出来ます。
 
@@ -31,7 +33,7 @@ make run
 
 cloneして、make runするだけです。
 
-## diff
+## 3. diff
 
 以下の変更を加えましょう。
 
@@ -136,7 +138,7 @@ make run
 で実行してうまく行ったら、Dockに追加して、
 設定画面で好みの色に変えて、カッコ良くして未来を感じましょう！！
 
-## future work
+## 4. Future work
 
 このアイディアを普段使うエディタにも適用したい！
 SublimeTextエディタは残念ながら、オープンソースではありません。
@@ -145,8 +147,14 @@ NW.js (node-webkit) は透明化ウィンドウが可能！
 ということは、きっと普段使うエディタもかっこ良く出来るはず！
 やってみるしかありません。
 
-## Conclution
+## 5. Conclusion
 
 iTerm2を改造するアイディアを考え、iTerm2をビルドする方法を紹介し、改造しました。
 それではみなさん、楽しいハックライフを!
 
+## 6. References
+
+- iTerm2
+    https://github.com/gnachman/iTerm2
+- RoundTransparentWindow
+    https://developer.apple.com/library/mac/samplecode/RoundTransparentWindow/Introduction/Intro.html
