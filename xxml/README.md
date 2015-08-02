@@ -432,6 +432,12 @@ SchemaをXXMLからコンパイルします。
 
 #### 3.3.1. 文法定義とパース
 
+パーサコンビネータを使って、文法定義する事を考えましょう。
+何度もタグを使って定義するのは面倒なので、tag関数を作り、タグ名とパーサを渡すとパーサが出来ると楽でしょう。
+
+あとは、tag関数を使ってtableパーサとtrパーサとtdパーサを作って呼び出すだけです。
+このパーサは、単純化して考えるため属性はありません。
+
     package xxml3_1
     import util.parsing.combinator._
 
@@ -443,12 +449,12 @@ SchemaをXXMLからコンパイルします。
     case class Lst(xs:List[XXML]) extends XXML
 
     object XXMLParser extends RegexParsers {
-    def name = "[!:_a-zA-Z]+".r
-    def text = "[^<]+".r ^^ {Text(_)}
-    def comment = "<!--" ~> rep("[^-]+".r | not("-->") ~> "-") <~ "-->" ^^
-                  {l=>l.foldLeft(""){(a,b)=>a+b}} ^^ {Comment(_)}
-    def tag(name:String, p: =>Parser[XXML]):Parser[XXML] =
-      "<" ~> name ~> ">" ~> rep(p) <~ opt("</" <~ opt(name) <~ ">") ^^ {Block(name, _)} | comment
+      def name = "[!:_a-zA-Z]+".r
+      def text = "[^<]+".r ^^ {Text(_)}
+      def comment = "<!--" ~> rep("[^-]+".r | not("-->") ~> "-") <~ "-->" ^^
+                    {l=>l.foldLeft(""){(a,b)=>a+b}} ^^ {Comment(_)}
+      def tag(name:String, p: =>Parser[XXML]):Parser[XXML] =
+        "<" ~> name ~> ">" ~> rep(p) <~ opt("</" <~ opt(name) <~ ">") ^^ {Block(name, _)} | comment
 
       def exps = rep1(exp)
       def exp = table | text
@@ -479,6 +485,10 @@ SchemaをXXMLからコンパイルします。
     }
 
 #### 3.3.2. XXMLSchema
+
+スキーマとなるデータ定義(Se)を作り、Seを元にパーサを構成するcompile関数を作ります。
+また、xxmlからSeを生成する関数を作ります。
+あとは組み合わせれば、XXMLで文法を定義して、タグを省略出来るようになります。
 
     package xxml3_2
     import util.parsing.combinator._
