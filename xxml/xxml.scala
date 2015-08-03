@@ -54,7 +54,7 @@ object XXMLSchema extends XXMLParser {
     }
   }
   def tag(name:String, p: =>Parser[XXML]):Parser[XXML] =
-    ("<" ~> (name ).r ~> attrs <~ ">") ~ p <~ opt("</" ~ opt(name) ~ ">") ^^
+    ("<" ~> name.r ~> attrs <~ ">") ~ p <~ opt("</" ~ opt(name) ~ ">") ^^
     { case a~b => Block(name, a, toList(b)) } | comment
 
   def schema:Parser[Schema] = rules ^^ { case (n,e)::rules => Schema(n,((n,e)::rules).toMap) case _ => null }
@@ -121,13 +121,13 @@ object main extends App {
   val parser = XXMLSchema.compileSchema("""
     exps  = (table | text)*
     table = <table>tr*
-    tr    = <tr>td*
+    tr    = <tr>td*</> | <th>td*
     td    = <td>exps
     """)
 
   println(XXMLSchema.parseAll(parser, """
       <table>
-        <tr>
+        <th>
           <td>aaa
           <td>aaa
         <tr>
