@@ -45,6 +45,7 @@ object XXMLSchema extends XXMLParser {
   case class Or(ses:List[Se]) extends Se
   case class Tag(s:String, se:Se) extends Se
   case class Var(s: String) extends Se
+  case class Not(a:Se,b:Se) extends Se
   case class Schema(start:String, rules:Map[String, Se])
 
   def toList(x:XXML):List[XXML] = {
@@ -61,7 +62,8 @@ object XXMLSchema extends XXMLParser {
   def rules = rule.+
 
   def rule = (name <~ "=") ~ e ^^ {case name~e => (name, e)}
-  def e:Parser[Se] = repsep(term, "|") ^^ { case List(a)=> a case es => Or(es) }
+  def e:Parser[Se] = repsep(sub, "|") ^^ { case List(a)=> a case es => Or(es) }
+  def sub = rep1sep(term, "-") ^^ { _.reduce{(a,b)=>Not(b,a)}}
   def term = fact <~ "*" ^^ { Rep(_) } | fact
 
   def names = rep1sep(name,"|")
@@ -84,6 +86,7 @@ object XXMLSchema extends XXMLParser {
         case Or(Nil) => throw new Exception("error")
         case Tag(s,se) => tag(s,comp(se))
         case Var(s) => get(s)
+        case Not(a,b) => not(comp(a)) ~> comp(b)
       }
     schema.rules.foreach {
       case(name,se)=> env += (name -> comp(se))
@@ -121,27 +124,37 @@ object main extends App {
   println("res="+res)
 
   val parser = XXMLSchema.compileSchema("""
-exps  = (table | text)*
-table = <table>tr*
+html = <html>head | body </> | flow*
+head = <head>headc</> | headc
+headc = <title>text
+body = <body>flow*
+flow = <table>tr*</> | <div>flow*</> | h1 | inline
+h1 = <h1|h2|h3|h4|h5|h6|h7|h8>(flow - h1)*
+inline = text | <p>inline*
 tr    = <tr|th>td*
-td    = <td>exps
+td    = <td>flow*
     """)
 
   println(XXMLSchema.parseAll(parser, """
-      <table>
-        <th>
-          <td>aaa
-          <td>aaa
-        <tr>
-          <td>aaa
-          <td>aaa
-      </table>
-      <table>
-        <tr>
-          <td>aaa
-          <td>aaa
-        <tr>
-          <td>aaa
-          <td>aaa
+<html>
+<body>
+<h1>hoge
+<h2>huga</>
+<p>huga
+<p>hoge
+<div>aaa
+  <div>bbb
+  </>
+</>
+<table>
+  <tr>
+    <td>hoge
+    <td>aa
+  <tr>
+    <td>aaa
+    <td>bbb
+
+</body>
+</html>
     """))
 }
