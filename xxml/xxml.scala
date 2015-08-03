@@ -63,10 +63,12 @@ object XXMLSchema extends XXMLParser {
   def rule = (name <~ "=") ~ e ^^ {case name~e => (name, e)}
   def e:Parser[Se] = repsep(term, "|") ^^ { case List(a)=> a case es => Or(es) }
   def term = fact <~ "*" ^^ { Rep(_) } | fact
+
+  def names = rep1sep(name,"|")
   def fact = name ^^ { Var(_) } | "(" ~> e <~ ")" | "{" ~> e <~ "}" ^^ { Rep(_)} | 
-    (("<" ~> name <~ ">") ~ e ~ opt("<" ~> "/" ~> opt(name) <~ opt(">"))).filter
+    (("<" ~> names <~ ">") ~ e ~ opt("<" ~> "/" ~> opt(names) <~ opt(">"))).filter
     { case a~b~Some(Some(c)) => a==c case _ => true } ^^
-    { case a~b~c       => Tag(a, b) }
+    { case List(a)~b~c => Tag(a, b) case a~b~c => Or(a.map{Tag(_, b)}) }
 
   def compile(schema:Schema): Parser[XXML] = {
     var env = scala.collection.mutable.Map[String, Parser[XXML]]("text"->text)
@@ -119,10 +121,10 @@ object main extends App {
   println("res="+res)
 
   val parser = XXMLSchema.compileSchema("""
-    exps  = (table | text)*
-    table = <table>tr*
-    tr    = <tr>td*</> | <th>td*
-    td    = <td>exps
+exps  = (table | text)*
+table = <table>tr*
+tr    = <tr|th>td*
+td    = <td>exps
     """)
 
   println(XXMLSchema.parseAll(parser, """
