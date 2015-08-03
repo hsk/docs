@@ -63,9 +63,9 @@ object XXMLSchema extends XXMLParser {
   def rule = (name <~ "=") ~ e ^^ {case name~e => (name, e)}
   def e:Parser[Se] = repsep(term, "|") ^^ { case List(a)=> a case es => Or(es) }
   def term = fact <~ "*" ^^ { Rep(_) } | fact
-  def fact = name ^^ { Var(_) } | "(" ~> e <~ ")" | 
-    (("<" ~> name <~ ">") ~ e ~ ("<" ~> "/" ~> opt(name) <~ opt(">"))).filter
-    { case a~b~Some(c) => a==c case _ => true } ^^
+  def fact = name ^^ { Var(_) } | "(" ~> e <~ ")" | "{" ~> e <~ "}" ^^ { Rep(_)} | 
+    (("<" ~> name <~ ">") ~ e ~ opt("<" ~> "/" ~> opt(name) <~ opt(">"))).filter
+    { case a~b~Some(Some(c)) => a==c case _ => true } ^^
     { case a~b~c       => Tag(a, b) }
 
   def compile(schema:Schema): Parser[XXML] = {
@@ -119,17 +119,13 @@ object main extends App {
   println("res="+res)
 
   val parser = XXMLSchema.compileSchema("""
-    start   = exps
-    exps    = exp*
-    exp     = table | div | text
-    div     = <div>exps</div>
-    table   = <table>tr*</table>
-    tr      = <th>td*</th> | <tr>td*</tr>
-    td      = <td>exps</td>
+    exps  = (table | text)*
+    table = <table>tr*
+    tr    = <tr>td*
+    td    = <td>exps
     """)
 
   println(XXMLSchema.parseAll(parser, """
-    <div>
       <table>
         <tr>
           <td>aaa
@@ -137,6 +133,13 @@ object main extends App {
         <tr>
           <td>aaa
           <td>aaa
-    </div>
+      </table>
+      <table>
+        <tr>
+          <td>aaa
+          <td>aaa
+        <tr>
+          <td>aaa
+          <td>aaa
     """))
 }
