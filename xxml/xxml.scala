@@ -172,45 +172,45 @@ object main extends App {
   println("res="+res)
 
   val parser = XXMLSchema.compileSchema("""
-html    ::= (<html>[head] body) | body
-head    ::= <head>
-            { (<title>text)
-            | <base|bgsound|isindex|nextid|command|link|meta/>
-            | (<noscript>{inline})
-            | script
-            }
+html    ::= (<html>[(<head>{head})|{head}] body) | [(<head>{head})|{head}] body
+head    ::= (<title>text)
+          | <base|bgsound|isindex|nextid|command|link|meta/>
+          | (<noscript>{inline})
+          | script
+            
 body    ::= (<body>{flow}) | {flow}
-flow    ::= <hr/> | h1 | p
+flow    ::= <hr>
           | (<article|aside|blockquote|dfn|div|footer|form|header|nav|pre>{flow})
-          | (<hgroup>{h1})
+          | heading | p
+          | (<hgroup>{heading})
           | (<details>(<summary> inline) {flow})
           | (<fieldset>[<legend>inline] {flow})
           | (<figure> {flow | <figcaption>{flow}})
           | (<ol|ul>{<li>{flow}})
           | (<dl>{<dt|dd>flow})
-          | (<table>
+          | <table>
              [<caption>{flow}]
              {<colgroup>{<col>|script}}
              [<thead>{tr}]
              [<tfoot>{tr}]
              ((<tbody>{tr})|{tr})
              [<tfoot>{tr}]
-            )
+            </table>
           | inline
-h1      ::= <h1|h2|h3|h4|h5|h6>{flow - h1}
+heading ::= <h1|h2|h3|h4|h5|h6>{flow - heading}
 p       ::= <p>{inline - p}
 tr      ::= <tr>{<td|th>{flow}}
 inline  ::= text
-          | (<area|link|meta|br|embed|img|input|keygen|wbr/>)
-          | (<abbr|address|b|bdi|bdo|button|canv|cite|code|command
+          | <area|link|meta|br|embed|img|input|keygen|wbr>
+          | <abbr|address|b|bdi|bdo|button|canv|cite|code|command
              |data|em|i|iframe|kbd|label|mark|noscript|output|q
              |s|samp|section|small|span|strong|sub|sup|svg|time|u
-             |var|meter|progress
-             >{inline})
+             |var|meter|progress>{inline}
+            </>
           | (<datalist>{inline | option})
           | (<ruby>(<rt|rb>{inline}))
           | (<a|del|ins|map>{flow})
-          | (<video|audio>{flow|<source|track/>})
+          | (<video|audio>{flow|<source|track>})
           | script
           | (<textarea>cdata)
           | (<menu>{(<li>{flow})|flow})
