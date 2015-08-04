@@ -1,7 +1,21 @@
 package xxml
 import util.parsing.combinator._
 
-trait XXML
+sealed trait XXML {
+  def attrs(a:Map[String,String]):String = {
+    a.toList match {
+      case List() => ""
+      case ls => ls.map{case(a,b)=>" "+a+"=\""+b+"\""}.mkString("")
+    }
+  }
+  override def toString() = this match {
+    case Block(name,a,ls) => "<"+name+attrs(a)+">"+ls.map(_.toString).mkString("")+"</"+name+">"
+    case Comment(s) => "<!--"+s+"-->"
+    case One(name,a) => "<"+name+attrs(a)+"/>"
+    case Text(s) => s
+    case Lst(xs) => xs.map(_.toString).mkString("")
+  }
+}
 case class Block(name:String,attr:Map[String,String], ls:List[XXML]) extends  XXML
 case class Comment(s:String) extends XXML
 case class One(name:String,attr:Map[String,String]) extends XXML
@@ -14,10 +28,10 @@ class XXMLParser extends RegexParsers {
   def comment = "<!--" ~> ("[^-]+".r | not("-->") ~> "-").* <~ "-->" ^^
                 {l=>Comment(l.foldLeft(""){(a,b)=>a+b})}
 
-  def attr = name ~ opt("=" ~> ("\"([^\"]|\\.)+\"".r ^^ {_.substring(1)} | "[^> ]+".r)) ^^ {
+  def attr = name ~ opt("=" ~> ("\"([^\"]|\\.)+\"".r ^^ {b=>b.substring(1,b.length-1)} | "[^> ]+".r)) ^^ {
     case a~Some(b) => (a,b)
     case a~None    => (a,a)
-  } | "\"([^\"]|\\.)+\"".r ^^ {b=>("",b.substring(1))}
+  } | "\"([^\"]|\\.)+\"".r ^^ {b=>("",b.substring(1,b.length-1))}
 
   def attrs = (attr).* ^^ {l => l.foldLeft(Map[String,String]()){case(a,b)=>a + b}}
 
@@ -47,7 +61,8 @@ object XXMLSchema extends XXMLParser {
   case class Var(s: String) extends Se
   case class Not(a:Se,b:Se) extends Se
   case class Schema(start:String, rules:Map[String, Se])
-
+  case class Seq(ls:List[Se]) extends Se
+  case class Opt(a:Se) extends Se
   def toList(x:XXML):List[XXML] = {
     x match {
       case Lst(x) => x
@@ -62,12 +77,13 @@ object XXMLSchema extends XXMLParser {
   def rules = rule.+
 
   def rule = (name <~ "=") ~ e ^^ {case name~e => (name, e)}
-  def e:Parser[Se] = repsep(sub, "|") ^^ { case List(a)=> a case es => Or(es) }
+  def e:Parser[Se] = repsep(app, "|") ^^ { case List(a)=> a case es => Or(es) }
+  def app = rep1(sub) ^^ { case List(a) => a case s => Seq(s) }
   def sub = rep1sep(term, "-") ^^ { _.reduce{(a,b)=>Not(b,a)}}
-  def term = fact <~ "*" ^^ { Rep(_) } | fact
 
+  def term = fact <~ "*" ^^ { Rep(_) } | fact <~ "?" ^^ { Opt(_) } | fact
   def names = rep1sep(name,"|")
-  def fact = name ^^ { Var(_) } | "(" ~> e <~ ")" | "{" ~> e <~ "}" ^^ { Rep(_)} | 
+  def fact = (not(name ~ "=") ~> name) ^^ { Var(_) } | "(" ~> e <~ ")" | "{" ~> e <~ "}" ^^ { Rep(_)} | 
     (("<" ~> names <~ ">") ~ e ~ opt("<" ~> "/" ~> opt(names) <~ opt(">"))).filter
     { case a~b~Some(Some(c)) => a==c case _ => true } ^^
     { case List(a)~b~c => Tag(a, b) case a~b~c => Or(a.map{Tag(_, b)}) }
@@ -87,6 +103,14 @@ object XXMLSchema extends XXMLParser {
         case Tag(s,se) => tag(s,comp(se))
         case Var(s) => get(s)
         case Not(a,b) => not(comp(a)) ~> comp(b)
+        case Seq(s::ss) =>
+          ss.foldLeft(comp(s)){(a,b)=>
+            a ~ comp(b) ^^ {
+              case a~b=>Lst(toList(a):::toList(b))
+            }
+          }
+        case Opt(s) => opt(comp(s)) ^^ {case None => Lst(List()) case Some(a) => Lst(List(a))}
+          
       }
     schema.rules.foreach {
       case(name,se)=> env += (name -> comp(se))
@@ -124,36 +148,32 @@ object main extends App {
   println("res="+res)
 
   val parser = XXMLSchema.compileSchema("""
-html = <html>head | body </> | flow*
-head = <head>headc</> | headc
-headc = <title>text
-body = <body>flow*
-flow = <table>tr*</> | <div>flow*</> | h1 | inline
-h1 = <h1|h2|h3|h4|h5|h6|h7|h8>(flow - h1)*
-inline = text | <p>inline*
-tr    = <tr|th>td*
-td    = <td>flow*
+html   = (<html>head? body) | body
+head   = <head><title>text
+body   = (<body>flow*) | flow*
+flow   = (<table>tr*) | (<div>flow*) | h1 | inline
+h1     = <h1|h2|h3|h4|h5|h6|h7|h8>(flow - h1)*
+inline = text | p
+p      = <p>(inline - p)*
+tr     = <tr|th>td*
+td     = <td>flow*
     """)
 
   println(XXMLSchema.parseAll(parser, """
 <html>
+<head><title>aaa</title></head>
 <body>
 <h1>hoge
 <h2>huga</>
-<p>huga
+<p a="1">huga
 <p>hoge
 <div>aaa
   <div>bbb
-  </>
-</>
-<table>
-  <tr>
-    <td>hoge
-    <td>aa
-  <tr>
-    <td>aaa
-    <td>bbb
-
+    <table>
+      <tr>
+        <td>aaa
+  </div>
+hoge
 </body>
 </html>
     """))
