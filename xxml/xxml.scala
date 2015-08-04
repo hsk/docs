@@ -25,9 +25,8 @@ case class Lst(xs:List[XXML]) extends XXML
 class XXMLParser extends RegexParsers {
   def name = "[!:_a-zA-Z0-9][:_a-zA-Z0-9]*".r
   def text = "[^<]+".r ^^ {Text(_)}
-  def src(name:String) = ("<" ~> (name ~ attrs) <~ ">") ~ ("[^<]+".r | not("</") ~> "<").* ~
-    opt("<"~>"/"~>opt(name)<~opt(">")) ^^
-    { case n~a~t~n2=> Block(n,a,List(Text(t.foldLeft(""){_+_})))}
+  def cdata(name:String) = ("[^<]+".r | not(("</"+name+"\\b").r) ~> "<").* ^^
+    { case l=> Text(l.mkString("")) }
 
   def comment = "<!--" ~> ("[^-]+".r | not("-->") ~> "-").* <~ "-->" ^^
                 {l=>Comment(l.foldLeft(""){(a,b)=>a+b})}
@@ -68,7 +67,6 @@ object XXMLSchema extends XXMLParser {
   case class Schema(start:String, rules:Map[String, Se])
   case class Seq(ls:List[Se]) extends Se
   case class Opt(a:Se) extends Se
-  case class CData(a:Se) extends Se
   def toList(x:XXML):List[XXML] = {
     x match {
       case Lst(x) => x
@@ -91,11 +89,10 @@ object XXMLSchema extends XXMLParser {
   def sub = rep1sep(term, "-") ^^ { _.reduce{(a,b)=>Not(b,a)}}
 
   def term =
-    fact ~ opt("*"|"+"|"?"|"cdata\b".r) ^^ {
+    fact ~ opt("*"|"+"|"?") ^^ {
       case a~Some("*") => Rep(a)
       case a~Some("+") => Rep1(a)
       case a~Some("?") => Opt(a)
-      case a~Some(_  ) => CData(a)
       case a~None => a
     }
   def names = rep1sep(name,"|")
@@ -126,8 +123,8 @@ object XXMLSchema extends XXMLParser {
         case Or(s::ss) => ss.foldLeft(comp(s)){(a,b)=>a|comp(b)}
         case Or(Nil) => throw new Exception("error")
         case Tag(s,Or(List())) => one(s)
+        case Tag(s,Var("cdata")) => tag(s,cdata(s))
         case Tag(s,se) => tag(s,comp(se))
-        case CData(Tag(s,_)) => tag(s,src(s))
         case Var(s) => get(s)
         case Not(a,b) => not(comp(a)) ~> comp(b)
         case Seq(s::ss) =>
@@ -228,7 +225,13 @@ script  ::= <script|template|style>cdata
 
   println(XXMLSchema.parseAll(parser, """
 <html>
-<head><title>aaa</title></head>
+<head><title>aaa</title>
+<script>
+function test(){
+  return "</scrip>"
+}
+</script>
+</head>
 <body>
 <h1>hoge
 <h2>huga</>
@@ -252,5 +255,12 @@ script  ::= <script|template|style>cdata
   hoge
 </body>
 </html>
+    """))
+
+  println(XXMLSchema.parseAll(parser, """
+    <table>
+      <tr>
+        <td>aaa
+        <td>aaa
     """))
 }
