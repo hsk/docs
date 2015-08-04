@@ -25,6 +25,10 @@ case class Lst(xs:List[XXML]) extends XXML
 class XXMLParser extends RegexParsers {
   def name = "[!:_a-zA-Z0-9][:_a-zA-Z0-9]*".r
   def text = "[^<]+".r ^^ {Text(_)}
+  def src(name:String) = ("<" ~> (name ~ attrs) <~ ">") ~ ("[^<]+".r | not("</") ~> "<").* ~
+    opt("<"~>"/"~>opt(name)<~opt(">")) ^^
+    { case n~a~t~n2=> Block(n,a,List(Text(t.foldLeft(""){_+_})))}
+
   def comment = "<!--" ~> ("[^-]+".r | not("-->") ~> "-").* <~ "-->" ^^
                 {l=>Comment(l.foldLeft(""){(a,b)=>a+b})}
 
@@ -56,6 +60,7 @@ object XXMLParser extends XXMLParser {
 object XXMLSchema extends XXMLParser {
   sealed trait Se
   case class Rep(a:Se) extends Se
+  case class Rep1(a:Se) extends Se
   case class Or(ses:List[Se]) extends Se
   case class Tag(s:String, se:Se) extends Se
   case class Var(s: String) extends Se
@@ -63,6 +68,7 @@ object XXMLSchema extends XXMLParser {
   case class Schema(start:String, rules:Map[String, Se])
   case class Seq(ls:List[Se]) extends Se
   case class Opt(a:Se) extends Se
+  case class CData(a:Se) extends Se
   def toList(x:XXML):List[XXML] = {
     x match {
       case Lst(x) => x
@@ -81,7 +87,11 @@ object XXMLSchema extends XXMLParser {
   def app = rep1(sub) ^^ { case List(a) => a case s => Seq(s) }
   def sub = rep1sep(term, "-") ^^ { _.reduce{(a,b)=>Not(b,a)}}
 
-  def term = fact <~ "*" ^^ { Rep(_) } | fact <~ "?" ^^ { Opt(_) } | fact
+  def term =
+    fact <~ "*" ^^ { Rep(_) } |
+    fact <~ "+" ^^ { Rep1(_) } |
+    fact <~ "?" ^^ { Opt(_) } |
+    fact <~ "cdata\b".r ^^ { CData(_) } | fact
   def names = rep1sep(name,"|")
   def fact = (not(name ~ "=") ~> name) ^^ { Var(_) } | "(" ~> e <~ ")" | "{" ~> e <~ "}" ^^ { Rep(_)} | 
     (("<" ~> names <~ ">") ~ e ~ opt("<" ~> "/" ~> opt(names) <~ opt(">"))).filter
@@ -97,10 +107,12 @@ object XXMLSchema extends XXMLParser {
     }
     def comp(se:Se):Parser[XXML] =
       se match {
-        case Rep(se) => comp(se).* ^^{Lst(_)}
+        case Rep(se) => comp(se).* ^^ {Lst(_)}
+        case Rep1(se) => comp(se).+ ^^ {Lst(_)}
         case Or(s::ss) => ss.foldLeft(comp(s)){(a,b)=>a|comp(b)}
         case Or(Nil) => throw new Exception("error")
         case Tag(s,se) => tag(s,comp(se))
+        case CData(Tag(s,se)) => tag(s,src(s))
         case Var(s) => get(s)
         case Not(a,b) => not(comp(a)) ~> comp(b)
         case Seq(s::ss) =>
@@ -149,12 +161,14 @@ object main extends App {
 
   val parser = XXMLSchema.compileSchema("""
 html   = (<html>head? body) | body
-head   = <head><title>text
+head   = <head>((<title>text)|script)*
 body   = (<body>flow*) | flow*
 flow   = (<table>tr*) | (<div>flow*) | h1 | inline
 h1     = <h1|h2|h3|h4|h5|h6|h7|h8>(flow - h1)*
-inline = text | p
+inline = text | p | a | script
 p      = <p>(inline - p)*
+a      = <a>flow*
+script = <script|template|style|link>cdata
 tr     = <tr|th>td*
 td     = <td>flow*
     """)
@@ -166,6 +180,7 @@ td     = <td>flow*
 <h1>hoge
 <h2>huga</>
 <p a="1">huga
+<a href="hoge">aaa</a>
 <p>hoge
 <div>aaa
   <div>bbb
