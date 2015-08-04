@@ -78,6 +78,9 @@ object XXMLSchema extends XXMLParser {
   def tag(name:String, p: =>Parser[XXML]):Parser[XXML] =
     ("<" ~> name.r ~> attrs <~ ">") ~ p <~ opt("</" ~ opt(name) ~ ">") ^^
     { case a~b => Block(name, a, toList(b)) } | comment
+  def one(name:String):Parser[XXML] =
+    ("<" ~> name.r ~ attrs <~ opt("/") <~ ">") ^^
+    { case a~b => One(a, b) } | comment
 
   def schema:Parser[Schema] = rules ^^ { case (n,e)::rules => Schema(n,((n,e)::rules).toMap) case _ => null }
   def rules = rule.+
@@ -93,7 +96,7 @@ object XXMLSchema extends XXMLParser {
     fact <~ "?" ^^ { Opt(_) } |
     fact <~ "cdata\b".r ^^ { CData(_) } | fact
   def names = rep1sep(name,"|")
-  def fact = (not(name ~ "=") ~> name) ^^ { Var(_) } | "(" ~> e <~ ")" | "{" ~> e <~ "}" ^^ { Rep(_)} | 
+  def fact = (not(name ~ "=") ~> name) ^^ { Var(_) } | "(" ~> e <~ ")" | "{" ~> e <~ "}" ^^ { Rep(_)} |
     (("<" ~> names <~ ">") ~ e ~ opt("<" ~> "/" ~> opt(names) <~ opt(">"))).filter
     { case a~b~Some(Some(c)) => a==c case _ => true } ^^
     { case List(a)~b~c => Tag(a, b) case a~b~c => Or(a.map{Tag(_, b)}) }
@@ -111,8 +114,9 @@ object XXMLSchema extends XXMLParser {
         case Rep1(se) => comp(se).+ ^^ {Lst(_)}
         case Or(s::ss) => ss.foldLeft(comp(s)){(a,b)=>a|comp(b)}
         case Or(Nil) => throw new Exception("error")
+        case Tag(s,Or(List())) => one(s)
         case Tag(s,se) => tag(s,comp(se))
-        case CData(Tag(s,se)) => tag(s,src(s))
+        case CData(Tag(s,_)) => tag(s,src(s))
         case Var(s) => get(s)
         case Not(a,b) => not(comp(a)) ~> comp(b)
         case Seq(s::ss) =>
@@ -165,8 +169,9 @@ head   = <head>((<title>text)|script)*
 body   = (<body>flow*) | flow*
 flow   = (<table>tr*) | (<div>flow*) | h1 | inline
 h1     = <h1|h2|h3|h4|h5|h6|h7|h8>(flow - h1)*
-inline = text | p | a | script
+inline = text | p | a | br | script
 p      = <p>(inline - p)*
+br     = <br>
 a      = <a>flow*
 script = <script|template|style|link>cdata
 tr     = <tr|th>td*
@@ -179,8 +184,7 @@ td     = <td>flow*
 <body>
 <h1>hoge
 <h2>huga</>
-<p a="1">huga
-<a href="hoge">aaa</a>
+<p a="1">huga<br><a href="hoge">aaa</a>
 <p>hoge
 <div>aaa
   <div>bbb
