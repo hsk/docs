@@ -91,10 +91,13 @@ object XXMLSchema extends XXMLParser {
   def sub = rep1sep(term, "-") ^^ { _.reduce{(a,b)=>Not(b,a)}}
 
   def term =
-    fact <~ "*" ^^ { Rep(_) } |
-    fact <~ "+" ^^ { Rep1(_) } |
-    fact <~ "?" ^^ { Opt(_) } |
-    fact <~ "cdata\b".r ^^ { CData(_) } | fact
+    fact ~ opt("*"|"+"|"?"|"cdata\b".r) ^^ {
+      case a~Some("*") => Rep(a)
+      case a~Some("+") => Rep1(a)
+      case a~Some("?") => Opt(a)
+      case a~Some(_  ) => CData(a)
+      case a~None => a
+    }
   def names = rep1sep(name,"|")
   def fact = name <~ not("::=") ^^ { Var(_) } |
     "(" ~> e <~ ")" |
@@ -108,11 +111,14 @@ object XXMLSchema extends XXMLParser {
 
   def compile(schema:Schema): Parser[XXML] = {
     var env = scala.collection.mutable.Map[String, Parser[XXML]]("text"->text)
-    def get(s: String): Parser[XXML] = new Parser[XXML] {
-      def apply(in: Input): ParseResult[XXML] = {
-        env(s)(in)
+    def get(s: String): Parser[XXML] = 
+      if(env.contains(s)) env(s) else
+      new Parser[XXML] {
+        lazy val parser = env(s)
+        def apply(in: Input): ParseResult[XXML] = {
+          parser(in)
+        }
       }
-    }
     def comp(se:Se):Parser[XXML] =
       se match {
         case Rep(se) => comp(se).* ^^ {Lst(_)}
@@ -127,7 +133,7 @@ object XXMLSchema extends XXMLParser {
         case Seq(s::ss) =>
           ss.foldLeft(comp(s)){(a,b)=>
             a ~ comp(b) ^^ {
-              case a~b=>Lst(toList(a):::toList(b))
+              case a~b=>Lst(List(a):::toList(b))
             }
           }
         case Opt(s) => opt(comp(s)) ^^ {case None => Lst(List()) case Some(a) => Lst(List(a))}
@@ -148,7 +154,7 @@ object XXMLSchema extends XXMLParser {
   }
 
   def compileSchema(input: String) = {
-    val res:Schema = parseSchema(input)
+    val res = parseSchema(input)
     println(res)
     compile(res)
   }
@@ -217,6 +223,7 @@ option  ::= <option>text
 script  ::= <script|template|style>cdata
     """)
 
+    println("--------")
 
 
   println(XXMLSchema.parseAll(parser, """
@@ -232,8 +239,17 @@ script  ::= <script|template|style>cdata
     <table>
       <tr>
         <td>aaa
+    </table>
+    <table>
+      <tr>
+        <td>aaa
+        <td>aaa
+    </table>
+    <table>
+      <tr>
+        <td>aaa
   </div>
-hoge
+  hoge
 </body>
 </html>
     """))
