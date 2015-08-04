@@ -85,7 +85,7 @@ object XXMLSchema extends XXMLParser {
   def schema:Parser[Schema] = rules ^^ { case (n,e)::rules => Schema(n,((n,e)::rules).toMap) case _ => null }
   def rules = rule.+
 
-  def rule = (name <~ "=") ~ e ^^ {case name~e => (name, e)}
+  def rule = (name <~ "::=") ~ e ^^ {case name~e => (name, e)}
   def e:Parser[Se] = repsep(app, "|") ^^ { case List(a)=> a case es => Or(es) }
   def app = rep1(sub) ^^ { case List(a) => a case s => Seq(s) }
   def sub = rep1sep(term, "-") ^^ { _.reduce{(a,b)=>Not(b,a)}}
@@ -96,7 +96,12 @@ object XXMLSchema extends XXMLParser {
     fact <~ "?" ^^ { Opt(_) } |
     fact <~ "cdata\b".r ^^ { CData(_) } | fact
   def names = rep1sep(name,"|")
-  def fact = (not(name ~ "=") ~> name) ^^ { Var(_) } | "(" ~> e <~ ")" | "{" ~> e <~ "}" ^^ { Rep(_)} |
+  def fact = name <~ not("::=") ^^ { Var(_) } |
+    "(" ~> e <~ ")" |
+    "{" ~> e <~ "}" ^^ { Rep(_)} |
+    "[" ~> e <~ "]" ^^ { Opt(_)} |
+    ("<" ~> names <~ "/>") ^^
+    { case List(a) => Tag(a, Or(List())) case a => Or(a.map{Tag(_, Or(List()))}) } |
     (("<" ~> names <~ ">") ~ e ~ opt("<" ~> "/" ~> opt(names) <~ opt(">"))).filter
     { case a~b~Some(Some(c)) => a==c case _ => true } ^^
     { case List(a)~b~c => Tag(a, b) case a~b~c => Or(a.map{Tag(_, b)}) }
@@ -164,19 +169,55 @@ object main extends App {
   println("res="+res)
 
   val parser = XXMLSchema.compileSchema("""
-html   = (<html>head? body) | body
-head   = <head>((<title>text)|script)*
-body   = (<body>flow*) | flow*
-flow   = (<table>tr*) | (<div>flow*) | h1 | inline
-h1     = <h1|h2|h3|h4|h5|h6|h7|h8>(flow - h1)*
-inline = text | p | a | br | script
-p      = <p>(inline - p)*
-br     = <br>
-a      = <a>flow*
-script = <script|template|style|link>cdata
-tr     = <tr|th>td*
-td     = <td>flow*
+html    ::= (<html>[head] body) | body
+head    ::= <head>
+            { (<title>text)
+            | <base|bgsound|isindex|nextid|command|link|meta/>
+            | (<noscript>{inline})
+            | script
+            }
+body    ::= (<body>{flow}) | {flow}
+flow    ::= <hr/> | h1 | p
+          | (<article|aside|blockquote|dfn|div|footer|form|header|nav|pre>{flow})
+          | (<hgroup>{h1})
+          | (<details>(<summary> inline) {flow})
+          | (<fieldset>[<legend>inline] {flow})
+          | (<figure> {flow | <figcaption>{flow}})
+          | (<ol|ul>{<li>{flow}})
+          | (<dl>{<dt|dd>flow})
+          | (<table>
+             [<caption>{flow}]
+             {<colgroup>{<col>|script}}
+             [<thead>{tr}]
+             [<tfoot>{tr}]
+             ((<tbody>{tr})|{tr})
+             [<tfoot>{tr}]
+            )
+          | inline
+h1      ::= <h1|h2|h3|h4|h5|h6>{flow - h1}
+p       ::= <p>{inline - p}
+tr      ::= <tr>{<td|th>{flow}}
+inline  ::= text
+          | (<area|link|meta|br|embed|img|input|keygen|wbr/>)
+          | (<abbr|address|b|bdi|bdo|button|canv|cite|code|command
+             |data|em|i|iframe|kbd|label|mark|noscript|output|q
+             |s|samp|section|small|span|strong|sub|sup|svg|time|u
+             |var|meter|progress
+             >{inline})
+          | (<datalist>{inline | option})
+          | (<ruby>(<rt|rb>{inline}))
+          | (<a|del|ins|map>{flow})
+          | (<video|audio>{flow|<source|track/>})
+          | script
+          | (<textarea>cdata)
+          | (<menu>{(<li>{flow})|flow})
+          | (<object>{<param>}{flow})
+          | (<select>{option|<optgroup>{option}})
+option  ::= <option>text
+script  ::= <script|template|style>cdata
     """)
+
+
 
   println(XXMLSchema.parseAll(parser, """
 <html>
