@@ -975,6 +975,12 @@ xmlは使わず、scalaのみでHTMLに似た言語を定義したもの。(タ�
 htmlに合わせた、タグの補正を出来るようにしてみているもの。
 invalidなタグをどう扱うかが難しいので、不完全だ。
 
+## 類似の研究
+
+- HaXML
+     - https://hackage.haskell.org/package/HaXml-1.24.1/docs/src/Text-XML-HaXml-Html-Parse.html
+
+
 ## HTML5 パーサ
 
 - https://en.wikipedia.org/wiki/Comparison_of_HTML_parsers

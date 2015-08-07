@@ -52,7 +52,7 @@ object XXMLParser {
   def one(name:String) = tago(name, comment.rep)
   def ones(names:ArrayBuffer[String]) = names.map{one(_)}.reduce{_|_}
 
-  // 
+  // 省略可能タグ
   def otag(name:String, p: Parser[Seq[XXML]]) =
     tag(name, p) | (p map {b=> Block(name, b)::Nil})
 
@@ -71,7 +71,6 @@ object XXMLParser {
     one("hr") |
     tags(ArrayBuffer("article","aside","blockquote","dfn","div","footer","form","header","nav","pre"),
       r(flow)) |
-
     tag("table",
         o(tag("caption", r(flow))) ~
         r(tag("colgroup", r(one("col") | script))) ~
