@@ -956,14 +956,16 @@ RULES自体も、終了タグの省略が可能なので以上の定義が可能
 可読性を考えて、BNFライクな言語で書く方がシンプルに書けるでしょう。
 以下が完全ではないかもしれませんが、HTML5の文法定義です。
 アトリビュートは省略し、終了タグは省略でき、{}が0個以上の繰り返し、[]が省略可能を表します。
+[< >]はタグ省略可能である事を表す特殊なタグです。
 
-    html    ::= (<html>[(<head>{head})|{head}] body) | [(<head>{head})|{head}] body
-    head    ::= (<title>text)
-              | <base|bgsound|isindex|nextid|command|link|meta/>
-              | (<noscript>{inline})
-              | script
-                
-    body    ::= (<body>{flow}) | {flow}
+    html    ::= [<html>] head body
+    head    ::= [<head>]
+                { (<title>text)
+                | <base|bgsound|isindex|nextid|command|link|meta/>
+                | (<noscript>{inline})
+                | script
+                }
+    body    ::= [<body>]{flow}
     flow    ::= <hr>
               | (<article|aside|blockquote|dfn|div|footer|form|header|nav|pre>{flow})
               | heading | p
@@ -978,7 +980,7 @@ RULES自体も、終了タグの省略が可能なので以上の定義が可能
                  {<colgroup>{<col>|script}}
                  [<thead>{tr}]
                  [<tfoot>{tr}]
-                 ((<tbody>{tr})|{tr})
+                 ([<tbody>]{tr})
                  [<tfoot>{tr}]
                 </table>
               | inline
@@ -1003,8 +1005,6 @@ RULES自体も、終了タグの省略が可能なので以上の定義が可能
               | (<select>{option|<optgroup>{option}})
     option  ::= <option>text
     script  ::= <script|template|style>cdata
-
-この定義では、タグ自体の省略を表していないので、若干複雑なので、改良したほうがよいでしょう。
 
 性能を考えると、高速動作する事がよくて、Scalaでは速くて分かりやすいのはfastparseを使うと良いようです。
 DSLを介さずに、直接関数を使って定義しツリー状の構造も作る例が以下になります。
@@ -1071,6 +1071,8 @@ SGMLでは開始タグと終了タグを両方省略出来ると言う事もあ�
 
 
 全然、まとまってないじゃないか！
+
+FastParse使って、属性持つかえるようにして、SchemaをDSLで定義できるようにし直すとまとまるのかなと。
 
 ## 5. 今後の研究
 
