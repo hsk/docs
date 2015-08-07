@@ -74,7 +74,7 @@ object XXMLSchema extends XXMLParser {
     }
   }
   def tag(name:String, p: =>Parser[XXML]):Parser[XXML] =
-    ("<" ~> name.r ~> attrs <~ ">") ~ p <~ opt("</" ~ opt(name) ~ ">") ^^
+    "<" ~> name.r ~> attrs  ~ (("/>" ^^ {a=>Lst(List())}) | ">" ~> p <~ opt("</" ~ opt(name) ~ ">")) ^^
     { case a~b => Block(name, a, toList(b)) } | comment
   def one(name:String):Parser[XXML] =
     ("<" ~> name.r ~ attrs <~ opt("/") <~ ">") ^^
@@ -183,11 +183,11 @@ flow    ::= <hr>
           | (<article|aside|blockquote|dfn|div|footer|form|header|nav|pre>{flow})
           | heading | p
           | (<hgroup>{heading})
-          | (<details>(<summary> inline) {flow})
-          | (<fieldset>[<legend>inline] {flow})
+          | (<details>(<summary>{inline}) {flow})
+          | (<fieldset>[<legend>{inline}] {flow})
           | (<figure> {flow | <figcaption>{flow}})
           | (<ol|ul>{<li>{flow}})
-          | (<dl>{<dt|dd>flow})
+          | (<dl>{<dt|dd>{flow}})
           | <table>
              [<caption>{flow}]
              {<colgroup>{<col>|script}}
@@ -263,4 +263,68 @@ function test(){
         <td>aaa
         <td>aaa
     """))
+}
+
+object main2 extends App {
+  val parser = XXMLSchema.compileSchema("""
+html    ::= (<html>[(<head>{head})|{head}] body) | [(<head>{head})|{head}] body
+head    ::= (<title>text)
+          | <base|bgsound|isindex|nextid|command|link|meta/>
+          | (<noscript>{inline})
+          | script
+            
+body    ::= (<body>{flow}) | {flow}
+flow    ::= <hr>
+          | (<article|aside|blockquote|dfn|div|footer|form|header|nav|pre>{flow})
+          | heading | p
+          | (<hgroup>{heading})
+          | (<details>(<summary>{inline}) {flow})
+          | (<fieldset>[<legend>{inline}] {flow})
+          | (<figure> {flow | <figcaption>{flow}})
+          | (<ol|ul>{<li>{flow}})
+          | (<dl>{<dt|dd>{flow}})
+          | <table>
+             [<caption>{flow}]
+             {<colgroup>{<col>|script}}
+             [<thead>{tr}]
+             [<tfoot>{tr}]
+             ((<tbody>{tr})|{tr})
+             [<tfoot>{tr}]
+            </table>
+          | inline
+heading ::= <h1|h2|h3|h4|h5|h6>{flow - heading}
+p       ::= <p>{inline - p}
+tr      ::= <tr>{<td|th>{flow}}
+inline  ::= text
+          | <area|link|meta|br|embed|img|input|keygen|wbr>
+          | <abbr|address|b|bdi|bdo|button|canv|cite|code|command
+             |data|em|i|iframe|kbd|label|mark|noscript|output|q
+             |s|samp|section|small|span|strong|sub|sup|svg|time|u
+             |var|meter|progress>{inline}
+            </>
+          | (<datalist>{inline | option})
+          | (<ruby>(<rt|rb>{inline}))
+          | (<a|del|ins|map>{flow})
+          | (<video|audio>{flow|<source|track>})
+          | script
+          | (<textarea>cdata)
+          | (<menu>{(<li>{flow})|flow})
+          | (<object>{<param>}{flow})
+          | (<select>{option|<optgroup>{option}})
+option  ::= <option>text
+script  ::= <script|template|style>cdata
+    """)
+
+  def time(any: => Any) {
+    for(i <- 0 until 10) {
+      val start = System.currentTimeMillis
+      any
+      println(System.currentTimeMillis - start)
+    }
+  }
+
+  time {
+      for(i <- 0 to 1000)
+        XXMLSchema.parseAll(parser, "<body><hr/><table><tr><td>aa<tr/></table></body>")
+  }
 }
