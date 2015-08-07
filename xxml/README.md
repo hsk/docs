@@ -952,9 +952,129 @@ RULES自体も、終了タグの省略が可能なので以上の定義が可能
     </table>
 
 
+更に考えを進めると、DTDやXMLSchema等の難しさは、SGMLやXMLで書く事にこだわったからのようにも思えます。
+可読性を考えて、BNFライクな言語で書く方がシンプルに書けるでしょう。
+以下が完全ではないかもしれませんが、HTML5の文法定義です。
+アトリビュートは省略し、終了タグは省略でき、{}が0個以上の繰り返し、[]が省略可能を表します。
+
+    html    ::= (<html>[(<head>{head})|{head}] body) | [(<head>{head})|{head}] body
+    head    ::= (<title>text)
+              | <base|bgsound|isindex|nextid|command|link|meta/>
+              | (<noscript>{inline})
+              | script
+                
+    body    ::= (<body>{flow}) | {flow}
+    flow    ::= <hr>
+              | (<article|aside|blockquote|dfn|div|footer|form|header|nav|pre>{flow})
+              | heading | p
+              | (<hgroup>{heading})
+              | (<details>(<summary>{inline}) {flow})
+              | (<fieldset>[<legend>{inline}] {flow})
+              | (<figure> {flow | <figcaption>{flow}})
+              | (<ol|ul>{<li>{flow}})
+              | (<dl>{<dt|dd>{flow}})
+              | <table>
+                 [<caption>{flow}]
+                 {<colgroup>{<col>|script}}
+                 [<thead>{tr}]
+                 [<tfoot>{tr}]
+                 ((<tbody>{tr})|{tr})
+                 [<tfoot>{tr}]
+                </table>
+              | inline
+    heading ::= <h1|h2|h3|h4|h5|h6>{flow - heading}
+    p       ::= <p>{inline - p}
+    tr      ::= <tr>{<td|th>{flow}}
+    inline  ::= text
+              | <area|link|meta|br|embed|img|input|keygen|wbr>
+              | <abbr|address|b|bdi|bdo|button|canv|cite|code|command
+                 |data|em|i|iframe|kbd|label|mark|noscript|output|q
+                 |s|samp|section|small|span|strong|sub|sup|svg|time|u
+                 |var|meter|progress>{inline}
+                </>
+              | (<datalist>{inline | option})
+              | (<ruby>(<rt|rb>{inline}))
+              | (<a|del|ins|map>{flow})
+              | (<video|audio>{flow|<source|track>})
+              | script
+              | (<textarea>cdata)
+              | (<menu>{(<li>{flow})|flow})
+              | (<object>{<param>}{flow})
+              | (<select>{option|<optgroup>{option}})
+    option  ::= <option>text
+    script  ::= <script|template|style>cdata
+
+この定義では、タグ自体の省略を表していないので、若干複雑なので、改良したほうがよいでしょう。
+
+性能を考えると、高速動作する事がよくて、Scalaでは速くて分かりやすいのはfastparseを使うと良いようです。
+DSLを介さずに、直接関数を使って定義しツリー状の構造も作る例が以下になります。
+
+    lazy val html = otag("html", head ~ body map {case (a,b)=>a++b})
+    lazy val head = otag("head",r(
+      ones(ArrayBuffer("base","bgsound","isindex","nextid","command","link","meta")) |
+      tag("title", texts) |
+      tag("noscript", r(inline)) |
+      script
+    ))
+    lazy val body = otag("body", r(flow))
+
+    lazy val flow:Parser[Seq[XXML]] = P(
+      one("hr") |
+      tags(ArrayBuffer("article","aside","blockquote","dfn","div","footer","form","header","nav","pre"),
+        r(flow)) |
+      tag("table",
+          o(tag("caption", r(flow))) ~
+          r(tag("colgroup", r(one("col") | script))) ~
+          o(tago("thead", r(tr))) ~
+          o(tag("tfoot", r(tr))) ~
+          otag("tbody", r(tr)) ~
+          o(tag("tfoot", r(tr))) map
+          {case (a,b,c,d,e,f)=>ArrayBuffer(a,b,c,d,e,f).flatten}
+      ) |
+      tago("dl", r( tago("dt", r(flow)) | tag("dd", r(flow)) )) |
+      tags(ArrayBuffer("ol","ul"), r(tago("li", r(flow)))) |
+      tag("hgroup", r(heading)) |
+      tag("fieldset", o(tag("legend", r(inline))) ~ r(flow) map {case (a,b)=>a++b}) |
+      tag("details", tag("summary", r(inline)) ~ r(flow) map {case (a,b)=>a++b}) |
+      tag("figure", r(flow | tag("figcaption", r(flow)))) |
+      heading | p | inline)
+
+    lazy val heading:Parser[Seq[XXML]] = P(
+      tags(ArrayBuffer("h1","h2","h3","h4","h5","h6"), r(!heading ~ flow)))
+
+    lazy val p:Parser[Seq[XXML]] = P(tago("p", r(!p ~ inline)))
+    lazy val tr = tago("tr",r(tago("td", r(flow)) | tago("th", r(flow))))
+    lazy val inline:Parser[Seq[XXML]] = P(text |
+      ones(ArrayBuffer("area", "link", "meta", "br", "embed", "img", "input", "keygen", "wbr")) |
+      tags(ArrayBuffer("abbr", "address", "b", "bdi", "bdo", "button", "canv", "cite",
+        "code", "command", "data", "em", "i", "iframe", "kbd", "label", "mark",
+        "noscript", "output", "q", "s", "samp", "section", "small", "span",
+        "strong", "sub", "sup", "svg", "time", "u", "var", "meter", "progress"),
+        r(inline)) |
+      tags(ArrayBuffer("a", "del", "ins", "map"), r(flow)) |
+      tag("textarea", cdata) |
+      tag("select", r(option | tag("optgroup", r(option)) ) ) | 
+      tag("datalist", r(inline | option)) |
+      tag("menu", r(tago("li", r(flow)) | flow) ) |
+      tag("ruby", r(tag("rt", r(inline)) | tag("rt", r(inline)))) |
+      tag("object", r(one("param")) ~ r(flow) map {case (a,b)=>a++b} ) |
+      tags(ArrayBuffer("video","audio"), r(flow | ones(ArrayBuffer("source", "track")))) |
+      script)
+
+    lazy val option = tago("option", texts)
+    lazy val script = tags(ArrayBuffer("script", "template", "style"), cdata)
+
+SGMLでは開始タグと終了タグを両方省略出来ると言う事もあるので、それに対応してあります。
+
+これをFastParseで作成して簡単なHTMLでパースするとnu.validator.htmlparserと比較すると1/5の速度で動きました。
+アトリビュート追加すると遅くなるでしょうけど。
+
+
+全然、まとまってないじゃないか！
+
 ## 5. 今後の研究
 
-パーサコンビネータによる実装は必ずしも効率的ではありません。手を抜いているにもかかわらず、nu.validator.htmlparserと比較して50倍ほど性能の差があります。
+パーサコンビネータによる実装は必ずしも効率的ではありません。手を抜いているにもかかわらず、nu.validator.htmlparserと比較して50倍ほど性能の差がありましたが、fastparseで書き直すと5倍程に出来ました。
 より効率的なパーサの検討が必要でしょう。
 エスケープシーケンスについての処理は行いませんでしたのでエスケープシーケンスの処理も追加すると良いでしょう。
 
