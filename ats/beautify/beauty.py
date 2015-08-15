@@ -52,6 +52,21 @@ class nstr(Parser):
         return None if not i.startswith(self.param) else [self.param, i[len(self.param):]]
 
 
+class notp(Parser):
+    def __init__(self, p1, p2):
+        self.p1 = p1
+        self.p2 = p2
+
+    def __call__(self, i):
+        return None if self.p1(i) is not None else self.p2(i)
+
+
+class Any1(Parser):
+    def __call__(self, i):
+        return None if len(i) == 0 else [i[0], i[1:]]
+any1 = Any1()
+
+
 class p(Parser):
     def __init__(self, *params):
         self.params = map(lambda v: st(v) if isinstance(v, basestring) else v, params)
@@ -104,12 +119,13 @@ class rep(Parser):
             i = r[1]
 
 
-blockcomment = p(nstr("(*"), rep(orp(nreg(r"([^*]|\*[^)])+"), lambda i: blockcomment(i))), nstr("*)"))
-skip = rep(orp(nreg(r'^(\s|/\*([^*]|\*[^/])*\*/|//[^\r\n]*)+'), blockcomment))
+blockcomment = p(nstr("(*"), rep(orp(notp(nreg(r"^(\(\*|\*\))"), any1), (lambda i: blockcomment(i)))), nstr("*)"))
+skip = rep(orp(nreg(r'^(\s|/\*.*?\*/|//[^\r\n]*)+'), blockcomment))
 
 
 def st(s):
     return p(skip, nstr(s))
+
 
 def rep1(*thiz):
     return rep(*thiz) ^ (lambda p: None if len(p) < 1 else p)
