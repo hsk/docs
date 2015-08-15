@@ -308,7 +308,82 @@ in
 end
     """))
 
+print(parse(
+    r"""
+case x of
+    a => b
 
+fun coin_get
+  (n: int): int = a
+
+datatype a =
+  | a
+  | a of ()
+  | bb{a:int} of ()
+
+case x of
+ | a => b
+
+fun coin_get
+  (n: int): int = a
+
+case x of
+ | a => b
+ | a => b
+
+case x of
+    a => b
+ | a => b
+
+fun coin_get
+  (n: int): int = a
+
+    """))
+
+print(parse(
+    r"""
+case x of
+    a => b
+
+fun coin_get
+  (n: int): int = a
+
+datatype a =
+  | a
+  | a of ()
+  | bb{a:int} of ()
+
+case x of
+ | a => b
+
+fun coin_get
+  (n: int): int = a
+
+case x of
+ | a => b
+ | a => b
+
+case x of
+    a => b
+ | a => b
+
+fun coin_get
+  (n: int): int = a
+
+    """))
+
+print(r"""|""")
+
+print(parse(
+    r'''
+fun aux (t: tree a): int =
+(
+if df = 0 orelse df = 1
+then 1+szl+szr
+else $raise Negative()
+)
+
+    '''))
 
 start = "ATS-Postiats/doc/BOOK/INT2PROGINATS/CODE/"
 data = open(start+"INT2PROGINATS-CODE.php").read()
@@ -318,13 +393,14 @@ r = re.compile(r"listitem_gen\('(.*?)', '(.*?)'")
 lst = r.findall(data)
 cnt = 0
 
-for i in lst:
-    cnt = cnt + 1
-    f = i[0] + "/" + i[1]
-    print("*****************************************")
-    print("test " + str(cnt) + " : " + f)
-    print("*****************************************")
-    print(parse(open(start+f).read()))
+if True:
+    for i in lst:
+        cnt = cnt + 1
+        f = i[0] + "/" + i[1]
+        print("*****************************************")
+        print("test " + str(cnt) + " : " + f)
+        print("*****************************************")
+        print(parse(open(start+f).read()))
 
 if False:
     tests = [
@@ -392,51 +468,13 @@ if False:
         end
         '''))
 
-    print(parse(
-        r'''
-            let b a = match a; with
-                | a when a = 1 ->
-                    let a = a in
-                    a
-                | _ ->
-                    let a = a in a
-        '''))
-
-# todo one line comment
-# http://ats-lang.sourceforge.net/DOCUMENT/INT2PROGINATS/HTML/x593.html
 print(parse(
-    r"""
+    r'''
+fun aux (t: tree a): int =
+(
+if df = 0 orelse df = 1
+then 1+szl+szr
+else $raise Negative()
+)
 
-(*
-    rets
-    (* hogeee *)
-*)
-
-fun print_dots (i: int): void =
-if i > 0 then (print ". "; print_dots (i-1)) else ()
-
-fun ifold
-  (
-    n: int, f: (int, int) -> int, ini: int
-  ) : int =
-  if n > 0 then f (ifold (n-1, f, ini), n) else ini
-// end of [ifold]
-
-fun sum (n:int): int = 
-    ifold (lam (res, x) => res + x)
-val () =
-    assertloc (sum (10) = 55)
-
-fun prod (n:int): int = 
-    ifold (n, lam (res, x) => res * x, 0)
-val () =
-assertloc (prod (10) = 10*9*8*7*6*5*4*3*2*1)
-
-fun sqrsum
-(n: int): int = 
-ifold (n, lam (res, x) => res + x * x, 0)
-val () = 
-assertloc (sqrsum (10) = (2*10+1)*(10+1)*10/6)
-    """))
-
-
+    '''))

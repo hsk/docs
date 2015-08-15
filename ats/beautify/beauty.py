@@ -201,13 +201,14 @@ def cnv(e):
 
 # pritty ocaml grammer
 
-keywords = reg(r"^(begin|end|if|else|then|let|in|val|implement|local|typedef|lam|try|with|fnx|fn|fun|macrodef|macdef|open|struct|module|and|while|do|done)\b")
+keywords = reg(r"^(begin|end|if|else|then|let|in|val|implement|local|typedef|sortdef|datatype|lam|try|with|fnx|fn|fun|case|of|orelse|macrodef|macdef|staload|dynload|open|struct|module|and|while|do|done)\b")
 semi = notp(";;") >> p(";")
 exp = p(lambda i: p(exp4, rep[semi, exp4], opt(semi))(i))
 exps = p(exp, opt(semi))
 id = orp(
-    notp(keywords) >> reg(r"^\$?[_a-zA-Z0-9]+"),
-    reg(r'^[+\-*/.<>:@=^|~?]+') ^ (lambda i: i if re.search(r'^(=|=>|->|\|)$', i[1]) is None else None),
+    notp(keywords) >> reg(r"^[\$\\]?[_a-zA-Z0-9]+"),
+    str(":<cloref>"),
+    reg(r'^[+\-*/.<>:@=^|~?]+') ^ (lambda i: i if re.search(r'^(=|=>|=<|->|\||)$', i[1]) is None else None),
     reg(r'^[!]'),
     reg(r'^("(\\.|[^"])*"|\'(\\.|[^\'])\')')
 )
@@ -228,16 +229,16 @@ sexp = orp(
 )
 app = rep1(sexp)
 exp1 = orp(
-    p("lam", -p[app], orp("=>", "=<cloptr1>"), -p(lambda i: exp2(i))),
+    p("lam", -p[app], orp("=>", "=<cloptr1>", "=<cloref>"), -p(lambda i: exp2(i))),
     p("let", -p(lambda i: rep(toplevel, opt(";;"))(i)), "in", -opt(exp), "end"),
     p("if", -exps, "then", -p(lambda i: exp4(i)), opt(p("else", exp))),
-    p("case", -exps, "of", opt("|"), -exps, rep["|", -exps]),
-    p("try", -exps, "with", opt("|"), -exps, rep["|", -exps]),
+    p("case", -exps, "of", -p(opt("|"), app, "=>", -exp, rep("|", app, "=>", -exp))),
+    p("try", -exps, "with", opt("|"), -app, "=>", exp, rep["|", app, "=>", -exp]),
     p("while", -exps, "do", -exps, "done"),
     app
 )
 
-exp2 = p(exp1, opt("=", exp1))
+exp2 = p(exp1, opt(orp("=", "orelse"), p(lambda i: exp2(i))))
 exp3 = p(exp2, rep(",", exp2))
 exp4 = p(exp3, opt("->", exp))
 prog = p(lambda i: rep(toplevel)(i))
@@ -249,18 +250,20 @@ struct_exp = rep1(orp(
     id,
     p("(", -opt(struct), ")"),
 ))
+datatype = p[app, "=", opt("|"), -app, opt("of", -app), rep("|", -app, opt("of", -app))]
 toplevel = orp(
     p(orp("fn", "fnx"), -p[app], opt("=", -exp)),
     p("fun", -p[app], opt("=", -exp)),
     p(orp("macdef", "macrodef"), -p[app], opt("=", -exp)),
     p("val", -p[app], "=", -exp),
     p("implement", -p[app], "=", -exp),
-    p("typedef", -p[app], "=", -exp),
+    p(orp("typedef", "sortdef"), -p[app], "=", -exp),
     p("and", -p[app], "=", -exp),
-    p("#include", -exp),
+    p(orp("#include","staload","dynload"), -exp),
     p("#define", -sexp, opt("(", -exps, ")"), -sexp),
     p("local", -p[prog], "in", -p[prog], "end"),
-    p("type", -p[id, "=", opt("|"), exp, rep("|", exp)]),
+    p("datatype", -datatype, rep("and", -datatype)),
+    p("exception", -id, "of", -exp),
     p("open", -p[id, rep(".", id)]),
     p(exp, opt(semi)),
     p("module", -p[app], "=", struct)
