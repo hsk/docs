@@ -201,7 +201,7 @@ def cnv(e):
 
 # pritty ocaml grammer
 
-keywords = reg(r"^(begin|end|if|else|then|let|in|val|implement|local|typedef|lam|try|with|fnx|fn|fun|open|struct|module|and|while|do|done)\b")
+keywords = reg(r"^(begin|end|if|else|then|let|in|val|implement|local|typedef|lam|try|with|fnx|fn|fun|macrodef|macdef|open|struct|module|and|while|do|done)\b")
 semi = notp(";;") >> p(";")
 exp = p(lambda i: p(exp4, rep[semi, exp4], opt(semi))(i))
 exps = p(exp, opt(semi))
@@ -217,6 +217,7 @@ sexp = orp(
     p("@{", -p(assign, rep(",", assign)), "}"),
     p("@[", -opt(exp), "]"),
     p("'(", -opt(exp), ")"),
+    p(",(", -opt(exp), ")"),
     p("'{", -p(assign, rep(",", assign)), "}"),
     p("'[", -opt(exp), "]"),
     id,
@@ -251,6 +252,7 @@ struct_exp = rep1(orp(
 toplevel = orp(
     p(orp("fn", "fnx"), -p[app], opt("=", -exp)),
     p("fun", -p[app], opt("=", -exp)),
+    p(orp("macdef", "macrodef"), -p[app], opt("=", -exp)),
     p("val", -p[app], "=", -exp),
     p("implement", -p[app], "=", -exp),
     p("typedef", -p[app], "=", -exp),
