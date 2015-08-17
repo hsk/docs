@@ -52,21 +52,6 @@ class nstr(Parser):
         return None if not i.startswith(self.param) else [self.param, i[len(self.param):]]
 
 
-class notp(Parser):
-    def __init__(self, p1, p2):
-        self.p1 = p1
-        self.p2 = p2
-
-    def __call__(self, i):
-        return None if self.p1(i) is not None else self.p2(i)
-
-
-class Any1(Parser):
-    def __call__(self, i):
-        return None if len(i) == 0 else [i[0], i[1:]]
-any1 = Any1()
-
-
 class p(Parser):
     def __init__(self, *params):
         self.params = map(lambda v: st(v) if isinstance(v, basestring) else v, params)
@@ -119,14 +104,6 @@ class rep(Parser):
             i = r[1]
 
 
-blockcomment = p(nstr("(*"), rep(orp(notp(nreg(r"^(\(\*|\*\))"), any1), (lambda i: blockcomment(i)))), nstr("*)"))
-skip = rep(orp(nreg(r'^(\s|/\*.*?\*/|//[^\r\n]*)+'), blockcomment))
-
-
-def st(s):
-    return p(skip, nstr(s))
-
-
 def rep1(*thiz):
     return rep(*thiz) ^ (lambda p: None if len(p) < 1 else p)
 
@@ -137,6 +114,19 @@ class notp(Parser):
 
     def __call__(self, i):
         return [[], i] if self.thiz(i) is None else None
+
+
+class Any1(Parser):
+    def __call__(self, i):
+        return None if len(i) == 0 else [i[0], i[1:]]
+any1 = Any1()
+
+blockcomment = p(nstr("(*"), rep(orp(notp(nreg(r"^(\(\*|\*\))"), any1), (lambda i: blockcomment(i)))), nstr("*)"))
+skip = rep(orp(nreg(r'^(\s|/\*.*?\*/|//[^\r\n]*)+'), blockcomment))
+
+
+def st(s):
+    return p(skip, nstr(s))
 
 
 def reg(s):
@@ -201,7 +191,7 @@ def cnv(e):
 
 # pritty ocaml grammer
 
-keywords = reg(r"^(begin|end|if|else|then|let|in|val|implement|local|typedef|sortdef|datatype|lam|try|with|fnx|fn|fun|case|of|orelse|macrodef|macdef|staload|dynload|open|struct|module|and|while|do|done)\b")
+keywords = reg(r"^(begin|end|if|else|then|let|in|val|implement|local|typedef|sortdef|datatype|extern|lam|try|with|fnx|fn|fun|case|of|orelse|macrodef|macdef|staload|dynload|open|struct|module|and|while|do|done)\b")
 semi = notp(";;") >> p(";")
 exp = p(lambda i: p(exp4, rep[semi, exp4], opt(semi))(i))
 exps = p(exp, opt(semi))
@@ -248,18 +238,18 @@ struct = p(lambda i: orp(
 )(i))
 struct_exp = rep1(orp(
     id,
-    p("(", -opt(struct), ")"),
+    p("(", -opt(struct), ")")
 ))
 datatype = p[app, "=", opt("|"), -app, opt("of", -app), rep("|", -app, opt("of", -app))]
 toplevel = orp(
-    p(orp("fn", "fnx"), -p[app], opt("=", -exp)),
-    p("fun", -p[app], opt("=", -exp)),
+    p(orp("fn", "fnx", "fun"), -p[app], opt("=", -exp)),
+    p("extern", -p[orp("fn", "fnx", "fun"), app]),
     p(orp("macdef", "macrodef"), -p[app], opt("=", -exp)),
     p("val", -p[app], "=", -exp),
     p("implement", -p[app], "=", -exp),
     p(orp("typedef", "sortdef"), -p[app], "=", -exp),
     p("and", -p[app], "=", -exp),
-    p(orp("#include","staload","dynload"), -exp),
+    p(orp("#include", "staload", "dynload"), -exp),
     p("#define", -sexp, opt("(", -exps, ")"), -sexp),
     p("local", -p[prog], "in", -p[prog], "end"),
     p("datatype", -datatype, rep("and", -datatype)),
