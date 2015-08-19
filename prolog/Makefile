@@ -11,3 +11,4 @@ all:
 
 clean:
 	rm -rf hello add add2 calc calc2 fact list strlist test01 seqprover
+

@@ -7,8 +7,6 @@ add(A, B, R) :-
 main :-
   add(10, 20, X),
   write('10 + 20 = '), write(X), nl,
-  {Y is 10 - 20,
-  write('10 - 20 = '), write(Y), nl},
   Z is 10 * 20,
   write('10 * 20 = '), write(Z), nl,
   halt.
