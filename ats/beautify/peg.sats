@@ -58,3 +58,5 @@ fn {a,b,c:t0ype+} notp
   (this:a-<cloref1>option0(res(b,c))
   ): a -<cloref1> option0(res(string,a))
 fn range(c1:char,c2:char): (string)-<cloref1>option0(res(string,string))
+
+overload :: with list0_cons

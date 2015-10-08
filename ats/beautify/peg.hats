@@ -13,5 +13,6 @@ staload "libats/ML/SATS/filebas.sats"
 infixr 0 /
 infixr 2 ~ ~> <~
 infixr 1 ^^ ^?^
+infixr 0 ::
 
 staload "peg.sats"

@@ -32,7 +32,7 @@ FluetとMorrisettのリージョン型システムや、MetaOCaml環境分類器
 <!--Uncannily, Rémy's algorithm views the region containment as a test if a type variable is generalizable.-->
 不思議なことに、レミーのアルゴリズムは型変数が一般化されたリージョン包含テストとみなせます。
 
-- [1. Introduction はじめに](1.intoro.md)
+- [1. Introduction はじめに](1.intro.md)
 - [2. Generalization 一般化](2.一般化.md)
 - [3. Unsound generalization as memory mismanagement メモリ管理ミスがある不完全な一般化](3.メモリ管理ミスがある不完全な一般化.md)
 - [4. Efficient generalization with levels レベルによる効率的な一般化](4.レベルによる効率的な一般化.md)
