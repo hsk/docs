@@ -9,7 +9,7 @@ Windowsでは確認してません。
 
 ### 初期化と終了処理
 
-メイン関数では、gc\_initで初期化し、gc\_freeで終了処理をします。
+メイン関数では、`gc_init`で初期化し、`gc_free`で終了処理をします。
 メインの処理は_mainで行います。
 
 	int main() {
@@ -27,12 +27,12 @@ Windowsでは確認してません。
 	void _main() {
 	  enum {FRAME_START, FRAME_SIZE, A, FRAME_END};
 
-`enum`の次の行には `ENTER\_FRAME\_ENUM();`を記述します。
+`enum`の次の行には `ENTER_FRAME_ENUM();`を記述します。
 
 	  ENTER_FRAME_ENUM();
 
-関数の最後には`LEAVE\_FRAME();`を記述します。
-`LEAVE\_FRAME();`は関数から抜ける際は必ず必要です。
+関数の最後には`LEAVE_FRAME();`を記述します。
+`LEAVE_FRAME();`は関数から抜ける際は必ず必要です。
 
 	  LEAVE_FRAME();
 	}
@@ -48,9 +48,9 @@ Windowsでは確認してません。
 
 ### GCの実行
 
-GCをするには`gc\_collect()`を呼びます。
+GCをするには`gc_collect()`を呼びます。
 
-	  gc\_collect();
+	  gc_collect();
 
 ### BOXED配列
 
