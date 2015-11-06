@@ -1,7 +1,25 @@
 #シンプルなGCのC言語実装
 
-- [mark\_and\_sweep](mark_and_sweep)は単純なCだけで実装
-- [mark_and_sweep_compiler](mark_and_sweep_compiler) 単純なCのランタイムを使用するコンパイラをOCamlで作成します(作成中)
-- [frame_map](frame_map)はフレームマップ付きのGCをC(x86\_64 only)
-- [new_world](new_world)はObjective-CのARCに似たGCの方式
-- [bitmap_gc](bitmap_gc)は単純なBitmapGCをCだけで実装
+ここには、C言語を使って書いた動作速度よりも単純さを重視して作成した様々なガーベジコレクションの例があります。
+
+GCの様々な手法は高速化するためにあるので速くないと実用性は低いのですが、高速な実装はそれだけ複雑で難しくなります。
+
+簡単な実装があれば、理解はしやすく入門しやすいのではないかと思います。
+
+- [mark\_and\_sweep](mark_and_sweep)
+	SML#のランタイムを参考に作成した、
+	単純なCだけで実装したマーク＆スイープGCのシンプルな実装とテストとドキュメントです。
+	200行程で完全なGCを実現し、100行程のテストが付いています。
+
+- [mark_and_sweep_compiler](mark_and_sweep_compiler)
+	単純なCのランタイムを使用するコンパイラをOCamlで作成します(作成中)
+
+- [frame_map](frame_map)
+	フレームマップ付きのGCをC言語で実装します(x86\_64 only)
+	フレームマップ付きのGCは、実行時にフレーム情報を更新せずに実行アドレス(スタック上のリターンアドレス)からフレーム情報を求めGCを行います。
+
+- [bitmap_gc](bitmap_gc)
+	mark\_and\_sweepを拡張して単純なBitmapGCをCだけで実装します。
+	
+- [new_world](new_world)
+	独自に考えたObjective-CのARCに似たGCの方式の提案です。
