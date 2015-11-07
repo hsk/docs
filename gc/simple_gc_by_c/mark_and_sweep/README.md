@@ -123,124 +123,124 @@ GCの実行時には、ヒープから確保したデータのみをチェック
 
 # 説明
 
-## データ構造
+- データ構造
 
-このプログラムはヒープとフレームリスト、スタック、オブジェクト、GCから構成されています。
+	このプログラムはヒープとフレームリスト、スタック、オブジェクト、GCから構成されています。
 
-- プログラム
-	- ヒープ
-	- フレームリスト
-	- スタック
-	- オブジェクト
-	- GC
+	- プログラム
+		- ヒープ
+		- フレームリスト
+		- スタック
+		- オブジェクト
+		- GC
 
-グローバル上にヒープやフレームリストが存在し、GCがメモリを管理してオブジェクトを生成したり、削除したりします。
+	グローバル上にヒープやフレームリストが存在し、GCがメモリを管理してオブジェクトを生成したり、削除したりします。
 
-	Global
-	       frame_list -----+
-	       heap_list ---+  |
-	                    |  |
-	       GC           |  |
-	   +---- HEAP <-----+  |
-	   |      | |          |
-	   |      | +-----+    |
-	   |      |       |    |
-	   v      v       v    |
-	live     live   death  |
-	Object-->Object Object |
-	   A                   |
-	   |                   |
-	   |   Native Function |
-	   |     STACK         |
-	   +------ FRAME <-----+
-	           (root set)
+		Global
+		       frame_list -----+
+		       heap_list ---+  |
+		                    |  |
+		       GC           |  |
+		   +---- HEAP <-----+  |
+		   |      | |          |
+		   |      | +-----+    |
+		   |      |       |    |
+		   v      v       v    |
+		live     live   death  |
+		Object-->Object Object |
+		   A                   |
+		   |                   |
+		   |   Native Function |
+		   |     STACK         |
+		   +------ FRAME <-----+
+		           (root set)
 
-ネイティブの関数のスタックフレーム上に管理されたフレームのリストを構築します。
-Objectはルート集合(フレーム)から参照されているか、ルート集合から参照されているオブジェクトから参照されていれば生きていますが、ヒープからのみ参照されている場合は死んでいるため、GC時に開放されます。
-管理されたオブジェクトをスタック上に取る事は残念ながら出来ません。
+	ネイティブの関数のスタックフレーム上に管理されたフレームのリストを構築します。
+	Objectはルート集合(フレーム)から参照されているか、ルート集合から参照されているオブジェクトから参照されていれば生きていますが、ヒープからのみ参照されている場合は死んでいるため、GC時に開放されます。
+	管理されたオブジェクトをスタック上に取る事は残念ながら出来ません。
 
-### enum ObjectType 
+	- enum ObjectType 
 
-オブジェクトの種類を表します。
+		オブジェクトの種類を表します。
 
-	OBJ_BOXED_ARRAY   BOX化された配列
-	OBJ_UNBOXED_ARRAY BOX化されていない配列
-	OBJ_PAIR          ペア
-	OBJ_RECORD        レコード
+			OBJ_BOXED_ARRAY   BOX化された配列
+			OBJ_UNBOXED_ARRAY BOX化されていない配列
+			OBJ_PAIR          ペア
+			OBJ_RECORD        レコード
 
-ObjectHeader内に格納されます。
+		ObjectHeader内に格納されます。
 
-### struct ObjectHeader
+	- struct ObjectHeader
 
-オブジェクトをヒープに配置するときに使うヘッダ情報です。
-オブジェクトのポインタの手前に付きます。
+		オブジェクトをヒープに配置するときに使うヘッダ情報です。
+		オブジェクトのポインタの手前に付きます。
 
-                 heap memory 
+		                 heap memory 
 
-	heap_list -> | next pointer  |--+
-                 | size    4byte |  |
-                 | type    1byte |  |
-                 | marked  1byte |  |
-                 | align         |  |
-                 | align         |  |
-                 | Object data   |  |
-                 |               |  |
-                 |               |  |
-                                    |
-	          +--| next pointer  |<-+
-              |  | :             |
-              |  | :             |
-              |
-              +->| next pointer  |--+
-                 | :             |  |
-                 | :             |  |
+			heap_list -> | next pointer  |--+
+		                 | size    4byte |  |
+		                 | type    1byte |  |
+		                 | marked  1byte |  |
+		                 | align         |  |
+		                 | align         |  |
+		                 | Object data   |  |
+		                 |               |  |
+		                 |               |  |
+		                                    |
+			          +--| next pointer  |<-+
+		              |  | :             |
+		              |  | :             |
+		              |
+		              +->| next pointer  |--+
+		                 | :             |  |
+		                 | :             |  |
 
-                       :         :
+		                       :         :
 
-                                    |
-	     NULL <--| next pointer  |<-+
-                 | :             |
-                 | :             |
+		                                    |
+			     NULL <--| next pointer  |<-+
+		                 | :             |
+		                 | :             |
 
-heap_listに追加されています。GC時にマークされなかった物は削除されます。
-typeと、markは下位ビットに押し込めればよりメモり効率が良くなるでしょう。
+		heap_listに追加されています。GC時にマークされなかった物は削除されます。
+		typeと、markは下位ビットに押し込めればよりメモり効率が良くなるでしょう。
 
-### union Object
+	- union Object
 
-Objectは様々なデータのunionです。
-オブジェクトデータにアクセスするための各フィールドが定義されています。
+		Objectは様々なデータのunionです。
+		オブジェクトデータにアクセスするための各フィールドが定義されています。
 
-### struct Frame
+	- struct Frame
 
-完全なGCを行うために必要なポインタの情報を保持します。
+		完全なGCを行うために必要なポインタの情報を保持します。
 
-               machine stack
+		               machine stack
 
-	frame_list -> | prev   |---+
-	              | size   |   |
-	              | frame0 |   |
-	              | frame1 |   |
-	              | frame2 |   |
-	              | frame3 |   |
-	              | frame4 |   |
-	              |   :    |   |
-	           +--| prev   |<--+
-	           |  | size   |
-	           |  | frame0 |
-	           |  |   :    |
-	           +->| prev   |---+
-	              | size   |   |
-	              | frame0 |   |
-	              |   :    |   |
-	              | NULL   |<--+
-	              | size   |   
-	              | frame0 |   
-	              |   :    |
+			frame_list -> | prev   |---+
+			              | size   |   |
+			              | frame0 |   |
+			              | frame1 |   |
+			              | frame2 |   |
+			              | frame3 |   |
+			              | frame4 |   |
+			              |   :    |   |
+			           +--| prev   |<--+
+			           |  | size   |
+			           |  | frame0 |
+			           |  |   :    |
+			           +->| prev   |---+
+			              | size   |   |
+			              | frame0 |   |
+			              |   :    |   |
+			              | NULL   |<--+
+			              | size   |   
+			              | frame0 |   
+			              |   :    |
 
-この図ではスタックは上に成長するように書かれています。
+		この図ではスタックは上に成長するように書かれています。
 
-Frame情報はflame_listに保持されます。
-リストのトップのポインタはグローバル変数に保持されますが、フレームのデータはスタック上に取られるため、ネイティブのスタック上に取られるので高速に動作します。
+		Frame情報はflame_listに保持されます。
+		リストのトップのポインタはグローバル変数に保持されますが、フレームのデータはスタック上に取られるため、ネイティブのスタック上に取られるので高速に動作します。
 
 - グローバル変数
 
