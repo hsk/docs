@@ -130,7 +130,7 @@ void gc_mark() {
   }
 }
 
-void gc_sweep() {
+void gc_sweep(int level) {
   ObjectHeader** object = &heap_list;
   while (*object) {
   	if((*object)->level < heap_level) break;
@@ -141,8 +141,11 @@ void gc_sweep() {
 
       heap_num--;
     } else {
-      if((*object)->level > heap_level)
-      	(*object)->level = heap_level;
+      if(level) {
+        printf("level change\n");
+        printf("level change %d -> %d\n", (*object)->level, level);
+      	(*object)->level = level;
+      }
       (*object)->marked = 0;
       object = &(*object)->next;
     }
@@ -152,7 +155,7 @@ void gc_sweep() {
 void gc_minor(Object* data) {
   int prev_num = heap_num;
   gc_mark_object(data);
-  gc_sweep();
+  gc_sweep(heap_level-1);
 
   heap_max = prev_num * 2;
 
@@ -169,20 +172,20 @@ Object* gc_new_world(Object*(*f)(void*data), void* data) {
 	return rc;
 }
 
-#define NEW_WORLD() \
+#define NEW_WORLD(tmp) \
   heap_level++; \
-  Frame* frame_bottom_temp = frame_bottom;
+  Frame* tmp = frame_bottom;
 
-#define END_WORLD(root) \
+#define END_WORLD(tmp,root) \
   gc_minor(root); \
-  frame_bottom = frame_bottom_temp; \
+  frame_bottom = tmp; \
   heap_level--;
 
 void gc_collect() {
   int prev_num = heap_num;
 
   gc_mark();
-  gc_sweep();
+  gc_sweep(0);
 
   heap_max = prev_num * 2;
 
@@ -234,7 +237,7 @@ void* gc_alloc_int(int n) {
   frame_list = frame_list->frame_prev;
 
 void gc_init() {
-  heap_level = 0;
+  heap_level = 1;
   frame_list = NULL;
   frame_bottom = NULL;
   heap_list = NULL;
@@ -333,6 +336,8 @@ Object* test_new_world2(Object* data) {
 
   frame[B] = gc_alloc_int(3); // 6
   frame[C] = gc_alloc_int(5); // 7
+  gc_collect();
+  gc_collect();
 
   LEAVE_FRAME();
   return frame[A];
@@ -350,10 +355,15 @@ void test_new_world() {
   frame[A]->field[2] = test_int(30); // 3
   frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
 
-  NEW_WORLD();
-  frame[B] = test_new_world2(frame[A]);
-  END_WORLD(frame[B]);// 6と7が消える。
+  NEW_WORLD(frame_tmp1);
 
+    NEW_WORLD(frame_tmp2);
+    frame[B] = test_new_world2(frame[A]);
+    END_WORLD(frame_tmp2, frame[B]);// 6と7が消える。
+
+  printf("level change check.........\n");
+  END_WORLD(frame_tmp1,frame[B]);// 6と7が消える。
+  printf("level change check.........\n");
   gc_collect();
   LEAVE_FRAME();
 }

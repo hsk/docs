@@ -422,7 +422,7 @@ LLVMのスタックマップも同様の事が出来るようにする事が可�
 SML#ではさらにSMLの知識や、ランタイムを読む必要がありました。
 ここでは、Cのみの知識で理解出来るようにしてスタックマップを説明しました。
 
-# 8. 参考URL
+# 8. 参考文献
 
 C言語でバックトレース
 
@@ -431,3 +431,30 @@ http://www35.atwiki.jp/futoyama/pages/101.html
 LLVMのガーベジコレクションのスタックマップ
 
 http://llvm.org/docs/GarbageCollection.html#stack-map
+
+
+- LLVMのGC(ガベージコレクション)サポートを使ってみる - Aizu Advent Calendar 2013(1日目)
+
+	http://yutopp.hateblo.jp/entry/2013/12/01/000152
+
+	https://github.com/yutopp/llvm-gc-support-test/tree/master/shadow_stack
+
+- LLVM Garbage Collection.
+
+	http://llvm.org/docs/GarbageCollection.html
+
+- Appel89
+
+	 Andrew W. Appel. Lisp and Symbolic Computation 19(7):703-705, July 1989.
+
+- Goldberg91
+	
+	Tag-free garbage collection for strongly typed programming languages. Benjamin Goldberg. ACM SIGPLAN PLDI‘91.
+
+- Tolmach94
+
+	Tag-free garbage collection using explicit type parameters. Andrew Tolmach. Proceedings of the 1994 ACM conference on LISP and functional programming.
+
+- Henderson2002
+
+	[Accurate Garbage Collection in an Uncooperative Environment](http://citeseer.ist.psu.edu/henderson02accurate.html)
