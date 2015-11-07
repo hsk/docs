@@ -33,7 +33,7 @@ OCamlの多相的型推論はレベルを用いて解決していますが、そ
 1. レベルで領域を管理する。
 2. 領域を複数持ちIDを持って管理する。
 
-今回はまず1のレベルで領域を管理するアルゴリズムを提案します。
+今回はまず1のレベルで領域を管理するアルゴリズムを提案します。とはいっても、他で既にありそうですけど。
 
 ## 3. アルゴリズム
 
@@ -63,58 +63,201 @@ GCが起きた場合は、levelを見て、現在レベルより低いレベル�
 
 heap_listはから
 
-				level = 1
-    			heap_list -> null
+                level = 1
+                heap_list -> null
                 world_list -> null
 
 メモリ割り当てが進む
 
-				level = 1
-    			heap_list -> (l1 4)->(l1 3)->(l1 2)->(l1 1)->null
+                level = 1
+                heap_list -> (l1 4)->(l1 3)->(l1 2)->(l1 1)->null
                 world_list -> null
 
 新しい領域に入ると、新しい領域に入った時のリストのトップを保存する。
 
-				level = 2
-    			heap_list -> (l1 4)->(l1 3)->(l1 2)->(l1 1)->null
+                level = 2
+                heap_list -> (l1 4)->(l1 3)->(l1 2)->(l1 1)->null
 
 新しい領域で計算する。
 
-				level = 2
-    			heap_list -> (l2 5)->(l2 6)->(l2 7)->
+                level = 2
+                heap_list -> (l2 5)->(l2 6)->(l2 7)->
                                | |           ^
                                | |           |
                                | +-----------+
                                v
-    			-> (l1 4)->(l1 3)->(l1 2)->(l1 1)->null
+                -> (l1 4)->(l1 3)->(l1 2)->(l1 1)->null
 
 
 計算が終わったので5の値を返したいので、5をルートとしてマークする。
 このとき、レベルが5のレベルより小さいポインタは親領域なのでマークしない。
 
-				level = 2
-    			heap_list -> (l2*5)->(l2 6)->(l2*7)->
+                level = 2
+                heap_list -> (l2*5)->(l2 6)->(l2*7)->
                                | |           ^
                                | |           |
                                | +-----------+
                                v
-    			-> (l1 4)->(l1 3)->(l1 2)->(l1 1)->null
+                -> (l1 4)->(l1 3)->(l1 2)->(l1 1)->null
 
-マークが終わったら、スイープをする。スイープは現状のレベルを1つ下げて、レベルが高いものだけマークされている物を残して現状レベルに下げ、マークされていない物は消す。
+マークが終わったら、スイープをする。このときのスイープは現状のレベルを1つ下げる。
+レベルが高いものだけマークされている物を残して現状レベルに下げ、マークされていない物は消す。
 
-				level = 1
-    			heap_list -> (l1 5)  (l2x6)  (l1 7)->
+                level = 1
+                heap_list -> (l1 5)  (l2x6)  (l1 7)->
                                | |           ^
                                | |           |
                                | +-----------+
                                v
-    			-> (l1 4)->(l1 3)->(l1 2)->(l1 1)->null
+                -> (l1 4)->(l1 3)->(l1 2)->(l1 1)->null
+
+
+
+## 他のアルゴリズムとの違い
+
+通常の世代別GCとの違いは、GCの世代交代のタイミングを自由に選べる事です。
+特に重要なポイントでエリアを分ける事で高速なGCが可能になります。
+参照ポインタ方式ではカウントの上げ下げが面倒でしたが、カウントの上げ下げは必要ありません。
+コンテキストの切り替えコストは最小で、レベルの書き換えだけで済むのでコピー操作もありません。
 
 ## 実装
 
-gc.cを参照。
+gc.cに実装があります。
 
-todo: diffを取ってみる。
+オブジェクトヘッダにレベルを持たせます。
+
+    <   unsigned int level;
+
+グローバル変数に`heap_level`と`frame_bottom`を追加します。
+
+    < int heap_level;
+    < Frame* frame_bottom;
+
+マーク時にヒープレベルより小さければマークしないようにします。
+
+    <   if (head->marked || head->level < heap_level) return;
+    ---
+    >   if (head->marked) return;
+
+マークするルート集合は新しく作り出したフレームだけにします。
+
+    <   while(frame != frame_bottom) {
+    ---
+    >   while(frame) {
+
+スイープの関数には、世界が終わったときにレベルを渡すようにします。
+
+    < void gc_sweep(int level) {
+    ---
+    > void gc_sweep() {
+
+スイープのループ中にレベルがヒープのレベルよりも低くなれば終了します。
+
+    <     if((*object)->level < heap_level) break;
+
+レベル指定があればレベルを元に戻します。
+
+    <       if(level) {
+    <         printf("level change\n");
+    <         printf("level change %d -> %d\n", (*object)->level, level);
+    <         (*object)->level = level;
+    <       }
+
+世界が終わった時の特別なGCを作ります。
+
+    < void gc_minor(Object* data) {
+    <   int prev_num = heap_num;
+    <   gc_mark_object(data);
+    <   gc_sweep(heap_level-1);
+    <
+    <   heap_max = prev_num * 2;
+    <
+    <   debug("Collected %d objects, %d remaining.\n", prev_num - heap_num,
+    <          heap_num);
+    < }
+
+世界を開始するマクロを追加して使います。tmpにはバックアップを取るフレーム名を指定します。
+
+    < #define NEW_WORLD(tmp) \
+    <   heap_level++; \
+    <   Frame* tmp = frame_bottom;
+
+
+    < #define END_WORLD(tmp,root) \
+    <   gc_minor(root); \
+    <   frame_bottom = tmp; \
+    <   heap_level--;
+
+通常のスイープは引数を0で呼び出します。
+
+    <   gc_sweep(0);
+    ---
+    >   gc_sweep();
+
+オブジェクトを作成した場合はレベルを保存します。
+
+    <   head->level = heap_level;
+
+初期化時はヒープレベルを1に、フレームボトムはNULLにします。
+
+    <   heap_level = 1;
+    <   frame_bottom = NULL;
+
+テストコードを追加します。
+
+    < Object* test_new_world2(Object* data) {
+    <   enum {FRAME_START, FRAME_SIZE, A, B, C, FRAME_END};
+    <   ENTER_FRAME_ENUM();
+    <
+    <   // レコード
+    <   enum {RECORD_SIZE=3,RECORD_BITMAP=BIT(1)|BIT(2)};
+    <   frame[A] = gc_alloc_record(RECORD_SIZE); // 4
+    <   frame[A]->longs[0] = 100; // undata
+    <   frame[A]->field[1] = gc_alloc_int(200); // 5
+    <   frame[A]->field[2] = data;
+    <   frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
+    <
+    <   frame[B] = gc_alloc_int(3); // 6
+    <   frame[C] = gc_alloc_int(5); // 7
+    <   gc_collect();
+    <   gc_collect();
+    <
+    <   LEAVE_FRAME();
+    <   return frame[A];
+    < }
+    <
+    < void test_new_world() {
+    <   enum {FRAME_START, FRAME_SIZE, A, B, FRAME_END};
+    <   ENTER_FRAME_ENUM();
+    <
+    <   // レコード
+    <   enum {RECORD_SIZE=3,RECORD_BITMAP=BIT(1)|BIT(2)};
+    <   frame[A] = gc_alloc_record(RECORD_SIZE); // 1
+    <   frame[A]->longs[0] = 10; // undata
+    <   frame[A]->field[1] = gc_alloc_int(20); // 2
+    <   frame[A]->field[2] = test_int(30); // 3
+    <   frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
+    <
+    <   NEW_WORLD(frame_tmp1);
+    <
+    <     NEW_WORLD(frame_tmp2);
+    <     frame[B] = test_new_world2(frame[A]);
+    <     END_WORLD(frame_tmp2, frame[B]);// 6と7が消える。
+    <
+    <   printf("level change check.........\n");
+    <   END_WORLD(frame_tmp1,frame[B]);// 6と7が消える。
+    <   printf("level change check.........\n");
+    <   gc_collect();
+    <   LEAVE_FRAME();
+    < }
+
+メインにテストを追加します。
+
+    <   printf("---\n");
+    <   gc_init();
+    <   test_new_world();
+    <   gc_free();
+    <
 
 ## 参考文献
 
