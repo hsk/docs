@@ -5,6 +5,8 @@
 メモリ効率はあまりよくありませんが、osx 上で32bit,64bitのCPUで動作させる事が出来ます。
 Windowsでは確認してません。
 
+
+
 ## 使い方
 
 ### 初期化と終了処理
@@ -114,14 +116,23 @@ ints,longs,longlongs,uchars,ushorts,uints,ulongs,ulonglongs要素を使って情
 	  LEAVE_FRAME();
 	}
 
-### NULL
+### NULL ポインタ
 
-GCをするさいは、ヒープから確保したデータのみをチェックします。
+GCの実行時には、ヒープから確保したデータのみをチェックします。
 そのため、ヒープにアドレスが登録されていなければ、問題なく動作します。
+
+# 説明
 
 ## データ構造
 
 このプログラムはヒープとフレームリスト、スタック、オブジェクト、GCから構成されています。
+
+- プログラム
+	- ヒープ
+	- フレームリスト
+	- スタック
+	- オブジェクト
+	- GC
 
 グローバル上にヒープやフレームリストが存在し、GCがメモリを管理してオブジェクトを生成したり、削除したりします。
 
@@ -231,94 +242,100 @@ Objectは様々なデータのunionです。
 Frame情報はflame_listに保持されます。
 リストのトップのポインタはグローバル変数に保持されますが、フレームのデータはスタック上に取られるため、ネイティブのスタック上に取られるので高速に動作します。
 
-## グローバル変数
+- グローバル変数
 
-### Frame* frame_list
+	- Frame* frame_list
 
-フレーム情報を格納します。frame_prevが前のフレームのアドレスをさします。
+		フレーム情報を格納します。frame_prevが前のフレームのアドレスをさします。
 
-### ObjectHeader* heap_list
+	- ObjectHeader* heap_list
 
-メモリ確保したヒープです。
+		メモリ確保したヒープです。
 
-単純なリスト構造をしています。GC時にこの中味を検索するため、高速化するにはこのデータ構造を変えると良いでしょう。
+		単純なリスト構造をしています。GC時にこの中味を検索するため、高速化するにはこのデータ構造を変えると良いでしょう。
 
-### int heap_num
+	- int heap_num
 
-ヒープ内のデータ数です。
+		ヒープ内のデータ数です。
 
-### int heap_max
+	- int heap_max
 
-ヒープ内のデータの最大値です。初期値は8で、heap_maxに到達すると、gcが実行され、倍のサイズに拡張されます。
+		ヒープ内のデータの最大値です。初期値は8で、heap_maxに到達すると、gcが実行され、倍のサイズに拡張されます。
 
-## 関数
+- 関数
 
-### int heap_find(ObjectHeader* o)
+	- ヒープ
 
-ヒープを検索します。線形に探索するため速いとは言えません。O(N)です。
+		- int heap_find(ObjectHeader* o)
 
-### void gc\_mark\_object(Object* o)
+			ヒープを検索します。線形に探索するため速いとは言えません。O(N)です。
 
-GCのgc_markから呼ばれ、オブジェクトをマークします。
+	- GC
+		- void gc\_mark\_object(Object* o)
 
-### void gc\_mark()
+			GCのgc_markから呼ばれ、オブジェクトをマークします。
 
-GCから呼ばれ、ルート集合(フレーム内データ)をトラバースしてマークします。
+		- void gc\_mark()
 
-### void gc\_sweep()
+			GCから呼ばれ、ルート集合(フレーム内データ)をトラバースしてマークします。
 
-GCからよばれ、マークされていないオブジェクトを開放し、マークされていたらマークビットを下ろします。
+		- void gc\_sweep()
 
-### void gc\_collect()
+			GCからよばれ、マークされていないオブジェクトを開放し、マークされていたらマークビットを下ろします。
 
-GCを実行します。gc\_allocからも呼び出されます。
+		- void gc\_collect()
 
-### void* gc\_alloc(ObjectType type, int size)
+			GCを実行します。gc\_allocからも呼び出されます。
 
-メモリを確保し、ヒープへ保存します。typeはオブジェクトのタイプを、sizeはバイト単位でのサイズを指定します。
+		- void* gc\_alloc(ObjectType type, int size)
 
-### void* gc\_alloc\_int(int n)
+			メモリを確保し、ヒープへ保存します。typeはオブジェクトのタイプを、sizeはバイト単位でのサイズを指定します。
 
-intの値を持ったオブジェクトを作成します。UNBOXEDな配列を使っています。
+		- void* gc\_alloc\_int(int n)
 
-### void gc\_init()
+			intの値を持ったオブジェクトを作成します。UNBOXEDな配列を使っています。
 
-VMを初期化します。
+		- void gc\_init()
 
-### void gc\_free()
+			VMを初期化します。
 
-VMを終了します。
+		- void gc\_free()
 
-## マクロ
+			VMを終了します。
 
-### RECORD\_BITMAP\_NUM(n)
+- マクロ
 
-レコード数に対応したビットマップのサイズを求めます。
+	- アロケーション
 
-### gc\_alloc\_pair()
+		- gc\_alloc\_pair()
 
-ペアを作成します。
+			ペアを作成します。
 
-### gc\_alloc\_boxed\_array(size)
+		- gc\_alloc\_boxed\_array(size)
 
-BOX化されたオブジェクト配列を作成します。sizeが1で、1つのオブジェクトを格納出来ます。
+			BOX化されたオブジェクト配列を作成します。sizeが1で、1つのオブジェクトを格納出来ます。
 
-### gc\_alloc\_unboxed\_array(size)
+		- gc\_alloc\_unboxed\_array(size)
 
-BOX化されてない配列を作成します。サイズはバイト単位で指定します。
+			BOX化されてない配列を作成します。サイズはバイト単位で指定します。
 
-### gc\_alloc\_record(n)
+		- gc\_alloc\_record(n)
 
-レコードを作成します。nはレコード数を指定します。
+			レコードを作成します。nはレコード数を指定します。
 
-### ENTER\_FRAME(SIZE)
+		- RECORD\_BITMAP\_NUM(n)
 
-関数の開始を表します。SIZEにはフレームの大きさを指定します。
+			レコード数に対応したビットマップのサイズを求めます。
 
-### ENTER\_FRAME\_ENUM()
+	- フレーム
+		- ENTER\_FRAME(SIZE)
 
-enumを使った場合に関数の先頭に記述します。
+			関数の開始を表します。SIZEにはフレームの大きさを指定します。
 
-### LEAVE_FRAME()
+		- ENTER\_FRAME\_ENUM()
 
-関数の最後に記述します。
+			enumを使った場合に関数の先頭に記述します。
+
+		- LEAVE_FRAME()
+
+			関数の最後に記述します。
