@@ -759,3 +759,47 @@ Objectがunionなので扱いが楽な事が分かると思います。
 
 全てソースを見終わりました。C言語は前方参照が出来ないのでボトムアップ的にプログラムを書かないと宣言を書く必要がでてきます。
 逆に考えると、下から読めば、トップダウン的に読む事が出来ます。良ければもう一度上に読み返してみてください。
+
+# 参考文献
+
+- [ガベージコレクションのアルゴリズムと実装2010/3/18](http://www.amazon.co.jp/%E3%82%AC%E3%83%99%E3%83%BC%E3%82%B8%E3%82%B3%E3%83%AC%E3%82%AF%E3%82%B7%E3%83%A7%E3%83%B3%E3%81%AE%E3%82%A2%E3%83%AB%E3%82%B4%E3%83%AA%E3%82%BA%E3%83%A0%E3%81%A8%E5%AE%9F%E8%A3%85-%E4%B8%AD%E6%9D%91-%E6%88%90%E6%B4%8B/dp/4798025623)
+	中村 成洋  (著), 相川 光  (著), 竹内 郁雄 (監修, 監修)
+
+
+- GCアルゴリズム詳細解説 GC/standard/Mark&Sweep
+
+	http://seesaawiki.jp/w/author_nari/d/GC/standard/Mark%26Sweep
+
+- SML#
+
+	http://www.pllab.riec.tohoku.ac.jp/smlsharp/ja/
+
+- SML# ランタイム
+
+	https://github.com/smlsharp/smlsharp/tree/master/src/runtime
+
+- LLVMのGC(ガベージコレクション)サポートを使ってみる - Aizu Advent Calendar 2013(1日目)
+
+	http://yutopp.hateblo.jp/entry/2013/12/01/000152
+
+	https://github.com/yutopp/llvm-gc-support-test/tree/master/shadow_stack
+
+- LLVM Garbage Collection
+
+	http://llvm.org/docs/GarbageCollection.html
+
+- Appel89
+
+	Runtime Tags Aren’t Necessary. Andrew W. Appel. Lisp and Symbolic Computation 19(7):703-705, July 1989.
+
+- Goldberg91
+	
+	Tag-free garbage collection for strongly typed programming languages. Benjamin Goldberg. ACM SIGPLAN PLDI‘91.
+
+- Tolmach94
+
+	Tag-free garbage collection using explicit type parameters. Andrew Tolmach. Proceedings of the 1994 ACM conference on LISP and functional programming.
+
+- Henderson2002
+
+	[Accurate Garbage Collection in an Uncooperative Environment](http://citeseer.ist.psu.edu/henderson02accurate.html)
