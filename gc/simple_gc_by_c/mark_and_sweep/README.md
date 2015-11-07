@@ -770,6 +770,18 @@ Objectがunionなので扱いが楽な事が分かると思います。
 
 	http://seesaawiki.jp/w/author_nari/d/GC/standard/Mark%26Sweep
 
+- minimum gc 
+
+	https://github.com/authorNari/minigc
+
+- Mark and Sweep Garbage Collection Algorithm 2013 Robert Nystrom
+
+	https://github.com/Sam-Serpoosh/mark_and_sweep_gc
+
+- Baby's First Garbage Collector. Bob Nystrom DECEMBER 08, 2013
+
+	http://journal.stuffwithstuff.com/2013/12/08/babys-first-garbage-collector/
+
 - SML#
 
 	http://www.pllab.riec.tohoku.ac.jp/smlsharp/ja/
@@ -784,13 +796,13 @@ Objectがunionなので扱いが楽な事が分かると思います。
 
 	https://github.com/yutopp/llvm-gc-support-test/tree/master/shadow_stack
 
-- LLVM Garbage Collection
+- LLVM Garbage Collection.
 
 	http://llvm.org/docs/GarbageCollection.html
 
 - Appel89
 
-	Runtime Tags Aren’t Necessary. Andrew W. Appel. Lisp and Symbolic Computation 19(7):703-705, July 1989.
+	 Andrew W. Appel. Lisp and Symbolic Computation 19(7):703-705, July 1989.
 
 - Goldberg91
 	
