@@ -8,9 +8,10 @@ WindowsやLinuxでは確認してませんが、特別な事はしていない�
 マークアンドスイープアルゴリズムは、今使っているオブジェクトから使っているオブジェクトを全てマークし、その後、マークされていないオブジェクトを解放するスイープを行う２つのフェーズからなるメモリ管理方法です。
 使っているオブジェクトは、何らかの形でGCに通知する必要があります。
 
-ネストした関数からシャドースタックのアドレスをGCに通知している、GCの簡単な実装例はなかなか見つかりません<a name="r4"></a>[\[4\]](#4)。
+様々なマークアンドスイープGCの簡単な実装例があります<a name="r4"></a>[\[4\]](#4) <a name="r14"></a>[\[14\]](#14)。
+ネストした関数からシャドースタックのアドレスをGCに通知していません。
 mini gcは保守的なGCなので通知する必要はありません<a name="r3"></a>[\[3\]](#3)
-シャドースタックを用いた例はLLVM<a name="r8"></a>[\[8\]](#8)やSML#<a name="r7"></a>[\[7\]](#7)などでありますが、ハードルが高く感じます。
+シャドースタックを用いた例はLLVM<a name="r8"></a>[\[8\]](#8)やSML#<a name="r7"></a>[\[7\]](#7)などでありますが、ハードルが高いように感じます。
 
 C言語だけでも使える簡単な例が欲しいと思い作成しました。
 
@@ -824,3 +825,7 @@ Objectがunionなので扱いが楽な事が分かると思います。
 - <a name="13"></a><a href="#r13">[13]</a> Henderson2002
 
 	[Accurate Garbage Collection in an Uncooperative Environment](http://citeseer.ist.psu.edu/henderson02accurate.html)
+
+- <a name="14"></a><a href="#r14">[14]</a> Writing a Simple Garbage Collector in C - Matthew Plant
+
+	http://web.engr.illinois.edu/~maplant2/gc.html
