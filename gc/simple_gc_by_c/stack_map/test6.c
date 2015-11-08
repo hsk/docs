@@ -1,6 +1,6 @@
 /*
 
-C だけで使える簡単な完全なフレームマップ付きGCをするためのサンプルプログラム
+C だけで使える簡単な完全なスタックマップ付きGCをするためのサンプルプログラム
 for osx x86_64
 
 */
@@ -118,23 +118,23 @@ typedef struct Frame {
   int* bitmap;
 } Frame;
 
-typedef struct FrameMap {
+typedef struct StackMap {
   unsigned short frame_size;
   void* start;
   void* end;
   Frame* frames;
-  struct FrameMap* next;
-} FrameMap;
+  struct StackMap* next;
+} StackMap;
 
-FrameMap* gc_frame_map_list;
+StackMap* gc_stack_map_list;
 
-void gc_add_frame_map(FrameMap* frame_map) {
-  if(frame_map->frame_size % 2 != 0) {
-    printf("frame size error %d\n", frame_map->frame_size);
+void gc_add_stack_map(StackMap* stack_map) {
+  if(stack_map->frame_size % 2 != 0) {
+    printf("frame size error %d\n", stack_map->frame_size);
     exit(0);
   }
-  frame_map->next = gc_frame_map_list;
-  gc_frame_map_list = frame_map;
+  stack_map->next = gc_stack_map_list;
+  gc_stack_map_list = stack_map;
 }
 
 void** gc_top_ptr;
@@ -146,17 +146,17 @@ void** get_stack_top() {
   return (void**)ptr[0];
 }
 
-FrameMap* gc_mark_find_frame_map(void* addr) {
-  FrameMap* frame_map = gc_frame_map_list;
-  while (frame_map) {
-    if (frame_map->start <= addr && addr <= frame_map->end)
-      return frame_map;      
-    frame_map = frame_map->next;
+StackMap* gc_mark_find_stack_map(void* addr) {
+  StackMap* stack_map = gc_stack_map_list;
+  while (stack_map) {
+    if (stack_map->start <= addr && addr <= stack_map->end)
+      return stack_map;      
+    stack_map = stack_map->next;
   }
   return NULL;
 }
 
-Frame* gc_mark_find_frame(FrameMap* f, void* addr) {
+Frame* gc_mark_find_frame(StackMap* f, void* addr) {
   Frame* frames = f->frames;
   while (frames) {
     if (frames[1].lbl > addr) return frames;
@@ -185,18 +185,18 @@ void gc_mark(void** ptr, void* addr) {
     addr = ptr[1];
     ptr = (void**)(ptr[0]);
 
-    FrameMap* frame_map = gc_mark_find_frame_map(addr);
-    if (!frame_map) continue;
+    StackMap* stack_map = gc_mark_find_stack_map(addr);
+    if (!stack_map) continue;
 
-    Frame* frame = gc_mark_find_frame(frame_map, addr);
+    Frame* frame = gc_mark_find_frame(stack_map, addr);
     if (!frame) continue;
 
     printf("find frame bitmap_size=%d\n", frame->bitmap_size);
 
 #ifdef __x86_64__
-    Object** objects = (Object**)&ptr[-2 - frame_map->frame_size];
+    Object** objects = (Object**)&ptr[-2 - stack_map->frame_size];
 #else
-    Object** objects = (Object**)&ptr[1 - frame_map->frame_size*2];
+    Object** objects = (Object**)&ptr[1 - stack_map->frame_size*2];
 #endif
 
     gc_mark_frame(frame, objects);
@@ -299,8 +299,8 @@ end:;
     {&&lbl3,0,&bitmap[0]},
     {&&end,0,NULL},
   };
-  static FrameMap f = {2, (void*)test,&&end, frames, NULL};
-  gc_add_frame_map(&f); start_ptr=&&start; goto start;
+  static StackMap f = {2, (void*)test,&&end, frames, NULL};
+  gc_add_stack_map(&f); start_ptr=&&start; goto start;
 }
 
 void test2() {
@@ -320,8 +320,8 @@ end:;
     {&&lbl2,1,&bitmap[0]},
     {&&end,0,NULL},
   };
-  static FrameMap f = {SIZE, (void*)test2,&&end, frames, NULL};
-  gc_add_frame_map(&f); start_ptr=&&start; goto start;
+  static StackMap f = {SIZE, (void*)test2,&&end, frames, NULL};
+  gc_add_stack_map(&f); start_ptr=&&start; goto start;
 }
 
 void test3() {
@@ -368,8 +368,8 @@ end:;
     {&&lbl3,1,&bitmap[unboxed]},
     {&&end,0,NULL},
   };
-  static FrameMap f = {SIZE, (void*)test3,&&end, frames, NULL};
-  gc_add_frame_map(&f); start_ptr=&&start; goto start;
+  static StackMap f = {SIZE, (void*)test3,&&end, frames, NULL};
+  gc_add_stack_map(&f); start_ptr=&&start; goto start;
 }
 
 Object* test_int(int n) {
@@ -386,8 +386,8 @@ end:;
     {&&lbl1,1,&bitmap[A]},
     {&&end,1,&bitmap[SIZE]},
   };
-  static FrameMap f = {SIZE, (void*)test_int,&&end, frames, NULL};
-  gc_add_frame_map(&f); start_ptr=&&start; goto *start_ptr;
+  static StackMap f = {SIZE, (void*)test_int,&&end, frames, NULL};
+  gc_add_stack_map(&f); start_ptr=&&start; goto *start_ptr;
 }
 
 void test_record() {
@@ -411,8 +411,8 @@ end:;
     {&&lbl1,1,&bitmap[A]},
     {&&end,1,&bitmap[SIZE]},
   };
-  static FrameMap f = {SIZE, (void*)test_record,&&end, frames, NULL};
-  gc_add_frame_map(&f); start_ptr=&&start; goto *start_ptr;
+  static StackMap f = {SIZE, (void*)test_record,&&end, frames, NULL};
+  gc_add_stack_map(&f); start_ptr=&&start; goto *start_ptr;
 }
 
 int main() {

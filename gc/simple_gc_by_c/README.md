@@ -16,12 +16,16 @@ GCの時間は短ければ短いほどよいので、様々なGC手法は高速�
 - [mark_and_sweep_compiler](mark_and_sweep_compiler)
 	単純なCのランタイムを使用するコンパイラをOCamlで作成します(作成中)
 
-- [frame_map](frame_map)
-	フレームマップ付きのGCをC言語で実装します(x86\_64 only)
-	フレームマップ付きのGCは、実行時にフレーム情報を更新せずに実行アドレス(スタック上のリターンアドレス)からフレーム情報を求めGCを行います。
+- [stack_map](stack_map)
+	スタックマップ付きのGCをC言語で実装します(x86\_64 only)
+	スタックマップ付きのGCは、実行時にフレーム情報を更新せずに実行アドレス(スタック上のリターンアドレス)からフレーム情報を求めGCを行います。
 
 - [bitmap_gc](bitmap_gc)
 	mark\_and\_sweepを拡張して単純なBitmapGCをCだけで実装します。
 	
 - [new_world](new_world)
 	独自に考えたObjective-CのARCに似たGCの方式の提案です。
+
+- [multi_world_gc](multi_world_gc)
+	new_worldの考えをさらに複数世界に発展させた提案です。
+

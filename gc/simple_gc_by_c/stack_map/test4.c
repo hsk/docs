@@ -1,21 +1,21 @@
 #include <stdio.h>
-typedef struct FrameMap {
+typedef struct StackMap {
   unsigned short frame_size;
   void* start;
   void* end;
-  struct FrameMap* next;
-} FrameMap;
+  struct StackMap* next;
+} StackMap;
 
-FrameMap* gc_frame_map_list;
+StackMap* gc_stack_map_list;
 
 
-void gc_add_frame_map(FrameMap* frame_map) {
-  printf("framemap start %p end %p size=%d\n",
-    frame_map->start,frame_map->end,
-    frame_map->frame_size);
+void gc_add_stack_map(StackMap* stack_map) {
+  printf("stack map start %p end %p size=%d\n",
+    stack_map->start, stack_map->end,
+    stack_map->frame_size);
 
-  frame_map->next = gc_frame_map_list;
-  gc_frame_map_list = frame_map;
+  stack_map->next = gc_stack_map_list;
+  gc_stack_map_list = stack_map;
 }
 
 void** gc_top_ptr;
@@ -32,12 +32,12 @@ void gc_init() {
   printf("top = %p\n", gc_top_ptr);
 }
 
-FrameMap* gc_mark_find_frame_map(void* addr) {
-  FrameMap* frame_map = gc_frame_map_list;
-  while (frame_map) {
-    if (frame_map->start <= addr && addr <= frame_map->end)
-      return frame_map;      
-    frame_map = frame_map->next;
+StackMap* gc_mark_find_stack_map(void* addr) {
+  StackMap* stack_map = gc_stack_map_list;
+  while (stack_map) {
+    if (stack_map->start <= addr && addr <= stack_map->end)
+      return stack_map;      
+    stack_map = stack_map->next;
   }
   return NULL;
 }
@@ -55,18 +55,18 @@ void gc_mark(void**ptr, void* addr) {
 
     printf("ptr=%p %p\n", ptr, ptr[1]);
 
-    FrameMap* frame_map = gc_mark_find_frame_map(addr);
-    if (!frame_map) continue;
+    StackMap* stack_map = gc_mark_find_stack_map(addr);
+    if (!stack_map) continue;
 
 #ifdef __x86_64__
-    void** objects = (void**)&ptr[-2 - frame_map->frame_size];
+    void** objects = (void**)&ptr[-2 - stack_map->frame_size];
 #else
-    void** objects = (void**)&ptr[-2 - frame_map->frame_size];
+    void** objects = (void**)&ptr[-2 - stack_map->frame_size];
 #endif
 
-    printf("%p %d\n", objects, frame_map->frame_size);
+    printf("%p %d\n", objects, stack_map->frame_size);
 
-    for(int i = 0; i < frame_map->frame_size; i++) {
+    for(int i = 0; i < stack_map->frame_size; i++) {
       printf("  %d %p\n", i, objects[i]);
     }
 
@@ -94,8 +94,8 @@ long long f2() {
   gc_collect();
   return 1;
 end:;
-  static FrameMap f = {10, (void*)f2,&&end, NULL};
-  gc_add_frame_map(&f); start_ptr=&&start; goto *start_ptr;
+  static StackMap f = {10, (void*)f2,&&end, NULL};
+  gc_add_stack_map(&f); start_ptr=&&start; goto *start_ptr;
 }
 
 int f1() {
@@ -117,8 +117,8 @@ int f1() {
   f2();
   return 0;
 end:;
-  static FrameMap f = {20, (void*)f1,&&end, NULL};
-  gc_add_frame_map(&f); start_ptr=&&start; goto *start_ptr;
+  static StackMap f = {20, (void*)f1,&&end, NULL};
+  gc_add_stack_map(&f); start_ptr=&&start; goto *start_ptr;
 }
 
 int main() {
