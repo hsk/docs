@@ -769,56 +769,56 @@ Objectがunionなので扱いが楽な事が分かると思います。
 
 # 5. 参考文献
 
-- <a name="1"></a><a href="r1">[1]</a> [ガベージコレクションのアルゴリズムと実装2010/3/18](http://www.amazon.co.jp/%E3%82%AC%E3%83%99%E3%83%BC%E3%82%B8%E3%82%B3%E3%83%AC%E3%82%AF%E3%82%B7%E3%83%A7%E3%83%B3%E3%81%AE%E3%82%A2%E3%83%AB%E3%82%B4%E3%83%AA%E3%82%BA%E3%83%A0%E3%81%A8%E5%AE%9F%E8%A3%85-%E4%B8%AD%E6%9D%91-%E6%88%90%E6%B4%8B/dp/4798025623)
+- <a name="1"></a><a href="#r1">[1]</a> [ガベージコレクションのアルゴリズムと実装2010/3/18](http://www.amazon.co.jp/%E3%82%AC%E3%83%99%E3%83%BC%E3%82%B8%E3%82%B3%E3%83%AC%E3%82%AF%E3%82%B7%E3%83%A7%E3%83%B3%E3%81%AE%E3%82%A2%E3%83%AB%E3%82%B4%E3%83%AA%E3%82%BA%E3%83%A0%E3%81%A8%E5%AE%9F%E8%A3%85-%E4%B8%AD%E6%9D%91-%E6%88%90%E6%B4%8B/dp/4798025623)
 	中村 成洋  (著), 相川 光  (著), 竹内 郁雄 (監修, 監修)
 
 
-- <a name="2"></a><a href="r2">[2]</a> GCアルゴリズム詳細解説 GC/standard/Mark&Sweep
+- <a name="2"></a><a href="#r2">[2]</a> GCアルゴリズム詳細解説 GC/standard/Mark&Sweep
 
 	http://seesaawiki.jp/w/author_nari/d/GC/standard/Mark%26Sweep
 
-- <a name="3"></a><a href="r3">[3]</a> minimum gc
+- <a name="3"></a><a href="#r3">[3]</a> minimum gc
 
 	https://github.com/authorNari/minigc
 
-- <a name="4"></a><a href="r4">[4]</a> Mark and Sweep Garbage Collection Algorithm 2013 Robert Nystrom
+- <a name="4"></a><a href="#r4">[4]</a> Mark and Sweep Garbage Collection Algorithm 2013 Robert Nystrom
 
 	https://github.com/Sam-Serpoosh/mark_and_sweep_gc
 
-- <a name="5"></a><a href="r5">[5]</a> Baby's First Garbage Collector. Bob Nystrom DECEMBER 08, 2013
+- <a name="5"></a><a href="#r5">[5]</a> Baby's First Garbage Collector. Bob Nystrom DECEMBER 08, 2013
 
 	http://journal.stuffwithstuff.com/2013/12/08/babys-first-garbage-collector/
 
-- <a name="6"></a><a href="r6">[6]</a> SML#
+- <a name="6"></a><a href="#r6">[6]</a> SML#
 
 	http://www.pllab.riec.tohoku.ac.jp/smlsharp/ja/
 
-- <a name="7"></a><a href="r7">[7]</a> SML# ランタイム
+- <a name="7"></a><a href="#r7">[7]</a> SML# ランタイム
 
 	https://github.com/smlsharp/smlsharp/tree/master/src/runtime
 
-- <a name="8"></a><a href="r8">[8]</a> LLVMのGC(ガベージコレクション)サポートを使ってみる - Aizu Advent Calendar 2013(1日目)
+- <a name="8"></a><a href="#r8">[8]</a> LLVMのGC(ガベージコレクション)サポートを使ってみる - Aizu Advent Calendar 2013(1日目)
 
 	http://yutopp.hateblo.jp/entry/2013/12/01/000152
 
 	https://github.com/yutopp/llvm-gc-support-test/tree/master/shadow_stack
 
-- <a name="9"></a><a href="r9">[9]</a> LLVM Garbage Collection.
+- <a name="9"></a><a href="#r9">[9]</a> LLVM Garbage Collection.
 
 	http://llvm.org/docs/GarbageCollection.html
 
-- <a name="10"></a><a href="r10">[10]</a> Appel89
+- <a name="10"></a><a href="#r10">[10]</a> Appel89
 
 	 Andrew W. Appel. Lisp and Symbolic Computation 19(7):703-705, July 1989.
 
-- <a name="11"></a><a href="r11">[11]</a> Goldberg91
+- <a name="11"></a><a href="#r11">[11]</a> Goldberg91
 	
 	Tag-free garbage collection for strongly typed programming languages. Benjamin Goldberg. ACM SIGPLAN PLDI‘91.
 
-- <a name="12"></a><a href="r12">[12]</a> Tolmach94
+- <a name="12"></a><a href="#r12">[12]</a> Tolmach94
 
 	Tag-free garbage collection using explicit type parameters. Andrew Tolmach. Proceedings of the 1994 ACM conference on LISP and functional programming.
 
-- <a name="13"></a><a href="r13">[13]</a> Henderson2002
+- <a name="13"></a><a href="#r13">[13]</a> Henderson2002
 
 	[Accurate Garbage Collection in an Uncooperative Environment](http://citeseer.ist.psu.edu/henderson02accurate.html)
