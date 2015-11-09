@@ -1,6 +1,6 @@
 /*
 
-ARC的、GC
+multi world gc
 
 */
 
