@@ -1,8 +1,18 @@
 # Objective-CのARCに似たGCの方式の提案
 
+## もくじ
+
+1. <a name="C1"></a>[モチベーション](#c1)
+2. <a name="C2"></a>[アイディア](#c2)
+3. <a name="C3"></a>[アルゴリズム](#c3)
+4. <a name="C4"></a>[他のアルゴリズムとの違い](#c4)
+5. <a name="C5"></a>[実装](#c5)
+6. <a name="C6"></a>[今後](#c6)
+7. <a name="C7"></a>[参考文献](#c7)
+
 ここでは、手動での世代管理をするガーベジコレクションの手法を提案します。
 
-## 1. モチベーション
+## 1. <a name="c1"></a>[モチベーション](#C1)
 
 メモリ管理手法としては、手動管理が速いですが開発が大変です。
 参照カウンタ方式は、カウントのコストが気になります。循環参照を検査する事で解放は可能ですが、循環参照の問題もあります。
@@ -15,7 +25,7 @@ Golangのgoルーチンや、Rustのspwawnはメモリ空間を分けますが�
 OCamlの多相的型推論はレベルを用いて解決していますが、その考えをオートリリースプールに応用出来るかもしれません。
 なんとか、マイナーGCを小さい空間で行う高速なアルゴリズムが作れない物かと思う訳です。
 
-## 2. アイディア
+## 2. <a name="c2"></a>[アイディア](#C2)
 
 新しいメモリ空間のみを作り計算し、終わったら計算結果をルート集合としてガーベジコレクションを行うようなことが出来ればいいのではないかという漠然とした考えが生まれました。
 
@@ -37,7 +47,7 @@ OCamlの多相的型推論はレベルを用いて解決していますが、そ
 
 今回はまず1のレベルで領域を管理するアルゴリズムを提案します。とはいっても、他で既にありそうですけど。
 
-## 3. アルゴリズム
+## 3. <a name="c3"></a>[アルゴリズム](#C3)
 
 新しい計算モデルでは、計算空間を作成する関数を作りここで、新しいヒープ空間をつくります。
 
@@ -115,14 +125,14 @@ heap_listはから
 
 
 
-## 他のアルゴリズムとの違い
+## 4. <a name="c4"></a>他のアルゴリズムとの違い
 
 通常の世代別GCとの違いは、GCの世代交代のタイミングを自由に選べる事です。
 特に重要なポイントでエリアを分ける事で高速なGCが可能になります。
 参照ポインタ方式ではカウントの上げ下げが面倒でしたが、カウントの上げ下げは必要ありません。
 コンテキストの切り替えコストは最小で、レベルの書き換えだけで済むのでコピー操作もありません。
 
-## 実装
+## 5. <a name="c5"></a>[実装](#C5)
 
 gc.cに実装があります。
 
@@ -260,7 +270,7 @@ gc.cに実装があります。
     <   test_new_world();
     <   gc_free();
 
-## 今後
+## 6. <a name="c6"></a>[今後](#C6)
 
 AからB、BからC、CからDへとデータを受け渡すような場合を考えると、一度世界を作ってから、さらにA,B,Cの世界をつくって呼び出すと、Aを使った後に受け取ったデータだけが世界に残り、そのあとBに渡され、AとBが作ったデータが残り、Cを呼び出すと、AとBとCの作ったデータだけが残ります。Aの作ったデータはもはやいらないはずですが残ります。
 
@@ -316,28 +326,28 @@ AからB、BからC、CからDへとデータを受け渡すような場合を�
 
 
 
-## 参考文献
+## 7. <a name="c7"></a> [参考文献](#C7)
 
-- AST2 線形型
+- <a name="1"></a>[[1]](r1) AST2 線形型
 
     http://ats-lang.sourceforge.net/DOCUMENT/INT2PROGINATS/HTML/c4154.html#simple-linear-objects
 
-- Rust オーナーシップ
+- <a name="2"></a>[[2]](r2) Rust オーナーシップ
 
     https://doc.rust-lang.org/book/ownership.html
 
-- Objective-C ARCによるメモリ管理 Saturday, December 31st, 2011
+- <a name="3"></a>[[3]](r3) Objective-C ARCによるメモリ管理 Saturday, December 31st, 2011
 
     http://cx5software.sakura.ne.jp/blog/2011/12/31/objective-c-memory_management_by_arc/
 
-- 微酔半壊: copying GCに対する改良 2007年04月01日
+- <a name="4"></a>[[4]](r4) 微酔半壊: copying GCに対する改良 2007年04月01日
 
     http://smpl.seesaa.net/article/37446952.html
 
-- 微酔半壊: Copying Garbage Collector 2007年03月17日
+- <a name="5"></a>[[5]](r5) 微酔半壊: Copying Garbage Collector 2007年03月17日
 
     http://smpl.seesaa.net/article/36160135.html
 
-- How OCaml type checker works -- or what polymorphism and garbage collection have in common
+- <a name="6"></a>[[6]](r6) How OCaml type checker works -- or what polymorphism and garbage collection have in common
 
     http://okmij.org/ftp/ML/generalization.html
