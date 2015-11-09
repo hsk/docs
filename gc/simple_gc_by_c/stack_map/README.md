@@ -10,7 +10,7 @@
 
 ## 1. はじめに
 
-LLVMのスタックマップ付きのGC [1] をCだけで作成します。
+LLVMのスタックマップ付きのGC <a name="r1"></a>[[1]](#1) をCだけで作成します。
 
 シャドースタックを使った単純なGCの実装では、実行時にマネージされたポインタ用の領域のリストの更新が必要でした。
 ここでは、実行時のシャドースタックの更新をなくし、代わりに実行アドレスからスタックフレームのアドレスを取得する仕組みを作ります。
@@ -136,7 +136,8 @@ GCはこのスタックを見て、リターンアドレスのl1aからjのア�
 
 C言語は様々なプラットフォームで動作するプログラミング言語です。
 スタックはマシン語とに異なり、スタックの使い方は実装に依存します。
-ここでは、我々が使用しているMac IntelのOSX上GCCを用いて、x86_64の環境でスタックトレースする事を考えます。
+C言語でバックトレース<a name="r1"></a>[[2]](#2)をするにはbacktraceを使えば出来ます。
+しかしここでは、我々が使用しているMac IntelのOSX上GCCを用いて、x86_64の環境でスタックトレースする事を考えます。
 
     Machine Stack
 
@@ -477,39 +478,37 @@ SML#ではさらにSMLの知識や、ランタイムを読む必要がありま�
 
 # 8. 参考文献
 
-- [1] LLVMのガーベジコレクションのスタックマップ
+- <a name="1"></a>[[1]](#r1) LLVMのガーベジコレクションのスタックマップ
 
     http://llvm.org/docs/GarbageCollection.html#stack-map
 
 
-C言語でバックトレース
+- <a name="2"></a>[[2]](#r2) C言語でバックトレース
 
-http://www35.atwiki.jp/futoyama/pages/101.html
+    http://www35.atwiki.jp/futoyama/pages/101.html
 
-
-
-- LLVMのGC(ガベージコレクション)サポートを使ってみる - Aizu Advent Calendar 2013(1日目)
+- <a name="3"></a>[[3]](#r3) LLVMのGC(ガベージコレクション)サポートを使ってみる - Aizu Advent Calendar 2013(1日目)
 
     http://yutopp.hateblo.jp/entry/2013/12/01/000152
 
     https://github.com/yutopp/llvm-gc-support-test/tree/master/shadow_stack
 
-- LLVM Garbage Collection.
+- <a name="4"></a>[[4]](#r4) LLVM Garbage Collection.
 
     http://llvm.org/docs/GarbageCollection.html
 
-- Appel89
+- <a name="5"></a>[[5]](#r5) Appel89
 
      Andrew W. Appel. Lisp and Symbolic Computation 19(7):703-705, July 1989.
 
-- Goldberg91
+- <a name="6"></a>[[6]](#r6) Goldberg91
     
     Tag-free garbage collection for strongly typed programming languages. Benjamin Goldberg. ACM SIGPLAN PLDI‘91.
 
-- Tolmach94
+- <a name="7"></a>[[7]](#r2) Tolmach94
 
     Tag-free garbage collection using explicit type parameters. Andrew Tolmach. Proceedings of the 1994 ACM conference on LISP and functional programming.
 
-- Henderson2002
+- <a name="8"></a>[[8]](#r8) Henderson2002
 
     [Accurate Garbage Collection in an Uncooperative Environment](http://citeseer.ist.psu.edu/henderson02accurate.html)
