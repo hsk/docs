@@ -152,10 +152,21 @@ void gc_sweep(int level) {
   }
 }
 
-void gc_minor(Object* data) {
+void gc_end_world(Object* data) {
   int prev_num = heap_num;
   gc_mark_object(data);
   gc_sweep(heap_level-1);
+
+  heap_max = prev_num * 2;
+
+  debug("Collected %d objects, %d remaining.\n", prev_num - heap_num,
+         heap_num);
+}
+
+void gc_pipe(Object* data) {
+  int prev_num = heap_num;
+  gc_mark_object(data);
+  gc_sweep(0);
 
   heap_max = prev_num * 2;
 
@@ -177,7 +188,7 @@ Object* gc_new_world(Object*(*f)(void*data), void* data) {
   Frame* tmp = frame_bottom;
 
 #define END_WORLD(tmp,root) \
-  gc_minor(root); \
+  gc_end_world(root); \
   frame_bottom = tmp; \
   heap_level--;
 
@@ -368,6 +379,57 @@ void test_new_world() {
   LEAVE_FRAME();
 }
 
+void test_pipes1() {
+  enum {FRAME_START, FRAME_SIZE, A, B, C, FRAME_END};
+  ENTER_FRAME_ENUM();
+
+  // レコード
+  enum {RECORD_SIZE=3,RECORD_BITMAP=BIT(1)|BIT(2)};
+  frame[A] = gc_alloc_record(RECORD_SIZE); // 1
+  frame[A]->longs[0] = 10; // undata
+  frame[A]->field[1] = gc_alloc_int(20); // 2
+  frame[A]->field[2] = test_int(30); // 3
+  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
+
+  NEW_WORLD(frame_tmp1);
+
+    frame[B] = test_new_world2(frame[A]);
+    frame[B] = test_new_world2(frame[B]);
+    frame[B] = test_new_world2(frame[B]);
+
+  printf("level change check.........\n");
+  END_WORLD(frame_tmp1,frame[B]);
+  printf("level change check.........\n");
+  gc_collect();
+  LEAVE_FRAME();
+}
+
+void test_pipes2() {
+  enum {FRAME_START, FRAME_SIZE, A, B, C, FRAME_END};
+  ENTER_FRAME_ENUM();
+
+  // レコード
+  enum {RECORD_SIZE=3,RECORD_BITMAP=BIT(1)|BIT(2)};
+  frame[A] = gc_alloc_record(RECORD_SIZE); // 1
+  frame[A]->longs[0] = 10; // undata
+  frame[A]->field[1] = gc_alloc_int(20); // 2
+  frame[A]->field[2] = test_int(30); // 3
+  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
+
+  NEW_WORLD(frame_tmp1);
+
+    frame[B] = test_new_world2(frame[A]);
+    gc_pipe(frame[B]);
+    frame[B] = test_new_world2(frame[B]);
+    gc_pipe(frame[B]);
+    frame[B] = test_new_world2(frame[B]);
+
+  printf("level change check.........\n");
+  END_WORLD(frame_tmp1,frame[B]);
+  printf("level change check.........\n");
+  gc_collect();
+  LEAVE_FRAME();
+}
 int main() {
   gc_init();
   test();
