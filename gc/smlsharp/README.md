@@ -3,8 +3,8 @@
 BitmapGCの実装や、LLVMとの関係を把握するには、SML#が参考になります。
 そこで、ここではSML#1.1.0<a name="r1"></a>[[1]](#1)とSML#2.0<a name="r1"></a>[[2]](#2)のランタイムを読みます。
 
-- [smlsharp1.1.0](/gc/bitmap/smlshar1.1.0)でLLVMなしのランタイムを読みます。
-- [smlshar2.0.0](/gc/bitmap/smlshar2.0.0)でLLVMを使ったランタイムを読みます。
+- [smlsharp1.1.0](/gc/smlsharp/smlshar1.1.0)でLLVMなしのランタイムを読みます。
+- [smlshar2.0.0](/gc/smlsharp/smlshar2.0.0)でLLVMを使ったランタイムを読みます。
 
 各ディレクトリにはSML#のランタイムをコピーしたあと、機能を削って読みやすくしてみています。
 
