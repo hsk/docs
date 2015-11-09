@@ -27,7 +27,7 @@ typedef enum {
 typedef struct ObjectHeader {
   struct ObjectHeader* next;
   unsigned int size;
-  int id;
+  unsigned int level;
   unsigned char type;
   unsigned char marked;
 } ObjectHeader;
@@ -68,8 +68,7 @@ typedef struct Frame {
   Object* frame_data[0];
 } Frame;
 
-int world_id;
-int world_count;
+int heap_level;
 Frame* frame_list;
 Frame* frame_bottom;
 ObjectHeader* heap_list;
@@ -90,7 +89,7 @@ void gc_mark_object(Object* object) {
   debug("mark %p\n",head);
   long size;
   if (!heap_find(head)) return;
-  if (head->marked || head->id != world_id) return;
+  if (head->marked || head->level < heap_level) return;
   long* bitmap;
   head->marked = 1;
   switch(head->type) {
@@ -131,10 +130,10 @@ void gc_mark() {
   }
 }
 
-void gc_sweep(int id) {
+void gc_sweep(int level) {
   ObjectHeader** object = &heap_list;
   while (*object) {
-  	if((*object)->id != world_id) break;
+  	if((*object)->level < heap_level) break;
     if (!(*object)->marked) {
       ObjectHeader* unreached = *object;
       *object = unreached->next;
@@ -142,10 +141,10 @@ void gc_sweep(int id) {
 
       heap_num--;
     } else {
-      if(id) {
-        printf("id change\n");
-        printf("id change %d -> %d\n", (*object)->id, id);
-      	(*object)->id = id;
+      if(level) {
+        printf("level change\n");
+        printf("level change %d -> %d\n", (*object)->level, level);
+      	(*object)->level = level;
       }
       (*object)->marked = 0;
       object = &(*object)->next;
@@ -153,10 +152,10 @@ void gc_sweep(int id) {
   }
 }
 
-void gc_collect_end_world(Object* data, int world_id) {
+void gc_collect_end_world(Object* data) {
   int prev_num = heap_num;
   gc_mark_object(data);
-  gc_sweep(world_id);
+  gc_sweep(heap_level-1);
 
   heap_max = prev_num * 2;
 
@@ -176,23 +175,22 @@ void gc_collect_pipe(Object* data) {
 }
 
 Object* gc_new_world(Object*(*f)(void*data), void* data) {
-	world_id++;
+	heap_level++;
 	Frame* frame_bottom_temp = frame_bottom;
 	Object* rc = f(data);
 	frame_bottom = frame_bottom_temp;
-	world_id--;
+	heap_level--;
 	return rc;
 }
 
-#define NEW_WORLD(tmp,tmp_world) \
-  int tmp_world = world_id; \
-  world_id++; \
+#define NEW_WORLD(tmp) \
+  heap_level++; \
   Frame* tmp = frame_bottom;
 
-#define END_WORLD(tmp,tmp_world,root) \
-  gc_collect_end_world(root,tmp_world); \
+#define END_WORLD(tmp,root) \
+  gc_collect_end_world(root); \
   frame_bottom = tmp; \
-  world_id = tmp_world;
+  heap_level--;
 
 void gc_collect() {
   int prev_num = heap_num;
@@ -212,7 +210,7 @@ void* gc_alloc(ObjectType type, int size) {
   ObjectHeader* head = (ObjectHeader*)malloc(sizeof(ObjectHeader)+size);
 
   debug("gc_alloc %p\n", head);
-  head->id = world_id;
+  head->level = heap_level;
   head->type = type;
   head->next = heap_list;
   heap_list = head;
@@ -249,13 +247,8 @@ void* gc_alloc_int(int n) {
 #define LEAVE_FRAME() \
   frame_list = frame_list->frame_prev;
 
-int gen_world_id() {
-  return world_id++;
-}
-
 void gc_init() {
-  world_id = 0;
-  world_count = gen_world_id();
+  heap_level = 1;
   frame_list = NULL;
   frame_bottom = NULL;
   heap_list = NULL;
@@ -379,9 +372,9 @@ void test_new_world() {
     frame[B] = test_new_world2(frame[A]);
     END_WORLD(frame_tmp2, frame[B]);// 6と7が消える。
 
-  printf("id change check.........\n");
+  printf("level change check.........\n");
   END_WORLD(frame_tmp1,frame[B]);// 6と7が消える。
-  printf("id change check.........\n");
+  printf("level change check.........\n");
   gc_collect();
   LEAVE_FRAME();
 }
@@ -404,9 +397,9 @@ void test_pipes1() {
     frame[B] = test_new_world2(frame[B]);
     frame[B] = test_new_world2(frame[B]);
 
-  printf("id change check.........\n");
+  printf("level change check.........\n");
   END_WORLD(frame_tmp1,frame[B]);
-  printf("id change check.........\n");
+  printf("level change check.........\n");
   gc_collect();
   LEAVE_FRAME();
 }
@@ -431,9 +424,9 @@ void test_pipes2() {
     gc_collect_pipe(frame[B]);
     frame[B] = test_new_world2(frame[B]);
 
-  printf("id change check.........\n");
+  printf("level change check.........\n");
   END_WORLD(frame_tmp1,frame[B]);
-  printf("id change check.........\n");
+  printf("level change check.........\n");
   gc_collect();
   LEAVE_FRAME();
 }
