@@ -319,7 +319,7 @@ void test3() {
 Object* test_int(int n) {
   enum {FRAME_START, FRAME_SIZE, A, FRAME_END};
   ENTER_FRAME_ENUM();
-  frame[A] = gc_alloc_int(n);
+  frame[A] = gc_alloc_int(n+10);
   LEAVE_FRAME();
   return frame[A];
 }
@@ -437,6 +437,30 @@ void test_pipes2() {
   gc_collect();
   LEAVE_FRAME();
 }
+
+void test_multi_world() {
+  enum {FRAME_START, FRAME_SIZE, A, B, C, D, FRAME_END};
+  ENTER_FRAME_ENUM();
+
+  frame[A] = gc_alloc_int(1);
+
+  NEW_WORLD(frame_tmp1);
+    frame[B] = test_int(frame[A]->intv);
+  END_WORLD(frame_tmp1,frame[B]);
+
+  NEW_WORLD(frame_tmp2);
+    frame[C] = test_int(frame[B]->intv);
+  END_WORLD(frame_tmp2,frame[C]);
+
+  NEW_WORLD(frame_tmp3);
+    frame[D] = test_int(frame[C]->intv);
+  END_WORLD(frame_tmp3,frame[D]);
+
+  printf("id change check.........\n");
+  gc_collect();
+  LEAVE_FRAME();
+}
+
 int main() {
   gc_init();
   test();
@@ -459,6 +483,11 @@ int main() {
   printf("---\n");
   gc_init();
   test_new_world();
+  gc_free();
+
+  printf("------------- test multi world\n");
+  gc_init();
+  test_multi_world();
   gc_free();
 
   printf("sizeof type %ld header %ld\n", sizeof(ObjectType), sizeof(ObjectHeader));

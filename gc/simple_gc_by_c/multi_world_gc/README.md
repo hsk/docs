@@ -121,19 +121,65 @@ ID指定があればIDを設定します。
 
 テストコードを追加します。
 
+	< void test_multi_world() {
+	<   enum {FRAME_START, FRAME_SIZE, A, B, C, D, FRAME_END};
+	<   ENTER_FRAME_ENUM();
+	<
+	<   frame[A] = gc_alloc_int(1);
+	<
+	<   NEW_WORLD(frame_tmp1);
+	<     frame[B] = test_int(frame[A]->intv);
+	<   END_WORLD(frame_tmp1,frame[B]);
+	<
+	<   NEW_WORLD(frame_tmp2);
+	<     frame[C] = test_int(frame[B]->intv);
+	<   END_WORLD(frame_tmp2,frame[C]);
+	<
+	<   NEW_WORLD(frame_tmp3);
+	<     frame[D] = test_int(frame[C]->intv);
+	<   END_WORLD(frame_tmp3,frame[D]);
+	<
+	<   printf("id change check.........\n");
+	<   gc_collect();
+	<   LEAVE_FRAME();
+	< }
+
 メインにテストを追加します。
 
-    <   printf("---\n");
+    <   printf("------------- test multi world\n");
     <   gc_init();
     <   test_multi_world();
     <   gc_free();
 
 これで作業は完了です。
 
-問題は、ないかというとあるかも。世界から世界を作った場合ある気がするんですけどどうなんでしょうか？とりあえず良いのか。クロージャ等もないしなぁ。なんか良さそうな気がするのですけど、テストが大変ですねこれは。計算途中で終わった世界を使い回したい場合はリストの入れ替えをしたほうがいいのかもしれませんね。まだゴチャゴチャしております。
+お、すぐ出来たぞとおもったら、new_worldのほうを修正していた！！
+持って来たらエラーだ。マクロの問題か。修正完了っと。すぐ動いてしまいました。
 
-あ、分かった。操作しているファイルが違うw
+しかし、これだと、計算終わったら同じ世界に統合されてしまうのでマルチにした意味がないw
+うーん。毎回IDは増えるだけだな。うーとどうしたら良いんだ、、、。
+なんとなくわかったのは、世界が混在している場合、
 
-あれだ。マクロ定義面倒いな修正修正。
+	1
+	3
+	3
+	3
+	1
+	1
+	1
+	1
+	2
+	2
+	2
+	2
+	1
+	1
+	1
+	1
+
+のような状態になりかねないという事です。ここでヒープを見る場合、同じヒープを使っていると、全部チェックしなくてはなりません問題が現れます。
+
+そこで、ヒープのバックアップが必要でしょう。テストもそれなりのものを考えないといけません。
+
 
 ## 3. <a name="c9"></a>[参考文献](#C9)
