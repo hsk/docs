@@ -3,7 +3,8 @@
 ## もくじ
 
 - 1. <a name="C1"></a>[はじめに](#c1)
-- 2. <a name="C5"></a>[実装](#c5)
+- 2. <a name="C2"></a>[とりあえず実装](#c2)
+- 2. <a name="C3"></a>[改良する](#c3)
 - 3. <a name="C9"></a>[参考文献](#c9)
 
 ## 1. <a name="c1"></a>[はじめに](#C1)
@@ -18,7 +19,7 @@
 
 計算世界のIDが同じであれば、同じ世界であり、IDが違う時は違う世界です。
 
-## 2. <a name="c5"></a>[実装](#C5)
+## 2. <a name="c2"></a>[とりあえず実装](#C2)
 
 [gc.c](gc.c)に実装があります。もうとりあえず作りながら考えましょう。
 たぶん、新しい世界を作るときには、新しい世界を新たにぶち立てて、古い世界は一度別の所に移動させます。
@@ -181,5 +182,40 @@ ID指定があればIDを設定します。
 
 そこで、ヒープのバックアップが必要でしょう。テストもそれなりのものを考えないといけません。
 
+## 3. <a name="c3"></a>[参考文献](#C3)改良する
+
+2章でとりあえず作った仕組みでは、ヒープリストを使っていたのが問題そうでした。
+3章ではこの問題のテストを作成し、問題をあぶり出した後、問題を解決しましょう。
+
+まず、２つめの世界で計算した後に本来であれば2の世界はまだ生き延びていなくてはなりません。
+そして、1の世界で新しいオブジェクトを作り、その後にもう一つ世界を作って、世界は終わらせずに、次のオブジェクトを作ってみましょう。
+
+	< void test_multi_world() {
+	<   enum {FRAME_START, FRAME_SIZE, A, B, C, D, FRAME_END};
+	<   ENTER_FRAME_ENUM();
+	<
+	<   frame[A] = gc_alloc_int(1);
+	<
+	<   NEW_WORLD(frame_tmp1);
+	<     frame[B] = test_int(frame[A]->intv);
+	<   CLOSE_WORLD(frame_tmp1);
+	<   frame[A] = gc_alloc_int(2);
+	<   NEW_WORLD(frame_tmp2);
+	<     frame[C] = test_int(frame[B]->intv);
+	<   CLOSE_WORLD(frame_tmp2);
+	<   frame[A] = gc_alloc_int(3);
+	<   GET_WORLD_OBJECT(frame_tmp1, frame[B]);
+	<   GET_WORLD_OBJECT(frame_tmp2, frame[C]);
+	<
+	<   printf("id change check.........\n");
+	<   gc_collect();
+	<   LEAVE_FRAME();
+	< }
+
+こんな感じか。こんな感じで、`CLOSE_WORLD`マクロと`GET_WORLD_OBJECT`マクロが欲しいのかな。
+とりあえずこんな感じですよ。閉じた世界はまだ生きていて何か取り出す処理は遅延されています。
+みたいなかんじですね。必要になるまで取り出されません。`GET_WORLD_OBJECT`で初めて取り出されますが、取り出した後もまた、生き残り続けます。というようなことを実現しなくてはなりません。
+
+休憩しよう。そうしよう。
 
 ## 3. <a name="c9"></a>[参考文献](#C9)
