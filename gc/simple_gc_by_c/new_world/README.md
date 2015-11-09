@@ -328,34 +328,34 @@ AからB、BからC、CからDへとデータを受け渡すような場合を�
 
 ## 7. <a name="c7"></a> [参考文献](#C7)
 
-- <a name="1"></a>[[1]](r1) AST2 線形型
+- <a name="1"></a>[[1]](#r1) AST2 線形型
 
     http://ats-lang.sourceforge.net/DOCUMENT/INT2PROGINATS/HTML/c4154.html#simple-linear-objects
 
-- <a name="2"></a>[[2]](r2) Rust オーナーシップ
+- <a name="2"></a>[[2]](#r2) Rust オーナーシップ
 
     https://doc.rust-lang.org/book/ownership.html
 
-- <a name="3"></a>[[3]](r3) Objective-C ARCによるメモリ管理 Saturday, December 31st, 2011
+- <a name="3"></a>[[3]](#r3) Objective-C ARCによるメモリ管理 Saturday, December 31st, 2011
 
     http://cx5software.sakura.ne.jp/blog/2011/12/31/objective-c-memory_management_by_arc/
 
-- <a name="4"></a>[[4]](r4) 微酔半壊: copying GCに対する改良 2007年04月01日
+- <a name="4"></a>[[4]](#r4) 微酔半壊: copying GCに対する改良 2007年04月01日
 
     http://smpl.seesaa.net/article/37446952.html
 
-- <a name="5"></a>[[5]](r5) 微酔半壊: Copying Garbage Collector 2007年03月17日
+- <a name="5"></a>[[5]](#r5) 微酔半壊: Copying Garbage Collector 2007年03月17日
 
     http://smpl.seesaa.net/article/36160135.html
 
-- <a name="6"></a>[[6]](r6) How OCaml type checker works -- or what polymorphism and garbage collection have in common
+- <a name="6"></a>[[6]](#r6) How OCaml type checker works -- or what polymorphism and garbage collection have in common
 
     http://okmij.org/ftp/ML/generalization.html
 
-- <a name="7"></a>[[7]](r7) Rust thread
+- <a name="7"></a>[[7]](#r7) Rust thread
 
     https://doc.rust-lang.org/std/thread/
 
-- <a name="8"></a>[[8]](r8) Gorutine
+- <a name="8"></a>[[8]](#r8) Gorutine
 
     https://tour.golang.org/concurrency/1
