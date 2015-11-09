@@ -87,16 +87,16 @@ ID指定があればIDを設定します。
 
 世界を開始するマクロを追加して使います。`tmp`にはバックアップを取るフレーム名を指定します。
 
-    < #define NEW_WORLD(tmp,tmp_world) \
-    <   int tmp_world = world_id;
+    < #define NEW_WORLD(tmp) \
+    <   int tmp##_world = world_id;
     <   world_id = gen_world_id(); \
     <   Frame* tmp = frame_bottom;
 
 
-    < #define END_WORLD(tmp,tmp_world,root) \
-    <   gc_collect_end_world(root, tmp_world); \
+    < #define END_WORLD(tmp,root) \
+    <   gc_collect_end_world(root, tmp##_world); \
     <   frame_bottom = tmp; \
-    <   world_id = tmp_world;
+    <   world_id = tmp##_world;
 
 通常のスイープは引数を`0`で呼び出します。
 
@@ -131,5 +131,9 @@ ID指定があればIDを設定します。
 これで作業は完了です。
 
 問題は、ないかというとあるかも。世界から世界を作った場合ある気がするんですけどどうなんでしょうか？とりあえず良いのか。クロージャ等もないしなぁ。なんか良さそうな気がするのですけど、テストが大変ですねこれは。計算途中で終わった世界を使い回したい場合はリストの入れ替えをしたほうがいいのかもしれませんね。まだゴチャゴチャしております。
+
+あ、分かった。操作しているファイルが違うw
+
+あれだ。マクロ定義面倒いな修正修正。
 
 ## 3. <a name="c9"></a>[参考文献](#C9)
