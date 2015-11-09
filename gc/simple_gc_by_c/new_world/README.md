@@ -147,7 +147,7 @@ GCではSTOP THE WORLDというような言い方もするのでここではそ�
 
 それでは実装に移りましょう。gc.cに実装があります。ここでは、mark\_and\_sweepとの差分を見て行きましょう。
 
-オブジェクトヘッダにレベルを持たせます。
+ObjectHeaderの構造体にレベルを持たせます。
 
     <   unsigned int level;
 
@@ -168,7 +168,7 @@ GCではSTOP THE WORLDというような言い方もするのでここではそ�
     ---
     >   while(frame) {
 
-スイープの関数には、世界が終わったときにレベルを渡すようにします。
+スイープの関数には、世界が終わった時のためにレベルを渡すようにします。
 
     < void gc_sweep(int level) {
     ---
@@ -188,7 +188,7 @@ GCではSTOP THE WORLDというような言い方もするのでここではそ�
 
 世界が終わった時の特別なGCを作ります。
 
-    < void gc_minor(Object* data) {
+    < void gc_collect_end_world(Object* data) {
     <   int prev_num = heap_num;
     <   gc_mark_object(data);
     <   gc_sweep(heap_level-1);
@@ -207,7 +207,7 @@ GCではSTOP THE WORLDというような言い方もするのでここではそ�
 
 
     < #define END_WORLD(tmp,root) \
-    <   gc_minor(root); \
+    <   gc_collect_end_world(root); \
     <   frame_bottom = tmp; \
     <   heap_level--;
 

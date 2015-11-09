@@ -152,7 +152,7 @@ void gc_sweep(int level) {
   }
 }
 
-void gc_end_world(Object* data) {
+void gc_collect_end_world(Object* data) {
   int prev_num = heap_num;
   gc_mark_object(data);
   gc_sweep(heap_level-1);
@@ -163,7 +163,7 @@ void gc_end_world(Object* data) {
          heap_num);
 }
 
-void gc_pipe(Object* data) {
+void gc_collect_pipe(Object* data) {
   int prev_num = heap_num;
   gc_mark_object(data);
   gc_sweep(0);
@@ -188,7 +188,7 @@ Object* gc_new_world(Object*(*f)(void*data), void* data) {
   Frame* tmp = frame_bottom;
 
 #define END_WORLD(tmp,root) \
-  gc_end_world(root); \
+  gc_collect_end_world(root); \
   frame_bottom = tmp; \
   heap_level--;
 
@@ -419,9 +419,9 @@ void test_pipes2() {
   NEW_WORLD(frame_tmp1);
 
     frame[B] = test_new_world2(frame[A]);
-    gc_pipe(frame[B]);
+    gc_collect_pipe(frame[B]);
     frame[B] = test_new_world2(frame[B]);
-    gc_pipe(frame[B]);
+    gc_collect_pipe(frame[B]);
     frame[B] = test_new_world2(frame[B]);
 
   printf("level change check.........\n");
