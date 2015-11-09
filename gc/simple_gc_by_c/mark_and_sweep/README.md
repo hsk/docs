@@ -8,7 +8,7 @@ WindowsやLinuxでは確認してませんが、特別な事はしていない�
 マークアンドスイープアルゴリズムは、今使っているオブジェクトから使っているオブジェクトを全てマークし、その後、マークされていないオブジェクトを解放するスイープを行う２つのフェーズからなるメモリ管理方法です。
 使っているオブジェクトは、何らかの形でGCに通知する必要があります。
 
-mini gcは保守的なGCなので通知する必要はありません<a name="r3"></a>[\[3\]](#3)。
+mini gcは保守的なGCなので通知する必要はありません<a name="_minigc"></a>\[[3][minigc]\]。
 様々なマークアンドスイープGCの簡単な実装例があります<a name="r4"></a>[\[4\]](#4) <a name="r14"></a>[\[14\]](#14)。
 しかし、ネストした関数からシャドースタックのアドレスをGCに通知していません。
 シャドースタックを用いた例はLLVMで作成した例<a name="r8"></a>[\[8\]](#8)やSML#<a name="r7"></a>[\[7\]](#7)などでありますが、ハードルが高いように感じます。
@@ -777,14 +777,15 @@ Objectがunionなので扱いが楽な事が分かると思います。
 - <a name="1"></a><a href="#r1">[1]</a> [ガベージコレクションのアルゴリズムと実装2010/3/18](http://www.amazon.co.jp/%E3%82%AC%E3%83%99%E3%83%BC%E3%82%B8%E3%82%B3%E3%83%AC%E3%82%AF%E3%82%B7%E3%83%A7%E3%83%B3%E3%81%AE%E3%82%A2%E3%83%AB%E3%82%B4%E3%83%AA%E3%82%BA%E3%83%A0%E3%81%A8%E5%AE%9F%E8%A3%85-%E4%B8%AD%E6%9D%91-%E6%88%90%E6%B4%8B/dp/4798025623)
 	中村 成洋  (著), 相川 光  (著), 竹内 郁雄 (監修, 監修)
 
-
 - <a name="2"></a><a href="#r2">[2]</a> GCアルゴリズム詳細解説 GC/standard/Mark&Sweep
 
 	http://seesaawiki.jp/w/author_nari/d/GC/standard/Mark%26Sweep
 
-- <a name="3"></a><a href="#r3">[3]</a> minimum gc
+- <a name="3"></a><a href="#_minigc">[3]</a> minimum gc
 
 	https://github.com/authorNari/minigc
+
+[minigc]: #3
 
 - <a name="4"></a><a href="#r4">[4]</a> Mark and Sweep Garbage Collection Algorithm 2013 Robert Nystrom
 
@@ -831,3 +832,5 @@ Objectがunionなので扱いが楽な事が分かると思います。
 - <a name="14"></a><a href="#r14">[14]</a> Writing a Simple Garbage Collector in C - Matthew Plant
 
 	http://web.engr.illinois.edu/~maplant2/gc.html
+
+
