@@ -398,6 +398,8 @@ Golangのgoルーチン<a name="r8"></a>[[8]](#8)や、Rustのspawn<a name="r7">
 
 ATSの線形型<a name="r1"></a>[[1]](#1)や、Rustのオーナーシップ<a name="r2"></a>[[2]](#2)は型によってリソースの解放を保証します。
 
+OStack Lua<a name="r10"></a>[[10]](#10)はLuaのメモリをスタック上に取ることで高速に実行する実装です。\[Erick06\]<a name="r11"></a>[[11]](#11)の手法をLuaに実装したもので、元々ヒープから取得するデータをスタック上に割り当てることでキャッシュが荒らされずに高速に動作します。
+
 プロセス呼び出しをパイプで繋ぎ、データをやり取りすれば、プロセス単位でメモリは解放されるのでGCをそもそも使う必要がないかもしれません。
 
 ## 8. <a name="c9"></a> [謝辞](#C9)
@@ -443,3 +445,15 @@ copy GCのことはすっかり頭から抜けていたので、微酔半壊: co
 - <a name="9"></a>[[9]](#r9) BEAM(Erlang VM) 参考資料まとめ
 
     http://blog.etsukata.com/2014/01/erlang-beam.html
+
+- <a name="10"></a>[[10]](#r10) OStack Lua (github)
+
+    https://github.com/hogelog/ostacklua
+
+- <a name="11"></a>[[11]](#r11) [Erik06] Erik Corry. Optimistic stack allocation for Java-like languages. In J. Eliot B.
+Moss,editor, ISMM'06 Proceedings of the Fourth International Symposium on
+MemoryManagement, pp. 162―173, Ottawa, Canada, June 2006. ACM Press.
+
+    http://www.researchgate.net/publication/221032948_Optimistic_stack_allocation_for_Java-like_languages
+
+    http://www.cs.technion.ac.il/~erez/ismm06/slides/foredrag.pdf.pdf

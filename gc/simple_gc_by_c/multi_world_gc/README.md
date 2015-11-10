@@ -250,6 +250,52 @@ GC実行時に解放されるオブジェクトがレコードで、コールバ
 ここでは、計算結果を２つ出して、２つのデータを取り出せるテストプログラムを作りましょう。
 そして、２つのデータをオブジェクトを生かした状態で取り出したり、取り出すと同時に解放してみたりしましょう。
 
+要するにゴミのでない計算機が作れる。計算機から計算機を取り出せるとすると、計算機は複数の計算機で共有出来るものでなくてはならない。
+共有する計算機のハンドルは、生のメモリヒープではなく、メモリヒープへのポインタでなくてはならない。
+
+	- vmレコード
+	// 	種類はOBJ_VM
+
+	typedef struct VM {
+	  ObjectHeader* heap_list; // ヒープデータ
+	  void* record; // 内部状態
+	} VM;
+
+	- データ取得関数 void* vm_get_record(VM* vm)
+
+		vmからレコードを取り出して返す
+		この時のレコードのデータはvmのheap_list内に保存されていて、vmのidを持っているので、そのvmからvm_get_travarseを使ってidを変えて取り出す
+
+	- gc_copy(Object* data)
+
+		状態は残す必要があるのでgcのアルゴリズムを使わずコピーを取る。OBJ_VMの場合はシャローコピーする。
+
+	- ファイナライザ void vm_finalize(void *vm) vmにはvmのポインタが入る。
+		vm状態の解放処理をする。
+		vm状態って何ですか？VM構造体をfreeして、heap_list内のデータを全部消すんです。
+		heap_listをグローバルにコピってそれから、gcを呼び出す。
+
+	他のデータ ---> VMレコード
+	               ^
+	               |
+	他のデータ ------+
+
+- ○ vmはいつ作る？
+	初期化時や、NEW_WORLDを呼ばれたときに、vm_newで作ってみましょう。
+
+- ○ vmのヘッダリストはいつ保存する？
+	vmをnewしたときにしてみましょう。
+	とりあえずやってみて駄目なら変えましょう。
+
+とりあえず、関数は作った。世界を複数立ち上げてみよう。
+
+
+	VM* vm1 = vm_new();
+	VM* vm2 = vm_new();
+
+ってすればできる。そしたら、vmを選択する。
+
+
 ## 5. <a name="c9"></a>[参考文献](#C9)
 
 - <a name="1"></a><a href="#r1">[1]</a> SML#
@@ -264,7 +310,10 @@ GC実行時に解放されるオブジェクトがレコードで、コールバ
 
 	https://github.com/smlsharp/smlsharp/search?utf8=%E2%9C%93&q=sml_set_finalizer
 
-- <a name="4"></a><a href="#r4">[4]</a> DOT計算 Dependent Object Types Towards a foundation for Scala’s type system
- - Nada Amin Adriaan Moors Martin Odersky fool2012
+- <a name="4"></a><a href="#r4">[4]</a> DOT計算 Dependent Object Types Towards a foundation for Scala’s type system - Nada Amin Adriaan Moors Martin Odersky fool2012
 
 	http://www.cs.uwm.edu/~boyland/fool2012/papers/fool2012_submission_3.pdf
+
+- <a name="5"></a><a href="#r5">[5]</a> stackalloc hogelog
+
+	https://github.com/hogelog/stackalloc

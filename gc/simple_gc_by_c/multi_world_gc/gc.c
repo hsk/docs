@@ -7,14 +7,20 @@ multi world gc
 #include <stdio.h>
 #include <stdlib.h>
 #include <setjmp.h>
+#include <memory.h>
 
 #define DEBUG
-
+//#define DEBUG2
+void noprintf(char* str, ...){}
 #ifdef DEBUG
 #define debug printf
 #else
 #define debug noprintf
-void noprintf(char* str, ...){}
+#endif
+#ifdef DEBUG2
+#define debug2 printf
+#else
+#define debug2 noprintf
 #endif
 
 typedef enum {
@@ -22,12 +28,15 @@ typedef enum {
   OBJ_UNBOXED_ARRAY,
   OBJ_PAIR,
   OBJ_RECORD,
+  OBJ_VM,
 } ObjectType;
+
+struct VM;
 
 typedef struct ObjectHeader {
   struct ObjectHeader* next;
   unsigned int size;
-  int id;
+  struct VM* vm;
   unsigned char type;
   unsigned char marked;
 } ObjectHeader;
@@ -68,16 +77,19 @@ typedef struct Frame {
   Object* frame_data[0];
 } Frame;
 
-int world_id;
-int world_count;
+typedef struct VM {
+  Object* record;
+  ObjectHeader* heap_list;
+  long heap_num;
+  long heap_max;
+} VM;
+
+VM* vm;
 Frame* frame_list;
 Frame* frame_bottom;
-ObjectHeader* heap_list;
-int heap_num;
-int heap_max;
 
 int heap_find(ObjectHeader* o) {
-  ObjectHeader* object = heap_list;
+  ObjectHeader* object = vm->heap_list;
   while (object) {
     if(object == o) return 1;
     object = object->next;
@@ -89,16 +101,22 @@ void gc_mark_object(Object* object) {
   ObjectHeader* head = &((ObjectHeader*)object)[-1];
   debug("mark %p\n",head);
   long size;
-  if (!heap_find(head)) return;
-  if (head->marked || head->id != world_id) return;
+  if (!heap_find(head)) {
+    debug2("unfind\n");
+    return;
+  }
+  debug2("find\n");
+  if (head->marked || head->vm != vm) return;
   long* bitmap;
   head->marked = 1;
   switch(head->type) {
     case OBJ_BOXED_ARRAY:
+      debug("BOXED_ARRAY\n");
       size = ((int)head->size) / sizeof(long);
-      debug("size=%ld\n",size);
-      for(int i = 0; i < size; i++)
+      debug2("size=%ld\n",size);
+      for(int i = 0; i < size; i++) 
           gc_mark_object(object->field[i]);
+      debug2("END\n");
       break;
     case OBJ_PAIR:
       debug("PAIR\n");
@@ -106,17 +124,22 @@ void gc_mark_object(Object* object) {
       gc_mark_object(object->pair.snd);
       break;
     case OBJ_UNBOXED_ARRAY:
+      debug("UNBOXED ARRAY\n");
+      break;
+    case OBJ_VM:
+      debug("VM\n");
       break;
     case OBJ_RECORD:
       size = ((int)head->size) / sizeof(long);
       debug("RECORD size=%ld\n", size);
       bitmap = &object->longs[size];
-      debug("size=%ld\n",size);
+      debug2("size=%ld\n",size);
       for(int i = 0; i < size; i++) {
         if(bitmap[i/sizeof(long)] & (1 << (i % sizeof(long))))
           gc_mark_object(object->field[i]);
-        else
-          debug("skip %d\n", i);
+        else {
+          debug2("skip %d\n", i);
+        }
       }
       break;
   }
@@ -125,27 +148,39 @@ void gc_mark_object(Object* object) {
 void gc_mark() {
   Frame* frame = frame_list;
   while(frame != frame_bottom) {
-    for(int i = 0; i < frame->frame_size; i++)
+    debug2("gc mark %p size %ld\n", frame, frame->frame_size);
+    for(int i = 0; i < frame->frame_size; i++) {
       gc_mark_object(frame->frame_data[i]);
+      debug2("done\n");
+    }
+    debug2("next %p\n", frame);
+    debug2("next prev %p %p\n", frame->frame_prev, frame_bottom);
     frame = frame->frame_prev;
   }
+  debug2("gc mark done\n");
 }
 
-void gc_sweep(int id) {
-  ObjectHeader** object = &heap_list;
+void vm_finalize(VM* _vm);
+
+void gc_sweep(VM* vm) {
+  ObjectHeader** object = &(vm->heap_list);
+  debug2("object =%p\n", object);
   while (*object) {
-    if((*object)->id != world_id) break;
+    if((*object)->vm != vm) break;
     if (!(*object)->marked) {
       ObjectHeader* unreached = *object;
       *object = unreached->next;
+
+      if(unreached->type == OBJ_VM) vm_finalize((VM*)&unreached[1]);
+      
       free(unreached);
 
-      heap_num--;
+      vm->heap_num--;
     } else {
-      if(id) {
-        printf("id change\n");
-        printf("id change %d -> %d\n", (*object)->id, id);
-        (*object)->id = id;
+      if(vm) {
+        debug2("id change\n");
+        debug2("id change %p -> %p\n", (*object)->vm, vm);
+        (*object)->vm = vm;
       }
       (*object)->marked = 0;
       object = &(*object)->next;
@@ -153,72 +188,69 @@ void gc_sweep(int id) {
   }
 }
 
-void gc_collect_end_world(Object* data, int world_id) {
-  int prev_num = heap_num;
+void gc_collect() {
+  long prev_num = vm->heap_num;
+
+  debug2("gc mark\n");
+  gc_mark();
+  debug2("gc sweep\n");
+  gc_sweep(vm);
+
+  vm->heap_max = prev_num * 2;
+
+  debug("Collected %ld objects, %ld remaining.\n", prev_num - vm->heap_num,
+         vm->heap_num);
+}
+
+void gc_collect_end_world(Object* data, VM* vm) {
+  long prev_num = vm->heap_num;
+  debug2("gc mark\n");
   gc_mark_object(data);
-  gc_sweep(world_id);
+  debug2("gc sweep\n");
+  gc_sweep(vm);
 
-  heap_max = prev_num * 2;
+  vm->heap_max = prev_num * 2;
 
-  debug("Collected %d objects, %d remaining.\n", prev_num - heap_num,
-         heap_num);
+  debug("Collected %ld objects, %ld remaining.\n", prev_num - vm->heap_num,
+         vm->heap_num);
 }
 
 void gc_collect_pipe(Object* data) {
-  int prev_num = heap_num;
+  long prev_num = vm->heap_num;
   gc_mark_object(data);
-  gc_sweep(0);
+  gc_sweep(vm);
 
-  heap_max = prev_num * 2;
+  vm->heap_max = prev_num * 2;
 
-  debug("Collected %d objects, %d remaining.\n", prev_num - heap_num,
-         heap_num);
-}
-
-Object* gc_new_world(Object*(*f)(void*data), void* data) {
-  world_id++;
-  Frame* frame_bottom_temp = frame_bottom;
-  Object* rc = f(data);
-  frame_bottom = frame_bottom_temp;
-  world_id--;
-  return rc;
+  debug("Collected %ld objects, %ld remaining.\n", prev_num - vm->heap_num,
+         vm->heap_num);
 }
 
 #define NEW_WORLD(tmp) \
-  int tmp##_world = world_id; \
-  world_id++; \
+  VM* tmp##_vm = vm; \
+  vm = vm_new(); \
   Frame* tmp = frame_bottom;
 
 #define END_WORLD(tmp,root) \
-  gc_collect_end_world(root,tmp##_world); \
+  gc_collect_end_world(root,tmp##_vm); \
   frame_bottom = tmp; \
-  world_id = tmp##_world;
-
-void gc_collect() {
-  int prev_num = heap_num;
-
-  gc_mark();
-  gc_sweep(0);
-
-  heap_max = prev_num * 2;
-
-  debug("Collected %d objects, %d remaining.\n", prev_num - heap_num,
-         heap_num);
-}
+  vm = tmp##_vm;
 
 void* gc_alloc(ObjectType type, int size) {
-  if (heap_num == heap_max) gc_collect();
+  debug2("gc alloc\n");
+  debug2("vm=%p\n",vm);
+  if (vm->heap_num == vm->heap_max) gc_collect();
 
   ObjectHeader* head = (ObjectHeader*)malloc(sizeof(ObjectHeader)+size);
 
   debug("gc_alloc %p\n", head);
-  head->id = world_id;
+  head->vm = vm;
   head->type = type;
-  head->next = heap_list;
-  heap_list = head;
+  head->next = vm->heap_list;
+  vm->heap_list = head;
   head->marked = 0;
   head->size=size;
-  heap_num++;
+  vm->heap_num++;
 
   return &head[1];
 }
@@ -238,6 +270,46 @@ void* gc_alloc_int(int n) {
   return data;
 }
 
+
+Object* gc_copy(Object* object) {
+  ObjectHeader* head = &((ObjectHeader*)object)[-1];
+  debug("gc copy %p\n",head);
+  long size;
+  if (!heap_find(head)) return NULL;
+  long* bitmap;
+  Object* new;
+  switch(head->type) {
+    case OBJ_BOXED_ARRAY:
+      new = gc_alloc(head->type, head->size);
+      size = ((int)head->size) / sizeof(long);
+      debug("size=%ld\n",size);
+      for(int i = 0; i < size; i++)
+          new->field[i] = gc_copy(object->field[i]);
+      break;
+    case OBJ_PAIR:
+      new = gc_alloc(head->type, head->size);
+      new->pair.fst = gc_copy(object->pair.fst);
+      new->pair.snd = gc_copy(object->pair.snd);
+      break;
+    case OBJ_UNBOXED_ARRAY:
+    case OBJ_VM:
+      new = gc_alloc(head->type, head->size);
+      memcpy(object, new, head->size);
+      break;
+    case OBJ_RECORD:
+      size = ((int)head->size) / sizeof(long);
+      new = gc_alloc(head->type, head->size);
+      memcpy(object, new, head->size);
+      bitmap = &object->longs[size];
+      for(int i = 0; i < size; i++) {
+        if(bitmap[i/sizeof(long)] & (1 << (i % sizeof(long))))
+          new->field[i] = gc_copy(object->field[i]);
+      }
+      break;
+  }
+  return new;
+}
+
 #define ENTER_FRAME(SIZE) \
   Object* frame[SIZE+2]; \
   ((Frame*)frame)->frame_prev = frame_list; \
@@ -249,23 +321,56 @@ void* gc_alloc_int(int n) {
 #define LEAVE_FRAME() \
   frame_list = frame_list->frame_prev;
 
-int gen_world_id() {
-  return world_id++;
+Object* vm_get_record(VM* _vm) {
+  VM* tmp_vm = vm;
+  vm = _vm;
+  Object* record = gc_copy(vm->record);
+  vm = tmp_vm;
+  return record;
+}
+
+void vm_finalize(VM* _vm) {
+  VM* tmp_vm = vm;
+
+  vm = _vm;
+  gc_collect();
+  vm = tmp_vm;
+}
+
+void vm_end(Object* o, VM* vm) {
+  gc_collect_end_world(o, vm);
+}
+
+Object* vm_end_record(VM* vm) {
+  gc_collect_end_world(vm->record, vm);
+  return vm->record;
+}
+
+VM* vm_new() {
+  debug("vm_new\n");
+  VM* vm = gc_alloc(OBJ_VM, sizeof(VM));
+  debug("gc alloc ok\n");
+  vm->record = NULL;
+  vm->heap_list = NULL;
+  vm->heap_num = 0;
+  vm->heap_max = 8;
+  return vm;
 }
 
 void gc_init() {
-  world_id = 0;
-  world_count = gen_world_id();
+  vm = malloc(sizeof(VM));
+  vm->record = NULL;
+  vm->heap_list = NULL;
+  vm->heap_num = 0;
+  vm->heap_max = 8;
   frame_list = NULL;
   frame_bottom = NULL;
-  heap_list = NULL;
-  heap_num = 0;
-  heap_max = 8;
 }
 
 void gc_free() {
   frame_list = NULL;
   gc_collect();
+  free(vm);
 }
 
 void test() {
@@ -273,8 +378,11 @@ void test() {
   frame[0] = (void*)frame_list;
   frame[1] = (void*)1;
   frame_list = (Frame*)frame;
+  printf("alloc\n");
   frame[2] = gc_alloc(OBJ_BOXED_ARRAY,sizeof(long)*2);
+  printf("gc start\n");
   gc_collect();
+  printf("gc end\n");
   frame_list = frame_list->frame_prev;
 }
 
@@ -461,35 +569,65 @@ void test_multi_world() {
   LEAVE_FRAME();
 }
 
+void test_multi_world2() {
+  enum {FRAME_START, FRAME_SIZE, VM1,VM2,A, B, C, FRAME_END};
+  ENTER_FRAME_ENUM();
+  frame[A] = gc_alloc_int(1);
+
+  VM* tmp_vm = vm;
+  frame[VM1] = (Object*)vm_new();
+  frame[VM2] = (Object*)vm_new();
+  vm = (VM*)frame[VM1];
+    vm->record = test_int(frame[A]->intv);
+  vm = (VM*)frame[VM2];
+    vm->record = test_int(frame[A]->intv);
+  vm = tmp_vm;
+
+  frame[B] = vm_get_record((VM*)frame[VM1]);// コピーとる
+  frame[C] = vm_get_record((VM*)frame[VM2]);// コピーとる
+
+  printf("id change check.........\n");
+  gc_collect();
+  LEAVE_FRAME();
+}
+
 int main() {
+/*
+  printf("------------- test\n");
   gc_init();
   test();
+  printf("------------- free\n");
   gc_free();
-  printf("---\n");
+  printf("------------- test2\n");
   gc_init();
   test2();
   gc_free();
 
-  printf("---\n");
+  printf("------------- test3\n");
   gc_init();
   test3();
   gc_free();
 
-  printf("---\n");
+  printf("------------- test4\n");
   gc_init();
   test_record();
   gc_free();
-
-  printf("---\n");
+*/
+  printf("------------- test new world\n");
   gc_init();
   test_new_world();
   gc_free();
-
+/*
   printf("------------- test multi world\n");
   gc_init();
   test_multi_world();
   gc_free();
 
+  printf("------------- test multi world2\n");
+  gc_init();
+  test_multi_world2();
+  gc_free();
+*/
   printf("sizeof type %ld header %ld\n", sizeof(ObjectType), sizeof(ObjectHeader));
   return 0;
 }
