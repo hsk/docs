@@ -6,7 +6,7 @@ ARC的、GC
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <setjmp.h>
+#include <assert.h>
 
 #define DEBUG
 
@@ -257,8 +257,8 @@ void gc_init() {
 }
 
 void gc_free() {
-  frame_list = NULL;
   gc_collect();
+  assert(heap_num==0);
 }
 
 void test() {
@@ -267,14 +267,18 @@ void test() {
   frame[1] = (void*)1;
   frame_list = (Frame*)frame;
   frame[2] = gc_alloc(OBJ_BOXED_ARRAY,sizeof(long)*2);
+  assert(heap_num==1);
   gc_collect();
+  assert(heap_num==1);
   frame_list = frame_list->frame_prev;
 }
 
 void test2() {
   ENTER_FRAME(1);
   frame[2] = gc_alloc(OBJ_BOXED_ARRAY,sizeof(long)*2);
+  assert(heap_num==1);
   gc_collect();
+  assert(heap_num==1);
   LEAVE_FRAME();
 }
 
@@ -305,7 +309,9 @@ void test3() {
 
   printf("data5 = %p %d\n", &frame[unboxed]->ints[0], frame[unboxed]->ints[0]);
   printf("data6 = %p %d\n", &frame[unboxed]->ints[1], frame[unboxed]->ints[1]);
+  assert(heap_num==7);
   gc_collect();
+  assert(heap_num==7);
   LEAVE_FRAME();
 }
 
@@ -313,6 +319,8 @@ Object* test_int(int n) {
   enum {FRAME_START, FRAME_SIZE, A, FRAME_END};
   ENTER_FRAME_ENUM();
   frame[A] = gc_alloc_int(n);
+  gc_collect();
+  assert(heap_num==3);
   LEAVE_FRAME();
   return frame[A];
 }
@@ -324,12 +332,14 @@ void test_record() {
   // レコード
   enum {RECORD_SIZE=3,RECORD_BITMAP=BIT(1)|BIT(2)};
   frame[A] = gc_alloc_record(RECORD_SIZE);
+  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
   frame[A]->longs[0] = 10; // undata
   frame[A]->field[1] = gc_alloc_int(20);
   frame[A]->field[2] = test_int(30);
-  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
 
+  assert(heap_num==3);
   gc_collect();
+  assert(heap_num==3);
   LEAVE_FRAME();
 }
 
@@ -340,10 +350,10 @@ Object* test_new_world2(Object* data) {
   // レコード
   enum {RECORD_SIZE=3,RECORD_BITMAP=BIT(1)|BIT(2)};
   frame[A] = gc_alloc_record(RECORD_SIZE); // 4
+  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
   frame[A]->longs[0] = 100; // undata
   frame[A]->field[1] = gc_alloc_int(200); // 5
   frame[A]->field[2] = data;
-  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
 
   frame[B] = gc_alloc_int(3); // 6
   frame[C] = gc_alloc_int(5); // 7
@@ -361,10 +371,10 @@ void test_new_world() {
   // レコード
   enum {RECORD_SIZE=3,RECORD_BITMAP=BIT(1)|BIT(2)};
   frame[A] = gc_alloc_record(RECORD_SIZE); // 1
+  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
   frame[A]->longs[0] = 10; // undata
   frame[A]->field[1] = gc_alloc_int(20); // 2
   frame[A]->field[2] = test_int(30); // 3
-  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
 
   NEW_WORLD(frame_tmp1);
 
@@ -386,10 +396,10 @@ void test_pipes1() {
   // レコード
   enum {RECORD_SIZE=3,RECORD_BITMAP=BIT(1)|BIT(2)};
   frame[A] = gc_alloc_record(RECORD_SIZE); // 1
+  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
   frame[A]->longs[0] = 10; // undata
   frame[A]->field[1] = gc_alloc_int(20); // 2
   frame[A]->field[2] = test_int(30); // 3
-  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
 
   NEW_WORLD(frame_tmp1);
 
@@ -411,10 +421,10 @@ void test_pipes2() {
   // レコード
   enum {RECORD_SIZE=3,RECORD_BITMAP=BIT(1)|BIT(2)};
   frame[A] = gc_alloc_record(RECORD_SIZE); // 1
+  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
   frame[A]->longs[0] = 10; // undata
   frame[A]->field[1] = gc_alloc_int(20); // 2
   frame[A]->field[2] = test_int(30); // 3
-  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
 
   NEW_WORLD(frame_tmp1);
 
@@ -430,6 +440,7 @@ void test_pipes2() {
   gc_collect();
   LEAVE_FRAME();
 }
+
 int main() {
   gc_init();
   test();
