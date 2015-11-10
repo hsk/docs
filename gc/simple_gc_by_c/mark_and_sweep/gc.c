@@ -7,6 +7,7 @@ C だけで使える簡単な完全なGCをするためのサンプルプログ�
 #include <stdio.h>
 #include <stdlib.h>
 #include <setjmp.h>
+#include <assert.h>
 
 //#define DEBUG
 
@@ -215,15 +216,23 @@ void test() {
   frame[1] = (void*)1;
   frame_list = (Frame*)frame;
   frame[2] = gc_alloc(OBJ_BOXED_ARRAY,sizeof(long)*2);
+  assert(heap_num==1);
   gc_collect();
+  assert(heap_num==1);
   frame_list = frame_list->frame_prev;
+  gc_collect();
+  assert(heap_num==0);
 }
 
 void test2() {
   ENTER_FRAME(1);
   frame[2] = gc_alloc(OBJ_BOXED_ARRAY,sizeof(long)*2);
+  assert(heap_num==1);
   gc_collect();
+  assert(heap_num==1);
   LEAVE_FRAME();
+  gc_collect();
+  assert(heap_num==0);
 }
 
 void test3() {
@@ -253,11 +262,15 @@ void test3() {
 
   printf("data5 = %p %d\n", &frame[unboxed]->ints[0], frame[unboxed]->ints[0]);
   printf("data6 = %p %d\n", &frame[unboxed]->ints[1], frame[unboxed]->ints[1]);
+  assert(heap_num==7);
   gc_collect();
+  assert(heap_num==7);
   LEAVE_FRAME();
+  gc_collect();
+  assert(heap_num==0);
 }
 
-Object* test_int(int n) {
+static Object* test_int(int n) {
   enum {FRAME_START, FRAME_SIZE, A, FRAME_END};
   ENTER_FRAME_ENUM();
   frame[A] = gc_alloc_int(n);
@@ -277,8 +290,13 @@ void test_record() {
   frame[A]->field[2] = test_int(30);
   frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
 
+  assert(heap_num==3);
   gc_collect();
+  assert(heap_num==3);
   LEAVE_FRAME();
+  assert(heap_num==3);
+  gc_collect();
+  assert(heap_num==0);
 }
 
 int main() {

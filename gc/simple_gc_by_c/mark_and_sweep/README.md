@@ -202,6 +202,7 @@ GCの実行時には、ヒープから確保したデータのみをチェック
 	#include <stdio.h>
 	#include <stdlib.h>
 	#include <setjmp.h>
+	#include <assert.h>
 
 インクルードが幾つかあります。
 
@@ -476,7 +477,7 @@ LEAVE\_FRAMEは関数を抜ける前に呼び出し、フレームのリスト�
 	  gc_collect();
 	}
 
-ここからは関数を使うテストです。まずは、低レベルに自力でフレームを作り、フレームリストに登録し、メモリアロケーションを行って、gcを呼び出し、最後にフレームリストを戻して終わります。
+ここからは関数を使うテストです。まずは、低レベルに自力でフレームを作り、フレームリストに登録し、メモリアロケーションを行って、gcを呼び出し、最後にフレームリストを戻して終わります。目視でのテストはassertを入れてheapの数をチェックしています。
 
 	void test() {
 	  void* frame[2+1];
@@ -484,8 +485,12 @@ LEAVE\_FRAMEは関数を抜ける前に呼び出し、フレームのリスト�
 	  frame[1] = (void*)1;
 	  frame_list = (Frame*)frame;
 	  frame[2] = gc_alloc(OBJ_BOXED_ARRAY,sizeof(long)*2);
+	  assert(heap_num==1);
 	  gc_collect();
+	  assert(heap_num==1);
 	  frame_list = frame_list->frame_prev;
+	  gc_collect();
+	  assert(heap_num==0);
 	}
 
 次の例は、マクロを使いフレームを操作し、配列も高レベルな命令を使って配置します。ずっと簡単です。
@@ -493,8 +498,12 @@ LEAVE\_FRAMEは関数を抜ける前に呼び出し、フレームのリスト�
 	void test2() {
 	  ENTER_FRAME(1);
 	  frame[2] = gc_alloc(OBJ_BOXED_ARRAY,sizeof(long)*2);
+	  assert(heap_num==1);
 	  gc_collect();
+	  assert(heap_num==1);
 	  LEAVE_FRAME();
+	  gc_collect();
+	  assert(heap_num==0);
 	}
 
 次の例は、enumを使ってスタックのサイズはマクロに任せています。ペア、BOX配列、int配列を作って、値を操作しています。
@@ -527,13 +536,17 @@ Objectがunionなので扱いが楽な事が分かると思います。
 
 	  printf("data5 = %p %d\n", &frame[unboxed]->ints[0], frame[unboxed]->ints[0]);
 	  printf("data6 = %p %d\n", &frame[unboxed]->ints[1], frame[unboxed]->ints[1]);
+	  assert(heap_num==7);
 	  gc_collect();
+	  assert(heap_num==7);
 	  LEAVE_FRAME();
+	  gc_collect();
+	  assert(heap_num==0);
 	}
 
-次はintを使ってみただけです。
+次はtest_record でネストして使用するintを使う例です。
 
-	Object* test_int(int n) {
+	static Object* test_int(int n) {
 	  enum {FRAME_START, FRAME_SIZE, A, FRAME_END};
 	  ENTER_FRAME_ENUM();
 	  frame[A] = gc_alloc_int(n);
@@ -555,8 +568,13 @@ Objectがunionなので扱いが楽な事が分かると思います。
 	  frame[A]->field[2] = test_int(30);
 	  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
 
+	  assert(heap_num==3);
 	  gc_collect();
+	  assert(heap_num==3);
 	  LEAVE_FRAME();
+	  assert(heap_num==3);
+	  gc_collect();
+	  assert(heap_num==0);
 	}
 
 最後がメイン関数です。
