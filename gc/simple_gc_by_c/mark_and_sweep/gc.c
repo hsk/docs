@@ -6,7 +6,6 @@ C だけで使える簡単な完全なGCをするためのサンプルプログ�
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <setjmp.h>
 #include <assert.h>
 
 //#define DEBUG

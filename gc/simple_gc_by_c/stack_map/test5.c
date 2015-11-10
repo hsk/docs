@@ -7,7 +7,7 @@ for osx x86_64
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <setjmp.h>
+#include <assert.h>
 
 #define DEBUG
 
@@ -237,6 +237,7 @@ void gc_init() {
 
 void gc_free() {
   gc_collect();
+  assert(heap_num==0);
 }
 
 void test() {
@@ -245,8 +246,11 @@ void test() {
   static void* start_ptr = &&end; goto *start_ptr; start:;
 
   printf("frame[1]=%p\n", frame);
+  assert(heap_num==0);
   frame[0] = gc_alloc(OBJ_BOXED_ARRAY,sizeof(long)*2);
+  assert(heap_num==1);
   gc_collect();
+  assert(heap_num==1);
   return;
 end:;
   static StackMap f = {3, (void*)test,&&end, NULL};
@@ -259,7 +263,9 @@ void test2() {
   static void* start_ptr = &&end; goto *start_ptr; start:;
   frame[A] = gc_alloc(OBJ_BOXED_ARRAY,sizeof(long)*2);
   frame[B] = gc_alloc(OBJ_BOXED_ARRAY,sizeof(long)*2);
+  assert(heap_num==2);
   gc_collect();
+  assert(heap_num==2);
   return;
 end:;
   static StackMap f = {SIZE, (void*)test2,&&end, NULL};
@@ -296,7 +302,9 @@ void test3() {
 
   printf("data5 = %p %d\n", &frame[unboxed]->ints[0], frame[unboxed]->ints[0]);
   printf("data6 = %p %d\n", &frame[unboxed]->ints[1], frame[unboxed]->ints[1]);
+  assert(heap_num==7);
   gc_collect();
+  assert(heap_num==7);
   return;
 end:;
   static StackMap f = {SIZE, (void*)test3,&&end, NULL};
@@ -327,7 +335,9 @@ void test_record() {
   frame[A]->field[2] = test_int(30);
   frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
 
+  assert(heap_num==3);
   gc_collect();
+  assert(heap_num==3);
   return;
 end:;
   static StackMap f = {SIZE, (void*)test_record,&&end, NULL};
@@ -338,7 +348,6 @@ int main() {
   gc_init();
   test();
   gc_free();
-
   printf("---\n");
   gc_init();
   test2();

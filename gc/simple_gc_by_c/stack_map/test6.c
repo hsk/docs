@@ -7,7 +7,7 @@ for osx x86_64
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <setjmp.h>
+#include <assert.h>
 
 #define DEBUG
 
@@ -210,6 +210,7 @@ void gc_sweep() {
     if (!(*object)->marked) {
       ObjectHeader* unreached = *object;
       *object = unreached->next;
+      printf("free %p\n", &unreached[1]);
       free(unreached);
 
       heap_num--;
@@ -260,7 +261,7 @@ void* gc_alloc(ObjectType type, int size) {
 void* gc_alloc_int(int n) {
   int* data = gc_alloc(OBJ_UNBOXED_ARRAY, sizeof(int)*1);
 
-  debug("int ptr %p\n", data);
+  debug("int ptr %p %d\n", data, n);
   *data = n;
   return data;
 }
@@ -274,6 +275,7 @@ void gc_init() {
 
 void gc_free() {
   gc_collect();
+  assert(heap_num==0);
 }
 
 void test() {
@@ -285,18 +287,22 @@ void test() {
 
   frame[0] = gc_alloc(OBJ_BOXED_ARRAY,sizeof(long)*2);
 lbl1:;
+  assert(heap_num==1);
   gc_collect();
+  assert(heap_num==1);
 lbl2:;
   gc_collect();
+  assert(heap_num==1);
 lbl3:;
   gc_collect();
+  assert(heap_num==0);
   return;
 end:;
-  static int bitmap[] = {1,0};
+  static int bitmap[] = {1,1};
   static Frame frames[] = {
     {&&lbl1,1,&bitmap[0]},
-    {&&lbl2,1,&bitmap[0]},
-    {&&lbl3,0,&bitmap[0]},
+    {&&lbl2,1,&bitmap[1]},
+    {&&lbl3,0,NULL},
     {&&end,0,NULL},
   };
   static StackMap f = {2, (void*)test,&&end, frames, NULL};
@@ -310,8 +316,12 @@ void test2() {
   frame[A] = gc_alloc(OBJ_BOXED_ARRAY,sizeof(long)*2);
   frame[B] = gc_alloc(OBJ_BOXED_ARRAY,sizeof(long)*2);
 lbl1:;
+  assert(heap_num==2);
   gc_collect();
 lbl2:;
+  assert(heap_num==1);
+  gc_collect();
+  assert(heap_num==1);
   return;
 end:;
   static int bitmap[] = {1};
@@ -336,12 +346,14 @@ void test3() {
   frame[A]->pair.fst = gc_alloc_int(10);
   frame[A]->pair.snd = gc_alloc_int(20);
 lbl1:;
+  assert(heap_num==3);
 
   // オブジェクト配列
   frame[B] = gc_alloc_boxed_array(2);
   frame[B]->field[0] = gc_alloc_int(30);
   frame[B]->field[1] = gc_alloc_int(40);
 lbl2:;
+  assert(heap_num==6);
 
   // int配列
   frame[unboxed] = gc_alloc_unboxed_array(sizeof(int)*2);
@@ -356,9 +368,15 @@ lbl2:;
 
   printf("data5 = %p %d\n", &frame[unboxed]->ints[0], frame[unboxed]->ints[0]);
   printf("data6 = %p %d\n", &frame[unboxed]->ints[1], frame[unboxed]->ints[1]);
+
+  assert(heap_num==7);
   gc_collect();
+  assert(heap_num==6);
 
 lbl3:;
+  gc_collect();
+  printf("%d\n", heap_num);
+  assert(heap_num==3);
   return;
 end:;
   static int bitmap[] = {1,3,6};
@@ -378,6 +396,8 @@ Object* test_int(int n) {
   static void* start_ptr = &&end; goto *start_ptr; start:;
   frame[A] = gc_alloc_int(n);
   Object* a = frame[A];
+  gc_collect();
+  assert(heap_num==3);
 lbl1:;
   return a;
 end:;
@@ -397,13 +417,17 @@ void test_record() {
   // レコード
   enum {RECORD_SIZE=3,RECORD_BITMAP=BIT(1)|BIT(2)};
   frame[A] = gc_alloc_record(RECORD_SIZE);
+  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
   frame[A]->longs[0] = 10; // undata
   frame[A]->field[1] = gc_alloc_int(20);
   frame[A]->field[2] = test_int(30);
-  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
 
+  assert(heap_num==3);
   gc_collect();
+  assert(heap_num==3);
 lbl1:;
+  gc_collect();
+  assert(heap_num==3);
   return;
 end:;
   static int bitmap[] = {1,1};
