@@ -8,7 +8,7 @@ ARC的、GC
 #include <stdlib.h>
 #include <assert.h>
 
-#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 #define debug printf
@@ -376,16 +376,22 @@ void test_new_world() {
   frame[A]->field[1] = gc_alloc_int(20); // 2
   frame[A]->field[2] = test_int(30); // 3
 
+  assert(heap_num==3);
   NEW_WORLD(frame_tmp1);
 
+    assert(heap_num==3);
     NEW_WORLD(frame_tmp2);
     frame[B] = test_new_world2(frame[A]);
+    assert(heap_num==7);
     END_WORLD(frame_tmp2, frame[B]);// 6と7が消える。
+    assert(heap_num==5);
 
   printf("level change check.........\n");
-  END_WORLD(frame_tmp1,frame[B]);// 6と7が消える。
+  END_WORLD(frame_tmp1,frame[B]);
+  assert(heap_num==5);
   printf("level change check.........\n");
   gc_collect();
+  assert(heap_num==5);
   LEAVE_FRAME();
 }
 
@@ -401,16 +407,22 @@ void test_pipes1() {
   frame[A]->field[1] = gc_alloc_int(20); // 2
   frame[A]->field[2] = test_int(30); // 3
 
+  assert(heap_num==3);
   NEW_WORLD(frame_tmp1);
 
     frame[B] = test_new_world2(frame[A]);
+    assert(heap_num==7);
     frame[B] = test_new_world2(frame[B]);
+    assert(heap_num==11);
     frame[B] = test_new_world2(frame[B]);
-
+    assert(heap_num==15);
   printf("level change check.........\n");
   END_WORLD(frame_tmp1,frame[B]);
+
+  assert(heap_num==5);
   printf("level change check.........\n");
   gc_collect();
+  assert(heap_num==5);
   LEAVE_FRAME();
 }
 
@@ -418,26 +430,27 @@ void test_pipes2() {
   enum {FRAME_START, FRAME_SIZE, A, B, C, FRAME_END};
   ENTER_FRAME_ENUM();
 
-  // レコード
-  enum {RECORD_SIZE=3,RECORD_BITMAP=BIT(1)|BIT(2)};
-  frame[A] = gc_alloc_record(RECORD_SIZE); // 1
-  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
-  frame[A]->longs[0] = 10; // undata
-  frame[A]->field[1] = gc_alloc_int(20); // 2
-  frame[A]->field[2] = test_int(30); // 3
-
+  frame[A] = gc_alloc_int(123); // 1
+  assert(heap_num==1);
   NEW_WORLD(frame_tmp1);
 
     frame[B] = test_new_world2(frame[A]);
+    assert(heap_num==5);
     gc_collect_pipe(frame[B]);
+    assert(heap_num==3);
     frame[B] = test_new_world2(frame[B]);
+    assert(heap_num==7);
     gc_collect_pipe(frame[B]);
+    assert(heap_num==3);
     frame[B] = test_new_world2(frame[B]);
+    assert(heap_num==7);
 
   printf("level change check.........\n");
   END_WORLD(frame_tmp1,frame[B]);
+  assert(heap_num==3);
   printf("level change check.........\n");
   gc_collect();
+  assert(heap_num==3);
   LEAVE_FRAME();
 }
 
@@ -464,7 +477,5 @@ int main() {
   gc_init();
   test_new_world();
   gc_free();
-
-  printf("sizeof type %ld header %ld\n", sizeof(ObjectType), sizeof(ObjectHeader));
   return 0;
 }

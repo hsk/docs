@@ -8,10 +8,10 @@ WindowsやLinuxでは確認してませんが、特別な事はしていない�
 マークアンドスイープアルゴリズムは、今使っているオブジェクトから使っているオブジェクトを全てマークし、その後、マークされていないオブジェクトを解放するスイープを行う２つのフェーズからなるメモリ管理方法です。
 使っているオブジェクトは、何らかの形でGCに通知する必要があります。
 
-mini gcは保守的なGCなので通知する必要はありません<a name="r3"></a>[\[3\]](#3)。
-様々なマークアンドスイープGCの簡単な実装例があります<a name="r4"></a>[\[4\]](#4) <a name="r14"></a>[\[14\]](#14)。
+mini gcは保守的なGCなので通知する必要はありません<a name="r3"></a>[[3]](#3)。
+様々なマークアンドスイープGCの簡単な実装例があります<a name="r4"></a>[[4]](#4) <a name="r14"></a>[[14]](#14)。
 しかし、ネストした関数からシャドースタックのアドレスをGCに通知していません。
-シャドースタックを用いた例はLLVMで作成した例<a name="r8"></a>[\[8\]](#8)やSML#<a name="r7"></a>[\[7\]](#7)などでありますが、ハードルが高いように感じます。
+シャドースタックを用いた例はLLVMで作成した例<a name="r8"></a>[[8]](#8)やSML#<a name="r7"></a>[[7]](#7)などでありますが、ハードルが高いように感じます。
 
 特にSML#のランタイムは様々なGCの実装が存在しており、レコードを含んだ場合でも完全なGCを行っており素晴しいものがあります。
 SML#のようなGCを気軽に見ることが出来るC言語だけで使える簡単なGCを行う例が欲しいと思い作成しました。
@@ -39,14 +39,14 @@ C言語へのトランスレータを書く際にも、可読性の高い出力�
 	void _main() {
 	  enum {FRAME_START, FRAME_SIZE, A, FRAME_END};
 
-`enum`の次の行には `ENTER_FRAME_ENUM();`を記述します。
+`enum`の次の行には `ENTER_FRAME_ENUM(frame);`を記述します。
 
-	  ENTER_FRAME_ENUM();
+	  ENTER_FRAME_ENUM(frame);
 
-関数の最後には`LEAVE_FRAME();`を記述します。
-`LEAVE_FRAME();`は関数から抜ける際は必ず必要です。
+関数の最後には`LEAVE_FRAME(frame);`を記述します。
+`LEAVE_FRAME(frame);`は関数から抜ける際は必ず必要です。
 
-	  LEAVE_FRAME();
+	  LEAVE_FRAME(frame);
 	}
 
 関数内でペアを定義して、intの値を登録してみましょう。
@@ -71,7 +71,7 @@ field要素を使って情報にアクセスします。
 
 	void test3() {
 	  enum {FRAME_START, FRAME_SIZE, OBJ, unboxed, FRAME_END};
-	  ENTER_FRAME_ENUM();
+	  ENTER_FRAME_ENUM(frame);
 
 	  // オブジェクト配列
 	  frame[OBJ] = gc_alloc_boxed_array(2);
@@ -82,7 +82,7 @@ field要素を使って情報にアクセスします。
 	  printf("data4 = %p %d\n", frame[OBJ]->field[1], frame[OBJ]->field[1]->intv);
 
 	  gc_collect();
-	  LEAVE_FRAME();
+	  LEAVE_FRAME(frame);
 	}
 
 ### UNBOXED配列
@@ -92,7 +92,7 @@ ints,longs,longlongs,uchars,ushorts,uints,ulongs,ulonglongs要素を使って情
 
 	void test3() {
 	  enum {FRAME_START, FRAME_SIZE, unboxed, FRAME_END};
-	  ENTER_FRAME_ENUM();
+	  ENTER_FRAME_ENUM(frame);
 
 	  // int配列
 	  frame[unboxed] = gc_alloc_unboxed_array(sizeof(int)*2);
@@ -103,7 +103,7 @@ ints,longs,longlongs,uchars,ushorts,uints,ulongs,ulonglongs要素を使って情
 	  printf("data6 = %p %d\n", &frame[unboxed]->ints[1], frame[unboxed]->ints[1]);
 
 	  gc_collect();
-	  LEAVE_FRAME();
+	  LEAVE_FRAME(frame);
 	}
 
 ### レコード
@@ -112,7 +112,7 @@ ints,longs,longlongs,uchars,ushorts,uints,ulongs,ulonglongs要素を使って情
 
 	void test_record() {
 	  enum {FRAME_START, FRAME_SIZE, A, FRAME_END};
-	  ENTER_FRAME_ENUM();
+	  ENTER_FRAME_ENUM(frame);
 
 	  // レコード
 	  enum {RECORD_SIZE=3,RECORD_BITMAP=BIT(1)|BIT(2)};
@@ -123,7 +123,7 @@ ints,longs,longlongs,uchars,ushorts,uints,ulongs,ulonglongs要素を使って情
 	  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
 
 	  gc_collect();
-	  LEAVE_FRAME();
+	  LEAVE_FRAME(frame);
 	}
 
 ### NULL ポインタ
@@ -156,7 +156,7 @@ GCの実行時には、ヒープから確保したデータのみをチェック
 		   v      v       v    |
 		live     live   death  |
 		Object-->Object Object |
-		   A                   |
+		   ^                   |
 		   |                   |
 		   |   Native Function |
 		   |     STACK         |
@@ -171,8 +171,8 @@ GCの実行時には、ヒープから確保したデータのみをチェック
 - スタックとフレームリスト
 
 	関数内でスタック上に確保したObject*の配列をグローバル変数の`frame_list`に追加し、終わったら外します。
-	`ENTER_FRAME_ENUM()`マクロがローカル変数の`frame`を`frame_list`への登録を行い、
-	`LEAVE_FRAME()`マクロがローカル変数の`frame`を`frame_list`から外します。
+	`ENTER_FRAME_ENUM(frame)`マクロがローカル変数の`frame`を`frame_list`への登録を行い、
+	`LEAVE_FRAME(frame)`マクロがローカル変数の`frame`を`frame_list`から外します。
 
 - GC
 
@@ -445,7 +445,7 @@ box化されたint値を作成する関数もありますが、内部実装は�
 ENTER_FRAMEでは、このあと、フレームの繋ぎ替えをおこない、サイズを登録します。
 フレームはObject*のローカルな配列変数にすぎません。
 
-	#define ENTER_FRAME(SIZE) \
+	#define ENTER_FRAME(frame, SIZE) \
 	  Object* frame[SIZE+2]; \
 	  ((Frame*)frame)->frame_prev = frame_list; \
 	  ((Frame*)frame)->frame_size = SIZE; \
@@ -453,11 +453,11 @@ ENTER_FRAMEでは、このあと、フレームの繋ぎ替えをおこない、
 
 ENTER\_FRAME\_ENUMはenumを使って記述しやすい補助的なマクロです。
 
-	#define ENTER_FRAME_ENUM() ENTER_FRAME((FRAME_END-2))
+	#define ENTER_FRAME_ENUM(frame) ENTER_FRAME(frame, (FRAME_END-2))
 
 LEAVE\_FRAMEは関数を抜ける前に呼び出し、フレームのリストを元に戻します。
 
-	#define LEAVE_FRAME() \
+	#define LEAVE_FRAME(frame) \
 	  frame_list = frame_list->frame_prev;
 
 
@@ -496,12 +496,12 @@ LEAVE\_FRAMEは関数を抜ける前に呼び出し、フレームのリスト�
 次の例は、マクロを使いフレームを操作し、配列も高レベルな命令を使って配置します。ずっと簡単です。
 
 	void test2() {
-	  ENTER_FRAME(1);
+	  ENTER_FRAME(frame, 1);
 	  frame[2] = gc_alloc(OBJ_BOXED_ARRAY,sizeof(long)*2);
 	  assert(heap_num==1);
 	  gc_collect();
 	  assert(heap_num==1);
-	  LEAVE_FRAME();
+	  LEAVE_FRAME(frame);
 	  gc_collect();
 	  assert(heap_num==0);
 	}
@@ -511,7 +511,7 @@ Objectがunionなので扱いが楽な事が分かると思います。
 
 	void test3() {
 	  enum {FRAME_START, FRAME_SIZE, A, B, unboxed, FRAME_END};
-	  ENTER_FRAME_ENUM();
+	  ENTER_FRAME_ENUM(frame);
 
 	  // ペア
 	  frame[A] = gc_alloc_pair();
@@ -539,7 +539,7 @@ Objectがunionなので扱いが楽な事が分かると思います。
 	  assert(heap_num==7);
 	  gc_collect();
 	  assert(heap_num==7);
-	  LEAVE_FRAME();
+	  LEAVE_FRAME(frame);
 	  gc_collect();
 	  assert(heap_num==0);
 	}
@@ -548,9 +548,9 @@ Objectがunionなので扱いが楽な事が分かると思います。
 
 	static Object* test_int(int n) {
 	  enum {FRAME_START, FRAME_SIZE, A, FRAME_END};
-	  ENTER_FRAME_ENUM();
+	  ENTER_FRAME_ENUM(frame);
 	  frame[A] = gc_alloc_int(n);
-	  LEAVE_FRAME();
+	  LEAVE_FRAME(frame);
 	  return frame[A];
 	}
 
@@ -558,7 +558,7 @@ Objectがunionなので扱いが楽な事が分かると思います。
 
 	void test_record() {
 	  enum {FRAME_START, FRAME_SIZE, A, FRAME_END};
-	  ENTER_FRAME_ENUM();
+	  ENTER_FRAME_ENUM(frame);
 
 	  // レコード
 	  enum {RECORD_SIZE=3,RECORD_BITMAP=BIT(1)|BIT(2)};
@@ -571,7 +571,7 @@ Objectがunionなので扱いが楽な事が分かると思います。
 	  assert(heap_num==3);
 	  gc_collect();
 	  assert(heap_num==3);
-	  LEAVE_FRAME();
+	  LEAVE_FRAME(frame);
 	  assert(heap_num==3);
 	  gc_collect();
 	  assert(heap_num==0);
@@ -778,15 +778,15 @@ Objectがunionなので扱いが楽な事が分かると思います。
 			レコード数に対応したビットマップのサイズを求めます。
 
 	- フレーム
-		- ENTER\_FRAME(SIZE)
+		- ENTER\_FRAME(frame, SIZE)
 
 			関数の開始を表します。SIZEにはフレームの大きさを指定します。
 
-		- ENTER\_FRAME\_ENUM()
+		- ENTER\_FRAME\_ENUM(frame)
 
 			enumを使った場合に関数の先頭に記述します。
 
-		- LEAVE_FRAME()
+		- LEAVE_FRAME(frame)
 
 			関数の最後に記述します。
 

@@ -186,15 +186,15 @@ void* gc_alloc_int(int n) {
   return data;
 }
 
-#define ENTER_FRAME(SIZE) \
+#define ENTER_FRAME(frame,SIZE) \
   Object* frame[SIZE+2]; \
   ((Frame*)frame)->frame_prev = frame_list; \
   ((Frame*)frame)->frame_size = SIZE; \
   frame_list = (Frame*)frame; \
 
-#define ENTER_FRAME_ENUM() ENTER_FRAME((FRAME_END-2))
+#define ENTER_FRAME_ENUM(frame) ENTER_FRAME(frame,(FRAME_END-2))
 
-#define LEAVE_FRAME() \
+#define LEAVE_FRAME(frame) \
   frame_list = frame_list->frame_prev;
 
 void gc_init() {
@@ -224,19 +224,19 @@ void test() {
 }
 
 void test2() {
-  ENTER_FRAME(1);
+  ENTER_FRAME(frame,1);
   frame[2] = gc_alloc(OBJ_BOXED_ARRAY,sizeof(long)*2);
   assert(heap_num==1);
   gc_collect();
   assert(heap_num==1);
-  LEAVE_FRAME();
+  LEAVE_FRAME(frame);
   gc_collect();
   assert(heap_num==0);
 }
 
 void test3() {
   enum {FRAME_START, FRAME_SIZE, A, B, unboxed, FRAME_END};
-  ENTER_FRAME_ENUM();
+  ENTER_FRAME_ENUM(frame);
 
   // ペア
   frame[A] = gc_alloc_pair();
@@ -271,7 +271,7 @@ void test3() {
 
 static Object* test_int(int n) {
   enum {FRAME_START, FRAME_SIZE, A, FRAME_END};
-  ENTER_FRAME_ENUM();
+  ENTER_FRAME_ENUM(frame);
   frame[A] = gc_alloc_int(n);
   LEAVE_FRAME();
   return frame[A];
@@ -279,7 +279,7 @@ static Object* test_int(int n) {
 
 void test_record() {
   enum {FRAME_START, FRAME_SIZE, A, FRAME_END};
-  ENTER_FRAME_ENUM();
+  ENTER_FRAME_ENUM(frame);
 
   // レコード
   enum {RECORD_SIZE=3,RECORD_BITMAP=BIT(1)|BIT(2)};

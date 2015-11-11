@@ -6,7 +6,7 @@ multi world gc
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <setjmp.h>
+#include <assert.h>
 #include <memory.h>
 
 #define DEBUG
@@ -226,15 +226,15 @@ void gc_collect_pipe(Object* data) {
          vm->heap_num);
 }
 
-#define NEW_WORLD(tmp) \
-  VM* tmp##_vm = vm; \
+#define NEW_WORLD(frame) \
+  VM* frame##_vm = vm; \
   vm = vm_new(); \
-  Frame* tmp = frame_bottom;
+  Frame* frame##_tmp_bottom = frame_bottom; \
 
-#define END_WORLD(tmp,root) \
-  gc_collect_end_world(root,tmp##_vm); \
-  frame_bottom = tmp; \
-  vm = tmp##_vm;
+#define END_WORLD(frame,root) \
+  frame_bottom = frame##_tmp_bottom; \
+  vm = frame##_vm; \
+  gc_collect_end_world(root,frame##_vm); \
 
 void* gc_alloc(ObjectType type, int size) {
   debug2("gc alloc\n");
@@ -310,15 +310,15 @@ Object* gc_copy(Object* object) {
   return new;
 }
 
-#define ENTER_FRAME(SIZE) \
+#define ENTER_FRAME(frame, SIZE) \
   Object* frame[SIZE+2]; \
   ((Frame*)frame)->frame_prev = frame_list; \
   ((Frame*)frame)->frame_size = SIZE; \
   frame_list = (Frame*)frame; \
 
-#define ENTER_FRAME_ENUM() ENTER_FRAME((FRAME_END-2))
+#define ENTER_FRAME_ENUM(frame) ENTER_FRAME(frame, (frame##_END-2))
 
-#define LEAVE_FRAME() \
+#define LEAVE_FRAME(frame) \
   frame_list = frame_list->frame_prev;
 
 Object* vm_get_record(VM* _vm) {
@@ -368,8 +368,8 @@ void gc_init() {
 }
 
 void gc_free() {
-  frame_list = NULL;
   gc_collect();
+  assert(vm->heap_num==0);
   free(vm);
 }
 
@@ -378,24 +378,27 @@ void test() {
   frame[0] = (void*)frame_list;
   frame[1] = (void*)1;
   frame_list = (Frame*)frame;
-  printf("alloc\n");
   frame[2] = gc_alloc(OBJ_BOXED_ARRAY,sizeof(long)*2);
-  printf("gc start\n");
+
+  assert(vm->heap_num==1);
   gc_collect();
-  printf("gc end\n");
+  assert(vm->heap_num==1);
+
   frame_list = frame_list->frame_prev;
 }
 
 void test2() {
-  ENTER_FRAME(1);
+  ENTER_FRAME(frame, 1);
   frame[2] = gc_alloc(OBJ_BOXED_ARRAY,sizeof(long)*2);
+  assert(vm->heap_num==1);
   gc_collect();
-  LEAVE_FRAME();
+  assert(vm->heap_num==1);
+  LEAVE_FRAME(frame);
 }
 
 void test3() {
-  enum {FRAME_START, FRAME_SIZE, A, B, unboxed, FRAME_END};
-  ENTER_FRAME_ENUM();
+  enum {frame_START, frame_SIZE, A, B, unboxed, frame_END};
+  ENTER_FRAME_ENUM(frame);
 
   // ペア
   frame[A] = gc_alloc_pair();
@@ -420,158 +423,178 @@ void test3() {
 
   printf("data5 = %p %d\n", &frame[unboxed]->ints[0], frame[unboxed]->ints[0]);
   printf("data6 = %p %d\n", &frame[unboxed]->ints[1], frame[unboxed]->ints[1]);
+  assert(vm->heap_num==7);
   gc_collect();
-  LEAVE_FRAME();
+  assert(vm->heap_num==7);
+  LEAVE_FRAME(frame);
 }
 
 Object* test_int(int n) {
-  enum {FRAME_START, FRAME_SIZE, A, FRAME_END};
-  ENTER_FRAME_ENUM();
+  enum {frame_START, frame_SIZE, A, frame_END};
+  ENTER_FRAME_ENUM(frame);
   frame[A] = gc_alloc_int(n+10);
-  LEAVE_FRAME();
+  gc_collect();
+  LEAVE_FRAME(frame);
   return frame[A];
 }
 
 void test_record() {
-  enum {FRAME_START, FRAME_SIZE, A, FRAME_END};
-  ENTER_FRAME_ENUM();
+  enum {frame_START, frame_SIZE, A, frame_END};
+  ENTER_FRAME_ENUM(frame);
 
   // レコード
   enum {RECORD_SIZE=3,RECORD_BITMAP=BIT(1)|BIT(2)};
   frame[A] = gc_alloc_record(RECORD_SIZE);
+  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
   frame[A]->longs[0] = 10; // undata
   frame[A]->field[1] = gc_alloc_int(20);
   frame[A]->field[2] = test_int(30);
-  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
 
+  assert(vm->heap_num==3);
   gc_collect();
-  LEAVE_FRAME();
+  assert(vm->heap_num==3);
+  LEAVE_FRAME(frame);
 }
 
 Object* test_new_world2(Object* data) {
-  enum {FRAME_START, FRAME_SIZE, A, B, C, FRAME_END};
-  ENTER_FRAME_ENUM();
+  enum {frame_START, frame_SIZE, A, B, C, frame_END};
+  ENTER_FRAME_ENUM(frame);
 
   // レコード
   enum {RECORD_SIZE=3,RECORD_BITMAP=BIT(1)|BIT(2)};
   frame[A] = gc_alloc_record(RECORD_SIZE); // 4
+  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
   frame[A]->longs[0] = 100; // undata
   frame[A]->field[1] = gc_alloc_int(200); // 5
   frame[A]->field[2] = data;
-  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
 
   frame[B] = gc_alloc_int(3); // 6
   frame[C] = gc_alloc_int(5); // 7
+
   gc_collect();
   gc_collect();
 
-  LEAVE_FRAME();
+  LEAVE_FRAME(frame);
   return frame[A];
 }
 
 void test_new_world() {
-  enum {FRAME_START, FRAME_SIZE, A, B, FRAME_END};
-  ENTER_FRAME_ENUM();
+  enum {frame_START, frame_SIZE, A, B, frame_END};
+  ENTER_FRAME_ENUM(frame);
 
   // レコード
-  enum {RECORD_SIZE=3,RECORD_BITMAP=BIT(1)|BIT(2)};
-  frame[A] = gc_alloc_record(RECORD_SIZE); // 1
-  frame[A]->longs[0] = 10; // undata
-  frame[A]->field[1] = gc_alloc_int(20); // 2
-  frame[A]->field[2] = test_int(30); // 3
-  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
+  frame[A] = gc_alloc_int(1); // 1
 
-  NEW_WORLD(frame_tmp1);
+  assert(vm->heap_num==1);
 
-    NEW_WORLD(frame_tmp2);
-    frame[B] = test_new_world2(frame[A]);
-    END_WORLD(frame_tmp2, frame[B]);// 6と7が消える。
+  NEW_WORLD(frame1);
+    enum {frame1_START, frame1_SIZE, C, frame1_END};
+    ENTER_FRAME_ENUM(frame1);
 
+    assert(vm->heap_num==0);
+
+    NEW_WORLD(frame2);
+      enum {frame2_START, frame2_SIZE, D, frame2_END};
+      ENTER_FRAME_ENUM(frame2);
+
+      assert(vm->heap_num==0);
+      frame1[C] = test_new_world2(frame[A]);
+      assert(vm->heap_num==4);
+
+      LEAVE_FRAME(frame2);
+    END_WORLD(frame2, frame1[C]);// 6と7が消える。
+    assert(vm->heap_num==0);
+    frame[B] = frame1[C];
+    LEAVE_FRAME(frame1);
   printf("id change check.........\n");
-  END_WORLD(frame_tmp1,frame[B]);// 6と7が消える。
+  END_WORLD(frame1,frame[B]);
+  assert(vm->heap_num==0);
   printf("id change check.........\n");
   gc_collect();
-  LEAVE_FRAME();
+  assert(vm->heap_num==0);
+  LEAVE_FRAME(frame);
 }
 
 void test_pipes1() {
-  enum {FRAME_START, FRAME_SIZE, A, B, C, FRAME_END};
-  ENTER_FRAME_ENUM();
+  enum {frame_START, frame_SIZE, A, B, C, frame_END};
+  ENTER_FRAME_ENUM(frame);
 
-  // レコード
-  enum {RECORD_SIZE=3,RECORD_BITMAP=BIT(1)|BIT(2)};
-  frame[A] = gc_alloc_record(RECORD_SIZE); // 1
-  frame[A]->longs[0] = 10; // undata
-  frame[A]->field[1] = gc_alloc_int(20); // 2
-  frame[A]->field[2] = test_int(30); // 3
-  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
+  frame[A] = gc_alloc_int(1); // 1
 
-  NEW_WORLD(frame_tmp1);
-
+  assert(vm->heap_num==1);
+  NEW_WORLD(frame1);
+    assert(vm->heap_num==0);
     frame[B] = test_new_world2(frame[A]);
+    assert(vm->heap_num==4);
     frame[B] = test_new_world2(frame[B]);
+    assert(vm->heap_num==8);
     frame[B] = test_new_world2(frame[B]);
+    assert(vm->heap_num==12);
 
   printf("id change check.........\n");
-  END_WORLD(frame_tmp1,frame[B]);
+  END_WORLD(frame1,frame[B]);
+  assert(vm->heap_num==0);
   printf("id change check.........\n");
   gc_collect();
-  LEAVE_FRAME();
+  assert(vm->heap_num==0);
+  LEAVE_FRAME(frame);
 }
 
 void test_pipes2() {
-  enum {FRAME_START, FRAME_SIZE, A, B, C, FRAME_END};
-  ENTER_FRAME_ENUM();
+  enum {frame_START, frame_SIZE, A, B, C, frame_END};
+  ENTER_FRAME_ENUM(frame);
 
-  // レコード
-  enum {RECORD_SIZE=3,RECORD_BITMAP=BIT(1)|BIT(2)};
-  frame[A] = gc_alloc_record(RECORD_SIZE); // 1
-  frame[A]->longs[0] = 10; // undata
-  frame[A]->field[1] = gc_alloc_int(20); // 2
-  frame[A]->field[2] = test_int(30); // 3
-  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
+  frame[A] = gc_alloc_int(1); // 1
 
-  NEW_WORLD(frame_tmp1);
-
+  assert(vm->heap_num==1);
+  NEW_WORLD(frame1);
+    assert(vm->heap_num==0);
     frame[B] = test_new_world2(frame[A]);
+    assert(vm->heap_num==4);
     gc_collect_pipe(frame[B]);
+    assert(vm->heap_num==4);
     frame[B] = test_new_world2(frame[B]);
+    assert(vm->heap_num==8);
     gc_collect_pipe(frame[B]);
+    assert(vm->heap_num==4);
     frame[B] = test_new_world2(frame[B]);
+    assert(vm->heap_num==8);
 
   printf("id change check.........\n");
-  END_WORLD(frame_tmp1,frame[B]);
+  END_WORLD(frame1, frame[B]);
+  assert(vm->heap_num==0);
   printf("id change check.........\n");
   gc_collect();
-  LEAVE_FRAME();
+  assert(vm->heap_num==0);
+  LEAVE_FRAME(frame);
 }
 
 void test_multi_world() {
-  enum {FRAME_START, FRAME_SIZE, A, B, C, D, FRAME_END};
-  ENTER_FRAME_ENUM();
+  enum {frame_START, frame_SIZE, A, B, C, D, frame_END};
+  ENTER_FRAME_ENUM(frame);
 
   frame[A] = gc_alloc_int(1);
 
-  NEW_WORLD(frame_tmp1);
+  NEW_WORLD(frame1);
     frame[B] = test_int(frame[A]->intv);
-  END_WORLD(frame_tmp1,frame[B]);
+  END_WORLD(frame1, frame[B]);
 
-  NEW_WORLD(frame_tmp2);
+  NEW_WORLD(frame2);
     frame[C] = test_int(frame[B]->intv);
-  END_WORLD(frame_tmp2,frame[C]);
+  END_WORLD(frame2, frame[C]);
 
-  NEW_WORLD(frame_tmp3);
+  NEW_WORLD(frame3);
     frame[D] = test_int(frame[C]->intv);
-  END_WORLD(frame_tmp3,frame[D]);
+  END_WORLD(frame3, frame[D]);
 
   printf("id change check.........\n");
   gc_collect();
-  LEAVE_FRAME();
+  LEAVE_FRAME(frame);
 }
 
 void test_multi_world2() {
-  enum {FRAME_START, FRAME_SIZE, VM1,VM2,A, B, C, FRAME_END};
-  ENTER_FRAME_ENUM();
+  enum {frame_START, frame_SIZE, VM1,VM2,A, B, C, frame_END};
+  ENTER_FRAME_ENUM(frame);
   frame[A] = gc_alloc_int(1);
 
   VM* tmp_vm = vm;
@@ -588,16 +611,16 @@ void test_multi_world2() {
 
   printf("id change check.........\n");
   gc_collect();
-  LEAVE_FRAME();
+  LEAVE_FRAME(frame);
 }
 
 int main() {
-/*
+
   printf("------------- test\n");
   gc_init();
   test();
-  printf("------------- free\n");
   gc_free();
+
   printf("------------- test2\n");
   gc_init();
   test2();
@@ -612,12 +635,12 @@ int main() {
   gc_init();
   test_record();
   gc_free();
-*/
+
   printf("------------- test new world\n");
   gc_init();
   test_new_world();
   gc_free();
-/*
+
   printf("------------- test multi world\n");
   gc_init();
   test_multi_world();
@@ -627,7 +650,6 @@ int main() {
   gc_init();
   test_multi_world2();
   gc_free();
-*/
-  printf("sizeof type %ld header %ld\n", sizeof(ObjectType), sizeof(ObjectHeader));
+
   return 0;
 }
