@@ -369,7 +369,7 @@ VM* vm_new() {
   vm->record = NULL;
   vm->heap_list = NULL;
   vm->heap_num = 0;
-  vm->heap_max = 8;
+  vm->heap_max = 256;
   return vm;
 }
 
@@ -487,9 +487,6 @@ Object* test_new_world2(Object* data) {
   frame[B] = gc_alloc_int(3); // 6
   frame[C] = gc_alloc_int(5); // 7
 
-  gc_collect();
-  gc_collect();
-
   LEAVE_FRAME(frame);
   return frame[A];
 }
@@ -519,14 +516,14 @@ void test_new_world() {
 
       LEAVE_FRAME(frame2);
     END_WORLD(frame2, frame1[C]);// 6と7が消える。
-    assert(vm->heap_num==3);
+    assert(vm->heap_num==3);// ヒープには、cのデータと世界のデータが残る
     frame[B] = frame1[C];
     LEAVE_FRAME(frame1);
   printf("id change check.........\n");
-  END_WORLD(frame1,frame[B]);
+  END_WORLD(frame1,frame[B]);// ヒープには世界のデータともとのデータに新しい2つのデータで4つ
   assert(vm->heap_num==4);
   printf("id change check.........\n");
-  gc_collect();
+  gc_collect();// 世界のデータが消えて3つに
   assert(vm->heap_num==3);
   LEAVE_FRAME(frame);
 }
@@ -536,18 +533,17 @@ void test_pipes1() {
   ENTER_FRAME_ENUM(frame);
 
   frame[A] = gc_alloc_int(1); // 1
-
   assert(vm->heap_num==1);
+
   NEW_WORLD(frame1);
 
     assert(vm->heap_num==0);
     frame[B] = test_new_world2(frame[A]);
     assert(vm->heap_num==4);
     frame[B] = test_new_world2(frame[B]);
-    assert(vm->heap_num==6);
-    frame[B] = test_new_world2(frame[B]);
     assert(vm->heap_num==8);
-
+    frame[B] = test_new_world2(frame[B]);
+    assert(vm->heap_num==12);
   printf("id change check.........\n");
   END_WORLD(frame1,frame[B]);
   assert(vm->heap_num==8);
@@ -566,22 +562,25 @@ void test_pipes2() {
   assert(vm->heap_num==1);
   NEW_WORLD(frame1);
     assert(vm->heap_num==0);
-    frame[B] = test_new_world2(frame[A]);
+    frame[B] = test_new_world2(frame[A]); // 生きているのが2つ死んでいるのが2つ
     assert(vm->heap_num==4);
-    gc_collect_pipe(frame[B]);
+    gc_collect_pipe(frame[B]);// bだけコピーして後は消す
     assert(vm->heap_num==2);
-    frame[B] = test_new_world2(frame[B]);
-    assert(vm->heap_num==6);
-    gc_collect_pipe(frame[B]);
-    assert(vm->heap_num==4);
-    frame[B] = test_new_world2(frame[B]);
-    assert(vm->heap_num==8);
+    frame[B] = test_new_world2(frame[B]);// bを渡すと 2つのデータが入ってるのを渡す
+    assert(vm->heap_num==6); // 生きてる４、死んでる2
+    gc_collect_pipe(frame[B]);// bだけコピーして後は消す
+    assert(vm->heap_num==4);// 生きてる4
+    frame[B] = test_new_world2(frame[B]);// 4+4=
+    assert(vm->heap_num==8);// 4 + 4 = 8 生きてる6死んでる2と
+    gc_collect_pipe(frame[B]);// bだけコピーして後は消す
+    assert(vm->heap_num==6);// 生きてる6
 
   printf("id change check.........\n");
-  END_WORLD(frame1, frame[B]);
+  END_WORLD(frame1, frame[B]); // 世界が終わる
+  // ヒープ上には、元のデータ1と世界のデータ1と6つの生きているで8個
   assert(vm->heap_num==8);
   printf("id change check.........\n");
-  gc_collect();
+  gc_collect();// gcで世界のデータが消える。
   assert(vm->heap_num==7);
   LEAVE_FRAME(frame);
 }
@@ -591,25 +590,26 @@ void test_multi() {
   ENTER_FRAME_ENUM(frame);
 
   frame[A] = gc_alloc_int(1);
-  gc_collect();
   assert(vm->heap_num==1);
   NEW_WORLD(frame1);// vmオブジェクトが作られる
+    assert(vm->heap_num==0);
     assert(frame1_vm->heap_num==2);
   END_WORLD(frame1, frame[B]);
   assert(vm->heap_num==2);
-  gc_collect();
+  gc_collect();// 世界が消える
   assert(vm->heap_num==1);
 
   NEW_WORLD(frame2);
+    assert(frame2_vm->heap_num==2); // 世界が増える
     assert(vm->heap_num==0);
     frame[B] = test_int(frame[A]->intv);
     assert(vm->heap_num==1);
     assert(frame2_vm->heap_num==2);
   END_WORLD(frame2, frame[B]);
-  assert(vm->heap_num==3);
+  assert(vm->heap_num==3);// frame2の世界と値が増えた
 
   printf("id change check.........\n");
-  gc_collect();
+  gc_collect();// frame2世界が消えた
   assert(vm->heap_num==2);
   LEAVE_FRAME(frame);
 }
@@ -626,25 +626,25 @@ void test_multi_world() {
     frame[B] = test_int(frame[A]->intv);
     assert(vm->heap_num==1);
   END_WORLD(frame1, frame[B]);
-  assert(vm->heap_num==3);
+  assert(vm->heap_num==3);// 世界と値分増えた
 
   NEW_WORLD(frame2);
     assert(vm->heap_num==0);
     frame[C] = test_int(frame[B]->intv);
     assert(vm->heap_num==1);
   END_WORLD(frame2, frame[C]);
-  assert(vm->heap_num==5);
+  assert(vm->heap_num==5);// 世界と値分増えた
 
   NEW_WORLD(frame3);
     assert(vm->heap_num==0);
     frame[D] = test_int(frame[C]->intv);
     assert(vm->heap_num==1);
   END_WORLD(frame3, frame[D]);
-  assert(vm->heap_num==7);
+  assert(vm->heap_num==7);// 世界と値分増えた
 
   printf("id change check.........\n");
   gc_collect();
-  assert(vm->heap_num==4);
+  assert(vm->heap_num==4);// 世界が３つ消えた
   LEAVE_FRAME(frame);
 }
 
@@ -655,28 +655,29 @@ void test_multi_world2() {
 
   assert(vm->heap_num==1);
   VM* tmp_vm = vm;
-  frame[VM1] = (Object*)vm_new();
-  frame[VM2] = (Object*)vm_new();
+  frame[VM1] = (Object*)vm_new();// 世界を作る
+  frame[VM2] = (Object*)vm_new();// 世界を作る
   assert(vm->heap_num==3);
-  vm = (VM*)frame[VM1];
+  vm = (VM*)frame[VM1];// 世界を移動
     assert(vm->heap_num==0);
-    vm->record = test_int(frame[A]->intv);
+    vm->record = test_int(frame[A]->intv);// 計算する
     assert(vm->heap_num==1);
-  vm = (VM*)frame[VM2];
+  vm = (VM*)frame[VM2];// 世界を移動
     assert(vm->heap_num==0);
-    vm->record = test_int(frame[A]->intv);
+    vm->record = test_int(frame[A]->intv);// 計算する
     assert(vm->heap_num==1);
-  vm = tmp_vm;
+  vm = tmp_vm;// 元に戻る
   assert(vm->heap_num==3);
 
   frame[B] = vm_get_record((VM*)frame[VM1]);// コピーとる
   frame[C] = vm_get_record((VM*)frame[VM2]);// コピーとる
   printf("%d\n", vm->heap_num);
   assert(vm->heap_num==5);
-
+  frame[VM1] = NULL; // 世界を消す
+  frame[VM2] = NULL; // 世界を消す
   printf("id change check.........\n");
   gc_collect();
-  assert(vm->heap_num==5);
+  assert(vm->heap_num==3);
   LEAVE_FRAME(frame);
 }
 
