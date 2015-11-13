@@ -76,16 +76,14 @@ int main() {
 
 #include <dlfcn.h>
 
-void invoke_method(char *lib, char *method) {
+int invoke_method(char *lib, char *method) {
   void *dl_handle;
   void (*func)();
   char *error;
 
   dl_handle = dlopen(lib, RTLD_LAZY);
   if (!dl_handle) {
-    printf("HTTP/1.0 404 Not Found\n\n404 not found.\n");
-    printf("dlopen error !!! %s\n", dlerror());
-    return;
+    return 1;
   }
 
   func = dlsym(dl_handle, method);
@@ -93,7 +91,7 @@ void invoke_method(char *lib, char *method) {
   if (error != NULL) {
     printf("HTTP/1.0 404 Not Found\n\n404 not found.\n");
     printf("dlsym error !!! %s\n", error);
-    return;
+    return 2;
   }
 
   printf("HTTP/1.0 200 OK\n");
@@ -102,6 +100,7 @@ void invoke_method(char *lib, char *method) {
   (*func)();
 
   dlclose(dl_handle);
+  return 0;
 }
 
 #include "gc.h"
@@ -169,9 +168,17 @@ void http(int sockfd) {
   }
 
   gc_init();
-  invoke_method(uri_lib, "get_action");
-  gc_free();
+  if(invoke_method(uri_lib, "get_action") == 1) {
+    sprintf(uri_lib, "gcc -shared -fPIC -o %s.so %s.c gc.so", uri_file, uri_file);
+    system(uri_lib);
+    sprintf(uri_lib, "%s.so", uri_file);
 
+    if(invoke_method(uri_lib, "get_action") == 1) {
+      printf("HTTP/1.0 404 Not Found\n\n404 not found.\n");
+      printf("dlopen error !!! %s\n", dlerror());
+    }
+  }
+  gc_free();
 
 ret:
   fflush(stdout);

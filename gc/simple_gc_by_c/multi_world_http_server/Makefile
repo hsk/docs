@@ -1,5 +1,4 @@
-all:
-	gcc http.c gc.c
+all: http
 
 dylib: dylib.c dylib_main.c
 	gcc -shared -fPIC -o dylib.so dylib.c
@@ -17,15 +16,13 @@ dygc: gc.c test.c dygc.c test1.c
 	gcc -rdynamic -o dygc dygc.c -ldl gc.so
 	./dygc
 
-http: test.so gc.so http.c
+http: http.c gc.so
 	gcc -o http http.c -ldl gc.so -lc
+	open http://localhost:8088/index.html &
 	./http
 
 gc.so: gc.c
 	gcc -shared -fPIC -o gc.so gc.c
-
-test.so: test.c gc.so
-	gcc -shared -fPIC -o test.so test.c gc.so
 
 clean:
 	rm -rf a.out dylib *.so dygc dyload http
