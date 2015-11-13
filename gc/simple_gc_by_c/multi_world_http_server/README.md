@@ -21,6 +21,7 @@
 
 最初は普通にDLLを作ってみました。
 参考URLはこの辺です。<a name="r1"></a>[[1]](#1)
+Linuxとの互換性がっと思って、<a name="r3"></a>[[3]](#3) Linuxと同じように書いたら動いたのでこっちのほうがよいかなと。
 
 	dylib: dylib.c dylib_main.c
 		gcc -shared -fPIC -o dylib.so dylib.c
@@ -30,7 +31,6 @@
 ## 2. ダイナミックローディング
 
 次は、ダイナミックにロードしてみましょう。
-
 
 	dyload:
 		gcc -shared -fPIC -o dylib.so dylib.c
@@ -50,7 +50,7 @@ gcをするDLLを作って、test.soというDLLを作って読み込みます�
 ## 4. HTTPサーバを作る
 
 socketを使ってHTTPサーバを作ってみます。
-参考URLはこの辺です。<a name="r1"></a>[[1]](#1)
+参考URLはこの辺です。<a name="r3"></a>[[3]](#3)
 
 ## 5. 使ってみて
 
@@ -62,7 +62,16 @@ socketを使ってHTTPサーバを作ってみます。
 
 ## 6. 参考文献
 
-- <a name="1"></a>[[1]](#r1) ダイナミックロードの参考URL
+- <a name="1"></a>[[1]](#r1) Mac OSXでダイナミックライブラリdylibを作ったり使ったりする方法。
 
-- <a name="2"></a>[[2]](#r2) httpサーバ
+	https://blog.katty.in/4347
+
+- <a name="2"></a>[[2]](#r2) Linuxで共有ライブラリsoを作ったり使ったりする方法。
+
+	https://blog.katty.in/4346
+
+
+- <a name="3"></a>[[3]](#r3) HTTPサーバプログラムの作成
+
+	http://research.nii.ac.jp/~ichiro/syspro98/wwwserver.html
 
