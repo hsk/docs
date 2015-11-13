@@ -1,5 +1,5 @@
-<h1 id="http">マルチワールドHTTPサーバ</h1>
-<p>どうも、世界を複数作って作るGCはErlangの軽量プロセスのようなものです。<br />ここでは、multi world gcを使って、軽量プロセスによるwebサーバを作成します。<br />目標は、プログラムはDLLとして読み込み、軽量メモリ空間で実行し、処理が終わると解放する事です。<br />プログラムが古ければコンパイルし直します。<br />非同期IOが理想ですが、そこまではしません。</p>
+<h1 id="multi-world-http-server">Multi World HTTP Server</h1>
+<p>どうも、世界を複数作って作るGCはErlangの軽量プロセスのようなものです。<br />ここでは、Multi World GCを使って、軽量プロセスによるWebサーバを作成します。<br />目標は、プログラムはDLLとして読み込み、軽量メモリ空間で実行し、処理が終わると解放する事です。<br />プログラムが古ければコンパイルし直します。<br />非同期IOが理想ですが、そこまではしません。</p>
 <pre><code>make</code></pre>
 <p>とすると自動的に</p>
 <p><a href="http://localhost:8088">http://localhost:8088</a></p>
@@ -19,10 +19,10 @@
     gcc -rdynamic -o dyload dyload.c -ldl</code></pre>
 <h2 id="dllgc">3. ダイナミックロードするDLLでGCを使用する</h2>
 <p>gcをするDLLを作って、test.soというDLLを作って読み込みます。</p>
-<pre><code>dygc: gc.c test.c dygc.c test1.c
+<pre><code>dygc: gc.c test.c dygc.c hello.c
     gcc -shared -fPIC -o gc.so gc.c
     gcc -shared -fPIC -o test.so test.c gc.so
-    gcc -rdynamic -shared -fPIC -o test1.so test1.c
+    gcc -rdynamic -shared -fPIC -o hello.so hello.c
     gcc -rdynamic -o dygc dygc.c -ldl gc.so
     ./dygc</code></pre>
 <h2 id="http">4. HTTPサーバを作る</h2>
@@ -47,14 +47,14 @@
 <h2>5. 使ってみて</h2>
 <p>さまざまな、プログラムを作ってみました。</p>
 <ul>
-<li><a href="test1.c">test1.c</a>はなにもしていないのに、printfだけで動きます。<a href="test1">test1</a><br /></li>
+<li><a href="hello.c">hello.c</a>はなにもしていないのに、printfだけで動きます。<a href="hello">hello</a><br /></li>
 <li><a href="test.c">test.c</a>はなにもしてませんが、GCをごにょごにょしています。<a href="test">test</a><br /></li>
 <li><a href="string.c">string.c</a>は文字列生成関数がないと不便だと思って文字列用関数を作って使ってみてました。<a href="string">string</a><br /></li>
 <li><a href="pandoc.c">pandoc.c</a>はsystem関数を使ってpandoc<a name="r4"></a><a href="#4">[4]</a>を呼び出して、<a href="README.md">README.md</a>要するにこのファイルを表示します。Haskellが動くWebサーバですよw <a href="http://localhost:8088/pandoc">http://localhost:8088/pandoc</a> にアクセスすれば見れるのです。楽しい。このファイルを書き換えるだけで、内容が変わる。不思議です。<br /></li>
 <li><a href="calc.c">calc.c</a>は四則演算の構文木を作り、計算します。<a href="calc">calc</a></li>
 </ul>
 <p>非常に面白いですね。SML#でもWebアプリをSML#で作っていたのもうなずけます。</p>
-<p>しかし、GC付きのコードをちゃんと手で書くのはやっぱり面倒くさいです。<br />最初は面白いんです。でも段々めんどくさくなってきます。<br />コンパイラからの出力なら良いのだろうけど、手動で使うのはちょっと、、、。やはりコンパイラを作るしかない！<br />関数の開始と終了だけにマクロを書くのは仕方ないですが、変数をイチイチ管理された領域に書き込む必要があります。<br />管理された領域に書かないと、GCが起こった場合にだけ、突然謎のメモリエラーになってしまいます。<br />動的言語なら、ポーティングを書くのがめんどくさいみたいになる所です。やっぱり、RubyやD言語のような保守的なGCは楽で良いですねぇ。<br />However、完全な仕組みを理解し、それを使う事が目的であったので結構満足出来ました。</p>
+<p>しかし、GC付きのコードをちゃんと手で書くのはやはり手間がかかります。<br />コンパイラから出力したいところです。やはりコンパイラを作るしかない！<br />関数の開始と終了だけにマクロを書くのは仕方ないですが、変数を管理された領域に書き込む必要があります。<br />さもないと、GCが起こった場合にだけ、突然謎のメモリエラーになってしまいます。<br />動的言語なら、ポーティングを書くのがめんどくさいみたいになる所です。やっぱり、Rubyのような保守的なGCは楽で良いですねぇ。<br />とはいえ、自分が作ろうとしている言語はコンパイラ言語です。Cを書かずにCのソースをポート出来れば良いのです。<br />However、完全な仕組みを理解し、それを使う事が目的であったので結構満足出来ました。</p>
 <h2>6. 参考文献</h2>
 <ul>
 <li><p><a name="1"></a><a href="#r1">[1]</a> Mac OSXでダイナミックライブラリdylibを作ったり使ったりする方法。</p>

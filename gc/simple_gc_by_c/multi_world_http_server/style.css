@@ -4,6 +4,7 @@ body {
   background-image: radial-gradient(ellipse farthest-corner at center top, #FFFFFF 0%, #F8F4F0 100%);
 }
 * {
+  font-family: Athelas;
   color: #606655;
 }
 
@@ -19,6 +20,7 @@ code {
 
 h1,h2,h3,h4,h5 {
 	border-bottom: 3px solid #884444;
+	font-family: Impact,Charcoal; 
 }
 
 hr {

@@ -7,8 +7,8 @@ void get_action() {
   printf("<html>\n");
   printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\" />\n");
   printf("<body>\n");
-  printf("<h1>test1</h1>");
-  printf("test1\n");
+  printf("<h1>hello world</h1>");
+  printf("hello world\n");
   printf("<hr/>\n");
   printf("<a href=\"javascript:history.back()\">back</a>\n");
   printf("</body>\n");
