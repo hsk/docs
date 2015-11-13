@@ -1,30 +1,68 @@
 # マルチワールドHTTPサーバ
 
 ここでは、multi world gcを使って、軽量プロセスによるwebサーバを作成します。
-目標は、プログラムはDLLとして読み込み、軽量メモリ空間で実行され、処理が終わると解放する事です。
-プログラムが古ければコンパイルし直されます。
-非同期IOが理想ですが、そこまではしません。
-
+目標は、プログラムはDLLとして読み込み、軽量メモリ空間で実行し、処理が終わると解放する事です。
+プログラムが古ければコンパイルし直します。
+非同期IOが理想ですが、そこまではしません。するかもしれませんが。
 
 	make
 
-として、
-
+とすると自動的に
 
 	http://localhost:8088/index.html
 
-にアクセスすると、index.htmlが表示され、
+にアクセスし、index.htmlを表示します。
 
 	http://localhost:8088/string
 
-にアクセスすると、string.cがコンパイルされて実行されます。
+にアクセスすると、string.cがコンパイルして実行します。
 
 ## 1. とりあえず普通にDLLを作る
 
+最初は普通にDLLを作ってみました。
+参考URLはこの辺です。<a name="r1"></a>[[1]](#1)
+
+	dylib: dylib.c dylib_main.c
+		gcc -shared -fPIC -o dylib.so dylib.c
+		gcc -o dylib dylib_main.c dylib.so
+		./dylib
+
 ## 2. ダイナミックローディング
 
-毎回ダイナミックにロードしてみる。
+次は、ダイナミックにロードしてみましょう。
 
-## 3. ダイナミックロードするDLLでGCを使用する。
 
+	dyload:
+		gcc -shared -fPIC -o dylib.so dylib.c
+		gcc -rdynamic -o dyload dyload.c -ldl
+
+## 3. ダイナミックロードするDLLでGCを使用する
+
+gcをするDLLを作って、test.soというDLLを作って読み込みます。
+
+	dygc: gc.c test.c dygc.c test1.c
+		gcc -shared -fPIC -o gc.so gc.c
+		gcc -shared -fPIC -o test.so test.c gc.so
+		gcc -rdynamic -shared -fPIC -o test1.so test1.c
+		gcc -rdynamic -o dygc dygc.c -ldl gc.so
+		./dygc
+
+## 4. HTTPサーバを作る
+
+socketを使ってHTTPサーバを作ってみます。
+参考URLはこの辺です。<a name="r1"></a>[[1]](#1)
+
+## 5. 使ってみて
+
+ちゃんと手で書くのはやっぱり面倒くさいです。
+最初は面白いんです。でも段々めんどくさくなってきます。
+コンパイラからの出力なら良いのだろうけど、手動で使うのは面倒くさいですね。
+関数の開始と終了だけにマクロを書くのは仕方ないかもしれないですが、変数をイチイチ管理された領域に書き込む必要があるのが面倒くさいです。
+管理された領域に書かないと、GCが起こった場合にだけ、突然謎のメモリエラーになってしまいます。
+
+## 6. 参考文献
+
+- <a name="1"></a>[[1]](#r1) ダイナミックロードの参考URL
+
+- <a name="2"></a>[[2]](#r2) httpサーバ
 
