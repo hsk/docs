@@ -65,9 +65,17 @@ static Object* eval(Object* e) {
 static void model(Object** val) {
 	enum {val_START, val_SIZE, result, A, B, C, val_END};
 	val[result] = str("Calc");
-	val[A] = ebin(EMul, ebin(EAdd,eint(1),eint(2)), eint(5));
+	val[A] = eint(1);
+	val[B] = eint(2);
+	val[A] = ebin(EAdd,val[A],val[B]);
+	val[B] = eint(5);
+	val[A] = ebin(EMul, val[A], val[B]);
 	val[B] = eval(val[A]);
-	val[A] = ebin(EDiv, ebin(EMul,eint(10),eint(20)), eint(5));
+	val[A] = eint(10);
+	val[C] = eint(20);
+	val[A] = ebin(EMul,val[A],val[C]);
+	val[C] = eint(5);
+	val[A] = ebin(EDiv, val[A], val[C]);
 	val[C] = eval(val[A]);
 }
 
@@ -81,9 +89,9 @@ static void view(Object** val) {
   printf("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />");
   printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\" />\n");
   printf("<body>\n");
-  printf("<h1>%s</h1>", val[result]->chars);
-  printf("(1+2)*5=%ld<br/>", val[B]->longv);
-  printf("(10*20)/5=%ld<br/>", val[C]->longv);
+  printf("<h1>%s</h1>\n", val[result]->chars);
+  printf("(1+2)*5=%ld<br/>\n", val[B]->longv);
+  printf("(10*20)/5=%ld<br/>\n", val[C]->longv);
 
   printf("<hr/>\n");
   printf("<a href=\"index.html\">back</a>\n");
