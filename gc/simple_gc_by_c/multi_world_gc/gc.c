@@ -309,12 +309,12 @@ Object* gc_copy(VM* vm, Object* object) {
     case OBJ_UNBOXED_ARRAY:
     case OBJ_VM:
       new = gc_alloc(head->type, head->size);
-      memcpy(object, new, head->size);
+      memcpy(new, object, head->size);
       break;
     case OBJ_RECORD:
       size = ((int)head->size) / sizeof(long);
       new = gc_alloc(head->type, head->size);
-      memcpy(object, new, head->size);
+      memcpy(new, object, head->size);
       bitmap = &object->longs[size];
       for(int i = 0; i < size; i++) {
         if(bitmap[i/sizeof(long)] & (1 << (i % sizeof(long))))
