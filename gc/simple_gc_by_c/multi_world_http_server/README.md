@@ -51,8 +51,33 @@ gcをするDLLを作って、test.soというDLLを作って読み込みます�
 
 socketを使ってHTTPサーバを作ってみます。
 HTTPサーバプログラムの作成<a name="r3"></a>[[3]](#3)を参考に改造してみました。
-DLLを読み込む機能を付け、標準出力をソケットに繋ぎ変えることで、CGIのような動作をDLLで行います。
+DLLを読み込む機能をつくり、標準出力をソケットに繋ぎ変えることで、CGIのような動作をDLLで行います。
+繋ぎ変えるにはfilenoを使って低水準のハンドルを取得し、dupを使ってハンドルをコピーして保存し、dup2で置き換えます。
+
+	  int stdoutno = fileno(stdout);
+	  int back_stdoutno = dup(stdoutno);
+	  dup2(sockfd, stdoutno);
+
+処理が終わったら、fflushで出力をフラッシュして、dup2でバックアップを取っていた物に標準出力を戻し、バックアップのハンドルは閉じます。
+
+	  fflush(stdout);
+	  dup2(back_stdoutno, stdoutno);
+	  close(back_stdoutno);
+
 動くと楽しいものです。
+
+ソケットを使ったサーバは、直ぐに閉じなくて困るのでオプションを設定してみました。
+
+	  int val = 1;
+	  setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
+
+	  struct linger ling;
+	  ling.l_onoff = 1;
+	  ling.l_linger = 0;
+	  printf("set %d\n", setsockopt(sockfd, SOL_SOCKET, SO_LINGER, &ling, sizeof(ling)));
+
+シグナルに対応するなどもしてますが、当たり前ですけど軽量プロセス故に1個死ぬと全部死にます。
+HTTPモジュールなので仕方ないですね。みたいな雰囲気を醸し出しており面白いものがあります。
 
 ## 5. 使ってみて
 
