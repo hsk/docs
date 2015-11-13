@@ -9,9 +9,9 @@
 
 とすると自動的に
 
-	http://localhost:8088/index.html
+	http://localhost:8088
 
-にアクセスし、index.htmlを表示します。
+にアクセスし、[pandoc.c](pandoc.c)を実行して[README.md](README.md)をHTMLに変換し表示します。
 
 	http://localhost:8088/string
 

@@ -17,8 +17,9 @@ dygc: gc.c test.c dygc.c test1.c
 	./dygc
 
 http: http.c gc.so
+	pandoc -f markdown_github README.md -o index.html
 	gcc -o http http.c -ldl gc.so -lc
-	open http://localhost:8088/index.html &
+	open http://localhost:8088/ &
 	./http
 
 gc.so: gc.c

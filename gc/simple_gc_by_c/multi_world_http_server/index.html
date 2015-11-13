@@ -1,14 +1,69 @@
-<html>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<link rel="stylesheet" type="text/css" href="style.css" />
-<body>
-<h1>http server</h1>
+<h1 id="http">マルチワールドHTTPサーバ</h1>
+<p>ここでは、multi world gcを使って、軽量プロセスによるwebサーバを作成します。<br />目標は、プログラムはDLLとして読み込み、軽量メモリ空間で実行し、処理が終わると解放する事です。<br />プログラムが古ければコンパイルし直します。<br />非同期IOが理想ですが、そこまではしません。するかもしれませんが。</p>
+<pre><code>make</code></pre>
+<p>とすると自動的に</p>
+<pre><code>http://localhost:8088</code></pre>
+<p>にアクセスし、<a href="pandoc.c">pandoc.c</a>を実行して<a href="README.md">README.md</a>をHTMLに変換し表示します。</p>
+<pre><code>http://localhost:8088/string</code></pre>
+<p>にアクセスすると、string.cがコンパイルして実行します。</p>
+<h2 id="dll">1. とりあえず普通にDLLを作る</h2>
+<p>最初は普通にDLLを作ってみました。<br />参考URLはこの辺です。<a name="r1"></a><a href="#1">[1]</a><br />Linuxとの互換性がっと思って、<a name="r2"></a><a href="#2">[2]</a> Linuxと同じように書いたら動いたのでこっちのほうがよいかなと。</p>
+<pre><code>dylib: dylib.c dylib_main.c
+    gcc -shared -fPIC -o dylib.so dylib.c
+    gcc -o dylib dylib_main.c dylib.so
+    ./dylib</code></pre>
+<h2>2. ダイナミックローディング</h2>
+<p>次は、ダイナミックにロードしてみましょう。</p>
+<pre><code>dyload:
+    gcc -shared -fPIC -o dylib.so dylib.c
+    gcc -rdynamic -o dyload dyload.c -ldl</code></pre>
+<h2 id="dllgc">3. ダイナミックロードするDLLでGCを使用する</h2>
+<p>gcをするDLLを作って、test.soというDLLを作って読み込みます。</p>
+<pre><code>dygc: gc.c test.c dygc.c test1.c
+    gcc -shared -fPIC -o gc.so gc.c
+    gcc -shared -fPIC -o test.so test.c gc.so
+    gcc -rdynamic -shared -fPIC -o test1.so test1.c
+    gcc -rdynamic -o dygc dygc.c -ldl gc.so
+    ./dygc</code></pre>
+<h2 id="http">4. HTTPサーバを作る</h2>
+<p>socketを使ってHTTPサーバを作ってみます。<br />HTTPサーバプログラムの作成<a name="r3"></a><a href="#3">[3]</a>を参考に改造してみました。<br />DLLを読み込む機能をつくり、標準出力をソケットに繋ぎ変えることで、CGIのような動作をDLLで行います。<br />繋ぎ変えるにはfilenoを使って低水準のハンドルを取得し、dupを使ってハンドルをコピーして保存し、dup2で置き換えます。</p>
+<pre><code>  int stdoutno = fileno(stdout);
+  int back_stdoutno = dup(stdoutno);
+  dup2(sockfd, stdoutno);</code></pre>
+<p>処理が終わったら、fflushで出力をフラッシュして、dup2でバックアップを取っていた物に標準出力を戻し、バックアップのハンドルは閉じます。</p>
+<pre><code>  fflush(stdout);
+  dup2(back_stdoutno, stdoutno);
+  close(back_stdoutno);</code></pre>
+<p>動くと楽しいものです。</p>
+<p>ソケットを使ったサーバは、直ぐに閉じなくて困るのでオプションを設定してみました。</p>
+<pre><code>  int val = 1;
+  setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &amp;val, sizeof(val));
+
+  struct linger ling;
+  ling.l_onoff = 1;
+  ling.l_linger = 0;
+  printf(&quot;set %d\n&quot;, setsockopt(sockfd, SOL_SOCKET, SO_LINGER, &amp;ling, sizeof(ling)));</code></pre>
+<p>シグナルに対応するなどもしてますが、当たり前ですけど軽量プロセス故に1個死ぬと全部死にます。<br />HTTPモジュールなので仕方ないですね。みたいな雰囲気を醸し出しており面白いものがあります。<br />シグナルは<a name="r5"></a><a href="#5">[5]</a>を参考にしました。</p>
+<h2>5. 使ってみて</h2>
+<p>さまざまな、プログラムを作ってみました。</p>
 <ul>
-  <li><a href="test">test.c</a>
-  <li><a href="test1">test1.c</a>
-  <li><a href="string">string.c</a>
-  <li><a href="pandoc">pandoc.c system("pandoc README.md")でmarkdown表示</a>
-  <li><a href="calc">calc.c</a>
+<li><a href="test1.c">test1.c</a>はなにもしていないのに、printfだけで動きます。<a href="test1">test1</a><br /></li>
+<li><a href="test.c">test.c</a>はなにもしてませんが、GCをごにょごにょしています。<a href="test">test</a><br /></li>
+<li><a href="string.c">string.c</a>は文字列生成関数がないと不便だと思って文字列用関数を作って使ってみてました。<a href="string">string</a><br /></li>
+<li><a href="pandoc.c">pandoc.c</a>はsystem関数を使ってpandoc<a name="r4"></a><a href="#4">[4]</a>を呼び出して、<a href="README.md">README.md</a>要するにこのファイルを表示します。Haskellが動くWebサーバですよw <a href="http://localhost:8088/pandoc">http://localhost:8088/pandoc</a> にアクセスすれば見れるのです。楽しい。このファイルを書き換えるだけで、内容が変わる。不思議です。<br /></li>
+<li><a href="calc.c">calc.c</a>は四則演算の構文木を作り、計算します。<a href="calc">calc</a></li>
 </ul>
-</body>
-</html>
+<p>GC付きのコードをちゃんと手で書くのはやっぱり面倒くさいですね。<br />最初は面白いんです。でも段々めんどくさくなってきます。<br />コンパイラからの出力なら良いのだろうけど、手動で使うのはちょっと、、、。<br />関数の開始と終了だけにマクロを書くのは仕方ないかもしれないですが、変数をイチイチ管理された領域に書き込む必要があるのが面倒くさいです。<br />でも、管理された領域に書かないと、GCが起こった場合にだけ、突然謎のメモリエラーになってしまいます。<br />動的言語なら、ポーティングを書くのがめんどくさいみたいになる所です。やっぱり、RubyやD言語のような保守的なGCは楽で良いですねぇ。<br />でも、完全な仕組みを理解し、それを使う事が目的であったので結構満足出来ました。</p>
+<h2>6. 参考文献</h2>
+<ul>
+<li><p><a name="1"></a><a href="#r1">[1]</a> Mac OSXでダイナミックライブラリdylibを作ったり使ったりする方法。</p>
+<p><a href="https://blog.katty.in/4347">https://blog.katty.in/4347</a></p></li>
+<li><p><a name="2"></a><a href="#r2">[2]</a> Linuxで共有ライブラリsoを作ったり使ったりする方法。</p>
+<p><a href="https://blog.katty.in/4346">https://blog.katty.in/4346</a></p></li>
+<li><p><a name="3"></a><a href="#r3">[3]</a> HTTPサーバプログラムの作成</p>
+<p><a href="http://research.nii.ac.jp/~ichiro/syspro98/wwwserver.html">http://research.nii.ac.jp/~ichiro/syspro98/wwwserver.html</a></p></li>
+<li><p><a name="4"></a><a href="#r4">[4]</a> Pandocユーザーズガイド</p>
+<p><a href="http://sky-y.github.io/site-pandoc-jp/users-guide/">http://sky-y.github.io/site-pandoc-jp/users-guide/</a></p></li>
+<li><p><a name="5"></a><a href="#r5">[5]</a>【Android NDK】sigsegvをフックする【cocos2d-x】</p>
+<p><a href="http://qiita.com/kuuki_yomenaio/items/08781e4778df3928bb9b">http://qiita.com/kuuki_yomenaio/items/08781e4778df3928bb9b</a></p></li>
+</ul>

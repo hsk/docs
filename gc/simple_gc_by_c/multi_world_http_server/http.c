@@ -145,7 +145,9 @@ void http(int sockfd) {
     goto ret;
   }
 
-
+  if(strcmp(uri_file,"")==0 || strcmp(uri_file,"/")==0){
+    uri_file="pandoc";
+  }
   sprintf(uri_lib, "%s.c", uri_file);
 
   struct stat fic;
