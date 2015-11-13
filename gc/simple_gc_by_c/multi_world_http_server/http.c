@@ -20,7 +20,7 @@ static int sigsegvSignalHandler(int sig){
 }
 
 void initSignalHandler(){
-    signal(SIGINT, &sigsegvSignalHandler);
+//    signal(SIGINT, &sigsegvSignalHandler);
     signal(SIGSEGV, &sigsegvSignalHandler);
 }
 
@@ -114,14 +114,16 @@ void http(int sockfd) {
   char uri_lib[512];
   char http_ver[64];  char *uri_file;
 
+
+  if (read(sockfd, buf, 1024) <= 0) {
+    fprintf(stderr, "error: reading a request.\n");
+    return;
+  }
+
   int stdoutno = fileno(stdout);
   int back_stdoutno = dup(stdoutno);
   dup2(sockfd, stdoutno);
 
-  if (read(sockfd, buf, 1024) <= 0) {
-    fprintf(stderr, "error: reading a request.\n");
-    goto ret;
-  }
   sscanf(buf, "%s %s %s", meth_name, uri_addr, http_ver);
   if (strcmp(meth_name, "GET") != 0) {
     printf("HTTP/1.0 501 Not Implemented");

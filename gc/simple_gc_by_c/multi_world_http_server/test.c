@@ -8,6 +8,7 @@ void get_action() {
   printf("<html>\n");
   printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\" />\n");
   printf("<body>\n");
+  printf("<h1>test gc</h1>");
 
   printf("start test\n");
   enum {frame_START, frame_SIZE, VM1, VM2, A, B, C, frame_END};

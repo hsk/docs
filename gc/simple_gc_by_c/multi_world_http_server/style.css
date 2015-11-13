@@ -16,3 +16,13 @@ pre {
 code {
   color: #444444;
 }
+
+h1,h2,h3,h4,h5 {
+	border-bottom: 3px solid #884444;
+}
+
+hr {
+border:none;
+border-top:dashed 1px #AA0000;
+height:1px;
+}
