@@ -6,10 +6,14 @@
 非同期IOが理想ですが、そこまではしません。
 
 
-	make http
+	make
 
 として、
 
+
+	http://localhost:8088/index.html
+
+にアクセスすると、index.htmlが表示され、
 
 	http://localhost:8088/string
 

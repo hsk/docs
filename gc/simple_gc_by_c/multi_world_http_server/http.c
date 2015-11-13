@@ -95,9 +95,6 @@ int invoke_method(char *lib, char *method) {
     return 2;
   }
 
-  printf("HTTP/1.0 200 OK\n");
-  printf("text/html\n");
-  bodystart();
   (*func)();
 
   dlclose(dl_handle);
@@ -139,7 +136,6 @@ void http(int sockfd) {
     printf("text/html\n");
     bodystart();
     while((len = fread(buf, 1, 1024, fp)) > 0) {
-      fwrite(buf, len, 1, stderr);
       if (fwrite(buf, 1, len, stdout) != len) {
         fprintf(stderr, "error: writing a response.\n");
         break;

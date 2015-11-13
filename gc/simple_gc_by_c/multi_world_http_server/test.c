@@ -1,6 +1,10 @@
 #include "gc.h"
 
 void get_action() {
+  printf("HTTP/1.0 200 OK\n");
+  printf("text/html\n");
+  printf("Cache-Control: max-age=0\n\n");
+
   printf("<html>\n");
   printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\" />\n");
   printf("<body>\n");

@@ -1,10 +1,18 @@
 body {
-  position: absolute;
-  width: 500px;
-  height: 300px;
+  padding: 5px;
   background-image: -webkit-radial-gradient(center top, ellipse farthest-corner, #FFFFFF 0%, #F8F4F0 100%);
   background-image: radial-gradient(ellipse farthest-corner at center top, #FFFFFF 0%, #F8F4F0 100%);
 }
 * {
   color: #606655;
+}
+
+pre {
+  margin: 5px;
+  padding: 5px;
+  background: #F4F4F2;
+  box-shadow: -1px -1px 2px 2px rgba(255,255,255,0.4) inset;
+}
+code {
+  color: #444444;
 }

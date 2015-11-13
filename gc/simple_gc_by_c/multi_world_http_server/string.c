@@ -1,20 +1,6 @@
 #include "gc.h"
 #include <string.h>
 
-static Object* str(char* str) {
-  long len = strlen(str);
-  Object* o = gc_alloc_unboxed_array(len+1);
-  strcpy(o->chars, str);
-  return o;
-}
-
-static Object* str_cat(Object* str1, Object* str2) {
-  long len = strlen(str1->chars) + strlen(str2->chars);
-  Object* o = gc_alloc_unboxed_array(len+1);
-  sprintf(o->chars, "%s%s", str1->chars, str2->chars);
-  return o;
-}
-
 enum {val_START, val_SIZE, A, B, Str, Str2, val_END};
 
 static void model(Object** val) {
@@ -25,6 +11,10 @@ static void model(Object** val) {
 }
 
 static void view(Object** val) {
+  printf("HTTP/1.0 200 OK\n");
+  printf("text/html\n");
+  printf("Cache-Control: max-age=0\n\n");
+
   printf("<html>\n");
   printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\" />\n");
   printf("<body>\n");

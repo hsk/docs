@@ -185,6 +185,13 @@ void* gc_alloc_int(int n) {
   return data;
 }
 
+void* gc_alloc_long(long n) {
+  long* data = gc_alloc(OBJ_UNBOXED_ARRAY, sizeof(long)*1);
+
+  debug("int ptr %p\n", data);
+  *data = n;
+  return data;
+}
 
 Object* gc_copy(VM* vm, Object* object) {
   ObjectHeader* head = &((ObjectHeader*)object)[-1];

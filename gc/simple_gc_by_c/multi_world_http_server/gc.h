@@ -118,6 +118,8 @@ void* gc_alloc(ObjectType type, int size);
 #define BIT(n) (1 << n)
 
 void* gc_alloc_int(int n);
+void* gc_alloc_long(long n);
+
 Object* gc_copy(VM* vm, Object* object);
 #define ENTER_FRAME(frame, SIZE) \
   Object* frame[SIZE+2]; \
@@ -137,3 +139,17 @@ Object* vm_end_record(VM* vm);
 VM* vm_new();
 void gc_init();
 void gc_free();
+
+static Object* str(char* str) {
+  long len = strlen(str);
+  Object* o = gc_alloc_unboxed_array(len+1);
+  strcpy(o->chars, str);
+  return o;
+}
+
+static Object* str_cat(Object* str1, Object* str2) {
+  long len = strlen(str1->chars) + strlen(str2->chars);
+  Object* o = gc_alloc_unboxed_array(len+1);
+  sprintf(o->chars, "%s%s", str1->chars, str2->chars);
+  return o;
+}
