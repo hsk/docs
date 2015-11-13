@@ -1,6 +1,10 @@
 #include "gc.h"
 
 void get_action() {
+  printf("<html>\n");
+  printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\" />\n");
+  printf("<body>\n");
+
   printf("start test\n");
   enum {frame_START, frame_SIZE, VM1, VM2, A, B, C, frame_END};
   ENTER_FRAME_ENUM(frame);
@@ -39,4 +43,8 @@ void get_action() {
   //assert(vm->heap_num==3);
   printf("test888 %d %d\n", frame[A]->intv, frame[B]->intv+frame[C]->intv);
   LEAVE_FRAME(frame);
+  printf("<hr/>\n");
+  printf("<a href=\"index.html\">back</a>\n");
+  printf("</body>\n");
+  printf("</html>\n");
 }

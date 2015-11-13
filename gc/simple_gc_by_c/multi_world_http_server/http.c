@@ -63,7 +63,6 @@ int main() {
       fprintf(stderr, "error: accepting a socket.\n");
       break;
     } else {
-      fprintf(stderr, "accept\n");
       http(new_sockfd);
       close(new_sockfd);
     }
@@ -75,6 +74,7 @@ int main() {
 }
 
 #include <dlfcn.h>
+#define bodystart() printf("Cache-Control: max-age=0\n\n");
 
 int invoke_method(char *lib, char *method) {
   void *dl_handle;
@@ -89,14 +89,15 @@ int invoke_method(char *lib, char *method) {
   func = dlsym(dl_handle, method);
   error = dlerror();
   if (error != NULL) {
-    printf("HTTP/1.0 404 Not Found\n\n404 not found.\n");
-    printf("dlsym error !!! %s\n", error);
+    printf("HTTP/1.0 404 Not Found\n");
+    bodystart();
+    printf("404 not found.\ndlsym error !!! %s\n", error);
     return 2;
   }
 
   printf("HTTP/1.0 200 OK\n");
   printf("text/html\n");
-  printf("\n");
+  bodystart();
   (*func)();
 
   dlclose(dl_handle);
@@ -105,7 +106,6 @@ int invoke_method(char *lib, char *method) {
 
 #include "gc.h"
 #include <sys/stat.h>
-
 
 void http(int sockfd) {
 
@@ -127,8 +127,8 @@ void http(int sockfd) {
   }
   sscanf(buf, "%s %s %s", meth_name, uri_addr, http_ver);
   if (strcmp(meth_name, "GET") != 0) {
-    printf("error2\n");
     printf("HTTP/1.0 501 Not Implemented");
+    bodystart();
     goto ret;
   }
   uri_file = uri_addr+1;
@@ -137,7 +137,7 @@ void http(int sockfd) {
   if ((fp = fopen(uri_file, "r")) != NULL) {
     printf("HTTP/1.0 200 OK\n");
     printf("text/html\n");
-    printf("\n");
+    bodystart();
     while((len = fread(buf, 1, 1024, fp)) > 0) {
       fwrite(buf, len, 1, stderr);
       if (fwrite(buf, 1, len, stdout) != len) {
@@ -174,8 +174,10 @@ void http(int sockfd) {
     sprintf(uri_lib, "%s.so", uri_file);
 
     if(invoke_method(uri_lib, "get_action") == 1) {
-      printf("HTTP/1.0 404 Not Found\n\n404 not found.\n");
-      printf("dlopen error !!! %s\n", dlerror());
+      printf("HTTP/1.0 404 Not Found\n");
+      bodystart();
+
+      printf("404 not found.\ndlopen error !!! %s\n", dlerror());
     }
   }
   gc_free();

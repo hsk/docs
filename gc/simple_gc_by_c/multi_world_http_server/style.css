@@ -1,0 +1,10 @@
+body {
+  position: absolute;
+  width: 500px;
+  height: 300px;
+  background-image: -webkit-radial-gradient(center top, ellipse farthest-corner, #FFFFFF 0%, #F8F4F0 100%);
+  background-image: radial-gradient(ellipse farthest-corner at center top, #FFFFFF 0%, #F8F4F0 100%);
+}
+* {
+  color: #606655;
+}
