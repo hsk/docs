@@ -5,7 +5,7 @@ body {
 }
 * {
   font-family: Athelas;
-  color: #606655;
+  color: #404433;
 }
 
 pre {
@@ -19,8 +19,21 @@ code {
 }
 
 h1,h2,h3,h4,h5 {
-	border-bottom: 3px solid #884444;
-	font-family: Impact,Charcoal; 
+  color: #444433;
+  border-bottom: 3px solid #884444;
+  font-family: Impact,Charcoal; 
+}
+
+h1 {
+  color: #444400;
+  border-bottom: 4px solid #F4FF44;
+}
+a {
+  color: #222266;
+}
+h1 a,h2 a,h3 a,h4 a,h5 a {
+  border-bottom: 0px;
+  font-family: Impact,Charcoal; 
 }
 
 hr {

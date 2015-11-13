@@ -1,5 +1,17 @@
 # Multi World HTTP Server
 
+## Index
+
+- <a name="rintro"></a>[Introduction](#intro)
+1. <a name="rc1"></a>[DLLを作る](#c1)
+1. <a name="rc2"></a>[ダイナミックローディング](#c2)
+1. <a name="rc3"></a>[ダイナミックロードするDLLでGCを使用する](#c3)
+1. <a name="rc4"></a>[HTTPサーバを作る](#c4)
+1. <a name="rc5"></a>[考察](#c5)
+1. <a name="rc6"></a>[参考文献](#c6)
+
+## <a name="intro"></a>[Introduction](#rintro)
+
 どうも、世界を複数作って作るGCはErlangの軽量プロセスのようなものです。
 ここでは、Multi World GCを使って、軽量プロセスによるWebサーバを作成します。
 目標は、プログラムはDLLとして読み込み、軽量メモリ空間で実行し、処理が終わると解放する事です。
@@ -18,7 +30,7 @@ http://localhost:8088/string
 
 にアクセスすると、string.cがコンパイルして実行します。
 
-## 1. とりあえず普通にDLLを作る
+## 1. <a name="c1"></a>[DLLを作る](#rc1)
 
 最初は普通にDLLを作ってみました。
 参考URLはこの辺です。<a name="r1"></a>[[1]](#1)
@@ -29,7 +41,7 @@ Linuxとの互換性がっと思って、<a name="r2"></a>[[2]](#2) Linuxと同�
 		gcc -o dylib dylib_main.c dylib.so
 		./dylib
 
-## 2. ダイナミックローディング
+## 2. <a name="c2"></a>[ダイナミックローディング](#rc2)
 
 次は、ダイナミックにロードしてみましょう。
 
@@ -37,7 +49,7 @@ Linuxとの互換性がっと思って、<a name="r2"></a>[[2]](#2) Linuxと同�
 		gcc -shared -fPIC -o dylib.so dylib.c
 		gcc -rdynamic -o dyload dyload.c -ldl
 
-## 3. ダイナミックロードするDLLでGCを使用する
+## 3. <a name="c3"></a>[ダイナミックロードするDLLでGCを使用する](#rc3)
 
 gcをするDLLを作って、test.soというDLLを作って読み込みます。
 
@@ -48,7 +60,7 @@ gcをするDLLを作って、test.soというDLLを作って読み込みます�
 		gcc -rdynamic -o dygc dygc.c -ldl gc.so
 		./dygc
 
-## 4. HTTPサーバを作る
+## 4. <a name="c4"></a>[HTTPサーバを作る](#rc4)
 
 socketを使ってHTTPサーバを作ってみます。
 HTTPサーバプログラムの作成<a name="r3"></a>[[3]](#3)を参考に改造してみました。
@@ -81,15 +93,18 @@ DLLを読み込む機能をつくり、標準出力をソケットに繋ぎ変�
 HTTPモジュールなので仕方ないですね。みたいな雰囲気を醸し出しており面白いものがあります。
 シグナルは<a name="r5"></a>[[5]](#5)を参考にしました。
 
-## 5. 使ってみて
+## 5. <a name="c5"></a>[考察](#rc5)
 
 さまざまな、プログラムを作ってみました。
 
-- [hello.c](hello.c)はなにもしていないのに、printfだけで動きます。[hello](hello)
-- [test.c](test.c)はなにもしてませんが、GCをごにょごにょしています。[test](test)
-- [string.c](string.c)は文字列生成関数がないと不便だと思って文字列用関数を作って使ってみてました。[string](string)
-- [pandoc.c](pandoc.c)はsystem関数を使ってpandoc<a name="r4"></a>[[4]](#4)を呼び出して、[README.md](README.md)要するにこのファイルを表示します。Haskellが動くWebサーバですよw http://localhost:8088/pandoc にアクセスすれば見れるのです。楽しい。このファイルを書き換えるだけで、内容が変わる。不思議です。
-- [calc.c](calc.c)は四則演算の構文木を作り、計算します。[calc](calc)
+1. [hello.c](hello.c)はなにもしていないのに、printfだけで動きます。[hello](hello)
+1. [test.c](test.c)はなにもしてませんが、GCをごにょごにょしています。[test](test)
+1. [string.c](string.c)は文字列生成関数がないと不便だと思って文字列用関数を作って使ってみてました。[string](string)
+1. [pandoc.c](pandoc.c)はsystem関数を使ってpandoc<a name="r4"></a>[[4]](#4)を呼び出します。
+	要するにこのファイル[(README.md)](README.md)を表示します。
+	Haskellが動くWebサーバですよw http://localhost:8088/pandoc にアクセスすれば見れるのです。
+	楽しい。このファイルを書き換えるだけで、内容が変わる。不思議です。
+1. [calc.c](calc.c)は四則演算の構文木を作り、計算します。[calc](calc)
 
 非常に面白いですね。SML#でもWebアプリをSML#で作っていたのもうなずけます。
 
@@ -101,7 +116,7 @@ HTTPモジュールなので仕方ないですね。みたいな雰囲気を醸�
 とはいえ、自分が作ろうとしている言語はコンパイラ言語です。Cを書かずにCのソースをポート出来れば良いのです。
 However、完全な仕組みを理解し、それを使う事が目的であったので結構満足出来ました。
 
-## 6. 参考文献
+## 6. <a name="c6"></a>[参考文献](#rc6)
 
 - <a name="1"></a>[[1]](#r1) Mac OSXでダイナミックライブラリdylibを作ったり使ったりする方法。
 
