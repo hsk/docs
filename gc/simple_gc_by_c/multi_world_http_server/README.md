@@ -78,6 +78,7 @@ DLLを読み込む機能をつくり、標準出力をソケットに繋ぎ変�
 
 シグナルに対応するなどもしてますが、当たり前ですけど軽量プロセス故に1個死ぬと全部死にます。
 HTTPモジュールなので仕方ないですね。みたいな雰囲気を醸し出しており面白いものがあります。
+シグナルは<a name="r5"></a>[[5]](#5)を参考にしました。
 
 ## 5. 使ってみて
 
@@ -113,3 +114,6 @@ GC付きのコードをちゃんと手で書くのはやっぱり面倒くさい
 
 	http://sky-y.github.io/site-pandoc-jp/users-guide/
 
+- <a name="5"></a>[[5]](#r5)【Android NDK】sigsegvをフックする【cocos2d-x】
+
+	http://qiita.com/kuuki_yomenaio/items/08781e4778df3928bb9b
