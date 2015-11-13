@@ -7,7 +7,8 @@ static void model(Object** val) {
   val[A] = gc_alloc_int(1);
   gc_alloc_int(12);
   val[Str] = str("test data desu.");
-  val[Str2] = str_cat(val[Str], str("hoge"));	
+  val[Str2] = str("hoge");
+  val[Str2] = str_cat(val[Str], val[Str2]);	
 }
 
 static void view(Object** val) {
@@ -26,7 +27,7 @@ static void view(Object** val) {
   gc_collect();
   printf("heap_num %ld<br/>\n", vm->heap_num);
   printf("<hr/>\n");
-  printf("<a href=\"index.html\">back</a>\n");
+  printf("<a href=\"javascript:history.back()\">back</a>\n");
   printf("</body>\n");
   printf("</html>\n");
 }

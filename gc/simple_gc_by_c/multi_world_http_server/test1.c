@@ -9,7 +9,7 @@ void get_action() {
   printf("<body>\n");
   printf("test1\n");
   printf("<hr/>\n");
-  printf("<a href=\"index.html\">back</a>\n");
+  printf("<a href=\"javascript:history.back()\">back</a>\n");
   printf("</body>\n");
   printf("</html>\n");
 }

@@ -94,7 +94,7 @@ static void view(Object** val) {
   printf("(10*20)/5=%ld<br/>\n", val[C]->longv);
 
   printf("<hr/>\n");
-  printf("<a href=\"index.html\">back</a>\n");
+  printf("<a href=\"javascript:history.back()\">back</a>\n");
   printf("</body>\n");
   printf("</html>\n");
 }

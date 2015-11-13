@@ -48,7 +48,7 @@ void get_action() {
   printf("test888 %d %d\n", frame[A]->intv, frame[B]->intv+frame[C]->intv);
   LEAVE_FRAME(frame);
   printf("<hr/>\n");
-  printf("<a href=\"index.html\">back</a>\n");
+  printf("<a href=\"javascript:history.back()\">back</a>\n");
   printf("</body>\n");
   printf("</html>\n");
 }

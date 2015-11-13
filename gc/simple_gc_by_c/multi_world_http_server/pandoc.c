@@ -10,10 +10,10 @@ static void view(Object** val) {
   printf("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />");
   printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\" />\n");
   printf("<body>\n");
-  system("pandoc README.md");
+  system("pandoc -f markdown_github README.md");
 
   printf("<hr/>\n");
-  printf("<a href=\"index.html\">back</a>\n");
+  printf("<a href=\"javascript:history.back()\">back</a>\n");
   printf("</body>\n");
   printf("</html>\n");
 }

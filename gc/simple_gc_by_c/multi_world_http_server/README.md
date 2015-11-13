@@ -84,11 +84,11 @@ HTTPモジュールなので仕方ないですね。みたいな雰囲気を醸�
 
 さまざまな、プログラムを作ってみました。
 
-- [test1.c](test1.c)はなにもしていないのに、printfだけで動きます。
-- [test.c](test.c)はなにもしてませんが、GCをごにょごにょしています。
-- [string.c](string.c)は文字列生成関数がないと不便だと思って文字列用関数を作って使ってみてました。
-- [pandoc.c](pandoc.c)はsystem関数を使ってpandoc<a name="r4"></a>[[4]](#4)を呼び出して、README.mdを表示します。
-- [calc.c](calc.c)は四則演算の構文木を作り、計算します。
+- [test1.c](test1.c)はなにもしていないのに、printfだけで動きます。[test1](test1)
+- [test.c](test.c)はなにもしてませんが、GCをごにょごにょしています。[test](test)
+- [string.c](string.c)は文字列生成関数がないと不便だと思って文字列用関数を作って使ってみてました。[string](string)
+- [pandoc.c](pandoc.c)はsystem関数を使ってpandoc<a name="r4"></a>[[4]](#4)を呼び出して、[README.md](README.md)要するにこのファイルを表示します。Haskellが動くWebサーバですよw http://localhost:8088/pandoc にアクセスすれば見れるのです。楽しい。このファイルを書き換えるだけで、内容が変わる。不思議です。
+- [calc.c](calc.c)は四則演算の構文木を作り、計算します。[calc](calc)
 
 GC付きのコードをちゃんと手で書くのはやっぱり面倒くさいですね。
 最初は面白いんです。でも段々めんどくさくなってきます。
