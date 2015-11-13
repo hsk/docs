@@ -1,7 +1,5 @@
 #include "gc.h"
 
-enum {val_START, val_SIZE, result, A, B, C, val_END};
-
 enum {EInt, EAdd, EMul, ESub, EDiv};
 
 
@@ -40,10 +38,20 @@ static Object* eval(Object* e) {
 		val[e2] = eval(e->field[2]);
 		val[e1] = gc_alloc_long(val[e1]->longv + val[e2]->longv);
 		break;
+	case ESub:
+		val[e1] = eval(e->field[1]);
+		val[e2] = eval(e->field[2]);
+		val[e1] = gc_alloc_long(val[e1]->longv - val[e2]->longv);
+		break;
 	case EMul:
 		val[e1] = eval(e->field[1]);
 		val[e2] = eval(e->field[2]);
 		val[e1] = gc_alloc_long(val[e1]->longv * val[e2]->longv);
+		break;
+	case EDiv:
+		val[e1] = eval(e->field[1]);
+		val[e2] = eval(e->field[2]);
+		val[e1] = gc_alloc_long(val[e1]->longv / val[e2]->longv);
 		break;
 	default:
 		val[e1] = gc_alloc_long(1);
@@ -53,13 +61,18 @@ static Object* eval(Object* e) {
   return val[e1];
 }
 
+
 static void model(Object** val) {
-	val[result] = str("test2");
+	enum {val_START, val_SIZE, result, A, B, C, val_END};
+	val[result] = str("Calc");
 	val[A] = ebin(EMul, ebin(EAdd,eint(1),eint(2)), eint(5));
 	val[B] = eval(val[A]);
+	val[A] = ebin(EDiv, ebin(EMul,eint(10),eint(20)), eint(5));
+	val[C] = eval(val[A]);
 }
 
 static void view(Object** val) {
+  enum {val_START, val_SIZE, result, A, B, C, val_END};
   printf("HTTP/1.0 200 OK\n");
   printf("text/html\n");
   printf("Cache-Control: max-age=0\n\n");
@@ -68,8 +81,9 @@ static void view(Object** val) {
   printf("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />");
   printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\" />\n");
   printf("<body>\n");
-  printf("%s<br/>", val[result]->chars);
+  printf("<h1>%s</h1>", val[result]->chars);
   printf("(1+2)*5=%ld<br/>", val[B]->longv);
+  printf("(10*20)/5=%ld<br/>", val[C]->longv);
 
   printf("<hr/>\n");
   printf("<a href=\"index.html\">back</a>\n");
@@ -78,6 +92,7 @@ static void view(Object** val) {
 }
 
 void get_action() {
+  enum {val_START, val_SIZE, result, A, B, C, val_END};
   ENTER_FRAME_ENUM(val);
   model(val);
   view(val);
