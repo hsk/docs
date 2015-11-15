@@ -1,10 +1,17 @@
 <h1 id="multi-world-http-server">Multi World HTTP Server</h1>
-<h2>目次</h2>
+<h2 id="table-of-contents">Table of Contents</h2>
 <ul>
-<li><ol>
-<li><a name="C1"></a><a href="#c1">DLLを作る</a></li>
-</ol></li>
+<li><a name="rintro"></a><a href="#intro">Introduction</a><br /></li>
 </ul>
+<ol>
+<li><a name="rc1"></a><a href="#c1">DLLを作る</a><br /></li>
+<li><a name="rc2"></a><a href="#c2">ダイナミックローディング</a><br /></li>
+<li><a name="rc3"></a><a href="#c3">ダイナミックロードするDLLでGCを使用する</a><br /></li>
+<li><a name="rc4"></a><a href="#c4">HTTPサーバを作る</a><br /></li>
+<li><a name="rc5"></a><a href="#c5">考察</a><br /></li>
+<li><a name="rc6"></a><a href="#c6">参考文献</a></li>
+</ol>
+<h2 id="introduction"><a name="intro"></a><a href="#rintro">Introduction</a></h2>
 <p>どうも、世界を複数作って作るGCはErlangの軽量プロセスのようなものです。<br />ここでは、Multi World GCを使って、軽量プロセスによるWebサーバを作成します。<br />目標は、プログラムはDLLとして読み込み、軽量メモリ空間で実行し、処理が終わると解放する事です。<br />プログラムが古ければコンパイルし直します。<br />非同期IOが理想ですが、そこまではしません。</p>
 <pre><code>make</code></pre>
 <p>とすると自動的に</p>
@@ -12,18 +19,18 @@
 <p>にアクセスし、<a href="pandoc.c">pandoc.c</a>を実行して<a href="README.md">README.md</a>をHTMLに変換し表示します。</p>
 <p><a href="http://localhost:8088/string">http://localhost:8088/string</a></p>
 <p>にアクセスすると、string.cがコンパイルして実行します。</p>
-<h2 id="dll">1. <a name="c1"></a><a href="#C1">DLLを作る</a></h2>
+<h2 id="dll">1. <a name="c1"></a><a href="#rc1">DLLを作る</a></h2>
 <p>最初は普通にDLLを作ってみました。<br />参考URLはこの辺です。<a name="r1"></a><a href="#1">[1]</a><br />Linuxとの互換性がっと思って、<a name="r2"></a><a href="#2">[2]</a> Linuxと同じように書いたら動いたのでこっちのほうがよいかなと。</p>
 <pre><code>dylib: dylib.c dylib_main.c
     gcc -shared -fPIC -o dylib.so dylib.c
     gcc -o dylib dylib_main.c dylib.so
     ./dylib</code></pre>
-<h2>2. ダイナミックローディング</h2>
+<h2>2. <a name="c2"></a><a href="#rc2">ダイナミックローディング</a></h2>
 <p>次は、ダイナミックにロードしてみましょう。</p>
 <pre><code>dyload:
     gcc -shared -fPIC -o dylib.so dylib.c
     gcc -rdynamic -o dyload dyload.c -ldl</code></pre>
-<h2 id="dllgc">3. ダイナミックロードするDLLでGCを使用する</h2>
+<h2 id="dllgc">3. <a name="c3"></a><a href="#rc3">ダイナミックロードするDLLでGCを使用する</a></h2>
 <p>gcをするDLLを作って、test.soというDLLを作って読み込みます。</p>
 <pre><code>dygc: gc.c test.c dygc.c hello.c
     gcc -shared -fPIC -o gc.so gc.c
@@ -31,7 +38,7 @@
     gcc -rdynamic -shared -fPIC -o hello.so hello.c
     gcc -rdynamic -o dygc dygc.c -ldl gc.so
     ./dygc</code></pre>
-<h2 id="http">4. HTTPサーバを作る</h2>
+<h2 id="http">4. <a name="c4"></a><a href="#rc4">HTTPサーバを作る</a></h2>
 <p>socketを使ってHTTPサーバを作ってみます。<br />HTTPサーバプログラムの作成<a name="r3"></a><a href="#3">[3]</a>を参考に改造してみました。<br />DLLを読み込む機能をつくり、標準出力をソケットに繋ぎ変えることで、CGIのような動作をDLLで行います。<br />繋ぎ変えるにはfilenoを使って低水準のハンドルを取得し、dupを使ってハンドルをコピーして保存し、dup2で置き換えます。</p>
 <pre><code>  int stdoutno = fileno(stdout);
   int back_stdoutno = dup(stdoutno);
@@ -50,18 +57,18 @@
   ling.l_linger = 0;
   printf(&quot;set %d\n&quot;, setsockopt(sockfd, SOL_SOCKET, SO_LINGER, &amp;ling, sizeof(ling)));</code></pre>
 <p>シグナルに対応するなどもしてますが、当たり前ですけど軽量プロセス故に1個死ぬと全部死にます。<br />HTTPモジュールなので仕方ないですね。みたいな雰囲気を醸し出しており面白いものがあります。<br />シグナルは<a name="r5"></a><a href="#5">[5]</a>を参考にしました。</p>
-<h2>5. 使ってみて</h2>
+<h2>5. <a name="c5"></a><a href="#rc5">考察</a></h2>
 <p>さまざまな、プログラムを作ってみました。</p>
-<ul>
+<ol>
 <li><a href="hello.c">hello.c</a>はなにもしていないのに、printfだけで動きます。<a href="hello">hello</a><br /></li>
 <li><a href="test.c">test.c</a>はなにもしてませんが、GCをごにょごにょしています。<a href="test">test</a><br /></li>
 <li><a href="string.c">string.c</a>は文字列生成関数がないと不便だと思って文字列用関数を作って使ってみてました。<a href="string">string</a><br /></li>
-<li><a href="pandoc.c">pandoc.c</a>はsystem関数を使ってpandoc<a name="r4"></a><a href="#4">[4]</a>を呼び出して、<a href="README.md">README.md</a>要するにこのファイルを表示します。Haskellが動くWebサーバですよw <a href="http://localhost:8088/pandoc">http://localhost:8088/pandoc</a> にアクセスすれば見れるのです。楽しい。このファイルを書き換えるだけで、内容が変わる。不思議です。<br /></li>
+<li><a href="pandoc.c">pandoc.c</a>はsystem関数を使ってpandoc<a name="r4"></a><a href="#4">[4]</a>を呼び出します。<br /> 要するにこのファイル<a href="README.md">(README.md)</a>を表示します。<br /> Haskellが動くWebサーバですよw <a href="http://localhost:8088/pandoc">http://localhost:8088/pandoc</a> にアクセスすれば見れるのです。<br /> 楽しい。このファイルを書き換えるだけで、内容が変わる。不思議です。<br /></li>
 <li><a href="calc.c">calc.c</a>は四則演算の構文木を作り、計算します。<a href="calc">calc</a></li>
-</ul>
+</ol>
 <p>非常に面白いですね。SML#でもWebアプリをSML#で作っていたのもうなずけます。</p>
 <p>しかし、GC付きのコードをちゃんと手で書くのはやはり手間がかかります。<br />コンパイラから出力したいところです。やはりコンパイラを作るしかない！<br />関数の開始と終了だけにマクロを書くのは仕方ないですが、変数を管理された領域に書き込む必要があります。<br />さもないと、GCが起こった場合にだけ、突然謎のメモリエラーになってしまいます。<br />動的言語なら、ポーティングを書くのがめんどくさいみたいになる所です。やっぱり、Rubyのような保守的なGCは楽で良いですねぇ。<br />とはいえ、自分が作ろうとしている言語はコンパイラ言語です。Cを書かずにCのソースをポート出来れば良いのです。<br />However、完全な仕組みを理解し、それを使う事が目的であったので結構満足出来ました。</p>
-<h2>6. 参考文献</h2>
+<h2>6. <a name="c6"></a><a href="#rc6">参考文献</a></h2>
 <ul>
 <li><p><a name="1"></a><a href="#r1">[1]</a> Mac OSXでダイナミックライブラリdylibを作ったり使ったりする方法。</p>
 <p><a href="https://blog.katty.in/4347">https://blog.katty.in/4347</a></p></li>

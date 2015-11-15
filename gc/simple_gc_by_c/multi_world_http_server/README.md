@@ -1,6 +1,6 @@
 # Multi World HTTP Server
 
-## Index
+## Table of Contents
 
 - <a name="rintro"></a>[Introduction](#intro)
 1. <a name="rc1"></a>[DLLを作る](#c1)
@@ -22,11 +22,11 @@
 
 とすると自動的に
 
-http://localhost:8088
+<http://localhost:8088>
 
 にアクセスし、[pandoc.c](pandoc.c)を実行して[README.md](README.md)をHTMLに変換し表示します。
 
-http://localhost:8088/string
+<http://localhost:8088/string>
 
 にアクセスすると、string.cがコンパイルして実行します。
 
@@ -102,7 +102,7 @@ HTTPモジュールなので仕方ないですね。みたいな雰囲気を醸�
 1. [string.c](string.c)は文字列生成関数がないと不便だと思って文字列用関数を作って使ってみてました。[string](string)
 1. [pandoc.c](pandoc.c)はsystem関数を使ってpandoc<a name="r4"></a>[[4]](#4)を呼び出します。
 	要するにこのファイル[(README.md)](README.md)を表示します。
-	Haskellが動くWebサーバですよw http://localhost:8088/pandoc にアクセスすれば見れるのです。
+	Haskellが動くWebサーバですよw <http://localhost:8088/pandoc> にアクセスすれば見れるのです。
 	楽しい。このファイルを書き換えるだけで、内容が変わる。不思議です。
 1. [calc.c](calc.c)は四則演算の構文木を作り、計算します。[calc](calc)
 
@@ -120,20 +120,20 @@ However、完全な仕組みを理解し、それを使う事が目的であっ�
 
 - <a name="1"></a>[[1]](#r1) Mac OSXでダイナミックライブラリdylibを作ったり使ったりする方法。
 
-	https://blog.katty.in/4347
+	<https://blog.katty.in/4347>
 
 - <a name="2"></a>[[2]](#r2) Linuxで共有ライブラリsoを作ったり使ったりする方法。
 
-	https://blog.katty.in/4346
+	<https://blog.katty.in/4346>
 
 - <a name="3"></a>[[3]](#r3) HTTPサーバプログラムの作成
 
-	http://research.nii.ac.jp/~ichiro/syspro98/wwwserver.html
+	<http://research.nii.ac.jp/~ichiro/syspro98/wwwserver.html>
 
 - <a name="4"></a>[[4]](#r4) Pandocユーザーズガイド
 
-	http://sky-y.github.io/site-pandoc-jp/users-guide/
+	<http://sky-y.github.io/site-pandoc-jp/users-guide/>
 
 - <a name="5"></a>[[5]](#r5)【Android NDK】sigsegvをフックする【cocos2d-x】
 
-	http://qiita.com/kuuki_yomenaio/items/08781e4778df3928bb9b
+	<http://qiita.com/kuuki_yomenaio/items/08781e4778df3928bb9b>
