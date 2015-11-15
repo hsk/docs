@@ -1,6 +1,6 @@
 # test.md
 
-aaaa[[1]](#1) などと書きたいですよ。
+<a name="r1"></a>aaaa[[1]](#1) などと書きたいですよ。
 
 | aaa | bbb | ccc |
 | --- |:--- | ---:|
@@ -14,4 +14,4 @@ aaaa[[1]](#1) などと書きたいですよ。
 
 ### test3
 
-- <a name="1"></a> <http://google.com>
+- <a name="1"></a>[[1]](#r1) <http://google.com>
