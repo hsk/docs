@@ -32,7 +32,7 @@ E* ELam(E* e1, E*e2);
 E* EDef(char* name, E* e1, E*e2);
 E* EClo(E* e1, E*env, E*e2);
 void printe(E* e);
-void printes(E* e);
+void printes(char* sep, E* e);
 void printeln(E* e);
 char* to_s(E* e);
 E* EList(E* e1, ...);

@@ -61,13 +61,13 @@ E* EClo(E* e1, E*env, E*e2) {
 
 void printe(E* e);
 
-void printes(E* e) {
+void printes(char* sep, E* e) {
   if(e==EUni) return;
   switch(e->tag) {
     case ELST:
       if(e->tl==EUni) {printe(e->hd); return;}
       switch(e->tl->tag){
-        case ELST: printe(e->hd);printf("; ");printes(e->tl); return;
+        case ELST: printe(e->hd);printf(sep);printes(sep, e->tl); return;
         default: printe(e->hd);printf("::");printe(e->tl); return;
       }
     default: printe(e);
@@ -80,9 +80,9 @@ void printe(E* e) {
     case ESTR: printf("\"%s\"", e->strv); break;
     case ESYM: printf("%s", e->symv); break;
     case ELST:
-      if(e->tl->tag==ELST) {printf("["); printes(e); printf("]"); break;}
-      printes(e); break;
-    case EMSG: printe(e->hd);printf("(");printes(e->tl);printf(")"); break;
+      if(e->tl->tag==ELST) {printf("["); printes("; ",e); printf("]"); break;}
+      printes("; ", e); break;
+    case EMSG: printe(e->hd);printf("(");printes(", ",e->tl);printf(")"); break;
     case ECLO: printf("clo "); printe(e->hd);printf(" -> ");printe(e->tl->tl); break;
     case EFUN: printf("(native %p)", e->fun); break;
     case EMAC: printf("(mac %p)", e->fun); break;
