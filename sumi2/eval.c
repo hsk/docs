@@ -16,8 +16,7 @@ int eq(E* e1, E* e2) {
 }
 
 E* List_assoc(E* e, E* ls) {
-  while(ls->tag == ELST) {
-    if(ls==EUni) return EUni;
+  while(ls != EUni && ls->tag == ELST) {
     E* hd = ls->hd;
     if (hd->tag == ELST && eq(hd->hd, e)) return hd->tl;
     ls = ls->tl;
@@ -60,7 +59,7 @@ E* eval(E* env, E* e) {
 }
 
 static E* eif(E* env, E* e) {
-  if(e->tag==ELST && e->tl->tag == ELST && (e->tl->tl->tag == ELST || e->tl->tl == EUni)) {
+  if(e->tag==ELST && e->tl->tag == ELST && e->tl->tl->tag == ELST) {
     E* a = e->hd;
     E* b = e->tl->hd;
     E* c = e->tl->tl->hd;
@@ -71,7 +70,7 @@ static E* eif(E* env, E* e) {
 }
 
 static E* block(E* env, E* e) {
-  if(e==EUni || e->tag!=ELST) return EPair(env, e);
+  if(e->tag!=ELST) return EPair(env, e);
   E* env_e1 = eval(env, e->hd);
   if(e->tl == EUni) return env_e1;
   return block(env_e1->hd, e->tl);
@@ -88,16 +87,7 @@ static E* let(E* env, E* e) {
   }
   return EPair(env, e);
 }
-/*
-static E* fun(E* env, E* e) {
-  if(e->tag==ELST && e->tl->tag == ELST) {
-    E* a = e->hd;
-    E* b = e->tl->hd;
-    if(a->tag==ELST) return EPair(env, EClo(a, env, b));
-  }
-  return EPair(env, e);
-}
-*/
+
 static E* lam(E* env, E* e) {
   E* a = e->hd;
   E* b = e->tl->hd;
@@ -264,7 +254,8 @@ static E* read(E* env, E* e) {
 }
 
 E* init() {
-  EUni = EPair(EUni,EUni);
+  EUni = EPair(EUni,EUni); EUni->hd=EUni;EUni->tl =EUni;
+
   return EList(
     EPair(ESym("mul"),EFun(mul)),
     EPair(ESym("add"),EFun(add)),

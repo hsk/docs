@@ -27,24 +27,24 @@ void run(char* filename) {
 int main(int argc, char ** argv){
 
   env = init();
-  printf("koko\n");
   assert(eq(parse("1"),EInt(1)));
   assert(strcmp(to_s(parse("1")),"1")==0);
-  printf("koko1\n");
-  assert(eq(parse("1,2"),EPair(EInt(1),EInt(2))));
-  printf("kokoa\n");
-  assert(strcmp(to_s(EPair(EInt(1),EInt(2))),"(1. 2)")==0);
-  printf("kokog\n");
-  assert(eq(parse("()"),EUni));
-  printf("koko2\n");
+  assert(eq(parse("1::2"),EPair(EInt(1),EInt(2))));
+
+//  printf("%s\n", to_s(EPair(EInt(1),EInt(2))));
+  
+//  assert(strcmp(to_s(EPair(EInt(1),EInt(2))),"1::2")==0);
+  assert(strcmp(to_s(EUni),"[]")==0);
+  assert(eq(parse("[]"),EUni));
   assert(eq(parse("[]"),EList(NULL)));
   assert(eq(parse("[1]"),EList(EInt(1),NULL)));
+  assert(eq(parse("1::[]"),EList(EInt(1),NULL)));
   assert(eq(parse("[1;2]"),EList(EInt(1),EInt(2),NULL)));
-  assert(eq(parse("a(1;2)"),EBin("a",EInt(1),EInt(2))));
-  assert(eq(parse("a(1;2)(b;c)"),EMsg(EBin("a",EInt(1),EInt(2)),ESym("b"),ESym("c"),NULL)));
-  assert(test_eval("if(();1;2)", "2"));
-  assert(test_eval("if(1;1;2)", "1"));
-  assert(test_eval("if(0;1;2)", "1"));
+  assert(eq(parse("a(1,2)"),EBin("a",EInt(1),EInt(2))));
+  assert(eq(parse("a(1,2)(b,c)"),EMsg(EBin("a",EInt(1),EInt(2)),ESym("b"),ESym("c"),NULL)));
+  assert(test_eval("if([],1,2)", "2"));
+  assert(test_eval("if(1,1,2)", "1"));
+  assert(test_eval("if(0,1,2)", "1"));
   assert(test_eval("1", "1"));
   assert(test_eval("1+1", "2"));
   assert(test_eval("1+10*20", "201"));
@@ -67,8 +67,8 @@ int main(int argc, char ** argv){
   test(EIf(EUni,EInt(1),EInt(2)));
 
   test(EBin("let",ESym("x"),EInt(1)));
-  assert(test_eval("let(x;1)", "1"));
-  assert(test_eval("block(let(x;1);x)", "1"));
+  assert(test_eval("let(x,1)", "1"));
+  assert(test_eval("block(let(x,1),x)", "1"));
   test(EMsg(ESym("block"),
     EBin("let",ESym("x"),EInt(1)),
     ESym("x"),
@@ -78,43 +78,44 @@ int main(int argc, char ** argv){
   test(EMsg(ESym("block"),
     EBin("mul",EInt(20),EInt(10)),NULL));
 
-  assert(test_eval("block(let(x;20); x * 10)", "200"));
+  assert(test_eval("block(let(x,20), x * 10)", "200"));
   test(EMsg(ESym("block"),
     EBin("let",ESym("x"),EInt(20)),
     EBin("mul",ESym("x"),EInt(10)),NULL));
 
-  test(parse("block(let(a;fun(x)->x))"));
-  assert(test_eval("block(let(a;fun(x)->x); a(10))", "10"));
+  test(parse("block(let(a,fun(x)->x))"));
+  assert(test_eval("block(let(a,fun(x)->x), a(10))", "10"));
   test(EMsg(ESym("block"),
     EBin("let", ESym("a"), ELam(EList(ESym("x"),NULL),ESym("x"))),
     EMsg(ESym("a"),EInt(10),NULL),
     NULL));
 
-  assert(test_eval("block(let(a;fun(x)->x+1); a(10))", "11"));
+  assert(test_eval("block(let(a,fun(x)->x+1), a(10))", "11"));
   test(EMsg(ESym("block"),
     EBin("let", ESym("a"), ELam(EList(ESym("x"),NULL),EBin("add",ESym("x"),EInt(1)))),
     EMsg(ESym("a"),EInt(10),NULL),
     NULL));
 
-  assert(test_eval("block(let(a;fun(x;y)->x+y); a(10;20))", "30"));
+  assert(test_eval("block(let(a,fun(x,y)->x+y), a(10,20))", "30"));
   test(EMsg(ESym("block"),
     EBin("let", ESym("a"), ELam(EList(ESym("x"),ESym("y"),NULL),EBin("add",ESym("x"),ESym("y")))),
     EBin("a",EInt(10),EInt(20)),
     NULL));
 
-  assert(test_eval("block(let(x;50);let(a;fun(y)->x+y); a(20))", "70"));
-  assert(test_eval("block(x=50;a=fun(y)->x+y; x=10;a(20))", "70"));
-  test(parse("block(x=50;a=fun(y)->x+y;x=10; a(20))"));
-  test(parse("block((fun(n)->if(lt(n;1);1;2))(10) )"));
+  assert(test_eval("block(let(x,50),let(a,fun(y)->x+y), a(20))", "70"));
+  assert(test_eval("block(x=50,a=fun(y)->x+y, x=10,a(20))", "70"));
+  test(parse("block(x=50,a=fun(y)->x+y,x=10, a(20))"));
+  test(parse("block((fun(n)->if(lt(n,1),1,2))(10) )"));
 
   test(parse("block(\"aaa\" )"));
   printf("----------\n");
 
-  assert(test_eval("block(def f(n)=if(n<0;0;n+f(n-1)); f(10))","55"));
+  assert(test_eval("block(def(f,[n],if(n<0,0,n+f(n-1))), f(10))","55"));
+  assert(test_eval("def f(n)=(if(n<0,0,n+f(n-1))); f(10)","55"));
   assert(test_eval("\"abc\"","\"abc\""));
   test(parse("\"abc\"+\"d\""));
   assert(test_eval("\"abc\"+\"d\"","\"abcd\""));
-  assert(test_eval("\"abc\"==\"d\"","()"));
+  assert(test_eval("\"abc\"==\"d\"","[]"));
   assert(test_eval("\"abc\"==\"abc\"","1"));
 
   test(parse("parse(\"1\")"));

@@ -1,1 +1,5 @@
-123+456
+x=123+456;
+y=x+10;
+def sum(n)=if(n<=0,0,n+sum(n-1));
+def fib(n)=if(n<=2,1,fib(n-1)+fib(n-2));
+[x;y;sum(10);fib(12)]

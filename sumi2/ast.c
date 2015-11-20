@@ -68,7 +68,7 @@ void printes(E* e) {
       if(e->tl==EUni) {printe(e->hd); return;}
       switch(e->tl->tag){
         case ELST: printe(e->hd);printf("; ");printes(e->tl); return;
-        default: printe(e->hd);printf(". ");printe(e->tl); return;
+        default: printe(e->hd);printf("::");printe(e->tl); return;
       }
     default: printe(e);
   }
@@ -79,8 +79,10 @@ void printe(E* e) {
     case EINT: printf("%d", e->intv); break;
     case ESTR: printf("\"%s\"", e->strv); break;
     case ESYM: printf("%s", e->symv); break;
-    case ELST: printf("("); printes(e); printf(")"); break;
-    case EMSG: printe(e->hd);printe(e->tl); break;
+    case ELST:
+      if(e->tl->tag==ELST) {printf("["); printes(e); printf("]"); break;}
+      printes(e); break;
+    case EMSG: printe(e->hd);printf("(");printes(e->tl);printf(")"); break;
     case ECLO: printf("clo "); printe(e->hd);printf(" -> ");printe(e->tl->tl); break;
     case EFUN: printf("(native %p)", e->fun); break;
     case EMAC: printf("(mac %p)", e->fun); break;

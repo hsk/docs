@@ -26,6 +26,7 @@ int yywrap(void){ return 1;}
 ">="       return(GE);
 "<="       return(LE);
 "=="       return(EQ);
+"::"       return(COLONCOLON);
 "="        return(ASSIGN);
 "("        return(LPAREN);
 ")"        return(RPAREN);
