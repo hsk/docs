@@ -1,6 +1,7 @@
 #include "ast.h"
 
 int eq(E* e1, E* e2) {
+  if (e1==e2) return 1; 
   if (e1->tag != e2->tag) return 0;
   switch(e1->tag) {
     case EINT: return e1->intv == e2->intv;
@@ -9,7 +10,6 @@ int eq(E* e1, E* e2) {
     case EMSG:
     case ECLO:
     case ELST: if(eq(e1->hd, e2->hd)) return eq(e1->tl, e2->tl);
-    case EUNI: return 1;
     case EFUN: return e1->fun == e2->fun;
     default: return 0;
   }
@@ -17,6 +17,7 @@ int eq(E* e1, E* e2) {
 
 E* List_assoc(E* e, E* ls) {
   while(ls->tag == ELST) {
+    if(ls==EUni) return EUni;
     E* hd = ls->hd;
     if (hd->tag == ELST && eq(hd->hd, e)) return hd->tl;
     ls = ls->tl;
@@ -29,6 +30,7 @@ E* eval(E* env, E* e) {
   default: return EPair(env, e);
   case ESYM: return EPair(env, List_assoc(e, env));
   case ELST:{
+      if(e==EUni) return EPair(env, e);
       E* env_e1 = eval(env, e->hd);
       E* env_e = eval(env_e1->hd, e->tl);
       return EPair(env_e->hd, EPair(env_e1->tl, env_e->tl));
@@ -262,6 +264,7 @@ static E* read(E* env, E* e) {
 }
 
 E* init() {
+  EUni = EPair(EUni,EUni);
   return EList(
     EPair(ESym("mul"),EFun(mul)),
     EPair(ESym("add"),EFun(add)),

@@ -33,8 +33,7 @@ E* ESym(char* s) {
   return e;
 }
 
-static E uni = (E){EUNI, 0};
-E* EUni = &uni;
+E* EUni;
 
 E* EPair(E* e1, E*e2) {
   E* e = ENew(ELST);
@@ -63,11 +62,11 @@ E* EClo(E* e1, E*env, E*e2) {
 void printe(E* e);
 
 void printes(E* e) {
+  if(e==EUni) return;
   switch(e->tag) {
-    case EUNI: return;
     case ELST:
+      if(e->tl==EUni) {printe(e->hd); return;}
       switch(e->tl->tag){
-        case EUNI: printe(e->hd); return;
         case ELST: printe(e->hd);printf("; ");printes(e->tl); return;
         default: printe(e->hd);printf(". ");printe(e->tl); return;
       }
@@ -81,7 +80,6 @@ void printe(E* e) {
     case ESTR: printf("\"%s\"", e->strv); break;
     case ESYM: printf("%s", e->symv); break;
     case ELST: printf("("); printes(e); printf(")"); break;
-    case EUNI: printf("()"); break;
     case EMSG: printe(e->hd);printe(e->tl); break;
     case ECLO: printf("clo "); printe(e->hd);printf(" -> ");printe(e->tl->tl); break;
     case EFUN: printf("(native %p)", e->fun); break;

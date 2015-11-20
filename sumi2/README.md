@@ -3,6 +3,9 @@
 Cのような関数型言語を作ります。
 基本的にimmutableでクロージャがあります。
 目標は作った言語で、より楽にC言語のプログラムを出力するトランスレータを書く事です。
+またこの言語は、a(b)(c)をa(b;c)と記述する事を可能とします。関数は基本的にカリー化して定義されます。
+優先順位付きの演算子定義を使う事でより読みやすいコードに出来ます。
+強力なマクロによりパターンマッチなどがある。
 
 - read ファイル読込
 - write ファイル書出
@@ -23,13 +26,13 @@ Cのような関数型言語を作ります。
 
 	block(
 
-		def(eval(e);
-			match(e)(
-			arrow(Int(a); a);
-			arrow(Add(a;b); add(eval(a);eval(b)));
-			arrow(Sub(a;b); sub(eval(a);eval(b)));
-			arrow(_; 0)
-			)
+		def(eval(e))(
+			match(e)
+			(arrow(Int(a))(a))
+			(arrow(Add(a;b))(add(eval(a);eval(b))))
+			(arrow(Sub(a;b))(sub(eval(a);eval(b))))
+			(arrow(_)(0))
+			
 		);
 
 		println(eval(parse(read(argv(1)))))

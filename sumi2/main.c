@@ -27,11 +27,16 @@ void run(char* filename) {
 int main(int argc, char ** argv){
 
   env = init();
+  printf("koko\n");
   assert(eq(parse("1"),EInt(1)));
   assert(strcmp(to_s(parse("1")),"1")==0);
+  printf("koko1\n");
   assert(eq(parse("1,2"),EPair(EInt(1),EInt(2))));
+  printf("kokoa\n");
   assert(strcmp(to_s(EPair(EInt(1),EInt(2))),"(1. 2)")==0);
+  printf("kokog\n");
   assert(eq(parse("()"),EUni));
+  printf("koko2\n");
   assert(eq(parse("[]"),EList(NULL)));
   assert(eq(parse("[1]"),EList(EInt(1),NULL)));
   assert(eq(parse("[1;2]"),EList(EInt(1),EInt(2),NULL)));
@@ -44,6 +49,7 @@ int main(int argc, char ** argv){
   assert(test_eval("1+1", "2"));
   assert(test_eval("1+10*20", "201"));
   assert(test_eval("[2+1;20*10]", "[3;200]"));
+  printf("koko2\n");
 
   printeln(EPair(EInt(1),EPair(EInt(2),EInt(3))));
   printeln(EList(NULL));
