@@ -6,7 +6,6 @@ int eq(E* e1, E* e2) {
     case EINT: return e1->intv == e2->intv;
     case ESTR: return strcmp(e1->strv, e2->strv)==0;
     case ESYM: return strcmp(e1->symv, e2->symv)==0;
-    case ELAM:
     case EMSG:
     case ECLO:
     case ELST: if(eq(e1->hd, e2->hd)) return eq(e1->tl, e2->tl);
@@ -33,12 +32,6 @@ E* eval(E* env, E* e) {
       E* env_e1 = eval(env, e->hd);
       E* env_e = eval(env_e1->hd, e->tl);
       return EPair(env_e->hd, EPair(env_e1->tl, env_e->tl));
-    }
-  case ELAM:{
-      E* a = e->hd;
-      E* b = e->tl;
-      if(a->tag==ELST) return EPair(env, EClo(a, env, b));
-      return EPair(env, e);
     }
   case EMSG:{
       E* msg = e->hd;
@@ -103,6 +96,13 @@ static E* fun(E* env, E* e) {
   return EPair(env, e);
 }
 */
+static E* lam(E* env, E* e) {
+  E* a = e->hd;
+  E* b = e->tl->hd;
+  if(a->tag==ELST) return EPair(env, EClo(a, env, b));
+  return EPair(env, e);
+}
+
 static E* def(E* env, E* e) {
   E* nam = e->hd;
   E* a = e->tl->hd;
@@ -275,7 +275,7 @@ E* init() {
     EPair(ESym("parse"),EFun(parse_e)),
     EPair(ESym("eval"),EFun(eval_e)),
     EPair(ESym("read"),EFun(read)),
-//    EPair(ESym("fun"),EMac(fun)),
+    EPair(ESym("lam"),EMac(lam)),
     EPair(ESym("def"),EMac(def)),
     EPair(ESym("let"),EMac(let)),
     EPair(ESym("block"),EMac(block)),

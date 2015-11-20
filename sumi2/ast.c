@@ -49,13 +49,6 @@ E* EMsg0(E* e1, E*e2) {
   return e;
 }
 
-E* ELam(E* e1, E*e2) {
-  E* e = ENew(ELAM);
-  e->hd = e1;
-  e->tl = e2;
-  return e;
-}
-
 E* EClo(E* e1, E*env, E*e2) {
   E* e = ENew(ECLO);
   e->hd = e1;
@@ -90,7 +83,6 @@ void printe(E* e) {
     case ELST: printf("("); printes(e); printf(")"); break;
     case EUNI: printf("()"); break;
     case EMSG: printe(e->hd);printe(e->tl); break;
-    case ELAM: printf("fun "); printe(e->hd);printf(" -> ");printe(e->tl); break;
     case ECLO: printf("clo "); printe(e->hd);printf(" -> ");printe(e->tl->tl); break;
     case EFUN: printf("(native %p)", e->fun); break;
     case EMAC: printf("(mac %p)", e->fun); break;
@@ -165,3 +157,6 @@ E* EDef(char* name, E* e1, E*e2) {
   return EMsg(ESym("def"), ESym(name), e1, e2, NULL);
 }
 
+E* ELam(E* e1, E*e2) {
+  return EMsg(ESym("lam"), e1, e2, NULL);
+}

@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef enum { EINT, ESTR, ESYM, EMSG, ELST, EUNI, ELAM, EFUN, ECLO, EMAC } ETag;
+typedef enum { EINT, ESTR, ESYM, EMSG, ELST, EUNI, EFUN, ECLO, EMAC } ETag;
 
 typedef struct E {
   ETag tag;
