@@ -6,7 +6,7 @@ C だけで使える簡単な完全なGCをするためのサンプルプログ�
 //#define DEBUG
 
 //#define NOGC
-#define NDEBUG
+//#define NDEBUG
 
 #ifdef NOGC
 #define NDEBUG
@@ -23,10 +23,11 @@ C だけで使える簡単な完全なGCをするためのサンプルプログ�
 #include <assert.h>
 #include <string.h>
 
-#ifdef __cplusplus
 #include <set>
+#include <list>
+#include <vector>
+
 using namespace std;
-#endif
 
 
 
@@ -34,30 +35,27 @@ using namespace std;
 #define debug printf
 #else
 #define debug noprintf
-void noprintf(char* str, ...){}
+inline void noprintf(char* str, ...){}
 #endif
 
-typedef enum {
+enum ObjectType {
   OBJ_BOXED_ARRAY,
   OBJ_UNBOXED_ARRAY,
   OBJ_PAIR,
   OBJ_RECORD,
-} ObjectType;
+};
 
-typedef struct ObjectHeader {
-#ifndef __cplusplus
-  struct ObjectHeader* next;
-#endif
+struct ObjectHeader {
   unsigned int size;
   unsigned char type;
   unsigned char marked;
-} ObjectHeader;
+};
 
-typedef union Object {
+union Object {
   struct {
     union Object *fst;
     union Object *snd;
-  }pair;
+  };
   union Object* field[0];
 
   char charv;
@@ -81,36 +79,18 @@ typedef union Object {
   unsigned int uints[0];
   unsigned long ulongs[0];
   unsigned long long ulonglongs[0];
-} Object;
+};
 
-typedef struct Frame {
-  struct Frame* frame_prev;
-  short frame_size;
-  short frame_pos;
-  Object* frame_data[0];
-} Frame;
+typedef vector<Object*> Frame;
 
-Frame* frame_list;
+list<Frame*> frame_list;
 
-#ifdef __cplusplus
-    set<ObjectHeader*> heap_list;       // ローカル変数として、mp を生成
-#else
-  ObjectHeader* heap_list;
-#endif
+set<ObjectHeader*> heap_list;       // ローカル変数として、mp を生成
 int heap_num;
 int heap_max;
 
-int heap_find(ObjectHeader* o) {
-#ifdef __cplusplus
+inline int heap_find(ObjectHeader* o) {
     return heap_list.find(o) != heap_list.end();
-#else
-  ObjectHeader* object = heap_list;
-  while (object) {
-    if(object == o) return 1;
-    object = object->next;
-  }
-  return 0;
-#endif
 }
 
 void gc_mark_object(Object* object) {
@@ -130,8 +110,8 @@ void gc_mark_object(Object* object) {
       break;
     case OBJ_PAIR:
       debug("PAIR\n");
-      gc_mark_object(object->pair.fst);
-      gc_mark_object(object->pair.snd);
+      gc_mark_object(object->fst);
+      gc_mark_object(object->snd);
       break;
     case OBJ_UNBOXED_ARRAY:
       break;
@@ -151,19 +131,15 @@ void gc_mark_object(Object* object) {
 }
 
 void gc_mark() {
-  Frame* frame = frame_list;
-  while(frame) {
-    int pos = frame->frame_size;
-    if(pos > frame->frame_pos) pos = frame->frame_pos;
-    for(int i = 0; i < pos; i++)
-      gc_mark_object(frame->frame_data[i]);
-    frame = frame->frame_prev;
+  for (list<Frame*>::iterator frame = frame_list.begin(); frame != frame_list.end();frame++) {
+    for (vector<Object*>::iterator object = (*frame)->begin(); object != (*frame)->end();object++) {
+      gc_mark_object(*object);
+    }
   }
 }
 
 void gc_sweep() {
 
-#ifdef __cplusplus
   for (set<ObjectHeader*>::iterator object = heap_list.begin(); object != heap_list.end();) {
     if (!(*object)->marked) {
       ObjectHeader* unreached = *object;
@@ -177,22 +153,6 @@ void gc_sweep() {
       object++;
     }
   }
-#else
-  ObjectHeader** object = &heap_list;
-  while (*object) {
-    if (!(*object)->marked) {
-      ObjectHeader* unreached = *object;
-      *object = unreached->next;
-      //debug("sweep %p\n", unreached);
-      free(unreached);
-
-      heap_num--;
-    } else {
-      (*object)->marked = 0;
-      object = &(*object)->next;
-    }
-  }
-#endif
 }
 
 void gc_collect() {
@@ -215,12 +175,7 @@ Object* gc_new0(ObjectType type, int size) {
   ObjectHeader* head = (ObjectHeader*)malloc(sizeof(ObjectHeader)+size);
   //debug("gc_new %p\n", head);
   head->type = type;
-#ifdef __cplusplus
   heap_list.insert(head);
-#else
-  head->next = heap_list;
-  heap_list = head;
-#endif
   head->marked = 0;
   head->size=size;
   heap_num++;
@@ -230,34 +185,8 @@ Object* gc_new0(ObjectType type, int size) {
 
 #define gc_oarray0(size) (gc_new0(OBJ_BOXED_ARRAY, sizeof(Object*)*size))
 
-Object* gc_add_pool(Frame* frame_list, Object* head) {
-
-  int frame_pos = frame_list->frame_pos;
-  int frame_size = frame_list->frame_size-1;
-  Object** frame_data = frame_list->frame_data;
-  
-  if (frame_pos < frame_size) {// フレームサイズ内ならそのまま使用する
-    frame_data += frame_list->frame_pos;
-  } else {// 足りなくなったら追加領域を使う
-    frame_data += frame_size;
-    frame_pos -= frame_size;
-    // 追加時
-    if (frame_pos == 0) {
-      *frame_data = gc_oarray0(2);
-    } else {
-      int add_size = ((ObjectHeader*)*frame_data)[-1].size/sizeof(void*);
-      if(add_size==frame_pos) {
-        Object* frame_data2 = gc_oarray0(add_size*2);
-        memcpy((void*)frame_data2, (void*)*frame_data, sizeof(Object*)*add_size);
-        *frame_data = frame_data2;
-      }
-    }
-    frame_data = (Object**)(*frame_data);
-    frame_data += frame_pos;
-  }
-  *frame_data = head;
-  frame_list->frame_pos++;
-  if (heap_num == heap_max) gc_collect();
+inline Object* gc_add_pool(Frame* frame, Object* head) {
+  frame->push_back(head);
   return head;
 }
 
@@ -268,13 +197,13 @@ Object* gc_add_pool(Frame* frame_list, Object* head) {
 #define RECORD_BITMAP_NUM(n) (((n)+sizeof(long)*8-1) / (sizeof(long)*8) )
 #define BIT(n) (1 << n)
 
-Object* gc_record(long size, long bitmap) {
+inline Object* gc_record(long size, long bitmap) {
   Object* obj = gc_new(OBJ_RECORD, sizeof(Object*)*size+RECORD_BITMAP_NUM(size));
   obj->longs[size] = bitmap;
   return (Object*)obj;
 }
 
-Object* gc_int(int n) {
+inline Object* gc_int(int n) {
   int* data = (int*)gc_new(OBJ_UNBOXED_ARRAY, sizeof(int)*1);
 
   debug("int ptr %p\n", data);
@@ -282,70 +211,59 @@ Object* gc_int(int n) {
   return (Object*)data;
 }
 
-#define pool(a) (gc_add_pool(frame_list, a))
+inline Object* pool(Object* head) {
+  return gc_add_pool(frame_list.front(), head);
+}
 
-#define ENTER_FRAME(frame,SIZE) \
-  Object* frame[SIZE+3]; \
-  ((Frame*)frame)->frame_prev = frame_list; \
-  ((Frame*)frame)->frame_size = SIZE+1; \
-  ((Frame*)frame)->frame_pos = 0; \
-  frame_list = (Frame*)frame; \
-
-#define LEAVE_FRAME(frame) \
-  frame_list = frame_list->frame_prev;
-#define pool_ret(a) (gc_add_pool(frame_list->frame_prev, a))
-Object* root_frame[256+3];
+inline Object* pool_ret(Object* a) {
+  for (list<Frame*>::iterator frame = frame_list.begin(); frame != frame_list.end();) {
+    frame++;
+    if(frame != frame_list.end()) return gc_add_pool(*frame, a);
+  }
+  return a;
+}
 
 void gc_init() {
-
-  ((Frame*)root_frame)->frame_prev = NULL;
-  ((Frame*)root_frame)->frame_size = 256+1;
-  ((Frame*)root_frame)->frame_pos = 0;
-
-  frame_list = (Frame*)root_frame;
-#ifdef __cplusplus
+  frame_list.clear();
+  frame_list.push_front(new Frame());
   heap_list.clear();
-#else
-  heap_list = NULL;
-#endif
   heap_num = 0;
   heap_max = 8;
 }
 
 void gc_free() {
-  frame_list = NULL;
+  for (list<Frame*>::iterator frame = frame_list.begin(); frame != frame_list.end();frame++)
+    delete (*frame);  
+  frame_list.clear();
   gc_collect();
 }
 
+struct AutoPool{
+  Frame frame;
+  AutoPool(){
+    frame_list.push_front(&frame);
+  }
+  ~AutoPool(){
+    frame_list.pop_front();
+  }
+};
+
 void test() {
-  void* frame[3+2];
-  frame[0] = (void*)frame_list;
-  frame[1] = (void*)2;
-  frame_list = (Frame*)frame;
-
-  Object* obj = pool(gc_new(OBJ_BOXED_ARRAY,sizeof(long)*2));
-  assert(heap_num==1);
-  gc_collect1();
-  assert(heap_num==1);
-  frame_list = frame_list->frame_prev;
-  gc_collect1();
-  assert(heap_num==0);
-}
-
-void test2() {
-  ENTER_FRAME(frame,1);
-  Object* obj = pool(gc_new(OBJ_BOXED_ARRAY,sizeof(long)*2));
-  assert(heap_num==1);
-  gc_collect1();
-  assert(heap_num==1);
-  LEAVE_FRAME(frame);
+  {
+    AutoPool autopool;
+    Object* obj = pool(gc_new(OBJ_BOXED_ARRAY,sizeof(long)*2));
+    assert(heap_num==1);
+    gc_collect1();
+    assert(heap_num==1);
+  }
   gc_collect1();
   assert(heap_num==0);
 }
 
 void test3() {
   for(int j = 0; j < 10000; j+=111) {
-    ENTER_FRAME(frame,3);
+    {
+      AutoPool autopool;
       Object* unboxed;// = pool(gc_array(sizeof(int)*2));
       // int配列
       for(int i = 0; i < j;i++){
@@ -357,33 +275,34 @@ void test3() {
       assert(heap_num>=j);
       gc_collect1();
       assert(heap_num>=j);
-    LEAVE_FRAME();
+    }
     gc_collect1();
     assert(heap_num==0);
   }
 }
 
 static Object* test_int(int n) {
-  ENTER_FRAME(frame,1);
-  Object* A = pool_ret(pool(gc_int(n)));
-  LEAVE_FRAME();
+  Object* A;
+  { AutoPool autopool;
+    A = pool_ret(pool(gc_int(n)));
+  }
   gc_collect1();
   return A;
 }
 
 void test_record() {
-  ENTER_FRAME(frame,1);
+  { AutoPool autopool;
 
-  // レコード
-  Object* A = pool(gc_record(3,BIT(1)|BIT(2)));
-  A->longs[0] = 10; // undata
-  A->field[1] = gc_int(20);
-  A->field[2] = gc_int(30);
+    // レコード
+    Object* A = pool(gc_record(3,BIT(1)|BIT(2)));
+    A->longs[0] = 10; // undata
+    A->field[1] = gc_int(20);
+    A->field[2] = gc_int(30);
 
-  assert(heap_num==3);
-  gc_collect1();
-  assert(heap_num==3);
-  LEAVE_FRAME();
+    assert(heap_num==3);
+    gc_collect1();
+    assert(heap_num==3);
+  }
   assert(heap_num==3);
   gc_collect1();
   assert(heap_num==0);
@@ -396,8 +315,10 @@ int fib(int n) {
 
 // 全部ルート集合に加えられるので、何もしなくてもちゃんと動く。
 void test_noframe() {
+  printf("test_noframe\n");
   // レコード
   Object* A = pool(gc_record(3,BIT(1)|BIT(2)));
+  printf("test_noframe 1\n");
   A->longs[0] = 10; // undata
   A->field[1] = gc_int(20);
   A->field[2] = test_int(30);
@@ -410,15 +331,12 @@ void test_noframe() {
 }
 
 int main() {
+
   gc_init();
   test();
   gc_free();
   printf("--- test ok\n");
-  gc_init();
-  test2();
-  gc_free();
 
-  printf("--- test 2 ok\n");
   gc_init();
   test3();
   gc_free();
@@ -429,6 +347,7 @@ int main() {
   gc_free();
 
   printf("--- test_record ok\n");
+
   gc_init();
   test_noframe();
   gc_free();
