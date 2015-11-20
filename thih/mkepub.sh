@@ -28,7 +28,6 @@ pandoc title.txt \
   chap11/README_6_3.md \
   chap11/README_6_4.md \
   chap12/README.md \
-  acknowledgments.md \
   references.md \
   footnotes.md \
   -o thih.epub \
