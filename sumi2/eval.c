@@ -9,7 +9,6 @@ int eq(E* e1, E* e2) {
     case ELAM:
     case EMSG:
     case ECLO:
-    case EDEF:
     case ELST: if(eq(e1->hd, e2->hd)) return eq(e1->tl, e2->tl);
     case EUNI: return 1;
     case EFUN: return e1->fun == e2->fun;
@@ -40,14 +39,6 @@ E* eval(E* env, E* e) {
       E* b = e->tl;
       if(a->tag==ELST) return EPair(env, EClo(a, env, b));
       return EPair(env, e);
-    }
-  case EDEF:{
-      E* nam = e->hd;
-      E* a = e->tl->hd;
-      E* b = e->tl->tl;
-      E* clo = EClo(a, env, b);
-      clo->tl->hd = EPair(EPair(nam, clo), clo->tl->hd);
-      return EPair(clo->tl->hd, clo);
     }
   case EMSG:{
       E* msg = e->hd;
@@ -111,18 +102,17 @@ static E* fun(E* env, E* e) {
   }
   return EPair(env, e);
 }
-static E* def(E* env, E* e) {
-  if(e->tag==ELST && e->tl->tag == ELST) {
-    E* nam = e->hd;
-    E* a = e->tl->hd;
-    E* b = e->tl->tl->hd;
-    E* clo = EClo(a, env, b);
-    clo->tl->hd = EPair(EPair(nam, clo), clo->tl->hd);
-    if(a->tag==ELST) return EPair(env, clo);
-  }
-  return EPair(env, e);
-}
 */
+static E* def(E* env, E* e) {
+  E* nam = e->hd;
+  E* a = e->tl->hd;
+  E* b = e->tl->tl->hd;
+//  printf("def------ %s a %s b %s\n", to_s(nam), to_s(a), to_s(b));
+  E* clo = EClo(a, env, b);
+  clo->tl->hd = EPair(EPair(nam, clo), clo->tl->hd);
+  return EPair(clo->tl->hd, clo);
+}
+
 
 static E* add(E* env, E* e) {
   if(e->tag==ELST && e->tl->tag == ELST) {
@@ -286,7 +276,7 @@ E* init() {
     EPair(ESym("eval"),EFun(eval_e)),
     EPair(ESym("read"),EFun(read)),
 //    EPair(ESym("fun"),EMac(fun)),
-//    EPair(ESym("def"),EMac(def)),
+    EPair(ESym("def"),EMac(def)),
     EPair(ESym("let"),EMac(let)),
     EPair(ESym("block"),EMac(block)),
     NULL

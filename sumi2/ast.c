@@ -56,15 +56,6 @@ E* ELam(E* e1, E*e2) {
   return e;
 }
 
-E* EDef(char* name, E* e1, E*e2) {
-  E* e = ENew(EDEF);
-  e->hd = ESym(name);
-  e->tl = ENew(ELST);
-  e->tl->hd = e1;
-  e->tl->tl = e2;
-  return e;
-}
-
 E* EClo(E* e1, E*env, E*e2) {
   E* e = ENew(ECLO);
   e->hd = e1;
@@ -101,7 +92,6 @@ void printe(E* e) {
     case EMSG: printe(e->hd);printe(e->tl); break;
     case ELAM: printf("fun "); printe(e->hd);printf(" -> ");printe(e->tl); break;
     case ECLO: printf("clo "); printe(e->hd);printf(" -> ");printe(e->tl->tl); break;
-    case EDEF: printf("def "); printe(e->hd);printf(" = ");printe(e->tl->tl); break;
     case EFUN: printf("(native %p)", e->fun); break;
     case EMAC: printf("(mac %p)", e->fun); break;
     default: printf("(tag%d)", e->tag); break;
@@ -170,3 +160,8 @@ E* EBin(char* msg, E* e1, E* e2) {
 E* EIf(E* e1, E* e2, E* e3) {
   return EMsg(ESym("if"), e1, e2, e3, NULL);
 }
+
+E* EDef(char* name, E* e1, E*e2) {
+  return EMsg(ESym("def"), ESym(name), e1, e2, NULL);
+}
+
