@@ -6,7 +6,7 @@ C だけで使える簡単な完全なGCをするためのサンプルプログ�
 //#define DEBUG
 
 //#define NOGC
-//#define NDEBUG
+#define NDEBUG
 
 #ifdef NOGC
 #define NDEBUG
@@ -223,20 +223,24 @@ inline Object* pool_ret(Object* a) {
   return a;
 }
 
-void gc_init() {
-  frame_list.clear();
-  frame_list.push_front(new Frame());
-  heap_list.clear();
-  heap_num = 0;
-  heap_max = 8;
-}
+struct GC{
+  GC() {
+    frame_list.clear();
+    frame_list.push_front(new Frame());
+    heap_list.clear();
+    heap_num = 0;
+    heap_max = 8;
+  }
 
-void gc_free() {
-  for (list<Frame*>::iterator frame = frame_list.begin(); frame != frame_list.end();frame++)
-    delete (*frame);  
-  frame_list.clear();
-  gc_collect();
-}
+  ~GC() {
+    for (list<Frame*>::iterator frame = frame_list.begin(); frame != frame_list.end();frame++)
+      delete (*frame);  
+    frame_list.clear();
+    gc_collect();
+  }
+
+};
+
 
 struct AutoPool{
   Frame frame;
@@ -332,25 +336,17 @@ void test_noframe() {
 
 int main() {
 
-  gc_init();
-  test();
-  gc_free();
+  {GC gc; test(); }
   printf("--- test ok\n");
 
-  gc_init();
-  test3();
-  gc_free();
+  {GC gc; test3(); }
 
   printf("--- test3 ok\n");
-  gc_init();
-  test_record();
-  gc_free();
+  {GC gc; test_record(); }
 
   printf("--- test_record ok\n");
 
-  gc_init();
-  test_noframe();
-  gc_free();
+  {GC gc; test_noframe(); }
 
   printf("sizeof type %ld header %ld\n", sizeof(ObjectType), sizeof(ObjectHeader));
   return 0;
