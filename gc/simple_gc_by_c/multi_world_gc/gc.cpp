@@ -8,6 +8,11 @@ multi vm gc
 #include <stdlib.h>
 #include <assert.h>
 #include <memory.h>
+#include <set>
+#include <list>
+#include <vector>
+
+using namespace std;
 
 #define DEBUG
 #define DEBUG2
@@ -31,14 +36,11 @@ typedef enum {
   OBJ_VM,
 } ObjectType;
 
-struct VM;
-
-typedef struct ObjectHeader {
-  struct ObjectHeader* next;
+struct ObjectHeader {
   unsigned int size;
   unsigned char type;
   unsigned char marked;
-} ObjectHeader;
+};
 
 typedef union Object {
   struct {
@@ -70,39 +72,26 @@ typedef union Object {
   unsigned long long ulonglongs[0];
 } Object;
 
-typedef struct Frame {
+struct Frame {
   struct Frame* frame_prev;
   unsigned long frame_size;
   Object* frame_data[0];
-} Frame;
+};
 
-typedef struct VM {
+struct VM {
   Object* record;
-  ObjectHeader* heap_list;
+  set<ObjectHeader*>* heap_list;
   long heap_num;
   long heap_max;
-} VM;
+};
 
 VM* vm;
+
 Frame* frame_list;
 Frame* frame_bottom;
 
 int heap_find(VM* vm, ObjectHeader* o) {
-  ObjectHeader* object = vm->heap_list;
-  while (object) {
-    if(object == o) return 1;
-    object = object->next;
-  }
-  return 0;
-}
-
-long heap_count(ObjectHeader* object) {
-  long sum = 0;
-  while (object) {
-    sum++;
-    object = object->next;
-  }
-  return sum;
+  return vm->heap_list->find(o) != vm->heap_list->end();
 }
 
 void gc_mark_object(Object* object) {
@@ -171,32 +160,22 @@ void gc_mark() {
 void vm_finalize(VM* _vm);
 
 void gc_sweep(VM* _vm) {
-  ObjectHeader** object = &(vm->heap_list);
-  debug2("object =%p\n", object);
-  while (*object) {
+  for (set<ObjectHeader*>::iterator object = vm->heap_list->begin(); object != vm->heap_list->end();) {
     if (!(*object)->marked) {
       ObjectHeader* unreached = *object;
-      *object = unreached->next;
-
+      vm->heap_list->erase(object++);
       if(unreached->type == OBJ_VM) vm_finalize((VM*)&unreached[1]);
-      
       free(unreached);
-
       vm->heap_num--;
     } else {
       (*object)->marked = 0;
       if(_vm) {
         printf("gc sweep vm\n");
-        ObjectHeader* moving = *object;
-        *object = moving->next;
-        debug2("id change\n");
         _vm->heap_num++;
-        moving->next = _vm->heap_list;
-        _vm->heap_list = moving;
-        printf("heap_num %ld %ld\n", _vm->heap_num, heap_count(_vm->heap_list));
-        assert(_vm->heap_num == heap_count(_vm->heap_list));
+        _vm->heap_list->insert(*object);
+        vm->heap_list->erase(object++);
       } else {
-        object = &(*object)->next;
+        object++;
       }
     }
   }
@@ -261,8 +240,9 @@ Object* gc_alloc(ObjectType type, int size) {
 
   debug("gc_alloc %p\n", head);
   head->type = type;
-  head->next = vm->heap_list;
-  vm->heap_list = head;
+  vm->heap_list->insert(head);
+  debug("gc_alloc %p ok\n", head);
+  
   head->marked = 0;
   head->size=size;
   vm->heap_num++;
@@ -343,8 +323,10 @@ Object* vm_get_record(VM* _vm) {
 void vm_finalize(VM* _vm) {
   VM* tmp_vm = vm;
 
+
   vm = _vm;
   gc_collect();
+  delete vm->heap_list;
   vm = tmp_vm;
 }
 
@@ -362,8 +344,8 @@ VM* vm_new() {
   VM* vm = (VM*)gc_alloc(OBJ_VM, sizeof(VM));
   debug("gc alloc ok\n");
   vm->record = NULL;
-  vm->heap_list = NULL;
   vm->heap_num = 0;
+  vm->heap_list = new set<ObjectHeader*>();
   vm->heap_max = 256;
   return vm;
 }
@@ -371,9 +353,9 @@ VM* vm_new() {
 void gc_init() {
   vm = (VM*)malloc(sizeof(VM));
   vm->record = NULL;
-  vm->heap_list = NULL;
   vm->heap_num = 0;
   vm->heap_max = 8;
+  vm->heap_list = new set<ObjectHeader*>();
   frame_list = NULL;
   frame_bottom = NULL;
 }
@@ -381,6 +363,7 @@ void gc_init() {
 void gc_free() {
   gc_collect();
   assert(vm->heap_num==0);
+  delete vm->heap_list;
   free(vm);
 }
 

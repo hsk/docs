@@ -78,7 +78,7 @@ typedef vector<Object*> Frame;
 
 struct GC{
   list<Frame*> frame_list;
-  set<ObjectHeader*> heap_list;       // ローカル変数として、mp を生成
+  set<ObjectHeader*> heap_list;
   int heap_num;
   int heap_max;
   Frame frame;
