@@ -72,7 +72,8 @@ typedef union Object {
 
 typedef struct Frame {
   struct Frame* frame_prev;
-  unsigned long frame_size;
+  unsigned short frame_size;
+  unsigned short frame_pos;
   Object* frame_data[0];
 } Frame;
 
@@ -157,7 +158,9 @@ void gc_mark() {
   Frame* frame = frame_list;
   while(frame != frame_bottom) {
     debug2("gc mark %p size %ld\n", frame, frame->frame_size);
-    for(int i = 0; i < frame->frame_size; i++) {
+    int pos = frame->frame_size;
+    if(pos > frame->frame_pos) pos = frame->frame_pos;
+    for(int i = 0; i < pos; i++) {
       gc_mark_object(frame->frame_data[i]);
       debug2("done\n");
     }
@@ -216,7 +219,7 @@ void gc_collect() {
          vm->heap_num);
 }
 
-void gc_collect_end_vm(Object* data, VM* _vm) {
+Object* gc_collect_end_vm(Object* data, VM* _vm) {
   long prev_num = vm->heap_num;
   debug2("gc mark\n");
   gc_mark_object(data);
@@ -227,6 +230,7 @@ void gc_collect_end_vm(Object* data, VM* _vm) {
 
   debug("Collected %ld objects, %ld moving.\n", prev_num - vm->heap_num,
          vm->heap_num);
+  return data;
 }
 
 void gc_collect_pipe(Object* data) {
@@ -255,7 +259,6 @@ void gc_collect_pipe(Object* data) {
 Object* gc_alloc(ObjectType type, int size) {
   debug2("gc alloc\n");
   debug2("vm=%p\n",vm);
-  if (vm->heap_num == vm->heap_max) gc_collect();
 
   ObjectHeader* head = (ObjectHeader*)malloc(sizeof(ObjectHeader)+size);
 
@@ -268,6 +271,39 @@ Object* gc_alloc(ObjectType type, int size) {
   vm->heap_num++;
 
   return (Object*)&head[1];
+}
+
+#define gc_oarray0(size) (gc_alloc(OBJ_BOXED_ARRAY, sizeof(Object*)*size))
+
+Object* gc_add_pool(Frame* frame_list, Object* head) {
+
+  int frame_pos = frame_list->frame_pos;
+  int frame_size = frame_list->frame_size-1;
+  Object** frame_data = frame_list->frame_data;
+  
+  if (frame_pos < frame_size) {// フレームサイズ内ならそのまま使用する
+    frame_data += frame_list->frame_pos;
+  } else {// 足りなくなったら追加領域を使う
+    frame_data += frame_size;
+    frame_pos -= frame_size;
+    // 追加時
+    if (frame_pos == 0) {
+      *frame_data = gc_oarray0(2);
+    } else {
+      int add_size = ((ObjectHeader*)*frame_data)[-1].size/sizeof(void*);
+      if(add_size==frame_pos) {
+        Object* frame_data2 = gc_oarray0(add_size*2);
+        memcpy((void*)frame_data2, (void*)*frame_data, sizeof(Object*)*add_size);
+        *frame_data = frame_data2;
+      }
+    }
+    frame_data = (Object**)(*frame_data);
+    frame_data += frame_pos;
+  }
+  *frame_data = head;
+  frame_list->frame_pos++;
+  if (vm->heap_num == vm->heap_max) gc_collect();
+  return head;
 }
 
 #define gc_alloc_pair() (gc_alloc(OBJ_PAIR, sizeof(Object*)*2))
@@ -325,16 +361,19 @@ Object* gc_copy(VM* vm, Object* object) {
   return obj;
 }
 
+#define pool(a) (gc_add_pool(frame_list, a))
 #define ENTER_FRAME(frame, SIZE) \
-  Object* frame[SIZE+2]; \
+  Object* frame[SIZE+3]; \
   ((Frame*)frame)->frame_prev = frame_list; \
-  ((Frame*)frame)->frame_size = SIZE; \
+  ((Frame*)frame)->frame_size = SIZE+1; \
+  ((Frame*)frame)->frame_pos = 0; \
   frame_list = (Frame*)frame; \
-
-#define ENTER_FRAME_ENUM(frame) ENTER_FRAME(frame, (frame##_END-2))
 
 #define LEAVE_FRAME(frame) \
   frame_list = frame_list->frame_prev;
+
+#define pool_ret(a) (gc_add_pool(frame_list->frame_prev, a))
+Object* root_frame[256+3];
 
 Object* vm_get_record(VM* _vm) {
   return gc_copy(_vm, _vm->record);
@@ -374,7 +413,9 @@ void gc_init() {
   vm->heap_list = NULL;
   vm->heap_num = 0;
   vm->heap_max = 8;
-  frame_list = NULL;
+  ((Frame*)root_frame)->frame_prev = NULL;
+  ((Frame*)root_frame)->frame_size = 256+1;
+  ((Frame*)root_frame)->frame_pos = 0;
   frame_bottom = NULL;
 }
 
@@ -387,9 +428,9 @@ void gc_free() {
 void test() {
   void* frame[2+1];
   frame[0] = (void*)frame_list;
-  frame[1] = (void*)1;
+  frame[1] = (void*)2;
   frame_list = (Frame*)frame;
-  frame[2] = gc_alloc(OBJ_BOXED_ARRAY,sizeof(long)*2);
+  Object* a = pool(gc_alloc(OBJ_BOXED_ARRAY,sizeof(long)*2));
 
   assert(vm->heap_num==1);
   gc_collect();
@@ -400,40 +441,40 @@ void test() {
 
 void test2() {
   ENTER_FRAME(frame, 1);
-  frame[2] = gc_alloc(OBJ_BOXED_ARRAY,sizeof(long)*2);
+  Object* a = pool(gc_alloc(OBJ_BOXED_ARRAY,sizeof(long)*2));
   assert(vm->heap_num==1);
   gc_collect();
   assert(vm->heap_num==1);
   LEAVE_FRAME(frame);
 }
 
+
 void test3() {
-  enum {frame_START, frame_SIZE, A, B, unboxed, frame_END};
-  ENTER_FRAME_ENUM(frame);
+  ENTER_FRAME(frame,3);
 
   // ペア
-  frame[A] = gc_alloc_pair();
-  frame[A]->fst = gc_alloc_int(10);
-  frame[A]->snd = gc_alloc_int(20);
+  Object* A = pool(gc_alloc_pair());
+  A->fst = gc_alloc_int(10);
+  A->snd = gc_alloc_int(20);
 
   // オブジェクト配列
-  frame[B] = gc_alloc_boxed_array(2);
-  frame[B]->field[0] = gc_alloc_int(30);
-  frame[B]->field[1] = gc_alloc_int(40);
+  Object* B = pool(gc_alloc_boxed_array(2));
+  B->field[0] = gc_alloc_int(30);
+  B->field[1] = gc_alloc_int(40);
 
   // int配列
-  frame[unboxed] = gc_alloc_unboxed_array(sizeof(int)*2);
-  frame[unboxed]->ints[0] = 50;
-  frame[unboxed]->ints[1] = 60;
+  Object* unboxed = pool(gc_alloc_unboxed_array(sizeof(int)*2));
+  unboxed->ints[0] = 50;
+  unboxed->ints[1] = 60;
 
-  printf("data1 = %p %d\n", frame[A]->fst, frame[A]->fst->intv);
-  printf("data2 = %p %d\n", frame[A]->snd, frame[A]->snd->intv);
+  printf("data1 = %p %d\n", A->fst, A->fst->intv);
+  printf("data2 = %p %d\n", A->snd, A->snd->intv);
 
-  printf("data3 = %p %d\n", frame[B]->field[0], frame[B]->field[0]->intv);
-  printf("data4 = %p %d\n", frame[B]->field[1], frame[B]->field[1]->intv);
+  printf("data3 = %p %d\n", B->field[0], B->field[0]->intv);
+  printf("data4 = %p %d\n", B->field[1], B->field[1]->intv);
 
-  printf("data5 = %p %d\n", &frame[unboxed]->ints[0], frame[unboxed]->ints[0]);
-  printf("data6 = %p %d\n", &frame[unboxed]->ints[1], frame[unboxed]->ints[1]);
+  printf("data5 = %p %d\n", &unboxed->ints[0], unboxed->ints[0]);
+  printf("data6 = %p %d\n", &unboxed->ints[1], unboxed->ints[1]);
   assert(vm->heap_num==7);
   gc_collect();
   assert(vm->heap_num==7);
@@ -441,25 +482,24 @@ void test3() {
 }
 
 Object* test_int(int n) {
-  enum {frame_START, frame_SIZE, A, frame_END};
-  ENTER_FRAME_ENUM(frame);
-  frame[A] = gc_alloc_int(n+10);
+  ENTER_FRAME(frame,1);
+  Object* A = pool_ret(pool(gc_alloc_int(n+10)));
   gc_collect();
   LEAVE_FRAME(frame);
-  return frame[A];
+  gc_collect();
+  return A;
 }
 
 void test_record() {
-  enum {frame_START, frame_SIZE, A, frame_END};
-  ENTER_FRAME_ENUM(frame);
+  ENTER_FRAME(frame,2);
 
   // レコード
   enum {RECORD_SIZE=3,RECORD_BITMAP=BIT(1)|BIT(2)};
-  frame[A] = gc_alloc_record(RECORD_SIZE);
-  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
-  frame[A]->longs[0] = 10; // undata
-  frame[A]->field[1] = gc_alloc_int(20);
-  frame[A]->field[2] = test_int(30);
+  Object* A = pool(gc_alloc_record(RECORD_SIZE));
+  A->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
+  A->longs[0] = 10; // undata
+  A->field[1] = gc_alloc_int(20);
+  A->field[2] = test_int(30);
 
   assert(vm->heap_num==3);
   gc_collect();
@@ -468,30 +508,30 @@ void test_record() {
 }
 
 Object* test_new_vm2(Object* data) {
-  enum {frame_START, frame_SIZE, A, B, C, frame_END};
-  ENTER_FRAME_ENUM(frame);
+  ENTER_FRAME(frame,3);
 
   // レコード
   enum {RECORD_SIZE=3,RECORD_BITMAP=BIT(1)|BIT(2)};
-  frame[A] = gc_alloc_record(RECORD_SIZE); // 4
-  frame[A]->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
-  frame[A]->longs[0] = 100; // undata
-  frame[A]->field[1] = gc_alloc_int(200); // 5
-  frame[A]->field[2] = data;
+  Object* A = pool(gc_alloc_record(RECORD_SIZE)); // 4
+  A->longs[RECORD_SIZE] = RECORD_BITMAP;// レコードのビットマップ(cpuビット数分でアラインする。ビットマップもcpu bit数)
+  A->longs[0] = 100; // undata
+  A->field[1] = gc_alloc_int(200); // 5
+  A->field[2] = data;
 
-  frame[B] = gc_alloc_int(3); // 6
-  frame[C] = gc_alloc_int(5); // 7
+  Object* B = gc_alloc_int(3); // 6
+  Object* C = gc_alloc_int(5); // 7
 
   LEAVE_FRAME(frame);
-  return frame[A];
+  return A;
 }
 
+/*
 void test_new_vm() {
   enum {frame_START, frame_SIZE, A, B, frame_END};
   ENTER_FRAME_ENUM(frame);
 
   // レコード
-  frame[A] = gc_alloc_int(1); // 1
+  Object* A = pool(gc_alloc_int(1)); // 1
 
   assert(vm->heap_num==1);
 
@@ -502,17 +542,16 @@ void test_new_vm() {
     assert(vm->heap_num==0);
 
     PUSH_VM(vm2);
-      enum {frame2_START, frame2_SIZE, D, frame2_END};
-      ENTER_FRAME_ENUM(frame2);
+      ENTER_FRAME(frame2,1);
 
       assert(vm->heap_num==0);
-      frame1[C] = test_new_vm2(frame[A]);
+      Object* C = test_new_vm2(A);
       assert(vm->heap_num==4);
 
       LEAVE_FRAME(frame2);
-    POP_VM(vm2, frame1[C]);// 6と7が消える。
+    POP_VM(vm2, C);// 6と7が消える。
     assert(vm->heap_num==3);// ヒープには、cのデータと世界のデータが残る
-    frame[B] = frame1[C];
+    Object* B = C;
     LEAVE_FRAME(frame1);
   printf("id change check.........\n");
   POP_VM(vm1,frame[B]);// ヒープには世界のデータともとのデータに新しい2つのデータで4つ
@@ -521,19 +560,19 @@ void test_new_vm() {
   gc_collect();// 世界のデータが消えて3つに
   assert(vm->heap_num==3);
   LEAVE_FRAME(frame);
-}
-
+}*/
+/*
 void test_pipes1() {
   enum {frame_START, frame_SIZE, A, B, C, frame_END};
   ENTER_FRAME_ENUM(frame);
 
-  frame[A] = gc_alloc_int(1); // 1
+  A = gc_alloc_int(1); // 1
   assert(vm->heap_num==1);
 
   PUSH_VM(vm1);
 
     assert(vm->heap_num==0);
-    frame[B] = test_new_vm2(frame[A]);
+    frame[B] = test_new_vm2(A);
     assert(vm->heap_num==4);
     frame[B] = test_new_vm2(frame[B]);
     assert(vm->heap_num==8);
@@ -552,12 +591,12 @@ void test_pipes2() {
   enum {frame_START, frame_SIZE, A, B, C, frame_END};
   ENTER_FRAME_ENUM(frame);
 
-  frame[A] = gc_alloc_int(1); // 1
+  A = gc_alloc_int(1); // 1
 
   assert(vm->heap_num==1);
   PUSH_VM(vm1);
     assert(vm->heap_num==0);
-    frame[B] = test_new_vm2(frame[A]); // 生きているのが2つ死んでいるのが2つ
+    frame[B] = test_new_vm2(A); // 生きているのが2つ死んでいるのが2つ
     assert(vm->heap_num==4);
     gc_collect_pipe(frame[B]);// bだけコピーして後は消す
     assert(vm->heap_num==2);
@@ -579,64 +618,66 @@ void test_pipes2() {
   assert(vm->heap_num==7);
   LEAVE_FRAME(frame);
 }
-
+*/
 void test_multi_vm() {
-  enum {frame_START, frame_SIZE, VM1,VM2,A, B, C, frame_END};
-  ENTER_FRAME_ENUM(frame);
-  frame[A] = gc_alloc_int(1);
+  ENTER_FRAME(frame,8);
+  Object* A = pool(gc_alloc_int(1));
 
   assert(vm->heap_num==1);
-  VM* tmp_vm = vm;
-  frame[VM1] = (Object*)vm_new();// 世界を作る
-  frame[VM2] = (Object*)vm_new();// 世界を作る
+  VM* tmp_vm = pool(vm);
+  VM* VM1 = pool(vm_new());// 世界を作る
+  VM* VM2 = pool(vm_new());// 世界を作る
   assert(vm->heap_num==3);
-  vm = (VM*)frame[VM1];// 世界を移動
+  vm = VM1;// 世界を移動
     assert(vm->heap_num==0);
-    vm->record = test_int(frame[A]->intv);// 計算する
+    vm->record = test_int(A->intv);// 計算する
     assert(vm->heap_num==1);
-  vm = (VM*)frame[VM2];// 世界を移動
-    assert(vm->heap_num==0);
-    vm->record = test_int(frame[A]->intv);// 計算する
-    assert(vm->heap_num==1);
-  vm = tmp_vm;// 元に戻る
-  assert(vm->heap_num==3);
 
-  frame[B] = vm_get_record((VM*)frame[VM1]);// コピーとる
-  frame[C] = vm_get_record((VM*)frame[VM2]);// コピーとる
+  Object* C;
+  vm = VM2;// 世界を移動
+    assert(vm->heap_num==0);
+    C = pool(test_int(A->intv));// 計算する
+    assert(vm->heap_num==1);
+  vm_end(C, tmp_vm);
+  
+  vm = tmp_vm;// 元に戻る
+  assert(vm->heap_num==4);
+
+  Object* B = pool(vm_get_record(VM1));// コピーとる
   assert(vm->heap_num==5);
-  frame[VM1] = NULL; // 世界を消す
-  frame[VM2] = NULL; // 世界を消す
   printf("id change check.........\n");
   gc_collect();
-  assert(vm->heap_num==3);
+  assert(vm->heap_num==5);
   LEAVE_FRAME(frame);
 }
 
 void test_multi() {
-  enum {frame_START, frame_SIZE, A, B, frame_END};
-  ENTER_FRAME_ENUM(frame);
+  ENTER_FRAME(frame,3);
 
-  frame[A] = gc_alloc_int(1);
+  Object* A = pool(gc_alloc_int(1));
+  Object* B;
   assert(vm->heap_num==1);
   PUSH_VM(vm1);// vmオブジェクトが作られる
     assert(vm->heap_num==0);
     assert(vm1->heap_num==2);
-  POP_VM(vm1, frame[B]);
+  POP_VM(vm1, B);
   assert(vm->heap_num==2);
   gc_collect();// 世界が消える
   assert(vm->heap_num==1);
 
+
   PUSH_VM(vm2);
     assert(vm2->heap_num==2); // 世界が増える
     assert(vm->heap_num==0);
-    frame[B] = test_int(frame[A]->intv);
+    B = pool(test_int(A->intv));
     assert(vm->heap_num==1);
     assert(vm2->heap_num==2);
-  POP_VM(vm2, frame[B]);
+  POP_VM(vm2, B);
   assert(vm->heap_num==3);// frame2の世界と値が増えた
 
   gc_collect();// frame2世界が消えた
   assert(vm->heap_num==2);
+
   LEAVE_FRAME(frame);
 }
 
@@ -662,16 +703,17 @@ int main() {
   test_record();
   gc_free();
 
+/*
   printf("------------- test new vm\n");
   gc_init();
   test_new_vm();
   gc_free();
-
+*/
   printf("------------- test multi vm\n");
   gc_init();
   test_multi_vm();
   gc_free();
-
+/*
   printf("------------- test pipes1\n");
   gc_init();
   test_pipes1();
@@ -681,7 +723,7 @@ int main() {
   gc_init();
   test_pipes2();
   gc_free();
-
+*/
   printf("------------- test multi\n");
   gc_init();
   test_multi();
