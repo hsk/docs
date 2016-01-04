@@ -1,4 +1,6 @@
-How to make ad-hoc polymorphism less ad hoc
+# How to make ad-hoc polymorphism less ad hoc
+
+# アドホック多相型下でのアドホックの作り方
 
 Philip Wadler and Stephen Blott
 
@@ -6,101 +8,82 @@ University of Glasgow
 
 October 1988
 
-Abstract
+## Abstract
 
-This paper presents type classes, a new approach
-to ad-hoc polymorphism. Type classes permit over-
-loading of arithmetic operators such as multiplica-
-tion, and generalise the "eqtype variables" of Stan-
-dard ML. Type classes extend the Hindley/Milner
-polymorphic type system, and  provide a new ap-
-proach to issues that arise in object-oriented pro-
-gramming. bounded types. quantication, and ab-
-stract data types. This paper provides an informal
-introduction to type classes, and defines them for-
-mally by means of type inference rules.
+This paper presents type classes, a new approach to ad-hoc polymorphism.
+Type classes permit Overloading of arithmetic operators such as
+multiplication, and generalise the “eqtype variables” of Standard ML.
+Type classes extend the Hindley/Milner polymorphic type system, and
+provide a new approach tO issues that arise in object-Oriented
+prOgramming, bounded type quantification, and abstract data types. This
+paper provides an informal introduction to type classes, and defines
+them formally by means of type inference rules.
 
+## 1 Introduction
 
-1 Introduction
+Strachey chose the adjectives ad-hoc and parametric to distinguish two
+varieties of polymorphism Strö7]. Ad-hoc polymorphism occurs when a
+function is defined Over several different types, acting in a different
+way for each type. A typical example is Overloaded multiplication: the
+same symbol may be used to denote multiplication of integers (as in 3+3)
+and multiplication of floating point values (as in 3. 14+3.14).
 
-Strachey chose the adjectives ad-hoc and parametric
-to distinguish two varieties of polymorphism [Str67].
+Parametric polymorphism occurs when a function is defined Over a range
+of types, acting in the same way for each type. A typical example is the
+length function, which acts in the same way on a list of
 
-Ad-hoc polymorphism occurs when a function is
-defined over several different types, acting in a dif-
-ferent way for each type. A typical example is
-overloaded multiplication: the same symbol may be
-used to denote multiplication of integers (as in 3*3)
-and multiplication of foating point values (as in
-3.14*3.14).
+----
 
-Parametric polymorphism o ccurs when a function
-is defined over a range of types, acting in the same
-way for each type. A typical example is the length
-function, which acts in the same way on a list of
+\*Authors’ address: Department of Computing Science, University of
+Glasgow, Glasgow G12 80C), Scotland. Flectronic mail: Hadler,
+blott@cs.glasgow .ac.uk.
+
+Published in: í 6 'th A CM Symposium on Principles of Programming
+Languages, Austin, Texas, January 1989.
+
+Permission to copy without fee all or part of this material is granted
+provided that the copies are not made or distributed for direct
+commercial advantage, the ACM copyright notice and the title of the
+publication and its date appear, and notice is given that copying is by
+permission of the Association for Computing Machinery. To copy
+otherwise, or to republish, requires a fee and/or specific permission.
+
+----
 
 integers and a list of floating point numbers.
 
-One widely accepted approach to parametric
-polymorphism is the Hindley/Milner type system
-[Hin69, Mil78, DM82], which is used in Standard
-ML [HMM86, Mil87]. Miranda1[Tur85], and other
-languages. On the other hand, there is no widely
-accepted approach to ad-hoc polymorphism, and so
-its name is doubly appropriate.
+One widely accepted approach to parametric polymorphism is the
+Hindley/Milner type system [Hiné9, Mil'V8, DM82), which is used in
+Standard ML [HMM86, Mil87], Miranda||Tur85], and other languages. On the
+other hand, there is no widely accepted approach to ad-hoc polymorphism,
+and so its name is doubly appropriate.
 
-This paper presents type classes, which extend the
-Hindley/Milner type system to include certain kinds
-of overloading, and thus bring together the two sorts
-of polymorphism that Strachey separated.
+This paper presents type classes, which extend the Hindley/Milner type
+system to include certain kinds of overloading, and thus bring together
+the two sorts of polymorphism that Strachey separated.
 
-The type system presented here is a generalisa-
-tion of the Hindley/Milner type system. As in that
-system, type declarations can be inferred, so explicit
-type declarations for functions are not required. Dur-
-ing the inference process, it is possible to translate a
-program using type classes to an equivalent program
-that does not use overloading. The translated pro-
-grams are typable in the (ungeneralised) Hindley/
-Milner type system.
+The type system presented here is a generalisation of the Hindley/Milner
+type system. As in that system, type declarations can be inferred, so
+explicit type declarations for functions are not required. During the
+inference process, it is possible to translate a program using type
+classes to an equivalent program that does not use overloading. The
+translated programs are typable in the (ungeneralised) Hindley/ Milner
+type system.
 
-The body of this paper gives an informal introduc-
-tion to type classes and the translation rules, while
-an appendix gives formal rules for typing and trans-
-lation, in the form of inference rules (as in [DM82]).
-The translation rules provide a semantics for type
+The body of this paper gives an informal introduction to type classes
+and the translation rules, while an appendix gives formal rules for
+typing and translation, in the form of inference rules (as in [DM82).
+The translation rules provide a semantics for type classes. They also
+provide one possible implementation technique: if desired, the new
+system could be added to an existing language with Hindley/Milner types
+simply by writing a pre-processor.
 
-classes. They also provide one possible implementa-
-tion technique: if desired, the new system could be
-added to an existing language with Hindley/Milner
-types simply by writing a pre-processor.
-
-Two places where the issues of ad-hoc polymor-
-phism arise are the definition of operators for arith-
-metic and equality. Below we examine the ap-
-proaches to these three problems adopted by Stan-
-dard ML and Miranda; not only do the approaches
-differ between￼the two languages, they also differ
-within a single language. But as we shall see, type
-classes provide a uniform mechanism that can ad-
-dress these problems.
-
--------
-
-\* Authors' address: Department of Computing Science,
-University of Glasgow, Glasgow G12 8QQ, Scotland. Elec-
-tronic mail: wadler, blott@cs.glasgow.ac.uk.
-
-Published in: 16'th ACM Symposium on Principles of Pro-
-gramming Languages, Austin, Texas, January 1989.
-
-Permission to copy without fee all or part of this material is
-granted provided that the copies are not made or distributed
-for direct commercial advantage, the ACM copyright notice
-and the title of the publication and its date appear, and no-
-tice is given that copying is by permission of the Association
-for Computing Machinery. To copy otherwise, or to republish,
-requires a fee and/or specific permission.
+Two places where the issues of ad-hoc polymorphism arise are the
+definition of Operators for arithmetic and equality. Below we examine
+the approaches to these three problems adopted by Standard ML and
+Miranda; not only do the approaches differ between the two languages,
+they also differ within a single language. But as we shall see, type
+classes provide a uniform mechanism that can address these problems.
 
 ----
 
@@ -108,1038 +91,1133 @@ requires a fee and/or specific permission.
 
 ----
 
+This work grew out of the efforts of the Haskell committee to design a
+lazy functional programming language”. One of the goals of the Haskell
+committee was to adopt “off the shelf” solutions to problems wherever
+possible. We were a little surprised to realise that arithmetic and
+equality were areas where no standard solution was available! Type
+classes were developed as an attempt to find a better solution to these
+problems; the solution was judged successful enough to be included in
+the Haskell design. However, type classes should be judged independently
+of Haskell; they could just as well be incorporated into another
+language, such as Standard MII,.
 
+Type classes appear to be closely related to issues that arise in
+object-oriented programming, bounded quantification of types, and
+abstract data types |CW85, MP85, Rey85). Some of the connections are
+Outlined below, but more work is required to understand these relations
+fully.
 
+A type system very similar to Ours has been discovered independently by
+Stefan Kaes [KaeS8]. Our work improves on Kaes’ in several ways, notably
+by the introduction of type classes to group related operators, and by
+providing a better translation method.
 
+This paper is divided into two parts: the body gives an informal
+introduction to type classes, while the appendix gives a more formal
+description. Section 2 motivates the new system by describing
+limitations of ad-hoc polymorphism as it is used in Standard MI, and
+Miranda. Section 3 introduces type classes by means of a simple example.
+Section 4 illustrates how the example of Section 3 may be translated
+into an equivalent program without type classes. Section 5 presents a
+second example, the definition of an Overloaded equality function.
+Section 6 describes subclasses. Section 7 discusses related work and
+concludes. Appendix A presents inference rules for typing and
+translation.
 
+## 2 Limitations of ad-hoc
 
+polymorphism
 
+This section motivates Our treatment of ad-hoc polymorphism, by
+examining problems that arise with
 
+\*The Haskell committee includes: Arvind, Brian Boutel, Jon Fairbairn,
+Joe Fasel, Paul Hudak, John Hughes, Thomas Johnsson, Dick Kieburtz,
+Simon Peyton Jones, Rishiyur Nikhil, Mike Reeve, Philip Wadler, David
+Wise, and Jonathan Young.
 
+arithmetic and equality in Standard ML and Miranda.
 
+Arithmetic. In the simplest approach to overloading, basic Operations
+such as addition and multiplication are Overloaded, but functions
+defined in terms of them are not. For example, although one can write
+3+3 and 3. 14+3. 14, one cannot define
 
+	square x = x\*x
 
-
-
-
-￼
-This work grew out of the e􏰔orts of the Haskell committee to design a lazy functional programming language􏰅 􏰍 One of the goals of the Haskell commit􏰀 tee was to adopt 􏰎o􏰔 the shelf 􏰏 solutions to problems
-wherever
-alise that
-no standard solution was available􏰙 Type
-were develop ed as an attempt to 􏰑nd a better so􏰀 lution to these problems􏰘 the solution was judged successful enough to be included in the Haskell de􏰀 sign􏰍 However􏰌 type classes should be judged inde􏰀 p endently of Haskell􏰘 they could just as well be in􏰀 corp orated into another language􏰌 such as Standard ML􏰍
-arithmetic and equality in Standard ML and Mi􏰀 randa􏰍
-Arithmetic􏰍 In the simplest approach to overload􏰀 ing􏰌 basic op erations such as addition and multiplica􏰀 tion are overloaded􏰌 but functions de􏰑ned in terms of them are not􏰍 For example􏰌 although one can write 􏰆􏰥􏰆 and 􏰆􏰍􏰁􏰇􏰥􏰆􏰍􏰁􏰇􏰌 one cannot de􏰑ne
-square x 􏰟 x􏰥x
 and then write terms such as
-square 􏰆 square 􏰆􏰍􏰁􏰇
-possible􏰍 We were a little surprised to re􏰀
-arithmetic and equality were areas
-where classes
-Type classes app ear to be
-that arise in ob ject􏰀oriented
-quanti􏰑cation of types􏰌 and abstract data types 􏰒CW􏰃􏰈􏰌 MP􏰃􏰈􏰌 Rey􏰃􏰈􏰓􏰍 Some of the connections are
-outlined below􏰌 but more work is required stand these relations fully􏰍
-to under􏰀
-b een dis􏰀 􏰒Kae􏰃􏰃􏰓􏰍 Our work improves on Kaes􏰚 in several ways􏰌 notably
-A type system very similar to ours has
-A more general
-equation to stand
-loaded versions of square􏰌 with types
-and Float 􏰀􏰦 Float􏰍 But consider the function􏰉
-covered indep endently by Stefan Kaes
-ab ove over􏰀 Int 􏰀􏰦 Int
-by the introduction
-of type classes to group re􏰀 by providing a better transla􏰀
-This paper is
-gives an informal introduction to type classes􏰌 while the appendix gives a more formal description􏰍 Sec􏰀 tion 􏰅 motivates the new system by describing limi􏰀 tations of ad􏰀hoc polymorphism as it is used in Stan􏰀
-lated op erators􏰌 tion metho d􏰍
-and
-divided into two
-parts􏰉 the body
-􏰟 􏰕square
-x􏰌
-square y􏰌 square z􏰖
-dard ML
-classes by means of a simple example􏰍 Section 􏰇
-and concludes􏰍
-Appendix A presents translation􏰍
-inference rules
-for
-􏰅
-typing and
-closely related to issues programming􏰌 b ounded
-and Miranda􏰍 Section 􏰆 introduces type
-illustrates
-translated
-classes􏰍 Section 􏰈 presents a second example􏰌 the def􏰀 inition of an overloaded equality function􏰍 Section 􏰊 describ es sub classes􏰍 Section 􏰋 discusses related work
-how the example of Section 􏰆 may be into an equivalent program without type
-Limitations of ad-hoc polymorphism
-This section motivates our treatment of ad􏰀hoc p oly􏰀 morphism􏰌 by examining problems that arise with
-􏰅
-committee includes􏰉 Arvind􏰌 Brian Boutel􏰌 John Hughes􏰌 Thomas Johnsson􏰌 Dick Kieburtz􏰌 Simon Peyton Jones􏰌 Rishiyur Nikhil􏰌 Mike Reeve􏰌 Philip Wadler􏰌 David Wise􏰌 and Jonathan
-Young􏰍
-mits
-or a
-write 􏰆􏰥􏰇 􏰟􏰟
-􏰚a􏰚 􏰟􏰟 􏰚b􏰚 to denote equality over characters􏰍 But
-This is the approach taken in
-dentally􏰌 it is interesting to note that although Stan􏰀 dard ML includes overloading of arithmetic op era􏰀 tors􏰌 its formal de􏰑nition is delib erately ambiguous ab out how this overloading is resolved 􏰒HMT􏰃􏰃􏰌 page 􏰋􏰁􏰓􏰌 and di􏰔erent versions of Standard ML resolve overloading in di􏰔erent ways􏰍􏰖
-squares 􏰕x􏰌 y􏰌 z􏰖
-Since
-either
-ble overloaded versions
-there may be exp onential growth in the translations􏰌 and this is one reason why such solu􏰀 tions are not widely used􏰍
-In Miranda􏰌 this problem is side􏰀stepp ed by not overloading arithmetic op erations􏰍 Miranda provides only the 􏰗oating p oint type 􏰕named 􏰎num􏰏􏰖􏰌 and there is no way to use the type system to indicate that an op eration is restricted to integers􏰍
-Equality􏰍 The history of the equality op eration is checkered􏰉 it has been treated as overloaded􏰌 fully polymorphic􏰌 and partly polymorphic􏰍
-The 􏰑rst approach to equality is to make it over􏰀 loaded􏰌 just like multiplication􏰍 In particular􏰌 equal􏰀 ity may be overloaded on every monotype that ad􏰀
-i􏰍e􏰍􏰌 does not contain an abstract type type􏰍 In such a language􏰌 one may 􏰁􏰅 to denote equality over integers􏰌 or
-each of x􏰌 y􏰌 and type Int or type
-z might􏰌 indep endently􏰌 have Float􏰌 there are eight p ossi􏰀
-equality􏰌 function
-Standard
-ML􏰍 􏰕Inci􏰀
-approach is to allow the for the de􏰑nition of two
-of this function􏰍
-In general􏰌 numb er of
-￼Jon
-de􏰑ne a function member by the equations 􏰟 False
-The Haskell
-Fairbairn􏰌 Jo e Fasel􏰌 Paul Hudak􏰌
-one cannot member 􏰒􏰓 y
-􏰅
-member
-􏰕x􏰉xs􏰖 y
-􏰟 􏰕x 􏰟􏰟 y􏰖 􏰎􏰐 member xs y
+
+	square 3
+	square 3. 14
+
+This is the approach taken in Standard ML. (Incidentally, it is
+interesting to note that although Standard MI, includes overloading of
+arithmetic Operators, its formal definition is deliberately ambiguous
+about how this overloading is resolved [HMT88, page 71], and different
+versions of Standard M.I. resolve Overloading in different ways.)
+
+A more general approach is to allow the above equation to stand for the
+definition of two Overloaded versions of square, with types Int -\> Int
+and Float -\> Float. But consider the function:
+
+	squares (x, y, z)
+	    = (square x, square y, square z)
+
+Since each of x, y, and z might, independently, have either type Int or
+type Float, there are eight possible overloaded versions of this
+function. In general, there may be exponential growth in the number of
+translations, and this is one reason why such solutions are not widely
+used.
+
+In Miranda, this problem is side-stepped by not Overloading arithmetic
+Operations. Miranda provides only the floating point type (named “num”),
+and there is no way to use the type system to indicate that an Operation
+is restricted to integers.
+
+Equality. The history of the equality Operation is checkered: it has
+been treated as overloaded, fully polymorphic, and partly polymorphic.
+
+The first approach to equality is to make it Overloaded, just like
+multiplication. In particular, equality may be Overloaded on every
+monotype that admits equality, i.e., does not contain an abstract type
+or a function type. In such a language, One may write 3+4 == 12 to
+denote equality over integers, or 'a' == 'b' to denote equality Over
+characters. But One cannot define a function member by the equations
+
+	member [] y       = False
+	member (x : xs) y = (x == y) \/ member xs y
+
 and then write terms such as
-member 􏰒􏰁􏰌􏰅􏰌􏰆􏰓 􏰅 member 􏰏Haskell􏰏 􏰚k􏰚
-􏰕We abbreviate a list of characters
-as 􏰏abc􏰏􏰍􏰖 This is the approach taken in the 􏰑rst version of Standard ML 􏰒Mil􏰃􏰇􏰓􏰍
-A second approach is to make equality fully p oly􏰀 morphic􏰍 In this case􏰌 its type is
-􏰕􏰟􏰟􏰖 􏰉􏰉 a 􏰀􏰦 a 􏰀􏰦 Bool
-where a is a type variable ranging over every type􏰍 The type of the member function is now
-member 􏰉􏰉 􏰒a􏰓 􏰀􏰦
-􏰕We write 􏰒a􏰓 for the
-that applying equality to functions
-do es not generate a type error􏰍 This is the approach taken in Miranda􏰉 if equality is applied on a func􏰀 tion type􏰌 the result is a run􏰀time error􏰘 if equality is
-dictionary of appropriate metho ds􏰍 This is exactly the approach used in ob ject􏰀oriented programming 􏰒GR􏰃􏰆􏰓􏰍
-In the case of polymorphic equality􏰌 this means
-a 􏰀􏰦 Bool
-type 􏰎list of a􏰏􏰍􏰖
-applied on an
-representation for equality􏰍 This last may be consid􏰀 ered a bug􏰌 as it violates the principle of abstraction􏰍
-A third approach is to make equality polymorphic in a limited way􏰍 In this case􏰌 its type is
-􏰕􏰟􏰟􏰖 􏰉􏰉
-abstract type􏰌 the result is to test the
-a􏰕􏰟􏰟􏰖 􏰀􏰦 a􏰕􏰟􏰟􏰖 􏰀􏰦 Bool
-a􏰕􏰟􏰟􏰖 is a type variable ranging only over
-where
-types that admit equality􏰍 The type function is now
-member 􏰉􏰉 􏰒a􏰕􏰟􏰟􏰖 􏰓 􏰀􏰦 a􏰕􏰟􏰟􏰖 􏰀􏰦
-of the
-Bool
-member
-Applying equality􏰌 or member􏰌 on a function abstract type is now a type error􏰍 This is
-proach currently taken in Standard ML􏰌 where a􏰕􏰟􏰟􏰖 is written 􏰚􏰚a􏰌 and called an 􏰎eqtype variable􏰏􏰍
-Polymorphic equality places certain demands up on
-the implementor of the run􏰀time
-stance􏰌 in Standard ML reference
-for equality di􏰔erently from other
-b e possible at run􏰀time to distinguish references other p ointers􏰍
-Ob ject􏰀oriented programming􏰍 It would be nice if polymorphic equality could be extended to include user􏰀de􏰑ned equality op erations over abstract types􏰍 To implement this􏰌 we would need to require that every ob ject carry with it a p ointer to a method􏰌 a pro cedure for p erforming the equality test􏰍 If we are to have more than one op eration with this prop erty􏰌 then each object should carry with it a pointer to a
-We may now
-square x 􏰟
-de􏰑ne
-x 􏰥 x
-􏰒􏰚a􏰚􏰌􏰚b􏰚􏰌􏰚c􏰚􏰓
-will they p er􏰀
-This means or abstract types
-system􏰍 For in􏰀 types are tested types􏰌 so it must from
-type constructors􏰌 and a
-type or the ap􏰀
-􏰆
-that both arguments of the equality function contain a p ointer to the same dictionary 􏰕since
-are b oth of the same type􏰖􏰍 This suggests that
-haps dictionaries should be passed around indep en􏰀 dently of ob jects􏰘 now polymorphic equality would be passed one dictionary and two ob jects 􏰕minus dic􏰀 tionaries􏰖􏰍 This is the intuition behind type classes and the translation metho d describ ed here􏰍
-􏰆 An introductory example
-We will now introduce type classes by means of an example􏰍
-Say that we wish to overload 􏰕􏰡􏰖􏰌 􏰕􏰥􏰖􏰌 and negate 􏰕unary minus􏰖 on types Int and Float􏰍 To do so􏰌 we introduce a new type class􏰌 called Num􏰌 as shown in the class declaration in Figure 􏰁􏰍 This declaration may be read as stating 􏰎a type a belongs to class Num if there are functions named 􏰕􏰡􏰖􏰌 􏰕􏰥􏰖􏰌 and negate􏰌 of the appropriate types􏰌 de􏰑ned on it􏰍􏰏
-We may now declare instances of this class􏰌 as shown by the two instance declarations in Figure 􏰁􏰍 The assertion Num Int may be read 􏰎there are func􏰀 tions named 􏰕􏰡􏰖􏰌 􏰕􏰥􏰖􏰌 and negate􏰌 of the appropri􏰀 ate types􏰌 de􏰑ned on Int􏰏􏰍 The instance declaration justi􏰑es this assertion by giving appropriate bindings for the three functions􏰍 The type inference algorithm must verify that these bindings do have the appropri􏰀 ate type􏰌 i􏰍e􏰍􏰌 that addInt has type Int􏰀􏰦Int􏰀􏰦Int􏰌 and similarly for mulInt and negInt􏰍 􏰕We assume that addInt􏰌 mulInt􏰌 and negInt are de􏰑ned in the standard prelude􏰍􏰖 The instance Num Float is de􏰀 clared similarly􏰍
-A word on notational conventions􏰉 Type class names and type constructor names begin with a capi􏰀 tal letter􏰌 and type variable names begin with a small letter􏰍 Here􏰌 Num is a type class􏰌 Int and Float are
-is a
-There exists an
-of square from
-appendix􏰖􏰍 It derives the type􏰉
-square 􏰉􏰉 Num a 􏰟􏰦 a 􏰀􏰦 a
-algorithm that
-this de􏰑nition 􏰕it is
-type
-type
-variable􏰍
-can infer the outlined in the
-￼￼￼class Num a 􏰕􏰡􏰖􏰌 􏰕􏰥􏰖
-negate
-instance Num 􏰕􏰡􏰖 􏰟 􏰕􏰥􏰖 􏰟 negate 􏰟
-where
-instance Num Float where
-􏰕􏰡􏰖 􏰟 􏰕􏰥􏰖 􏰟 negate 􏰟
-square squarex
-squares
-squares 􏰕x􏰌
-addFloat
-mulFloat
-negFloat
-􏰉􏰉 􏰉􏰉
- Int
- addInt
- mulInt
- negInt
-y􏰌 z􏰖
-􏰕a􏰌b􏰌c􏰖 􏰀􏰦 y􏰌 square z􏰖
-a 􏰀􏰦 a 􏰀􏰦 a a 􏰀􏰦 a
-where
-􏰉􏰉 Num a 􏰟􏰦 a 􏰀􏰦 a 􏰟 x􏰥x
-􏰟 􏰕square x􏰌 square
-􏰕a􏰌b􏰌c􏰖
-􏰉􏰉 Num a􏰌 Num b􏰌 Num c 􏰟􏰦
-￼Figure 􏰁􏰉 De􏰑nition of arithmetic op erations
-￼￼￼data NumD a 􏰟 NumDict 􏰕a 􏰀􏰦 a 􏰀􏰦 a􏰖 􏰕a 􏰀􏰦 a 􏰀􏰦 a􏰖 􏰕a 􏰀􏰦 a􏰖
-add􏰕NumDictamn􏰖 􏰟 a mul􏰕NumDictamn􏰖 􏰟 m neg􏰕NumDictamn􏰖 􏰟 n
-numDInt 􏰉􏰉 numDInt 􏰟
-numDFloat 􏰉􏰉 numDFloat 􏰟
-square􏰚
-square􏰚 numDa
-NumD Int
-NumDict addInt mulInt
-negInt
-NumD Float
-NumDict addFloat mulFloat negFloat
-􏰉􏰉 NumD a 􏰀􏰦 a 􏰀􏰦 a x 􏰟 mul numDa x x
-a􏰌 NumD b􏰌 NumD c􏰖 􏰀􏰦 􏰕a􏰌b􏰌c􏰖 􏰀􏰦
-􏰟 􏰕square􏰚 numDa x􏰌 square􏰚 numDb y􏰌 square􏰚 numDc z􏰖
-squares􏰚 􏰉􏰉 􏰕NumD
-squares􏰚 􏰕numDa􏰌 numDb􏰌 numDc􏰖 􏰕x􏰌 y􏰌 z􏰖
-􏰕a􏰌b􏰌c􏰖
-￼Figure 􏰅􏰉 Translation of arithmetic op erations
-􏰇
-This is read􏰌 􏰎square has type a 􏰀􏰦 a􏰌 for every a
-􏰕􏰥􏰖􏰌 and negate are de􏰑ned write terms such as
-square 􏰆 square 􏰆􏰍􏰁􏰇
-and an appropriate type will be derived for each 􏰕Int for the 􏰑rst expression􏰌 Float for the second􏰖􏰍 On
-the other hand􏰌 writing square
-error at compile time􏰌 because Char has not been asserted 􏰕via an instance declaration􏰖 to be a numeric type􏰍
-Each term now replaced
-x􏰡y
-x􏰥y negate x
-of the form x􏰡y􏰌 x􏰥y􏰌 and negate x is
-such that a belongs to class Num 􏰕i􏰍e􏰍􏰌 such that
-by a corresp onding
-term􏰌 as
-follows􏰉
-function squares men􏰀 type given in Figure 􏰁 may be read􏰌 􏰎squares 􏰕a􏰌b􏰌c􏰖 for every a􏰌 b􏰌 c such that a􏰌 b􏰌 and c belong to class Num􏰏􏰍 􏰕We write 􏰕a􏰌b􏰌c􏰖 for the type that is the cartesian
-mul numDFloat 􏰆􏰍􏰁􏰇 􏰆􏰍􏰁􏰇
-Finally􏰌 if we de􏰑ne the tioned previously􏰌 then the
-easy for the
-compiler to these into
-will has and
-b e inferred􏰍 This type the type 􏰕a􏰌b􏰌c􏰖 􏰀􏰦
-pro duct of a􏰌 b􏰌 and c􏰍􏰖 So not eight􏰍 Terms such as
-squares 􏰕􏰁􏰌 􏰅􏰌 􏰆􏰍􏰁􏰇􏰖
-has one
-dictionary that is passed at run􏰀 here is the de􏰑nition of square
-􏰉􏰉 Num a 􏰟􏰦 a 􏰀􏰦 a 􏰟 x􏰥x
-􏰉􏰉 NumD a 􏰀􏰦 a 􏰀􏰦 a
-type􏰌
-One
-is possible at compile􏰀time to translate
-gram containing class and instance declarations to an equivalent program that does not􏰍 The equiva􏰀 lent program will have a valid Hindley􏰐Milner type􏰍
-The translation metho d will be illustrated by means of an example􏰍 Figure 􏰅 shows the transla􏰀 tion of the declarations in Figure 􏰁􏰍
-For each class declaration we introduce a new type􏰌 corresp onding to an appropriate 􏰎metho d dic􏰀 tionary􏰏 for that class􏰌 and functions to access the metho ds in the dictionary􏰍 In this case􏰌 corresp ond􏰀 ing to the class Num we introduce the type NumD as shown in Figure 􏰅􏰍 The data declaration de􏰑nes NumD to be a type constructor for a new type􏰍 Values of this type are created using the value constructor NumDict􏰌 and have three comp onents of the types shown􏰍 The functions add􏰌 mul􏰌 and neg take a value of type NumD and return its 􏰑rst􏰌 second􏰌 and third comp onent􏰌 resp ectively􏰍
-Each instance of the class Num is translated into the declaration of a value of type NumD􏰍 Thus􏰌 corre􏰀 sp onding to the instance Num Int we declare a data structure of type NumD Int􏰌 and similarly for Float􏰍
-are
-􏰇
-legal􏰌 and derive an
-Translation
-appropriate
-type􏰍
-feature of this form of
-overloading is that it any pro􏰀
-of square
-must be translated to
-􏰕􏰡􏰖􏰌 on a􏰖􏰍􏰏 We can now
-􏰚x􏰚 will yield a
-type
-􏰆􏰥􏰆 􏰀􏰀􏰦
-squares
-􏰈
-where numD appropriate
-example􏰌 we have the
-􏰀􏰀􏰦 add numD x y 􏰀􏰀􏰦 mul numD x y 􏰀􏰀􏰦 neg numD x
-an appropriate dictionary􏰍 How is the following translations􏰉
-is
-dictionary determined􏰛 By its type􏰍 For
-mul numDInt 􏰆􏰍􏰁􏰇 􏰥 􏰆􏰍􏰁􏰇
-􏰆 􏰆
-􏰀􏰀􏰦
-As an optimisation􏰌 it is
-p erform beta reductions to transform
-mulInt 􏰆 􏰆 and mulFloat 􏰆􏰍􏰁􏰇 􏰆􏰍􏰁􏰇􏰌 resp ectively􏰍
-If the type of a function contains a class􏰌 then this
-is translated into a time􏰍 For example􏰌 with its type
-square squarex
+
+	member [1,2,3] 2
+	member "Haskell" 'k'
+
+(We abbreviate a list of characters ['a’, ‘b’, ‘c’] as "abc".) This is
+the approach taken in the first version of Standard ML [Mil84].
+
+A second approach is to make equality fully polymorphic. In this case,
+its type is
+
+	(==) :: a -> a -> Bool
+
+where a is a type variable ranging over every type. The type of the
+member function is now
+
+	member :: [a] -> a -> Bool
+
+(We write [a] for the type “list of a .) This means that applying
+equality to functions or abstract types does not generate a type error.
+This is the approach taken in Miranda: if equality is applied on a
+function type, the result is a run-time error; if equality is applied on
+an abstract type, the result is to test the representation for equality.
+This last may be considered a bug, as it violates the principle of
+abstraction. A third approach is to make equality polymorphic in a
+limited way. In this case, its type is
+
+	(==) :: a(==) -> a (==)-> Bool
+
+where as--) is a type variable ranging Only Over types that admit
+equality. The type of the member function is now
+
+	member :: aિ(==)] -> a(--)-> Bool
+
+Applying equality, or member, on a function type or abstract type is now
+a type error. This is the approach currently taken in Standard ML, where
+a (==) is written 'a, and called an “eqtype variable”.
+
+Polymorphic equality places certain demands upon the implementor of the
+run-time system. For instance, in Standard MI, reference types are
+tested for equality differently from other types, so it must be possible
+at run-time to distinguish references from Other pointers.
+
+Object-oriented programming. It would be nice if polymorphic equality
+could be extended to include user-defined equality Operations over
+abstract types. To implement this, we would need to require that every
+object carry with it a pointer to a method, a procedure for performing
+the equality test. If we are to have more than One Operation with this
+property, then each object should carry with it a pointer to a
+
+dictionary of appropriate methods. This is exactly the approach used in
+object-Oriented programming |GR83).
+
+In the case of polymorphic equality, this means that both arguments of
+the equality function will contain a pointer to the same dictionary
+(since they are both of the same type). This suggests that perhaps
+dictionaries should be passed around independently of objects; now
+polymorphic equality would be passed one dictionary and two objects
+(minus dictionaries). This is the intuition behind type classes and the
+translation method described here.
+
+## 3 An introductory example
+
+We will now introduce type classes by means of an example.
+
+Say that we wish to overload (+), (+), and negate (unary minus) on types
+Int and Float. To do so, we intrOduce a new type class, called Num, as
+shown in the class declaration in Figure 1. This declaration may be read
+as stating “a, type a belongs to class Num if there are functions named
+(+), (+), and negate, of the appropriate types, defined on it.”
+
+We may now declare instances of this class, as shown by the two instance
+declarations in Figure 1. The assertion Num Int may be read “there are
+functions named (+), (+), and negate, of the appropriate types, defined
+on Int”. The instance declaration justifies this assertion by giving
+appropriate bindings for the three functions. The type inference
+algorithm must verify that these bindings do have the appropriate type,
+i.e., that addint has type Int-\>Int-\>Int, and similarly for mullnt and
+neglint. (We assume that addsnt, mullnt, and neglint are defined in the
+standard prelude.) The instance Num Float is declared similarly.
+
+A word on notational conventions: Type class names and type constructor
+names begin with a capital letter, and type variable names begin with a
+small letter. Here, Num is a type class, Int and Float are type
+constructors, and a is a type variable.
+
+We may now define
+
+	square x = x + x
+
+There exists an algorithm that can infer the type of square from this
+definition (it is outlined in the
+
+appendix). It derives the type:
+
+	square :: Num a => a -> a
+
+
+	class Num a where
+	  (+), (+) :: a -> a -> a
+	  negate   :: a -> a
+
+	instance Num Int where
+	  (+)    = addInt
+	  (+)    = mulInt
+	  negate = negInt
+
+	instance Num Float where
+
+
+	  (+)    = addFloat
+	  (+)    = mulFloat
+	  negate = negFloat
+	  
+	square   :: Num a => a -> a
+	square x = x * х
+
+	squares           :: Num a, Num b, Num c => (a, b, c) -> (a, b, c)
+	squares (x, y, z) =  (square x, square y, square z)
+
+Figure 1: Definition of arithmetic Operations
+
+	data NumsD a = NumDict (a -> a -> a) (a -> a -> a) (a -> a)
+
+	add (NumDict a m n) = a
+	mul (NumDict a m n) = m
+	neg (NumDict a m n) = n
+	
+	numDInt   :: NumD Tnt
+	numDInt   =  NumDict addInt mulInt negInt
+	numDFloat :: MumD F1oat
+	numDFloat =  NumDict addFloat mulFloat negFloat
+
+	square'         :: NumD a -> a -> a
+	square' numba X =  mul numDa X X
+
+	squares' :: (NumD a, NumD b, NumD c) -> (a,b,c) -> (a,b,c)
+
+	squares' (numDa, numDb, numDc) (x, y, z)
+	    = (square' numDa x, square' numDb y, square' numDc z)
+
+Figure 2: Translation of arithmetic Operations
+
+This is read, “square has type a -\> a, for every a such that a belongs
+to class Num (i.e., such that (+), (+), and negate are defined on a).”
+We can now write terms such as
+
+	square 3
+	square 3. 14
+
+and an appropriate type will be derived for each (Int for the first
+expression, Float for the second). On the other hand, writing square 'x'
+will yield a type error at compile time, because Char has not been
+asserted (via an instance declaration) to be a numeric type.
+
+Finally, if we define the function squares mentioned previously, then
+the type given in Figure will be inferred. This type may be read,
+“squares has the type (a,b,c) -\> (a,b,c) for every a, b, and c such
+that a, b, and c belong to class Num”. (We write (a,b,c) for the type
+that is the cartesian product of a, b, and c.) So squares has one type,
+not eight. Terms such as
+
+	squares (1, 2, 3. 14)
+
+are legal, and derive an appropriate type.
+
+## 4 Translation
+
+One feature of this form of Overloading is that it is pOssible at
+cOmpile-time tO translate any prOgram containing class and instance
+declarations to an equivalent program that does not. The equivalent
+program will have a valid Hindley/Milner type. The translation method
+will be illustrated by means of an example. Figure 2 shows the
+translation of the declarations in Figure 1.
+
+For each class declaration we introduce a new type, corresponding to an
+appropriate “method dictionary” for that class, and functions to access
+the methods in the dictionary. In this case, corresponding to the class
+Num we introduce the type NumD as shown in Figure 2. The data
+declaration defines Nums) to be a type constructor for a new type.
+Values of this type are created using the value constructor Nums)ict,
+and have three components of the types shown. The functions add, mul,
+and neg take a value of type Nums) and return its first, second, and
+third component, respectively.
+
+Each instance of the class Num is translated intO the declaration of a
+value of type Nums). Thus, corresponding to the instance Num Int we
+declare a data structure of type Nums) Int, and similarly for Float.
+
+Each term of the form x+y, x+y, and negate x is now replaced by a
+corresponding term, as follows:
+
+	x+y      --> add numb x y
+	х*у      –—> mul numD x y
+	negate x --> neg numD x
+
+where nums) is an appropriate dictionary. How is the appropriate
+dictionary determined? By its type. For example, we have the following
+translations:
+
+	3 + 3
+	  ——> mul numDInt 3 3
+
+	​3.14 + 3.14
+	  --> mul numDFloat 3.14 3.14
+
+As an Optimisation, it is easy for the compiler to perform beta
+reductions to transform these into mullnt 3 3 and mulPloat 3. 14 3. 14,
+respectively.
+
+If the type of a function contains a class, then this is translated into
+a dictionary that is passed at runtime. For example, here is the
+definition of square with its type
+
+	square   :: Num a => a -> a
+	square x =  x * x
+
 This translates to
-square􏰚 square􏰚 numD
-Each application
-pass in the appropriate extra parameter􏰉
-square 􏰆
-􏰀􏰀􏰦 square􏰚 numDInt 􏰆
-square 􏰆􏰍􏰅
-􏰀􏰀􏰦 square􏰚 numDFloat 􏰆
-x 􏰟 mul
-numD x x
-Finally􏰌 the translation of squares Figure 􏰅􏰍 Just as there is one type􏰌
-in
-eight􏰌 there is only one translation􏰌 rather than eight􏰍 Exp onential growth is avoided􏰍
-􏰈 A further example􏰉
-equality
-This section shows how to de􏰑ne equality using class and instance declarations􏰍 Type classes serve as a straightforward generalisation of the 􏰎eqtype vari􏰀 ables􏰏 used in Standard ML􏰍 Unlike Standard ML􏰌 this mechanism allows the user to extend equality over abstract types in a straightforward way􏰍 And􏰌 unlike Standard ML􏰌 this mechanism can be trans􏰀 lated out at compile time􏰌 so it places no special de􏰀 mands on the implementor of the run􏰀time system􏰍
-is also
-rather than
-shown
-￼￼￼class  Eq
-  􏰕􏰟􏰟􏰖 􏰉􏰉
-instance
-  􏰕􏰟􏰟􏰖  􏰟
-instance
-􏰕􏰟􏰟􏰖 􏰟 eqChar
+
+	square'        :: NumD a -> a -> a
+	square' numD x =  mul numD x x
+
+Each application of square must be translated to pass in the appropriate
+extra parameter:
+
+	square 3
+	  --> square' numDInt 3
+	square 3.2
+	  --> square' numDFloat 3
+
+Finally, the translation of squares is also shown in Figure 2. Just as
+there is one type, rather than eight, there is only one translation,
+rather than eight. Fxponential growth is avoided.
+
+## 5 A further example: equality
+
+This section shows how to define equality using class and instance
+declarations. Type classes serve as a straightforward generalisation of
+the “eqtype variables” used in Standard MI. Unlike Standard ML, this
+mechanism allows the user to extend equality Over abstract types in a
+straightforward way. And, unlike Standard ML, this mechanism can be
+translated out at compile time, so it places no special demands On the
+implementOr of the run-time system.
+
+
+	class Eq a where
+	  (==) :: a -> a -> bool
+
+	instance Eq Int where
+	  (==) = eqInt
+
+	instance Eq Char Where
+	  (==) = eqChar
+
+	member            :: Eq a => [a] -> a -> Bool
+	member [] y       =  False
+	member (x:xs) y   =  (x == y) \/ member xs y
+
+	instance Eq a, Eq b => Eq (a,b) where
+	  (u,v) == (x,y)  = (u == x) & (v == y)
+
+	instance Eq a => Eq [a] where
+	  [] == []        = True
+	  [] == y:ys      = False
+	  x:xs == []      = False
+	  x:xs == y:ys    = (x == y) & (xs == ys)
+
+	data Set a = MkSet [a]
+
+	instance Eq a => Eq (Set a) where
+		MkSet xs == MkSet ys = and (map (member xs) ys)
+		                & and (map (member ys) xs)
+
+
+Figure 3: Definition of equality
+
+The definition is summarised in Figure 3. We begin by declaring a class,
+Eq, containing a single operator, (==), and instances Eq Int and Eq Char
+of this class.
+
+We then define the member function in the usual way, as shown in Figure
+3. The type of member need not be given explicitly, as it can be
+inferred. The inferred type is:
+
+	member :: Eq a => [a] -> a -> Bool
+
+This is read “member has type [a] -\> a -\> Bool, for every type a such
+that a is in class Eq (i.e., such that equality is defined on a)” (This
+is exactly equivalent to the Standard MI type ’’a list-\>''a-\>bool,
+where ' 'a is an “eqtype variable”.) We may now write terms such as
+
+	member [1,2,3] 2
+	member "Haskell" 'k'
+
+which both evaluate to True.
+
+Next, we give an instance defining equality Over pairs. The first line
+of this instance reads, “for every
+
+a and b such that a is in class Eq and b is in class Eq, the pair (a,b)
+is also in class Eq.” In other words, “if equality is defined on a and
+equality is defined on b, then equality is defined On (a,b).” The
+instance defines equality on pairs in terms of equality on the two
+components, in the usual way.
+
+Similarly, it is possible to define equality Over lists. The first line
+of this instance reads, “if equality is defined on a, then equality is
+defined on type list of a’.” We may now write terms such as
+
+	"hello" == "goodbye"
+	[[1,2,3], [4,5,6]] == [] member ["Haskell", "Alonzo"] "Moses"
+
+which all evaluate to False.
+
+The final data declaration defines a new type constructor Set and a new
+value constructor MkSet. If a module exports Set but hides MkSet, then
+outside of the module the representation of Set will not be accessible;
+this is the mechanism used in Haskell to define abstract data types. The
+final instance defines equality Over sets. The first line of this
+instance reads, “if equality is defined on a, then equality is
+
+	eqDPair (eqDa, eqDb)
+
+	eqPair eqPair (eqDa, eqDb) (x, y) (u, v)
+
+	eqDList eqDList eqDa
+
+	eqList eqList eqList eqList eqList
+
+	[I [] [] (y:ys) (x: xs) [] (x: xs) (y:ys)
+
+	eqDa eqDa eqDa eqDa
+
+	:: EqD a -\> [a] -\> a -\> Bool
+
+	data EqD a = EqDict (a -\> a -\> Bool)
+
+	eq (EqDict e) ニ e
+
+	eqDInt : : EqD Int
+
+	eqDInt = EqDict eqInt
+
+	eqDChar : : EqD Int
+
+	eqDChar = EqDict eqChar
+
+	member \*
+
+	member” eqDa [] y 二 member” eqDa (x : xs) y 二
+
+	eqDPair
+
+	: : EqD a -\> EqD [a]
+
+	:: EqD a -\> [a] -\> [a] -\> Bool
+
+	False
+
+	eq eqLa x y \\/ member” eqDa xs y
+
+	(EqD a, EqD b) -\> EqD (a,b) EqDict (eqPair (eqDa, eqDb)) (EqD a, EqD b)
+	-\> (a,b) -\> (a,b) -\> Bool eq eqLa x u & eq eqDb y v
+
+	EqDict (eqList eqDa)
+
+	True
+
+	False
+
+	False eq eqLa x y & eq (eqDList eqLa) xs ys
+
+Figure 4:
+
+defined on type “set of a .” In this case, sets are represented in terms
+of lists, and two sets are taken to be equal if every member of the
+first is a member of the second, and vice-versa. (The definition uses
+standard functions map, which applies a function to every element of a
+list, and and, which returns the conjunction of a list of booleans.)
+Because set equality is defined in terms of member, and member uses
+Overloaded equality, it is valid to apply equality to sets of integers,
+sets of lists of integers, and even sets of sets of integers.
+
+This last example shows how the type class mechanism allows Overloaded
+functions to be defined Over abstract data types in a natural way. In
+particular, this provides an improvement Over the treatment of equality
+provided in Standard MI, or Miranda.
+
+### 5.1 Translation of equality
+
+We now consider how the translation mechanism applies to the equality
+example.
+
+Figure 4 shows the translation of the declarations
+
+Translation of equality
+
+in Figure 3. The first part of the translation introduces nothing new,
+and is similar tO the translation
+
+in Section 4.
+
+We begin by defining a dicitionary Eq.D corresponding to the class Eq.
+In this case, the class contains Only one operation, (==), so the
+dictionary has only One entry. The selector function eq takes a
+dictionary of type Eqs) a and returns the One entry, of type
+a-\>a-\>Bool. Corresponding to the instances Eq Int and Eq Char we
+define two dictionaries of types EqD Int and EqD Char, containing the
+appropriate equality functions, and the function member is translated to
+member” in a straightforward way.
+
+Here are three terms and their translations:
+
+12 eq eqDInt (mul numDInt 3 4) 12
+
+[1,2,3] 2 member” eqDInt [1,2,3] 2
+
+member "Haskell'' 'k’
+
+--\> member” eqDChar "Haskell" 'k’
+
+3米4 三三
+
+ーー\>
+
 member
-member 􏰒􏰓 y member 􏰕x􏰉xs􏰖 y
-instance Eq a􏰌 Eq 􏰕u􏰌v􏰖 􏰟􏰟 􏰕x􏰌y􏰖
-instance Eq a 􏰒􏰓 􏰟􏰟 􏰒􏰓
-􏰟􏰦
-Eq
-􏰒􏰓 􏰟􏰟 y􏰉ys x􏰉xs 􏰟􏰟 􏰒􏰓 x􏰉xs 􏰟􏰟 y􏰉ys
-a where
-a 􏰀􏰦 a 􏰀􏰦 bool
-Eq Int  where
- eqInt
-Eq Char where
-b
-􏰉􏰉 Eq a 􏰟􏰦 􏰒a􏰓 􏰀􏰦 a 􏰀􏰦 Bool 􏰟 False
-􏰟 􏰕x 􏰟􏰟 y􏰖 􏰎􏰐 member xs y
-􏰟􏰦 Eq 􏰕a􏰌b􏰖 where
-􏰟 􏰕u 􏰟􏰟 x􏰖 􏰧 􏰕v 􏰟􏰟 y􏰖
-􏰒a􏰓 where
-􏰟 True
-􏰟 False
-􏰟 False
-􏰟 􏰕x􏰟􏰟y􏰖􏰧􏰕xs􏰟􏰟ys􏰖
-data Set a
-instance Eq
-MkSet xs 􏰟􏰟 MkSet ys 􏰟 and 􏰕map 􏰕member xs􏰖 ys􏰖
-􏰧 and 􏰕map 􏰕member ys􏰖 xs􏰖
-􏰟 MkSet 􏰒a􏰓
-a 􏰟􏰦 Eq 􏰕Set a􏰖 where
-￼The de􏰑nition is summarised in Figure 􏰆􏰍 We be􏰀 gin by declaring a class􏰌 Eq􏰌 containing a single op􏰀 erator􏰌 􏰕􏰟􏰟􏰖􏰌 and instances Eq Int and Eq Char of this class􏰍
-We then de􏰑ne the member function in the usual
-a and b such that a is in class Eq and b is in class Eq􏰌 the pair 􏰕a􏰌b􏰖 is also in class Eq􏰍􏰏 In other words􏰌 􏰎if equality is de􏰑ned on a and equality is de􏰑ned on b􏰌 then equality is de􏰑ned on 􏰕a􏰌b􏰖􏰍􏰏 The instance de􏰑nes equality on pairs in terms of equality on the two comp onents􏰌 in the usual way􏰍
-Similarly􏰌 it is possible to de􏰑ne equality over lists􏰍 The 􏰑rst line of this instance reads􏰌 􏰎if equality is de􏰑ned on a􏰌 then equality is de􏰑ned on type 􏰜list of a􏰚􏰍􏰏 We may now write terms such as
-way􏰌 as shown in Figure not be given explicitly􏰌 inferred type is􏰉
-􏰆􏰍 as
-The type it can be
-of member need
-The
-This is read 􏰎member has type 􏰒a􏰓 􏰀􏰦 a 􏰀􏰦
-for every type a such that a is in class Eq 􏰕i􏰍e􏰍􏰌 such that equality is de􏰑ned on a􏰖􏰏 􏰕This
-member 􏰉􏰉 Eq a 􏰟􏰦 􏰒a􏰓 􏰀􏰦 a 􏰀􏰦 Bool
-is exactly equivalent to the
-Standard ML type
-which all evaluate to False􏰍
-The 􏰑nal data declaration de􏰑nes a new type con􏰀
-􏰚􏰚a list􏰀􏰦􏰚􏰚a􏰀􏰦bool􏰌 variable􏰏􏰍􏰖 We may now
-member 􏰒􏰁􏰌􏰅􏰌􏰆􏰓 􏰅
-where write
-􏰚􏰚a terms
-is an 􏰎eqtype
-member
-􏰏Haskell􏰏 􏰚k􏰚
-new value constructor MkSet􏰍 If Set but hides MkSet􏰌 then out􏰀 the representation of Set will not is the mechanism used in Haskell
-which b oth evaluate to True􏰍
-Next􏰌 we give an instance de􏰑ning equality over
-pairs􏰍 The 􏰑rst line of this instance reads􏰌 􏰎for every
-such
-as
-structor Set and a
-a mo dule exp orts
-side of the mo dule
-b e accessible􏰘 this
-to de􏰑ne abstract data types􏰍 The 􏰑nal instance de􏰀 􏰑nes equality over sets􏰍 The 􏰑rst line of this instance reads􏰌 􏰎if equality is de􏰑ned on a􏰌 then equality is
-Figure 􏰆􏰉 De􏰑nition of equality
-inferred􏰍
-Bool􏰌
-􏰏hello􏰏 􏰟􏰟 􏰏goodbye􏰏 􏰒􏰒􏰁􏰌􏰅􏰌􏰆􏰓􏰌􏰒􏰇􏰌􏰈􏰌􏰊􏰓􏰓 􏰟􏰟 􏰒􏰓 member 􏰒􏰏Haskell􏰏􏰌 􏰏Alonzo􏰏􏰓
-􏰊
-􏰏Moses􏰏
-￼￼￼data EqD a
-eq 􏰕EqDict e􏰖
-eqDInt
-eqDInt
-eqDChar
-eqDChar
-member􏰚
-member􏰚 eqDa
-member􏰚 eqDa
-􏰟 EqDict 􏰕a 􏰀􏰦 a 􏰀􏰦 Bool􏰖
-􏰟 e
-􏰉􏰉 EqD Int
-􏰟 EqDict eqInt
-􏰉􏰉 EqD Int
-eqDPair
-eqDPair 􏰕eqDa􏰌eqDb􏰖
-􏰟 EqDict
-eqChar
-􏰒􏰓 􏰕x􏰉xs􏰖
-􏰉􏰉 EqDa􏰀􏰦􏰒a􏰓􏰀􏰦a􏰀􏰦Bool
-􏰟 False
-􏰟 eqeqDaxy􏰎􏰐member􏰚eqDaxsy
-􏰉􏰉 􏰕EqD a􏰌 EqD b􏰖 􏰀􏰦 EqD 􏰕a􏰌b􏰖 􏰟 EqDict 􏰕eqPair 􏰕eqDa􏰌eqDb􏰖􏰖
-􏰉􏰉 􏰕EqD a􏰌 EqD b􏰖 􏰀􏰦 􏰕a􏰌b􏰖 􏰀􏰦 􏰕a􏰌b􏰖 􏰀􏰦 Bool 􏰟 eq eqDa x u 􏰧 eq eqDb y v
-􏰉􏰉 EqDa􏰀􏰦EqD􏰒a􏰓
-􏰟 EqDict 􏰕eqList eqDa􏰖
-􏰉􏰉 EqDa􏰀􏰦􏰒a􏰓􏰀􏰦􏰒a􏰓􏰀􏰦Bool
-􏰟 True
-􏰟 False
-􏰟 False
-􏰟 eq eqDa x y 􏰧 eq 􏰕eqDList eqDa􏰖 xs ys
-eqPair
-eqPair 􏰕eqDa􏰌eqDb􏰖 􏰕x􏰌y􏰖 􏰕u􏰌v􏰖
-eqDList
-eqDList eqDa
-eqList
-eqList eqDa 􏰒􏰓 􏰒􏰓
-eqList eqDa 􏰒􏰓 􏰕y􏰉ys􏰖 eqList eqDa 􏰕x􏰉xs􏰖 􏰒􏰓 eqList eqDa 􏰕x􏰉xs􏰖 􏰕y􏰉ys􏰖
-y
-y
-￼are rep􏰀 taken to the 􏰑rst is a memb er of the second􏰌 and vice􏰀versa􏰍 􏰕The de􏰑nition uses standard functions map􏰌 which applies a function to every element of a list􏰌 and and􏰌 which returns the conjunction of a list of b o oleans􏰍􏰖 Because set equal􏰀 ity is de􏰑ned in terms of member􏰌 and member uses overloaded equality􏰌 it is valid to apply equality to sets of integers􏰌 sets of lists of integers􏰌 and even sets
-of sets of integers􏰍
-This last example shows how the type class mech􏰀
-anism allows overloaded functions to be de􏰑ned over abstract data types in a natural way􏰍 In particular􏰌 this provides an improvement over the treatment of
-de􏰑ned on type 􏰜set of a􏰚􏰍􏰏 In this case􏰌 sets
-in Figure 􏰆􏰍 The 􏰑rst part of the translation intro􏰀 duces nothing new􏰌 and is similar to the translation in Section 􏰇􏰍
-We begin by de􏰑ning a dicitionary EqD corresp ond􏰀 ing to the class Eq􏰍 In this case􏰌 the class contains only one op eration􏰌 􏰕􏰟􏰟􏰖􏰌 so the dictionary has only one entry􏰍 The selector function eq takes a dictio􏰀 nary of type EqD a and returns the one entry􏰌 of type a􏰀􏰦a􏰀􏰦Bool􏰍 Corresp onding to the instances Eq Int and Eq Char we de􏰑ne two dictionaries of types EqD Int and EqD Char􏰌 containing the appro􏰀 priate equality functions􏰌 and the function member is translated to member􏰚 in a straightforward way􏰍 Here are three terms and their translations􏰉
-resented in terms of lists􏰌 and be equal if every memb er of
-two sets are
-equality provided in Standard ML or
-􏰈􏰍􏰁 Translation of equality
-Miranda􏰍
-numDInt 􏰆
-􏰒􏰁􏰌􏰅􏰌􏰆􏰓 􏰅
-􏰇􏰖 􏰁􏰅
-We now consider how the translation mechanism ap􏰀 plies to the equality example􏰍
-Figure 􏰇 shows the translation of the declarations
-member 􏰏Haskell􏰏 􏰚k􏰚
-􏰀􏰀􏰦 member􏰚 eqDChar 􏰏Haskell􏰏 􏰚k􏰚
+
+--\>
+
 The translation of the instance declaration for
-Figure 􏰇􏰉 Translation of equality
-􏰋
-􏰆􏰥􏰇 􏰟􏰟
-􏰀􏰀􏰦 eq eqDInt 􏰕mul
-member 􏰒􏰁􏰌􏰅􏰌􏰆􏰓 􏰅
-􏰀􏰀􏰦 member􏰚 eqDInt
-􏰁􏰅
-equality over lists is a little trickier􏰍 Recall that instance declaration begins
-instance Eq a 􏰟􏰦 Eq 􏰒a􏰓 where 􏰍􏰍􏰍
-This states
-the
-numerical and equality op erations􏰌 then these each app ear in the type separately􏰉
-memsq 􏰉􏰉 Eq a􏰌 Num a 􏰟􏰦 􏰒a􏰓􏰀􏰦a􏰀􏰦Bool memsq xs x 􏰟 member xs 􏰕square x􏰖
-As a practical matter􏰌 this seems a bit o dd􏰞we would exp ect every data type that has 􏰕􏰡􏰖􏰌 􏰕􏰥􏰖􏰌 and negate de􏰑ned on it to have 􏰕􏰟􏰟􏰖 de􏰑ned as well􏰘 but not the converse􏰍 Thus it seems sensible to make Num a subclass of Eq􏰍
-We can do this as follows􏰉
-equality this􏰌 the eterised by type
-de􏰑ned over
-a dictionary for type a􏰌 and so has the
-􏰀􏰀􏰦 eq
-􏰕eqDList eqDChar􏰖 􏰏hello􏰏
-􏰏goodbye􏰏
-that equality is de􏰑ned over
-􏰒􏰒􏰁􏰌􏰅􏰌􏰆􏰓􏰌􏰒􏰇􏰌􏰈􏰌􏰊􏰓􏰓 􏰟􏰟
-􏰀􏰀􏰦 eq 􏰕eqDList 􏰕eqDList 􏰒􏰒􏰁􏰌􏰅􏰌􏰆􏰓􏰌􏰒􏰇􏰌􏰈􏰌􏰊􏰓􏰓
-􏰒􏰓
+
+equality over lists is a little trickier. Recall that the instance
+declaration begins
+
+instance Eq. a =\> Eq [a] Where
+
+This states that equality is defined over type [a] if equality is
+defined Over type a. Corresponding to this, the instance dictionary for
+type [a] is parameterised by a dictionary for type a, and so has the
+
 type
-type a􏰍 Corresp onding
-􏰒a􏰓 if to instance dictionary for type 􏰒a􏰓 is param􏰀
-is
-eqDList 􏰉􏰉 EqD a 􏰀􏰦 EqD 􏰒a􏰓
-The remainder of the
-􏰇􏰌 as is the translation for equality
-are three terms and their translations􏰉
-􏰏hello􏰏 􏰟􏰟 􏰏goodbye􏰏
-class Eq a
-􏰕􏰡􏰖 􏰉􏰉
-  􏰕􏰥􏰖    􏰉􏰉
-  negate 􏰉􏰉
-􏰟􏰦 Num a where a 􏰀􏰦 a 􏰀􏰦 a
-a 􏰀􏰦 a 􏰀􏰦 a
-a 􏰀􏰦 a
-translation is
-shown in
-over
-eqDInt􏰖􏰖
-member 􏰒􏰏Haskell􏰏􏰌 􏰏Alonzo􏰏􏰓
-􏰀􏰀􏰦 member􏰚 􏰕eqDList eqDChar􏰖
-􏰒􏰏Haskell􏰏􏰌 􏰏Alonzo􏰏􏰓 􏰏Moses􏰏
-As an optimisation􏰌 it is easy for the compiler to p er􏰀 form beta reductions to transform terms of the form eq 􏰕eqDList eqD􏰖 into eqList eqD􏰌 where eqD is any dictionary for equality􏰍 This optimisation may be applied to the 􏰑rst two examples ab ove􏰌 and also
-to
-argument is known in advance􏰍 op erations such as member and itly pass an equality op eration
-This
-it also belongs to class Eq􏰍 In other words􏰌 Num is a
-sub class of Eq􏰌 or􏰌 equivalently􏰌 Eq is a sup erclass Num􏰍 The instance declarations remain the same as before􏰞but the instance declaration Num Int is only valid if there is also an instance declaration Eq Int active within the same scop e􏰍
-From this it follows that whenever a type contains Num a it must also contain Eq a􏰘 therefore as a con􏰀
-the de􏰑nition of eqList itself in Figure 􏰇􏰍
-It is worthwhile to compare the e􏰝ciency of this translation technique with polymorphic equality as found in Standard ML or Miranda􏰍 The individual op erations􏰌 such as eqInt are slightly more e􏰝cient than polymorphic equality􏰌 because the type of the
-class Top a where fun􏰁 􏰉􏰉 a 􏰀􏰦 a
-class Top a 􏰟􏰦 Left a where fun􏰅 􏰉􏰉 a 􏰀􏰦 a
-class Top a 􏰟􏰦 Right a where
-that ence is costs􏰍
-p olymorphic needed to
-asses the
-􏰊 Sub classes
-trade􏰀o􏰔
-b etween
-these
-􏰀􏰦 a
-􏰒􏰓
-On the eqList
-other hand􏰌 must explic􏰀 around􏰌 an overhead equality avoids􏰍 Further exp eri􏰀
-fun􏰆 􏰉􏰉 a
-class Left where
-fun􏰇 􏰉􏰉 a
-􏰀􏰦 a
-a􏰌 Right a 􏰟􏰦 Bottom a
-In the preceeding􏰌 Num and Eq were considered as completely separate classes􏰍 If we want to use b oth
-Figure pairs􏰍 Here
-􏰏Moses􏰏
-􏰃
-asserts that a may belong to class Num only if
-venient abbreviation we p ermit Eq a to from a type whenever Num a is present􏰍
-b e omitted Thus􏰌 for
-mentioned􏰌
-the type of memsq we
-memsq 􏰉􏰉
-The quali􏰑er because it is
-Eq a no longer needs implied by Num a􏰍
-to be
-or
-In general􏰌 each class may have any numb er of sub sup erclasses􏰍 Here is a contrived example􏰉
-could now write Num a 􏰟􏰦 􏰒a􏰓􏰀􏰦a􏰀􏰦Bool
-The
-grammed as follows􏰉
-Top 􏰐􏰎 􏰐􏰎
-types can
-b e dia􏰀
-relationships among these
-of
-declaration􏰌 sp ecifying must satisfy􏰉
-prop erties that
-the class each instance
-class Eq a where
-Left Right 􏰎 􏰐
-􏰎􏰐 Bottom
-class Coerce a b where coerce 􏰉􏰉 a 􏰀􏰦 b
-instance Coerce Int Float where coerce 􏰟 convertIntToFloat
-In this case􏰌 the assertion Coerce a b might be taken as equivalent to the assertion that a is a sub􏰀 type of b􏰍 This suggests a relation between this work and work on b ounded quanti􏰑cation and on subtypes 􏰕see 􏰒CW􏰃􏰈􏰌 Rey􏰃􏰈􏰓 for excellent surveys of work in this area􏰌 and 􏰒Wan􏰃􏰋􏰌 Car􏰃􏰃􏰓 for more recent work􏰖􏰍
-variable
-b e fruitful􏰍
-Type classes also may
-of
-a
-how they are to be implemented􏰍
-type class corresp onds to an abstract
-many implementations􏰌 one for each instance dec􏰀 laration􏰍 Again􏰌 exploration of the relationship be􏰀 tween type classes and current work on abstract data types 􏰒CW􏰃􏰈􏰌 MP􏰃􏰈􏰌 Rey􏰃􏰈􏰓 app ears to be called for􏰍
-We have already referred to the work of Kaes􏰍 One advance of our work over his is the conceptual and notational bene􏰑t of grouping overloaded functions into classes􏰍 In addition􏰌 our system is more gen􏰀 eral􏰘 Kaes cannot handle overloadings involving more than one type variable􏰌 such as the coerce example ab ove􏰍 Finally􏰌 our translation rules are an improve􏰀 ment over his􏰍 Kaes outlines two sets of translation rules 􏰕which he calls 􏰎semantics􏰏􏰖􏰌 one static and one dynamic􏰍 His dynamic semantics is more limited in p ower than the language describ ed here􏰘 his static semantics app ears similar in p ower􏰌 but􏰌 unlike the translation described here􏰌 can greatly increase the size of a program􏰍
-One drawback of our translation metho d is that it introduces new parameters to be passed at run􏰀 time􏰌 corresponding to method dictionaries􏰍 It may be possible to eliminate some of these costs by us􏰀 ing partial evaluation 􏰒BEJ􏰃􏰃􏰓 to generate versions of functions specialised for certain dictionaries􏰘 this would reduce run time at the cost of increasing co de size􏰍 Further work is needed to assess the trade􏰀o􏰔s
-Although
-lems for the
-oriented languages􏰌 they p ose no problems for the translation scheme outlined here􏰍 The translation simply assures that the appropriate dictionaries are passed at run􏰀time􏰘 no sp ecial hashing schemes are required􏰌 as in some ob ject􏰀oriented systems􏰍
-􏰋 Conclusion It is natural to think of
-multiple sup erclasses
-usual means of implementing ob ject􏰀
-􏰕􏰟􏰟􏰖 􏰉􏰉
-􏰨 􏰕􏰟􏰟􏰖 is an equivalence
-class Num a where
-adding assertions to
-a 􏰀􏰦 a 􏰀􏰦 Bool
-zero􏰌 one 􏰉􏰉
-􏰕􏰡􏰖􏰌 􏰕􏰥􏰖 􏰉􏰉
-negate 􏰉􏰉
-􏰨 􏰕zero􏰌 one􏰌 􏰕􏰡􏰖􏰌 􏰕􏰥􏰖􏰌 􏰨 form a ring
-abstract data type􏰍 collection of functions
-Each type and their
-class sp eci􏰑es types􏰌 but not In a way􏰌 each
-a
-a 􏰀􏰦 a 􏰀􏰦 a a 􏰀􏰦 a
-data type with
-It is valid for any pro of to rely on these prop erties􏰌 long as one proves that they hold for each instance declaration􏰍 Here the assertions have simply been written as comments􏰘 a more sophisticated system could p erhaps verify or use such assertions􏰍 This sug􏰀 gests a relation between classes and ob ject􏰀oriented programming of a di􏰔erent sort􏰌 since class declara􏰀 tions now begin to resemble ob ject declarations in OBJ 􏰒FGJM􏰃􏰈􏰓􏰍
-It is possible to have overloaded constants􏰌 such as zero and one in the ab ove example􏰍 However􏰌 unre􏰀 stricted overloading of constants leads to situations where the overloading cannot be resolved without providing extra type information􏰍 For instance􏰌 the expression one 􏰥 one is meaningless unless it is used in a context that sp eci􏰑es whether its result is an Int or a Float􏰍 For this reason􏰌 we have been careful in this paper to use constants that are not overloaded􏰉
-􏰆 has type Int􏰌 and 􏰆􏰍􏰁􏰇 has general treatment of constants ercion between subtypes􏰍
-type Float􏰍 A more seems to require co􏰀
-It is reasonable to allow a class to apply to more than one type variable􏰍 For instance􏰌 we might have
-p ose
-some prob􏰀
-relation
-b e thought of as a kind
-negate􏰖
-so
-􏰂
-classes may be thought of as a kind of quanti􏰑er􏰌 limiting the types that a type may instantiate to􏰍 But unlike other ap􏰀 proaches to b ounded quanti􏰑cation􏰌 type classes do not introduce any implicit co ercions 􏰕such as from subtype Int to sup ertype Float􏰌 or from a record with 􏰑elds x􏰌 y􏰌 and z to a record with 􏰑elds x and y􏰖􏰍 Further exploration of the relationship between type classes and these other approaches is likely to
-Type b ounded
-b etween our approach 􏰕with or without partial eval􏰀 uation􏰖 and other techniques􏰍
-It is clear from the ab ove that many issues remain to be explored􏰌 and many tradeo􏰔s remain to be as􏰀 sessed􏰍 We lo ok forward to the practical exp erience with type classes that Haskell will provide􏰍
-types in other expressions will be inferred by the rules given here􏰍
-As an example􏰌 a p ortion of the de􏰑nition of equal􏰀 ity given in Figure 􏰆 is shown in Figure 􏰊􏰍 In this 􏰑gure􏰌 and in the rest of this appendix􏰌 we use Eq 􏰣 as an abbreviation for the type 􏰣 􏰙 􏰣 􏰙 Bool 􏰍
-As a second example􏰌 a p ortion of the de􏰑nition
-Acknowledgements􏰍 The imp ortant overloading might be re􏰗ected in the type
-tion was suggested 􏰕in a rather di􏰔erent
-Jo e Fasel􏰍 For discussion and comments􏰌 we are also grateful to􏰉 Luca Cardelli􏰌 Bob Harp er􏰌 Paul Hudak􏰌 John Hughes􏰌 Stefan Kaes􏰌 John Launchbury􏰌 John Mitchell􏰌 Kevin Mitchell􏰌 Nick Rothwell􏰌 Mads Tofte􏰌
-David Watt􏰌 the memb ers of the
-Haskell committee􏰌
-we have a 􏰎dictio􏰀 and indep endent of
-The Damas􏰐Milner system distinguishes between types 􏰕written 􏰣 􏰖 and type schemes 􏰕written 􏰪 􏰖􏰍 Our system adds a third syntactic group􏰌 predicated types􏰍 The syntax of these is given in Figure 􏰈􏰍
-In the full language􏰌 we wrote types such as member 􏰉􏰉 Eq a 􏰟􏰦 􏰒a􏰓 􏰀􏰦 a 􏰀􏰦 Bool
-In the simpli􏰑ed language􏰌 we write this in the form
-member 􏰉􏰉 􏰃􏰔􏰉 􏰕eq 􏰉􏰉 Eq 􏰔􏰖􏰉 􏰒􏰔􏰓 􏰙 􏰔 􏰙 Bool
-The restriction Eq a can be read 􏰎equality is de􏰑ned on type a􏰏 and the corresp onding restriction 􏰕eq 􏰉􏰉 Eq 􏰔􏰖 can be read 􏰎eq must have an instance of type Eq 􏰔􏰏􏰍
-In general􏰌 we refer to 􏰕x 􏰉􏰉 􏰣 􏰖􏰉 􏰫 as a predicated type and 􏰕x 􏰉􏰉 􏰣 􏰖 as a predicate􏰍
-We will give rules for deriving typings of the form A 􏰜 e 􏰉􏰉 􏰪 n e
-This can be read as􏰌 􏰎under the set of assumptions A􏰌 the expression e has well􏰀typing 􏰪 with transla􏰀 tion e􏰏􏰍 Each typing also includes a translation􏰌 so the rules derive typingntranslation pairs􏰍 It is p ossi􏰀 ble to present the typing rules without reference to the translation􏰌 simply by deleting the 􏰜ne􏰚 p ortion from all rules􏰍 It is not􏰌 however􏰌 possible to present the translation rules indep endently􏰌 since typing con􏰀 trols the translation􏰍 For example􏰌 the introduction and elimination of predicates in types controls the introduction and elimination of lamb da abstractions in translations􏰍
-and
-A
-the memb ers of IFIP 􏰅􏰍􏰃􏰍
-op erators together into overloading􏰍
-Typing and translation rules
-A􏰍􏰅 Types
-This appendix presents the formal typing and trans􏰀 lation rules􏰌 one set of rules p erforming b oth typing
-and translation􏰍 The rules are an extension given by Damas and Milner 􏰒DM􏰃􏰅􏰓􏰍
-A􏰍􏰁 Language
-of those
-To present the typing and translation rules
-loading􏰌 it is helpful to use a slightly simpler language that captures the essential issues􏰍 We will use a lan􏰀 guage with the usual constructs 􏰕identi􏰑ers􏰌 appli􏰀 cations􏰌 lamb da abstractions􏰌 and let expressions􏰖􏰌
-plus two new constructs􏰌
-that corresp ond to class
-resp ectively􏰍 The syntax of expressions and given in Figure 􏰈􏰍
+
+eqDList :: EqD a -\> EqD [a]
+
+The remainder of the translation is shown in Figure 4, as is the
+translation for equality over pairs. Here are three terms and their
+translations:
+
+"hello" == "goodbye"
+
+--\> eq (eqDList eqDChar)
+
+"hello" "goodbye"
+
+[[1,2,3], [4,5,6]] == []
+
+--\> eq (eqDList (eqDList eqDInt)) [[1,2,3], [4,5,6]] []
+
+member ["Haskell", "Alonzo"] "Moses"
+
+--\> member” (eqLList eqDChar)
+
+["Haskell", "Alonzo"] "Moses"
+
+As an Optimisation, it is easy for the compiler to perform beta
+reductions to transform terms of the form eq (eqLList eqL) into eqList
+eqD, where eqs) is any dictionary for equality. This optimisation may be
+applied to the first two examples above, and also to the definition of
+eqList itself in Figure 4.
+
+It is worthwhile to compare the efficiency of this translation technique
+with polymorphic equality as found in Standard MI, or Miranda. The
+individual Operations, such as eqInt are slightly more efficient than
+polymorphic equality, because the type of the argument is known in
+advance. On the other hand, Operations such as member and eqList must
+explicitly pass an equality Operation around, an Overhead that
+polymorphic equality avoids. Further experience is needed to asses the
+trade-off between these
+
+COsts.
+
+## 6 Subclasses
+
+In the preceeding, Num and Eq were considered as completely separate
+classes. If we want to use both
+
+numerical and equality Operations, then these each appear in the type
+separately:
+
+memsq :: Eq a, Num a =\> [a] -\>a-\>Bool memsa xs x = member xs (square
+x.)
+
+As a practical matter, this seems a bit odd–we would expect every data
+type that has (+), (+), and negate defined on it to have (==) defined as
+well; but not the converse. Thus it seems sensible tO make Num a
+subclass of Eq.
+
+We can do this as follows:
+
+class Eq. a =\> Num a where
+
+(+) : : a ー\> a ー\> a (+) : : a -\> a -\> a negate : : a -\> a
+
+This asserts that a may belong tO class Num Only if it also belongs tO
+class Eq. In Other words, Num is a subclass of Eq, or, equivalently, Eq
+is a superclass of Num. The instance declarations remain the same as
+before—but the instance declaration Num Int is Only valid if there is
+also an instance declaration Eq. Int active within the same SCOpe.
+
+From this it follows that whenever a type contains Num a it must also
+contain Eq a; therefore as a cOnvenient abbreviation we permit Eq. a to
+be omitted from a type whenever Num a is present. Thus, for the type of
+memsa we could now write
+
+memsq :: Num a =\> [a] -\>a-\>Bool
+
+The qualifier Eq. a no longer needs to be mentioned,
+
+because it is implied by Num a.
+
+In general, each class may have any number of sub
+
+or superclasses. Here is a contrived example:
+
+class Top a Where
+
+fun 1 : : a -\> a
+
+class Top a =\> Left a where
+
+fun2 : : a -\> a
+
+class Top a =\> Right a where
+
+fun3 : : a -\> a
+
+class Left a, Right a =\> Bottom a
+
+Where
+
+funé! : : a -\> a
+
+The relationships among these types can be diagrammed as follows:
+
+* * * * *
+
+![](images/image02.png)
+
+* * * * *
+
+Left Right
+
+\\ / \\ /
+
+Bottom
+
+Although multiple superclasses pose some problems for the usual means of
+implementing objectOriented languages, they pose no problems for the
+translation scheme Outlined here. The translation simply assures that
+the appropriate dictionaries are passed at run-time; no special hashing
+schemes are required, as in some object-Oriented systems.
+
+## 7 Conclusion
+
+It is natural to think of adding assertions to the class declaration,
+specifying properties that each instance must satisfy:
+
+class Eq a Where
+
+(==) : : a -\> a -\> Bool % (==) is an equivalence relation
+
+class Num a Where
+
+Zero, One : : a (+), (+) a -\> a -\> a. negate a -\> a % (zero, one,
+(+), (+), negate) % form a ring
+
+It is valid for any proof to rely on these properties, so long as one
+proves that they hold for each instance declaration. Here the assertions
+have simply been written as comments; a more sophisticated system could
+perhaps verify or use such assertions. This suggests a relation between
+classes and object-Oriented programming of a different sort, since class
+declarations now begin to resemble object declarations in OBJ [FG.JM85].
+
+It is possible to have Overloaded constants, such as zero and one in the
+above example. However, unrestricted overloading of constants leads to
+situations where the Overloading cannot be resolved without providing
+extra type information. For instance, the expression one + one is
+meaningless unless it is used in a context that specifies whether its
+result is an Int Or a Float. For this reason, we have been careful in
+this paper to use constants that are not Overloaded: 3 has type Int, and
+3. 14 has type Float. A more general treatment of constants seems to
+require coercion between subtypes.
+
+It is reasonable to allow a class to apply to more than one type
+variable. For instance, we might have
+
+class Coerce a b Where
+
+coerce : : a -\> b
+
+instance Coerce Int Float. Where
+
+Coerce = convert IntTor’loat
+
+In this case, the assertion Coerce a b might be taken as equivalent to
+the assertion that a is a subtype of b. This suggests a relation between
+this work and work on bounded quantification and on subtypes (see [CW85,
+Rey85 for excellent surveys of work in this area, and [WanS7, Car88 for
+more recent work). Type classes may be thought of as a kind of bounded
+quantifier, limiting the types that a type variable may instantiate to.
+But unlike other approaches to bounded quantification, type classes do
+not introduce any implicit coercions (such as from subtype Int to
+supertype Float, or from a record with fields x, y, and z to a record
+with fields x and y). Further exploration of the relationship between
+type classes and these other approaches is likely to be fruitful.
+
+Type classes also may be thought of as a kind of abstract data type.
+Each type class specifies a collection of functions and their types, but
+not how they are to be implemented. In a way, each type class
+corresponds to an abstract data type with many implementations, one for
+each instance declaration. Again, exploration of the relationship
+between type classes and current work on abstract data types [CW85,
+MP85, Rey85 appears to be called for. We have already referred to the
+work of Kaes. One advance of our work Over his is the conceptual and
+notational benefit of grouping Overloaded functions into classes. In
+addition, Our system is more general; Kaes cannot handle Overloadings
+involving more than one type variable, such as the coerce example above.
+Finally, Our translation rules are an improvement Over his. Kaes
+Outlines two sets of translation rules (which he calls “semantics”), one
+static and one dynamic. His dynamic semantics is more limited in power
+than the language described here; his static semantics appears similar
+in power, but, unlike the translation described here, can greatly
+increase the size of a program.
+
+One drawback of Our translation method is that it introduces new
+parameters to be passed at runtime, corresponding to method
+dictionaries. It may be possible to eliminate some of these costs by
+using partial evaluation (BEJ88 to generate versions of functions
+specialised for certain dictionaries; this would reduce run time at the
+cost of increasing code size. Further work is needed to assess the
+trade-offs
+
+between our approach (with or without partial evaluation) and other
+techniques.
+
+It is clear from the above that many issues remain to be explored, and
+many tradeoffs remain to be assessed. We look forward to the practical
+experience with type classes that Haskell will provide.
+
+Acknowledgements. The important idea that Overloading might be reflected
+in the type of a function was suggested (in a rather different form) by
+Joe Fasel. For discussion and comments, we are also grateful to: Luca
+Cardelli, Bob Harper, Paul Hudak, John Hughes, Stefan Kaes, John
+Launchbury, John Mitchell, Kevin Mitchell, Nick Rothwell, Mads Tofte,
+David Watt, the members of the Haskell committee, and the members of
+IFIP 2.8.
+
+## A Typing and translation rules
+
+This appendix presents the formal typing and translation rules, One set
+of rules performing both typing and translation. The rules are an
+extension of those given by Damas and Milner [DM82].
+
+### A.1 Language
+
+To present the typing and translation rules for Overloading, it is
+helpful to use a slightly simpler language that captures the essential
+issues. We will use a language with the usual constructs (identifiers,
+applications, lambda abstractions, and let expressions), plus two new
+constructs, over and inst expressions, that correspond to class and
+instance declarations, respectively. The syntax of expressions and types
+is given in Figure 5.
+
 An over expression
-over x 􏰉􏰉 􏰪 in e
-inst x 􏰉􏰉 􏰪
-􏰠
-over and inst expressions􏰌 and instance declarations􏰌
-declares
-scop e of this declaration􏰌 there may be one or more
-x to be an overloaded identi􏰑er􏰍
-Within the
-idea that of a func􏰀 form􏰖 by
-of arithmetic op erators
-given in Figure 􏰁 is shown in
-for over􏰀
-types
-is
-Figure 􏰋􏰍 ation for
-In this 􏰑gure the type
-we use
-Num 􏰣
-as an abbrevi􏰀
-􏰕􏰣 􏰙 􏰣 􏰙 􏰣􏰘
-In translating to the formal language􏰌
-group ed the three
-nary􏰏􏰍 This is straightforward􏰌 the central issue􏰉 how to resolve
-􏰣 􏰙 􏰣 􏰙 􏰣􏰘
-􏰣 􏰙 􏰣􏰖
-￼￼corresp onding
-inst expressions
-￼􏰠
-the type 􏰪 is an
-􏰟 e􏰠 in e􏰁 instance of the
-where
-notion
-and let expressions􏰌 the b ound variables in over and inst expressions may not be redeclared in a smaller scop e􏰍 Also unlike lamb da and let expressions􏰌 over and inst expressions must contain explicit types􏰘 the
-to be made precise later􏰖􏰍
-type 􏰪 Unlike lamb da
-􏰕a
-􏰁􏰠
-￼￼￼Identi􏰑ers x
-Expressions
-e 􏰉􏰉􏰟
-j e􏰠e􏰁
-j 􏰬x􏰉 e
-j letx􏰟e􏰠 ine􏰁
-j overx􏰉􏰉􏰪ine
-j instx􏰉􏰉􏰪􏰟e􏰠ine􏰁
-Type
-Type
-Types
-Predicated Types Type􏰀schemes
-Variables 􏰔 Constructors 􏰭
-􏰣 􏰉􏰉􏰟 􏰫 􏰉􏰉􏰟 􏰪 􏰉􏰉􏰟
-􏰠
-􏰕􏰣 􏰙 􏰣 􏰖 j 􏰔 j 􏰭􏰕􏰣􏰁 􏰉 􏰉 􏰉 􏰣n􏰖
-􏰕x 􏰉􏰉 􏰣 􏰖􏰉 􏰫 j 􏰣 􏰃􏰔􏰉 􏰪 j 􏰫
-x
-￼Figure 􏰈􏰉 Syntax of expressions and types
-￼￼￼over eq 􏰉􏰉 􏰃􏰔􏰉 Eq 􏰔 in
-inst eq inst eq inst eq
-􏰉􏰉 Eq Int 􏰟 eqInt in
-􏰉􏰉 Eq Char 􏰟 eqChar in
-􏰉􏰉 􏰃􏰔􏰉􏰃􏰑 􏰉􏰕eq 􏰉􏰉 Eq 􏰔􏰖􏰉􏰕eq 􏰉􏰉 Eq 􏰑 􏰖􏰉Eq 􏰕􏰔􏰘 􏰑 􏰖
-􏰟 􏰬p􏰉􏰬q􏰉 eq 􏰕fst p􏰖 􏰕fst q􏰖 􏰮 eq 􏰕snd p􏰖 􏰕snd q􏰖 in eq 􏰕􏰁􏰘 􏰜a􏰚􏰖 􏰕􏰅􏰘 􏰜b􏰚􏰖
-￼Figure 􏰊􏰉 De􏰑nition of equality􏰌 formalised
-￼￼￼numD 􏰉􏰉 numD 􏰉􏰉 numD 􏰉􏰉
-􏰃􏰔􏰉 Num 􏰔 in
-Num Int 􏰟 􏰕addInt 􏰘 mulInt 􏰘 negInt 􏰖
-Num Float 􏰟 􏰕addFloat 􏰘 mulFloat 􏰘 negFloat 􏰖 in
-over
-inst
-inst
-let 􏰕􏰡􏰖
-let 􏰕􏰄􏰖
-let negate
-let square 􏰟 􏰬x􏰉 x􏰄x in square 􏰆
-in
-􏰟 fst numD in 􏰟 snd numD in 􏰟 thd numD in
-￼Figure 􏰋􏰉 De􏰑nition of arithmetic op erations􏰌 formalised
-􏰁􏰁
-￼￼￼􏰕eq 􏰉􏰉o 􏰃􏰔􏰉Eq 􏰔􏰖􏰘
-􏰕eq 􏰉􏰉i Eq Int n eq􏰕Eq Int􏰖 􏰖􏰘
-􏰕eq 􏰉􏰉i Eq Char n eq􏰕Eq Char􏰖 􏰖􏰘
-􏰕eq 􏰉􏰉i 􏰃􏰔􏰉􏰃􏰑 􏰉􏰕eq 􏰉􏰉 Eq 􏰔􏰖􏰉􏰕eq 􏰉􏰉 Eq 􏰑 􏰖􏰉Eq 􏰕􏰔􏰘 􏰑 􏰖 n eq 􏰕􏰃􏰔􏰉􏰃􏰑 􏰉􏰕eq􏰉􏰉Eq 􏰔􏰖􏰉􏰕eq 􏰉􏰉Eq 􏰑 􏰖􏰉Eq 􏰕􏰔􏰘􏰑 􏰖􏰖 􏰖􏰘 􏰕eq 􏰉􏰉Eq􏰔neq􏰕Eq􏰔􏰖􏰖􏰘
-􏰕eq 􏰉􏰉 Eq 􏰑 n eq􏰕Eq 􏰑􏰖 􏰖􏰘
-􏰕p 􏰉􏰉 􏰕􏰔􏰘 􏰑􏰖 n p􏰖􏰘
-􏰕q 􏰉􏰉􏰕􏰔􏰘􏰑􏰖nq􏰖
-￼Figure 􏰃􏰉 Some assumptions
-￼￼￼￼￼TAUT A􏰘 􏰕x 􏰉􏰉 􏰪 n x􏰖 􏰜 x 􏰉􏰉 􏰪 n x TAUT A􏰘 􏰕x 􏰉􏰉i 􏰪 n x􏰖 􏰜 x 􏰉􏰉 􏰪 n x
-￼￼￼SPEC
-GEN
-COMB
-ABS
-LET
-A 􏰜 e 􏰉􏰉 􏰃􏰔􏰉 􏰪 n e
-A 􏰜 e 􏰉􏰉 􏰒􏰔 n 􏰣 􏰓􏰪 n e
-A 􏰜 e 􏰉􏰉 􏰪 n e
-􏰔 not free in A
-￼￼￼￼￼A 􏰜
-A 􏰜 A 􏰜
-A 􏰜
-e 􏰉􏰉 􏰃􏰔􏰉 􏰪 n e
-￼e 􏰉􏰉 􏰕􏰣
-􏰠
-􏰙 􏰣 􏰖 n e
-􏰠􏰠􏰠 e 􏰉􏰉 􏰣 n e
-􏰠􏰠 􏰕e e 􏰖 􏰉􏰉 􏰣 n 􏰕e e 􏰖
-￼￼￼￼￼Ax􏰘 􏰕x 􏰉􏰉 􏰣
-􏰠
-n x􏰖 􏰜 e 􏰉􏰉 􏰣 n e
-￼￼A􏰜 􏰕􏰬x􏰉 e􏰖 􏰉􏰉 􏰕􏰣
-A 􏰜 e 􏰉􏰉 􏰪 n e
-􏰠
-􏰙 􏰣 􏰖 n 􏰕􏰬x􏰉 e􏰖
-￼􏰠􏰠 Ax􏰘 􏰕x 􏰉􏰉 􏰪 n x􏰖 􏰜 e 􏰉􏰉 􏰣 n e
-􏰠􏰠 A 􏰜 􏰕let x 􏰟 e in e 􏰖 􏰉􏰉 􏰣 n 􏰕let x 􏰟 e in e 􏰖
-￼￼￼￼￼Figure 􏰂􏰉 Typing and translation rules􏰌 part 􏰁
-􏰁􏰅
-A􏰍􏰆 Assumptions
-Typing is done in the context of a set of assump􏰀 tions􏰌 A􏰍 The assumptions bind typing and transla􏰀
-The
-instance
-relation
-􏰪 􏰬A 􏰪
-tion information to
-sion􏰍 This includes
-let expression􏰌 and
-we write them as sequences􏰌 assumptions are sets􏰌 and therefore the order is irrelevant􏰍
-􏰯 􏰕x 􏰉􏰉o 􏰪 􏰖 is used
-for overloaded identi􏰑ers􏰘
-part is similar to the de􏰑nition in Damas􏰐
-the free identi􏰑ers in an expres􏰀 identi􏰑ers b ound in lamb da and overloaded identi􏰑ers􏰍 Although
-􏰃􏰔􏰁􏰉􏰉􏰉􏰔n􏰉􏰫 and
-􏰠􏰠
-There are three forms of binding in an assumption list􏰉
-􏰪 􏰬A 􏰪􏰠 i􏰔
-􏰕􏰁􏰖 􏰑i is not free in 􏰪 and
-􏰕􏰅􏰖 􏰂􏰣􏰁􏰘 􏰉 􏰉 􏰉 􏰘 􏰣n􏰉 􏰒􏰣􏰁􏰟􏰔􏰁􏰘 􏰉 􏰉 􏰉 􏰘 􏰣n􏰟􏰔n􏰓􏰫 􏰬A 􏰫
-􏰠
-􏰯 􏰕x 􏰉􏰉i 􏰪 n x􏰪􏰖 is used for declared instances of overloaded identi􏰑ers􏰘 and
-where
-de􏰑ned as follows􏰉
-􏰪 􏰟
-􏰃􏰑􏰁􏰉􏰉􏰉􏰑m􏰉􏰫 􏰌 is
-􏰪 􏰟
-This
-Milner􏰍 The b ound variables of 􏰪 are sp ecialised and the resulting predicated types are compared􏰍
-􏰠
-De􏰑ne 􏰫 􏰬A 􏰫 i􏰔 the type part of 􏰫 equals the type
-􏰠
-part of 􏰫 􏰕the same condition as Damas􏰐Milner􏰖􏰌
-and for every predicate 􏰕x 􏰉􏰉 􏰣 􏰖 in 􏰫􏰌 either
-􏰯 there is a predicate of the form 􏰕x 􏰉􏰉 􏰣􏰖 in 􏰫􏰠 􏰕i􏰍e􏰍 the predicate app ears in b oth types􏰖􏰘 or
-􏰠
-￼􏰯 􏰕x 􏰉􏰉 􏰪 n x􏰖 is used for variables􏰌 and assumed identi􏰑ers􏰍
-lambda and
-instances of overloaded
-let
-bound
-￼￼￼In 􏰕x 􏰉􏰉 􏰪 n x􏰖 and 􏰕x 􏰉􏰉i 􏰪 n x􏰖􏰌 the identi􏰑er x is the translation of x􏰍 If x is not an overloaded identi􏰑er 􏰕that is􏰌 if x is b ound by a lamb da or let expression􏰖􏰌 then the assumption for x has the form 􏰕x 􏰉􏰉 􏰪 n x􏰖􏰌 so x simply translates as itself􏰍
-Figure 􏰃 shows the assumptions available when ap􏰀 plying the inference rules to the expression
-􏰬p􏰉 􏰬q􏰉 eq 􏰕fst p􏰖 􏰕fstq􏰖 􏰮 eq 􏰕snd p􏰖 􏰕snd q􏰖
-in Figure 􏰊􏰍 There are three 􏰕􏰉􏰉i 􏰖 bindings􏰌 corre􏰀 sp onding to the three instance declarations􏰌 and two
-􏰕􏰉􏰉􏰖 bindings for the two b ound variables􏰌 and two
-􏰕􏰉􏰉􏰖 bindings corresp onding to assumed instances of equality􏰍 􏰕We shall see later how assumed instances
-are introduced by the PRED rule􏰍􏰖
-􏰯 the predicate can tions A􏰍
-b e
-eliminated
-under assump􏰀
-A􏰍􏰇 Instances
-Given a set of assumptions A􏰌 we
-de􏰑ne an instance
-holds􏰍 On the other hand􏰌
-􏰕􏰃􏰔􏰉 􏰕eq 􏰉􏰉 Eq 􏰔􏰖􏰉 􏰒􏰔􏰓 􏰙 􏰔 􏰙 Bool􏰖 􏰬A􏰠 􏰕􏰒Float 􏰓 􏰙 Float 􏰙 Bool 􏰖
-do es not hold􏰌 since A􏰠 contains no binding asserting
-􏰠
-􏰪 􏰬A 􏰣 􏰮 􏰪 􏰬A 􏰣
-􏰠􏰠
-if 􏰪 and 􏰪 are not
-relation
-b etween
-type􏰀schemes􏰌
-􏰠 􏰪 􏰬A 􏰪 􏰉
-This can be read as 􏰎􏰪 is more general than 􏰪􏰠 under assumptions A􏰏􏰍 This is the same as the relationship de􏰑ned by Damas and Milner􏰌 but extended to apply to predicated types􏰍
-Only certain sets of assumptions are valid􏰍 The
-eq has an instance at type Float 􏰍 type􏰀schemes are uni􏰑able if
-de􏰑nition of validity dep ends on the 􏰬A
-there is a 􏰕well􏰀founded􏰖 mutual recursion between the de􏰑nition of valid assumptions and the de􏰑nition of 􏰬A 􏰍 We give the de􏰑nition of 􏰬A in this section􏰌 and the de􏰑nition of valid assumptions in the next􏰍
-that is􏰌 if there exists a type that is
-b oth under some set of assumptions􏰍 and 􏰪 􏰠 are uni􏰑able if there exists a type set of assumptions A such that
-relation􏰌 so
-􏰁􏰆
-A either
-􏰕x 􏰉􏰉 􏰣 􏰖
-can
-b e
-eliminated
-under A i􏰔
-predicate
-￼􏰯 􏰕x 􏰉􏰉 􏰣 n x􏰖 is in A􏰘 or
-￼􏰠􏰠
-􏰯 􏰕x 􏰉􏰉i 􏰪 n x􏰖 is in A and 􏰪 􏰬A 􏰣 􏰍
-For Figure
-example􏰌 if A􏰠 􏰃􏰌 then
-is the
-set of assumptions in
-that Two
-they overlap􏰌 an instance of We say that 􏰪
-􏰣 and valid
-uni􏰑able􏰍
-We
-write
-􏰪 􏰢􏰪
-􏰕􏰃􏰔􏰉 􏰕eq
-􏰬A􏰠 􏰕􏰒Int 􏰓 􏰙 Int 􏰙 Bool 􏰖
-􏰉􏰉 Eq 􏰔􏰖􏰉 􏰒􏰔􏰓 􏰙 􏰔 􏰙 Bool􏰖
-￼￼￼￼PRED
-REL
-OVER
-INST
-A􏰘 􏰕x 􏰉􏰉 􏰣 n x􏰣 􏰖 􏰜 e 􏰉􏰉 􏰫 n e
-A 􏰜 e 􏰉􏰉 􏰕x 􏰉􏰉 􏰣 􏰖􏰉 􏰫 n 􏰕􏰬x􏰣 􏰉 e􏰖 A 􏰜 e 􏰉􏰉 􏰕x 􏰉􏰉 􏰣 􏰖􏰉 􏰫 n e
-􏰠 A 􏰜 x 􏰉􏰉 􏰣 n e
-􏰠 A 􏰜 e 􏰉􏰉 􏰫 n 􏰕e e 􏰖
-Ax􏰘 􏰕x 􏰉􏰉o 􏰪􏰖 􏰜 e 􏰉􏰉 􏰣 n e
-A 􏰜 􏰕over x 􏰉􏰉 􏰪 in e􏰖 􏰉􏰉 􏰣 n e A􏰘 􏰕x 􏰉􏰉i 􏰪􏰠 n x􏰪􏰠􏰖 􏰜 e􏰠 􏰉􏰉 􏰪􏰠 n e􏰠
-􏰠
-􏰕x 􏰉􏰉o 􏰪􏰖 􏰅 A
-􏰕x 􏰉􏰉o 􏰪􏰖 􏰅 A
-􏰕x 􏰉􏰉o 􏰪􏰖 􏰅 A
-￼￼￼￼￼￼￼￼￼￼￼￼n x􏰪􏰠􏰖 􏰜 e 􏰉􏰉 􏰣 n e 􏰠􏰠􏰠
-A􏰘 􏰕x 􏰉􏰉i 􏰪
-A 􏰜 􏰕inst x 􏰉􏰉 􏰪 􏰟 e in e􏰖 􏰉􏰉 􏰣 n 􏰕let x􏰪􏰠 􏰟 e
-in e􏰖
-￼￼￼￼Figure 􏰁􏰠􏰉 Typing and translation rules􏰌 part 􏰅
-￼￼￼let eq􏰕EqInt􏰖 􏰟 eqInt in
-let eq 􏰕Eq Char 􏰖 􏰟 eqChar in
-let eq 􏰕􏰃􏰔􏰉􏰃􏰑􏰉􏰕eq􏰉􏰉Eq 􏰔􏰖􏰉􏰕eq 􏰉􏰉Eq 􏰑􏰖􏰉Eq 􏰕􏰔􏰘􏰑􏰖􏰖 􏰟 􏰬eq 􏰕Eq 􏰔􏰖􏰉􏰬eq􏰕Eq 􏰑􏰖􏰉􏰬p􏰉􏰬q􏰉
-eq 􏰕Eq 􏰔􏰖 􏰕fst p􏰖 􏰕fst q􏰖 􏰮 eq 􏰕Eq 􏰑􏰖 􏰕snd p􏰖 􏰕snd eq 􏰕􏰃􏰔􏰉􏰃􏰑􏰉􏰕eq􏰉􏰉Eq 􏰔􏰖􏰉􏰕eq 􏰉􏰉Eq 􏰑 􏰖􏰉Eq 􏰕􏰔􏰘􏰑􏰖􏰖 eq 􏰕Eq Int 􏰖 eq 􏰕Eq Char 􏰖
-q􏰖 in 􏰕􏰁􏰘 􏰜a􏰚􏰖
-􏰕􏰅􏰘 􏰜b􏰚􏰖
-￼Figure 􏰁􏰁􏰉 Translation of equality􏰌 formalised
-￼￼￼A􏰁 􏰉 􏰕eq 􏰉􏰉o 􏰃􏰔􏰉Eq 􏰔􏰖
-􏰕eqInt 􏰉􏰉 Eq Int n eqInt􏰖 􏰕eqChar 􏰉􏰉 Eq Int n eqChar 􏰖
-e􏰁 􏰉 inst eq 􏰉􏰉 Eq Int 􏰟 eqInt in inst eq 􏰉􏰉 Eq Char 􏰟 eqChar in eq
-￼Figure 􏰁􏰅􏰉 A problematic expression
-􏰁􏰇
-A􏰍􏰈 Valid assumptions
-For example􏰌 let A􏰠 be the set of assumptions shown in Figure 􏰃􏰌 together with assumptions ab out the types of integer and character constants􏰍 Then the ab ove rules are su􏰝cient to derive that
-is a
-􏰕􏰉􏰉o 􏰖 rule
-assumptions used within pro ofs must be
-All sets of
-valid􏰍 The valid sets of assumptions are inductively
-de􏰑ned as
-follows􏰉
-􏰯 Empty􏰍 The empty assumption set􏰌 fg􏰌 is valid􏰍
-􏰯 Normal identi􏰑er􏰍 If A is a valid assumption set􏰌
-x is an identi􏰑er that does not app ear in A􏰌 and
-􏰪 is a type scheme􏰌 then
-A􏰘 􏰕x 􏰉􏰉 􏰪 n x􏰖 is a valid assumption set􏰍
-􏰯 Overloaded identi􏰑er􏰍 If A is a valid assumption
-A􏰠 􏰜 􏰕eq 􏰁 􏰅􏰖 􏰉􏰉 Bool n 􏰕eq􏰕Eq Int􏰖 􏰁 􏰅􏰖
-set􏰌 􏰪 is 􏰪􏰁 􏰘 􏰉
-􏰤 􏰤 􏰤
+
+	over x :: σ in e
+
+declares a to be an Overloaded identifier. Within the scope of this
+declaration, there may be one or more corresponding inst expressions
+
+	inst x :: σ' = e0 in e1
+
+where the type σ' is an instance of the type σ (a notion to be made precise later).
+Unlike lambda and let expressions, the bound variables in over and inst expressions may not be redeclared in a smaller scope.
+Also unlike lambda and let expressions, over and inst expressions must contain explicit types; the types in other expressions will be inferred by the rules given here.
+
+As an example, a portion of the definition of equality given in Figure 3
+is shown in Figure 6. In this figure, and in the rest of this appendix,
+we use Eq T as an abbreviation for the type T — T — Bool.
+
+As a second example, a portion of the definition of arithmetic operators
+given in Figure 1 is shown in Figure 7. In this figure we use Num T as
+an abbreviation for the type
+
+	(τ -> τ -> τ, τ -> τ -> τ, τ -> τ)
+
+In translating to the formal language, we have grouped the three
+operators together into a “dictionary”. This is straightforward, and
+independent of the central issue: how to resolve overloading.
+
+### A.2 Types
+
+The Damas/Milner system distinguishes between types (written T) and type schemes (written a . Our system adds a third syntactic group, predicated types. The syntax of these is given in Figure 5.
+
+In the full language, we wrote types such as
+
+	member :: Eq a => [a] -> a -> Bool
+
+In the simplified language, we write this in the form
+
+	member :: ∀α. (eq :: Eq α). [a] -> q -> Bool
+
+The restriction Eq a can be read "equality is defined on type a and the corresponding restriction (eq :: Eq α) can be read “eq must have an instance of type Eq a".
+
+In general, we refer to (x :: τ).ρ as a predicated type and (a :: T) as a predicate.
+
+We will give rules for deriving typings of the form
+
+	Α |- e :: σ \ e^
+
+This can be read as, "under the set of assumptions A, the expression e has well-typing a with translation e^". Each typing also includes a translation, so the rules derive typing translation pairs. It is possible to present the typing rules without reference to the translation, simply by deleting the '\e^' portion from all rules. It is not, however, possible to present the translation rules independently, since typing controls the translation. For example, the introduction and elimination of predicates in types controls the introduction and elimination of lambda abstractions in translations.
+
+	Identifiers       x
+	Expressions       e ::= x
+	                      | e0 e1
+	                      | λx. e
+	                      | let a = e0 in e1
+	                      | over x :: σ in e
+	                      | inst x :: σ = e0 in e1
+	Type variables    α
+	Type Constructors χ
+	Тypes             τ ::= (τ -> τ') | α | (τ1 ... τn)
+	Predicated Types  ρ ::= (x :: τ).ρ | τ
+	Type-schemes      σ ::= ∀α.σ | ρ
+
+Figure 5: Syntax of expressions and types
+
+	over eq :: ∀α. Eq α in
+	inst eq :: Eq Int = eqlnt in
+	inst eq :: Eq Char = eqChar in
+	inst eq :: ∀α.∀β.(eq :: Eq a).(eq :: Eq β). Eq (α, β)
+	         = λp. λq. eq (fst p) (fst q) ∧ eq (snd p) (snd q) in
+	eq (1, 'a') (2, 'b')
+
+Figure 6: Definition of equality, formalised
+
+
+	over numD :: ∀α. Num α in
+	inst numD :: Num Int = (addInt, mulInt, negInt) in
+	inst numD :: Num Float = (addFloat, mulFloat, negFloat) in
+	let (+) = fst num D in
+	let (+) = snd num D in
+	let negate = thd num D in
+	let square = λx. x * x in
+	square 3
+
+Figure 7: Definition of arithmetic Operations, formalised
+
+	(eq ::o ∀α.Eq α),
+	(eq ::i Eq Int  \ eq(Eq Int )),
+	(eq ::i Eq Char \ eq(Eq Char)),
+	(eq ::i ∀α.∀β.(eq :: Eq α).(eq :: Eq β).Eq (α, β) \ eq(∀α.∀β.(eq::Eq α).(eq::Eq β).Eq (α,β)) ),
+	(eq :: Eq α \ eq (Eq α)),
+	(eq :: Eq β \ eq (Eq β)),
+	(p :: (α, β) \ p),
+	(q :: (α, β) \ q)
+
+Figure 8: Some assumptions
+
+	TAUT A, (x :: σ \ x^) |- x :: σ \ x^
+
+	TAUT A, (x ::i σ \ x^) |- x :: σ \ x^
+
+	     A |- e :: ∀α. σ \ e^
+	SPEC -----------------------------
+	     A |- e :: [α \ τ]σ \ e^
+
+	     A |- e :: σ \ e^
+	     α not free in A
+	GEN  -----------------------------
+	     A |- e :: ∀α. σ \ e^
+
+	     A |- e :: (τ' -> τ) \ e^
+	     A |- e':: τ' \ e^'
+	COMB -----------------------------
+	     A |- (e e') :: τ \ (e^ e^')
+
+	     Ax, (x :: τ' \ x) |- e :: τ\ e^
+	ABS  ---------------------------------
+	     A |- (λx: e) :: (τ' -> τ) \ (λx: e)
+
+	     A |- e :: σ \ e^
+	     Ax, (x :: σ \ x) |- e':: τ \ e^'
+	LET  -----------------------------------------------
+	     A |- (let x = e in e') :: τ \ (let x = e^ in e^' )
+
+Figure 9: Typing and translation rules, part 1
+
+## A.3 Assumptions
+
+Typing is done in the context of a set of assumptions, A. The assumptions bind typing and translation information to the free identifiers in an expres– sion. This includes identifiers bound in lambda and let expression, and overloaded identifiers. Although we write them as sequences, assumptions are sets, and therefore the Order is irrelevant.
+
+There are three forms of binding in an assumption list:
+
+- (x ::o σ) is used for overloaded identifiers;
+- (x ::i σ \ xσ) is used for declared instances of Overloaded identifiers; and
+- (x :: σ \ x^) is used for lambda and let bound variables, and assumed instances of Overloaded identifiers.
+
+In (x :: σ \ x^) and (x ::i σ \ x^), the identifier F is the translation of ar. If a is not an Overloaded identifier (that is, if a. is bound by a lambda or let expression), then the assumption for a has the form (a :: 0 \ a,), so a simply translates as itself.
+
+Figure 8 shows the assumptions available when applying the inference rules to the expression
+
+	λp. λq. eq (fst p) (fstq) ∧ eq (snd p) (sndq)
+
+in Figure 6. There are three (::) bindings, corresponding to the three instance declarations, and two (::) bindings for the two bound variables, and two (::) bindings corresponding to assumed instances of equality. (We shall see later how assumed instances are introduced by the PRED rule.)
+
+## A.4 Instances
+
+Given a set of assumptions A, we define an instance relation between type-schemes,
+
+	σ >-Α σ'.
+
+This can be read as "o is more general than o' under assumptions A’. This is the same as the relationship defined by Damas and Milner, but extended to apply to predicated types.
+
+Only certain sets of assumptions are valid. The definition of validity depends on the >-A relation, so there is a (well-founded) mutual recursion between the definition of valid assumptions and the definition of >-A. We give the definition of >-A in this section, and the definition of valid assumptions in the next.
+
+The instance relation
+
+	σ >-Α σ'
+
+where σ = ∀α1 ... αn.ρ and σ' = ∀Vβ1 ... βm . ρ', is defined as follows:
+
+	σ >-A or' iff
+	  (1) βi is not free in a and
+	  (2) Πτ1, ..., τn. [τ/α1, ..., τn/αn]ρ >-Α ρ'
+
+This part is similar to the definition in Damas/ Milner. The bound variables of or are specialised and the resulting predicated types are compared.
+
+Define ρ >- A ρ' iff the type part of ρ equals the type part of ρ' (the same condition as Damas/Milner), and for every predicate (a :: τ) in ρ, either
+
+• there is a predicate of the form (a :: τ) in ρ' (i.e. the predicate appears in both types); or
+
+• the predicate can be eliminated under assumptions A.
+
+A predicate (x:: τ) can be eliminated under A iff either
+
+• (x :: τ \ x^) is in A; or
+
+• (x ::i σ' \ x^) is in A and σ' > A τ.
+
+For example, if A0 is the set of assumptions in Figure 8, then
+
+	(∀σ. (eq :: Eq α). [a] -> 0 -> Bool)
+		>-A0 ([Int] -> Int –> Bool)
+
+holds. On the other hand,
+
+	(∀σ. (eq :: Eq α). [α] –> α –> Bool)
+	      >-A0 ([Float] –> Float –> Bool)
+
+does not hold, since Ao contains no binding asserting that eq has an instance at type Float.
+
+Two type-schemes are unifiable if they overlap, that is, if there exists a type that is an instance of both under some set of assumptions. We say that or and σ' are unifiable if there exists a type T and valid set of assumptions A such that
+
+	σ>-Α τ Λ σ' >-Α τ
+
+We write orio' if σ and σ' are not unifiable.
+
+	     Α, (x :: τ \ xτ) |- e :: ρ \ e^
+	PRED ---------------------------------- (x ::ο σ) ∈ Α
+	     Α |- e :: (x :: τ).ρ \ (λxτ. e^)
+
+	     Α |- e :: (α :: τ). ρ \ e^
+	     Α |- υ: τ\τ' e^'
+	REL  ------------------------------------ (x ::ο σ) ∈ Α
+	     A |- e :: p \ (e^ e^’)
+
+	     Αx, (r ::ο σ)  |-e :: τ\ 7
+	OVEᏒ ---------------------------------
+	     A |- (over x :: σ in e) :: τ \ e^
+
+	     Α, (r ::, σ' \ xσ') |- e' :: σ' \ e^'
+	     Α, (r ::, σ' \ xσ') |- e  :: τ  \ e^
+	INST ----------------------------------------------------------- (x ::ο σ) ∈ Α
+	     A |- (inst x :: σ' = e' in e) :: τ \ (let xσ' = e^' in e^)
+
+Figure 10: Typing and translation rules, part 2
+
+	let eq(Eq Int) = eqInt in
+	let eq(Eq Char) = eqChar in
+	let eq(∀α.∀β.(eq::Eq α).(eq::Eq β). Eq(α, β)) 
+	    =  λeq(Eq α).λeq(Εq β).λp.λq.
+		    eq(Εq α) (fst р) (fst q) /\ eq(Eq β) (snd р) (snd q) in
+	eq(∀σ.∀β.(eq::Eq a).(eq::Eq β). Eq (α,β)) eq(Eq Int) eq(Eq Char) (1, 'a') (2, 'b')
+
+Figure 11: Translation of equality, formalised
+
+	A1 : (eq ::o ∀α.Eq α)
+	     (eqInt :: Eq Int \ eqInt)
+	     (eqChar :: Eq Int \ eqChar)
+
+	e1 : inst eq :: Eq Int = eqľnt in
+	     inst eq :: Eq Char = eqChar in
+	     eq
+
+Figure 12: A problematic expression
+
+## A.5 Valid assumptions
+
+All sets of assumptions used within proofs must be valid. The valid sets of assumptions are inductively defined as follows:
+
+• Empty. The empty assumption set, {}, is valid.
+
+• Normal identifier. If A is a valid assumption set, a is an identifier that does not appear in A, and or is a type scheme, then
+
+	Α, (x :: σ \ x)
+
+is a valid assumption set.
+
+• Overloaded identifier. If A is a valid assumption set, a is an identifier that does not appear in A, o is a type scheme, and TI , ..., Tim are types and
+
+ol, . . . . on are types schemes such that
+
+	– 0 ≤ 4 o'; , for i from 1 to n, and
+	— or - A T, for i from 1 to m, and
+	— O';#o;, for distinct i, j from 1 to n
+
 then
-More complicated uses of overloading require the remaining four rules􏰌 shown in Figure 􏰁􏰠􏰍 The 􏰑rst two deal with the introduction and elimination of predicates􏰌 and the second two deal with the over and inst constructs􏰍
-As we have seen􏰌 expressions with types that con􏰀 tain classes 􏰕that is􏰌 expressions with predicated types􏰖 are translated to lamb da abstractions that require a dictionary to be passed at run􏰀time􏰍 This idea is encapsulated in the PRED 􏰕􏰎predicate􏰏􏰖 and
-REL 􏰕􏰎release􏰏􏰖 rules􏰍 The PRED introduce and eliminate predicates
-x is an identi􏰑er that does not app ear in A􏰌
-a type 􏰉 􏰉 􏰘 􏰪n
-scheme􏰌 and 􏰣􏰁􏰘 􏰉 􏰉 􏰉 􏰘 􏰣m
-are types schemes such that
-􏰪 􏰬A 􏰪i􏰌 for i from 􏰁 to n􏰌 and 􏰪 􏰬A 􏰣i􏰌 for i from 􏰁 to m􏰌 and
-and REL rules analogously to rules introduce
-􏰪i􏰢􏰪j 􏰌 for distinct
-i􏰘 j from 􏰁 to n
-way that the GEN and SPEC eliminate b ound type variables􏰍
-A􏰘 􏰕x 􏰉􏰉o 􏰪 􏰖􏰘
-􏰕x 􏰉􏰉i 􏰪􏰁 n x􏰪􏰁 􏰖􏰘 􏰉 􏰉 􏰉 􏰘 􏰕x 􏰉􏰉i 􏰪n n x􏰪n 􏰖􏰘 􏰕x 􏰉􏰉 􏰣􏰁 n x􏰣􏰁 􏰖􏰘 􏰉 􏰉 􏰉 􏰘 􏰕x 􏰉􏰉 􏰣m n x􏰣m 􏰖
-valid assumption set􏰍
-binding to the environment􏰌 types inst expressions adding binding to the environment􏰍
-For example􏰌 the assumptions in Figure 􏰃 are a valid set􏰍 However􏰌 this set would be invalid if aug􏰀 mented with the binding
-􏰕eq 􏰉􏰉i 􏰃􏰗􏰉Eq 􏰕Char􏰘 􏰗􏰖 n eq􏰕􏰃􏰗􏰉Eq 􏰕Char􏰘􏰗􏰖􏰖 􏰖
-as this instance overlaps with one already in the set􏰍
-􏰕􏰉􏰉i 􏰖
-A􏰍􏰊 Inference rules
-We now give typings of the form
-rules that
-A 􏰜 e 􏰉􏰉 􏰪 n e
-characterise
-well􏰀
-inference
-The
-and
-Damas􏰐Milner rules 􏰕Figure 􏰂􏰖􏰍 There are two small di􏰔erences􏰉 translations have been added to each rule in a straightforward way􏰌 and there are two TAUT
-rules break
-􏰁􏰠􏰍 The 􏰑rst group is based directly on the
-into two groups􏰌 shown in Figures 􏰂
-rules instead of one 􏰕one rule for 􏰕􏰉􏰉􏰖 one for 􏰕􏰉􏰉i􏰖 bindings􏰖􏰍
-bindings
-and
-Given A and e􏰌 we call 􏰪 a principal type scheme for e under A i􏰔
-􏰯 A 􏰜 e 􏰉􏰉 􏰪 n e􏰘 and
-are types and
-A􏰠 􏰜 􏰕eq 􏰜a􏰚 􏰜b􏰚􏰖 􏰉􏰉 Bool
-n 􏰕eq 􏰕Eq Char 􏰖
-􏰜a􏰚 􏰜b􏰚􏰖
-to resolve
-That is􏰌 these rules alone are su􏰝cient simple overloading􏰍
-the
-and
-the PRED rule adds a predicate to a type 􏰕and has a lamb da expression as its translation􏰖 and the REL rule removes a predicate from a type 􏰕and has an ap􏰀 plication as its translation􏰖􏰍
-The OVER rule types over expressions adding
-the appropriate
-and the INST
-the appropriate
-The validity condition on sets of assumptions ensures that overloaded identi􏰑ers are only instanced at valid types􏰍
-Notice that none of the translations contain
-or inst expressions􏰌 therefore􏰌 they contain no loading􏰍 It is easy to verify that the translations are themselves well􏰀typed in the Hindley􏰐Milner system􏰍
-For example􏰌 the program in Figure 􏰊 is translated by these rules into the program in Figure 􏰁􏰁􏰍 The reader can easily verify that this corresp onds to the translation from Figure 􏰆 to Figure 􏰇􏰍 We have thus
-shown how to formalise the typing and tion ideas that were presented informally of the paper􏰍
-transforma􏰀 in the body
-In particular􏰌
-over over􏰀
-￼A􏰍􏰋 Principal
-typings
-￼􏰁􏰈
-􏰠􏰠􏰠􏰠 􏰯 for every 􏰪 􏰌 if A 􏰜 e 􏰉􏰉 􏰪 n e then 􏰪 􏰬A 􏰪
-A key result in the Hindley􏰐Milner system is that every expression e that has a well􏰀typing has a prin􏰀 cipal type scheme􏰍
-We conjecture that for every valid set of assump􏰀 tions A and every expression e containing no over or inst expressions􏰌 if e has a well􏰀typing under A then e has a principal type scheme under A􏰍
-A􏰠 􏰜 eq 􏰉􏰉 􏰃􏰔􏰉Eq 􏰔 n eq 􏰕Eq alpha􏰖
-is principal􏰍 Examples of non􏰀principal typings are
-􏰒DM􏰃􏰅􏰓
-􏰒FGJM􏰃􏰈􏰓
-􏰒GR􏰃􏰆􏰓
-􏰒Hin􏰊􏰂􏰓
-􏰒HMM􏰃􏰊􏰓
-􏰒HMT􏰃􏰃􏰓
-􏰒Kae􏰃􏰃􏰓
-􏰒Mil􏰋􏰃􏰓
-􏰒Mil􏰃􏰇􏰓
-􏰒Mil􏰃􏰋􏰓
-􏰒MP􏰃􏰈􏰓
-L􏰍 Damas and R􏰍 Milner􏰌 Principal type schemes for functional programs􏰍 In Pro􏰀 ceedings of the 􏰂􏰚th Annual Symposium on Principles of Programming Languages􏰌 Albuquerque􏰌 N􏰍M􏰍􏰌 January 􏰁􏰂􏰃􏰅􏰍
-K􏰍 Futasagi􏰌 J􏰍A􏰍 Goguen􏰌 J􏰍􏰀P􏰍 Jouan􏰀 naud􏰌 and J􏰍 Meseguer􏰌 Principles of OBJ􏰅􏰍 In Proceedings of the 􏰁􏰅􏰚th An􏰀 nual Symposium on Principles of Pro􏰀
-￼For Figure 􏰃􏰍
-gramming Languages􏰌
-A􏰍 Goldb erg and D􏰍
-􏰃􏰠􏰉 The Language and Its Implementa􏰀 tion􏰍 Addison􏰀Wesley􏰌 􏰁􏰂􏰃􏰆􏰍
-Each of
-these is an instance of the principal
-example􏰌 let A􏰠 be the set of assumptions in Then the typing
-A􏰠 􏰜 eq 􏰉􏰉 Eq Int n eq􏰕Eq Int􏰖
-A􏰠 􏰜 eq 􏰉􏰉 Eq Char n eq􏰕Eq Char􏰖
-scheme Trans􏰍
-typing The existence of principal types is problematic for
-under
-expressions that For example􏰌 let and expression in derive the typings
-assumptions
-A􏰠 􏰍
-contain over and inst expressions􏰍
-A􏰁 and Figure
-A􏰁 􏰜 e􏰁 􏰉􏰉 Eq Int n eqInt
-A􏰁 􏰜 e􏰁 􏰉􏰉 Eq Char n eqChar
-still ensures the existence of principal
-References
-types􏰍
-􏰒BEJ􏰃􏰃􏰓 D􏰍 Bj􏰣rner􏰌 A􏰍 Ershov􏰌 and N􏰍D􏰍 Jones􏰌 editors􏰌 Partial Evaluation and Mixed Computation􏰌 North􏰀Holland􏰌 􏰁􏰂􏰃􏰃 􏰕to
-app ear􏰖􏰍
-􏰒CW􏰃􏰈􏰓 L􏰍 Cardelli and
-standing types􏰌 data abstraction􏰌 and
-polymorphism􏰍 Computing Surveys 􏰁􏰋􏰌 􏰇􏰌 Decemb er 􏰁􏰂􏰃􏰈􏰍
-􏰒Car􏰃􏰃􏰓 L􏰍 Cardelli􏰌 Structural subtyping and the notion of p ower type􏰍 In Proceedings of the 􏰁􏰈􏰚th Annual Symposium on Prin􏰀 ciples of Programming Languages􏰌 San
-Diego􏰌 California􏰌 January 􏰁􏰂􏰃􏰃􏰍
-In Proceedings of the Symposium
-and Functional Programming􏰌 Austin􏰌 Texas􏰌 August 􏰁􏰂􏰃􏰇􏰍
-R􏰍 Milner􏰌 Changes to the Standard ML core language􏰍 Rep ort ECS􏰀LFCS􏰀􏰃􏰋􏰀􏰆􏰆􏰌 Edinburgh University􏰌 Computer Science Dept􏰍􏰌 􏰁􏰂􏰃􏰋􏰍
-J􏰍 C􏰍 Mitchell and G􏰍 D􏰍 Plotkin􏰌 Ab􏰀 stract types have existential type􏰍 In Pro􏰀 ceedings of the 􏰁􏰅􏰚th Annual Symposium on Principles of Programming Languages􏰌 January 􏰁􏰂􏰃􏰈􏰍
-e􏰁 be the assumption
-􏰁􏰅􏰍 Then it is
-set possible to
-resolu􏰀 It remains an op en question
-But there
-tion of this is to require
-tions have global scop e􏰍
-whether there is some less drastic restriction that
-is no principal type􏰙 One possible
-that over and inst declara􏰀
-P􏰍 Wegner􏰌 On under􏰀
-􏰁􏰊
-R􏰍 Hindley􏰌 The principal type
-of an ob ject in combinatory logic􏰍
-Am􏰍 Math􏰍 Soc􏰍 􏰁􏰇􏰊􏰌 pp􏰍 􏰅􏰂􏰤􏰊􏰠􏰌 Decem􏰀 ber 􏰁􏰂􏰊􏰂􏰍
-R􏰍 Harper􏰌 D􏰍 MacQueen􏰌 and R􏰍 Milner􏰌 Standard ML􏰍 Rep ort ECS􏰀LFCS􏰀􏰃􏰊􏰀􏰅􏰌 Edinburgh University􏰌 Computer Science Dept􏰍􏰌 􏰁􏰂􏰃􏰊􏰍
-R􏰍 Harp er􏰌 R􏰍 Milner􏰌 and M􏰍 Tofte􏰌 The de􏰑nition of Standard ML􏰌 version 􏰅􏰍 Re􏰀 p ort ECS􏰀LFCS􏰀􏰃􏰃􏰀􏰊􏰅􏰌 Edinburgh Uni􏰀 versity􏰌 Computer Science Dept􏰍􏰌 􏰁􏰂􏰃􏰃􏰍
-S􏰍 Kaes􏰌 Parametric polymorphism􏰍 In Proceedings of the 􏰅􏰚nd European Sym􏰀 posium on Programming􏰌 Nancy􏰌 France􏰌 March 􏰁􏰂􏰃􏰃􏰍 LNCS 􏰆􏰠􏰠􏰌 Springer􏰀Verlag􏰌 􏰁􏰂􏰃􏰃􏰍
-R􏰍 Milner􏰌 A theory of
-phism in programming􏰍 J􏰍 Comput􏰍 Syst􏰍 Sci􏰍 􏰁􏰋􏰌 pp􏰍 􏰆􏰇􏰃􏰤􏰆􏰋􏰈􏰌 􏰁􏰂􏰋􏰃􏰍
-R􏰍 Milner􏰌 A prop osal for Standard ML􏰍
-January 􏰁􏰂􏰃􏰈􏰍
-Robson􏰌 Smal ltalk􏰀
-type polymor􏰀
-on Lisp
-􏰒Rey􏰃􏰈􏰓 J􏰍 C􏰍 Reynolds􏰌 Three approaches to type structure􏰍 In Mathematical Foun􏰀 dations of Software Development􏰌 LNCS
-􏰁􏰃􏰈􏰌 Springer􏰀Verlag􏰌 􏰁􏰂􏰃􏰈􏰍
-􏰒Str􏰊􏰋􏰓 C􏰍 Strachey􏰌 Fundamental concepts in programming languages􏰍 Lecture notes for International Summer Scho ol in Com􏰀 puter Programming􏰌 Cop enhagen􏰌 Au􏰀
-gust 􏰁􏰂􏰊􏰋􏰍
-􏰒Tur􏰃􏰈􏰓 D􏰍 A􏰍 Turner􏰌 Miranda􏰉 A non􏰀strict functional language with polymorphic types􏰍 In Proceedings of the 􏰅􏰚nd Inter􏰀 national Conference on Functional Pro􏰀 gramming Languages and Computer Ar􏰀 chitecture􏰌 Nancy􏰌 France􏰌 Septemb er
-􏰁􏰂􏰃􏰈􏰍 LNCS 􏰅􏰠􏰁􏰌 Springer􏰀Verlag􏰌 􏰁􏰂􏰃􏰈􏰍
-􏰒Wan􏰃􏰋􏰓 M􏰍 Wand􏰌 Complete type inference for simple ob jects􏰍 In Proceedings of the Sym􏰀
-on Logic in Computer Science􏰌 NY􏰌 June 􏰁􏰂􏰃􏰋􏰍 IEEE Computer
-posium
-Ithaca􏰌
-So ciety Press􏰌 􏰁􏰂􏰃􏰋􏰍
-􏰁􏰋
+
+	Α, (r ::ο σ),
+	(x ::i σ1 \ xσ1), ..., (x ::i σn \ xσn) ,
+	(x ::  τ1 \ xτ1), ..., (x ::  τm \ xτm) 
+
+is a valid assumption set.
+
+For example, the assumptions in Figure 8 are a valid set. However, this set would be invalid if augmented with the binding
+
+	(eq ::i ∀γ. Eq(Char, γ) \ eq(∀γ. Eq(Char, γ)) )
+
+as this instance Overlaps with One already in the set.
+
+## A.6 Inference rules
+
+We now give inference rules that characterise welltypings of the form
+
+	Α |- e :: σ \ e^
+
+The rules break into two groups, shown in Figures 9 and 10. The first group is based directly on the Damas/Milner rules (Figure 9). There are two small differences: translations have been added to each rule in a straightforward way, and there are two TAUT rules instead of one (one rule for (::) bindings and One for (::) bindings).
+
+For example, let Ao be the set of assumptions shown in Figure 8, together with assumptions about the types of integer and character constants. Then the above rules are sufficient to derive that
+
+	A0 |- (eq 1   2  ) :: Bool \ (eq(Eq Int) 1 2)
+	A0 |- (eq 'а' 'b') :: Bool \ (eq(Eq Char) 'а' 'b')
+
+That is, these rules alone are sufficient to resolve simple overloading.
+
+More complicated uses of overloading require the remaining four rules, shown in Figure 10. The first two deal with the introduction and elimination of predicates, and the second two deal with the over and inst constructs.
+
+As we have seen, expressions with types that contain classes (that is, expressions with predicated types) are translated to lambda abstractions that require a dictionary to be passed at run-time. This idea is encapsulated in the PRED ("predicate") and REL (“release”) rules. The PRED and REL rules introduce and eliminate predicates analogously to the way that the GEN and SPEC rules introduce and eliminate bound type variables. In particular, the PRED rule adds a predicate to a type (and has a lambda expression as its translation) and the REL rule removes a predicate from a type (and has an application as its translation).
+
+The OVER rule types over expressions adding the appropriate (::o) binding to the environment, and the INST rule types inst expressions adding the appropriate (::) binding to the environment. The validity condition on sets of assumptions ensures that Overloaded identifiers are only instanced at valid types.
+
+Notice that none of the translations contain over or inst expressions, therefore, they contain no Overloading. It is easy to verify that the translations are themselves well-typed in the Hindley/Milner system. For example, the program in Figure 6 is translated by these rules into the program in Figure 11. The reader can easily verify that this corresponds to the translation from Figure 3 to Figure 4. We have thus shown how to formalise the typing and transformation ideas that were presented informally in the body of the paper.
+
+## A.7 Principal typings
+
+Given A and e, we call of a principal type scheme for e under A iff
+
+• A |- e :: σ \ e^ ; and
+
+• for every σ', if A |- e :: σ’ \ e^' then σ >-A σ'
+
+A key result in the Hindley/Milner system is that every expression e that has a well-typing has a principal type scheme.
+
+We conjecture that for every valid set of assumptions A and every expression e containing no over or inst expressions, if e has a well-typing under Athen e has a principal type scheme under A.
+
+For example, let Ao be the set of assumptions in Figure 8. Then the typing
+
+	A0 |- eq :: ∀α. Eq a \ eq(Eq alpha)
+
+is principal. Examples of non-principal typings are
+
+	A0 |- eq :: Eq Int  \ eq(Eq Int)
+	A0 |- eq :: Eq Char \ eq(Ep Char)
+
+Each of these is an instance of the principal typing under assumptions A0.
+
+The existence of principal types is problematic for expressions that contain over and inst expressions. For example, let A1 and el be the assumption set and expression in Figure 12. Then it is possible to derive the typings
+
+	A1 |- e1 :: Eq Int  \ eqInt
+	A1 |- e1 :: Eq Char \ eqChar
+
+But there is no principal types One possible resolution of this is to require that over and inst declarations have global scope. It remains an Open question whether there is some less drastic restriction that still ensures the existence of principal types.
+
+## References
+
+[BEJ88] D. Bjørner, A. Ershov, and N.D. Jones, editors, Partial Evaluation and Mired Computation, North-Holland, 1988 (to appear).
+
+[CW85] L. Cardelli and P. Wegner, On understanding types, data abstraction, and polymorphism. Computing Surveys 17, 4, December 1985.
+
+[Car88] L. Cardelli, Structural subtyping and the
+notion of power type. In Proceedings of the 15th Annual Symposium on Principles of Programming Languages, San Diego, California, January 1988.
+
+[DM82] L. Damas and R. Milner, Principal type schemes for functional programs. In Proceedings of the 9th Annual Symposium on Principles of Programming Languages, Albuquerque, N.M., January 1982.
+
+[FGJM85] K. Futasagi, J.A. Goguen, J.-P. Jouannaud, and J. Meseguer, Principles of OBJ2. In Proceedings of the 12th Annual Symposium om Principles of Programming Languages, January 1985.
+
+[GR83] A. Goldberg and D. Robson, Smalltalk80: The Language and Its Implementation. Addison-Wesley, 1983.
+
+[Hin69] R. Hindley, The principal type scheme of an object in combinatory logic. Trans. Am. Math. Soc. 146, pp. 29—60, December 1969.
+
+[HMM86] R. Harper, D. MacQueen, and R. Milner, Standard ML. Report ECS-LFCS-86-2, Edinburgh University, Computer Science Dept., 1986.
+
+[HMT88] R. Harper, R. Milner, and M. Tofte, The definition of Standard ML, version 2. Report ECS-LFCS-88-62, Edinburgh University, Computer Science Dept., 1988.
+
+[Kae88] S. Kaes, Parametric polymorphism. In Proceedings of the 2'nd Furopean Symposium on Programming, Nancy, France, March 1988, LNCS 300, Springer-Verlag, 1988.
+
+[Mil78] R. Milner, A theory of type polymorphism in programming. J. Comput. Syst.
+Sci. 17, pp. 348–375, 1978.
+
+[Mil84] R. Milner, A proposal for Standard ML. In Proceedings of the Symposium on Lisp and Functional Programming, Austin, Texas, August 1984.
+
+[Mil87] R. Milner, Changes to the Standard ML core language. Report FCS-LFCS-87-33, Edinburgh University, Computer Science Dept., 1987.
+
+[MP85] J. C. Mitchell and G. D. Plotkin, Abstract types have existential type. In Proceedings of the 12th Annual Symposium on Principles of Programming Languages, January 1985.
+
+[Rey85] J. C. Reynolds, Three approaches to type structure. In Mathematical Foundations of Software Development, LNCS 185, Springer-Verlag, 1985.
+
+|Str67] C. Strachey, Fundamental concepts in programming languages. Lecture notes for International Summer School in Computer Programming, Copenhagen, Allgust 1967.
+
+[Turs85] D. A. Turner, Miranda: A non-strict functional language with polymorphic types. In Proceedings of the 2'nd International Conference on Functional Programming Languages and Computer Architecture, Nancy, France, September 1985. LNCS 201, Springer-Verlag, 1985.
+
+[Wan87] M. Wand, Complete type inference for simple objects. In Proceedings of the Symposium on Logic in Computer Science, Ithaca, NY, June 1987. IEEE Computer Society Press, 1987.
