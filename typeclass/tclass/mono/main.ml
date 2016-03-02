@@ -35,7 +35,10 @@ let rec show_e (e: e): string =
   | EAbs(s, e) -> "EAbs(" ^ s ^ ", " ^ show_e e ^ ")"
   | ELet(s, e1, e2) -> "ELet(" ^ s ^ ", " ^ show_e e1 ^ ", " ^ show_e e2 ^ ")"
 
-let union l1 l2 = l1 @ l2
+let union l1 l2 =
+  List.fold_right (fun s l ->
+    if List.mem s l then l else s::l
+  ) l1 l2
 
 let rec ftv_type(t: t): string list =
   match t with
@@ -44,20 +47,21 @@ let rec ftv_type(t: t): string list =
   | TBool        -> []
   | TFun(t1, t2) -> union (ftv_type t1) (ftv_type t2)
 
-let rec apply_type (s: subst) (t: t): t =
+let subst = ref []
+
+let rec apply_type (t: t): t =
   match t with
-  | TVar(n)      -> if List.mem_assoc n s then List.assoc n s else TVar(n)
-  | TFun(t1, t2) -> TFun(apply_type s t1, apply_type s t2)
+  | TVar(n)      -> if List.mem_assoc n !subst then List.assoc n !subst else TVar n
+  | TFun(t1, t2) -> TFun(apply_type t1, apply_type t2)
   | t            -> t
 
-let rec apply_assumps(s: subst) (assumps: assumps): assumps =
+let rec apply_assumps (assumps: assumps): assumps =
   List.map (fun (k, v) ->
-    (k, apply_type s v)
+    (k, apply_type v)
   ) assumps
 
 let nullSubst = []
 
-let subst = ref []
 
 let count = ref 0
 
@@ -66,65 +70,59 @@ let rec newTVar(prefix: string): t =
   count := s + 1;
   TVar(prefix ^ string_of_int s)
 
-let rec varBind(u: string) (t: t): subst = 
-  if t = TVar(u)
-  then nullSubst
-  else if List.mem u (ftv_type t) then
+let rec varBind(u: string) (t: t) = 
+  if t = TVar(u) then () else
+  if List.mem u (ftv_type t) then
     raise (TypeError("occurs check fails: " ^ u ^ " vs. " ^ show_t t))
-  else [(u, t)]
+  else subst := (u, t) :: !subst
 
-let composeSubst(s1: subst) (s2: subst): subst =
-  List.map (fun (x, v) ->
-      (x, apply_type s1 v)
-  ) s2 @ s1
-
-let rec mgu(t1: t) (t2: t): subst =
+let rec mgu(t1: t) (t2: t): unit =
   match (t1, t2) with
   | (TFun(l, r),TFun(l2, r2)) ->
-    let s1 = mgu l l2 in
-    let s2 = mgu (apply_type s1 r) (apply_type s1 r2) in
-    composeSubst s1 s2
+    mgu l l2;
+    mgu (apply_type r) (apply_type r2)
   | (TVar(u), t) -> varBind u t
   | (t, TVar(u)) -> varBind u t
-  | (TInt, TInt) -> nullSubst
-  | (TBool,TBool) -> nullSubst
+  | (TInt, TInt) -> ()
+  | (TBool,TBool) -> ()
   | (t1,t2) ->
     raise (TypeError("types do not unify: " ^ show_t t1 ^ " vs. " ^ show_t t2))
 
 (* Main type inference function *)
-let rec ti(env: assumps) (e: e): (subst * t) =
+let rec ti(env: assumps) (e: e): t =
   match e with
   | EVar(n) ->
     if List.mem_assoc n env then
-      (nullSubst, List.assoc n env)
+      List.assoc n env
     else
       raise(TypeError("unbound variable: " ^ n))
-  | EInt(_)  -> (nullSubst, TInt)
-  | EBool(_) -> (nullSubst, TBool)
+  | EInt(_)  -> TInt
+  | EBool(_) -> TBool
   | EAbs(n, e) ->
-    let tv = newTVar("'a") in
+    let tv = newTVar "'a" in
     let env2 = (n , tv) :: env in
-    let (s1, t1) = ti env2 e in
-    (s1, TFun(apply_type s1 tv, t1))
+    let t1 = ti env2 e in
+    TFun(apply_type tv, t1)
   | EApp(e1, e2) ->
     begin try
-      let tv = newTVar("'a") in
-      let (s1, t1) = ti env e1 in
-      let (s2, t2) = ti (apply_assumps s1 env) e2 in
-      let s3 = mgu (apply_type s2 t1) (TFun(t2, tv)) in
-      (composeSubst s3 (composeSubst s2 s1), apply_type s3 tv)
+      let tv = newTVar "'a" in
+      let t1 = ti env e1 in
+      let t2 = ti (apply_assumps env) e2 in
+      mgu (apply_type t1) (TFun(t2, tv));
+      apply_type tv
     with
       | TypeError(msg) -> raise (TypeError (msg ^ "\n in " ^ show_e e))
     end
   | ELet(x, e1, e2) ->
-    let (s1, t1) = ti env e1 in
+    let t1 = ti env e1 in
     let env2 = (x, t1) :: env in
-    let (s2, t2) = ti (apply_assumps s1 env2) e2 in
-    (composeSubst s1 s2, t2)
+    let t2 = ti (apply_assumps env2) e2 in
+    t2
 
 let rec type_inference(env:assumps) (e: e):t = 
-  let (s, t) = ti env e in
-  apply_type s t
+  subst := [];
+  let t = ti env e in
+  apply_type t
 
 let rec test((e: e), (et: t)):unit =
   try
