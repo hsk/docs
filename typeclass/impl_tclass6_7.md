@@ -11,12 +11,11 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.53.3952&rep=rep1&type=p
 ## 6 Dictionary Conversion
 -->
 
-
   辞書変換は、2つの方法で生成されたコードに影響を与えます。
-  第一に、オーバーロード定義は辞書結合用の追加パラメータ変数を受け取ります。
-  第二に、オーバーロード定義を参照するために辞書を渡す必要があります。
-  （通常は関数ですが、任意の型であってもよい）オーバーロード定義の参照は、型が暗黙的な辞書引数が挿入されなければならないかチェックされます。したがって、型検査器は、2つの基本的な変更を必要とします。
-  とき定義は（トップレベルまたはのletとletrecを使用して、ローカル定義のいずれかで）暗黙的な辞書引数は、実行時にオーバーロードを解決するために必要なすべての必要な辞書を結合するために挿入されている型付けされています。
+  第一に、オーバーロード定義は辞書結合用の追加パラメータ変数を受け取るようになります。
+  第二に、オーバーロード定義を参照するために辞書を渡すようになります。
+  したがって、型検査器は、2つの基本的な変更を必要とします; オーバーロード定義が参照されたとき(これは通常は関数だが任意の型であってもよい)、型が暗黙的な辞書引数が挿入されなければならないか検査されます。
+  （トップレベルまたはletかletrecを使ったローカル定義のいずれかで）暗黙的な辞書引数が定義されたときは、実行時にオーバーロードを解決するために必要なすべての必要な辞書を結合するために挿入されるように解決されます。
 
 <!--original
   Dictionary conversion affects the generated code in two ways.
@@ -26,7 +25,7 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.53.3952&rep=rep1&type=p
   When a definition (either at the top level or in a local definition using a let or letrec) is typed hidden dictionary arguments are inserted to bind any necessary dictionaries needed to resolve the overloading at run time.
 -->
 
-  型シグネチャと辞書パラメータとの関係は単純です：コンテキストの各要素は、オーバーロードの定義によってに渡されるか、受け取った辞書に対応しています。
+  型シグネチャと辞書パラメータとの関係は単純です：コンテキストの各要素は、オーバーロードの定義によって渡されるか、受け取った辞書に対応しています。
   例えば、型(Eq a、Text b) => a -> b の関数は2つの辞書、class Eqと他にTextを必要とするでしょう。
   コンテキストの順序は任意です; 辞書があれば、同じ順序が一貫して使用されるように、任意の順序で渡すことができます。
 
@@ -36,7 +35,7 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.53.3952&rep=rep1&type=p
   The ordering of a context is arbitrary; dictionaries can be passed in any order so long as the same ordering is used consistently.
 -->
 
-  standard MLの型検査器によって実行されるコードを舐めている間にプログラムに辞書通過コードを追加する事が、おそらく本質的な実装上の問題の対処方法です。
+  標準的なMLの型検査器によって実行されるコードをトラバースしている間にプログラムに辞書通過コードを追加する事が、おそらく本質的な実装上の問題の対処方法です。
   式に関連する型が原因で型検査が進むにつれて単一化を変更することがあります。
   一般化でのみオーバーロードを解決するために必要な適切な辞書を決定できるので、一般化された式全体のすでにトラバースした箇所の判断ができません。
   一般化後のコードを二回走査する事を避けるために、我々はプレースホルダを使って解決不能なコードの必要な情報を保持します。
@@ -58,7 +57,7 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.53.3952&rep=rep1&type=p
 ### 6.1 Inserting Placeholders
 -->
 
-  型検査器が、オーバーロードされた変数、メソッド、またはletrecバインド変数のいずれかに遭遇したときにプレースホルダが挿入されます。
+  型検査器が、オーバーロードされた変数、メソッド、またはletrec束縛変数のいずれかに遭遇したときにプレースホルダが挿入されます。
   わずかに異なる形のプレースホルダがそれぞれの場合で使われます。
 
 <!--original
@@ -86,7 +85,6 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.53.3952&rep=rep1&type=p
   The classes Text and Num which appear in the placeholders indicate that the placeholder must resolve to an expression yielding a dictionary for that class.
 -->
 
-
   ----
 
   メソッド関数は、直接プレースホルダに変換されます。
@@ -103,17 +101,17 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.53.3952&rep=rep1&type=p
 
   ----
 
+  再帰的に定義された変数は、その型が分かるまで、変換できません。
+  正しいコンテキストが決定されるまで、それらが一般化される前に遭遇するような変数への参照は、単にプレースホルダーによって置き換えられます。
+  例えば、その型が一般化されるまでは単純な再帰定義の中でこのようなメンバーとして、メンバーへの再帰呼び出しはプレースホルダになります。
+  一般化した後、それは通常のオーバーロードされた変数として扱われます。
+
 <!--
   Recursively defined variables cannot be converted until their type is known.
   References to such variables encountered before they are generalized are simply replaced by a placeholder until the correct context has been determined.
   For example, in a simple recursive definition such as member, the recursive call to member becomes a placeholder until its type is generalized.
   After generalization, it is treated as an ordinary overloaded variable.
 -->
-
-  その型が分かるまで、再帰的に定義された変数は変換できません。
-  正しいコンテキストが決定されるまで、それらが一般化される前に遭遇するような変数への参照は、単にプレースホルダーによって置き換えられます。
-  例えば、その型が一般化されるまでは単純な再帰定義の中でこのようなメンバーとして、メンバーへの再帰呼び出しはプレースホルダになります。
-  一般化した後、それは通常のオーバーロードされた変数として扱われます。
 
 
 ### 6.2 辞書パラメータの挿入
@@ -139,7 +137,7 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.53.3952&rep=rep1&type=p
   This environment maps a pair containing a class and type variable onto a dictionary parameter variable.
 -->
 
-  簡単な例は、fの推論された型が(Num t1,Text t2) => t1 -> t2の場合、 fの定義はf = \d1 d2 -> f' に変更され、ここでf'はfの元の定義です。
+  簡単な例としては、fの推論された型が(Num t1,Text t2) => t1 -> t2の場合、 fの定義はf = \d1 d2 -> f' に変更され、ここでf'はfの元の定義です。
   これは、次の引数環境を作成します: [((Num,t1),d1),((Text,t2),d2)]。
 
 <!--
@@ -153,8 +151,8 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.53.3952&rep=rep1&type=p
 ### 6.3 Resolving Placeholders
 -->
 
-  一般化で、定義中に挿入されたプレースホルダを解決することができます。
-  すべてのプレースホルダのリスト(それぞれの新しいプレースホルダが作成され上書きされたもの)は、プレースホルダ検索をするためにコードのトラバースする事を回避するために使えます。
+  一般化では、定義中に挿入されたプレースホルダを解決することができます。
+  すべてのプレースホルダのリスト(それぞれの新しいプレースホルダが作成され上書きされたもの)は、プレースホルダ検索をするためにコードのトラバースする事を回避するために使用できます。
   辞書パラメータが挿入された後に、各プレースホルダは検証されます。
   メソッドやクラスのいずれかに関連付けられているプレースホルダは、プレースホルダに関連付けられている型が、それが解決される方法を決定します。
 
@@ -206,6 +204,11 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.53.3952&rep=rep1&type=p
     The ambiguity may be resolved by some language specific mechanism or simply signal a type error.
 -->
 
+  再帰呼び出しに関連付けられたプレースホルダは、2つの異なる方法で解決することができます。
+  最も簡単な方法は、オーバーロードされた変数の参照を生成することで、他のオーバーロードされた変数と変わりありません。
+  再帰呼び出しのコンテキストはこの時まで分からないので、この方法は一般化した後にだけ行うことができます。
+  再帰呼び出しに渡される辞書は関数への元の引数と変わらないので、内側の再帰呼び出しに辞書を渡す必要性は辞書が既にバインドされている内側のエントリポイントを使用して除去することができます。
+  この例はセクション7で示します。
 
 
 <!--
@@ -216,23 +219,17 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.53.3952&rep=rep1&type=p
   An example of this is shown in section 7.
 -->
 
-  再帰呼び出しに関連付けられたプレースホルダは、2つの異なる方法で解決することができます。
-  最も簡単な方法は、オーバーロードされた変数の参照を生成することで、他のオーバーロードされた変数と変わりありません。
-  再帰呼び出しのコンテキストはこの時まで分からないので、この方法は一般化した後にだけ行うことができます。
-  再帰呼び出しに渡される辞書は関数への元の引数と変わらないので、内側の再帰呼び出しに辞書を渡す必要性は辞書が既にバインドされている内側のエントリポイントを使用して除去することができます。
-  この例はセクション7で示します。
+## 7 例
 
 <!--
-## 7 例
--->
-
 ## 7 Examples
+-->
 
   我々は、それぞれが3つのコードツリーで構成された、２つの例で我々の型検査器の動作を説明します。
   最初のコードツリーは新たにインスタンス化された型変数(ti)と挿入されたプレースホルダを示しています。
   型変数と型テンプレートをインスタンス化するためのルールは、MLの型検査と同じです。
   第二の木は単一化した結果を示しています。
-  型は、図中の線(訳の図では'...')に沿って対で単一化されています。
+  型は、図中の線(訳の図ではコメント内の'=')に沿って対で単一化されています。
   最後は、一般化及びプレースホルダ分解の結果を示します。
   実際の型検査器は、継続的に代わりにすべての型の変数がinstatuatedされた後の単一化を行います;
   これらのステップは、明確にするために、ここで分離されています。
@@ -277,22 +274,15 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.53.3952&rep=rep1&type=p
   The @ nodes are curried applications.
 -->
 
-
+    (* Context: Num t6 *)
     letrec f =
-      (* Context: Num t6  t1 ... t2→t3 *)
-      \x
-        (* t3 ... t6 *)
-        @
-          (* t4 -> t5 -> t6 ... t7->t7->t7 *)
-          <+,t7>
-          (* t4 ... t2 *)
-          x
-          (* t5 ... t9 *)
-          @
-            (* t8->t9 ... t1 *)
-            <f,t1>
-            (* t8 ... t2 *)
-            x
+      ((* t1 = t2→t3 *) \x
+        ((* t3 = t6 *) @
+          ((* t4 -> t5 -> t6 = t7->t7->t7 *) <+,t7>)
+          ((* t4 = t2 *) x)
+          ((* t5 = t9 *) @
+            ((* t8->t9 = t1 *) <f,t1>)
+            ((* t8 = t2 *) x))))
 
   単一化後、次のようになります:
 
@@ -300,21 +290,15 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.53.3952&rep=rep1&type=p
   After unification, this becomes:
 -->
 
+    (* Context: Num t2 *)
     letrec f =
-      (* Context: Num t2 t2->t2 *)
-      \x
-        (* t2 *)
-        @
-          (* t2->t2->t2 *)
-          <+,t2>
-          (* t2 *)
-          x
-          (* t2 *)
-          @
-            (* t2->t2 *)
-            <f,t2>
-            (* t2 *)
-            x
+      ((* t2->t2 *) \x
+        ((* t2 *) @
+          ((* t2->t2->t2 *) <+,t2>)
+          ((* t2 *) x)
+          ((* t2 *) @
+            ((* t2->t2 *) <f,t2>)
+            ((* t2 *) x) )))
 
   +に関連付けられたプレースホルダ内の型は、環境パラメータの一部です。
   これがfに渡される辞書はパラメータxのための+の適切なの実装が含まれていることを示します。
@@ -332,18 +316,18 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.53.3952&rep=rep1&type=p
 
 
     letrec f =
-      \d
-        \x
-          @
-            @
+      (\d
+        (\x
+          (@
+            (@
               sel+
-              d
+              d)
             x
-            @
-              @
+            (@
+              (@
                 f
-                d
-              x
+                d)
+              x))))
 
   -------
 
@@ -376,20 +360,13 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.53.3952&rep=rep1&type=p
 
     (* Context: Text t5 *)
     let g =
-      (* t1->t2 *)
-      \x
-        (* t2 ... t4 *)
-        @
-          (* t3->t4 ... t5->String *)
-          <print,t5>
-          (* t3 ... (t6, t7) *)
-          2-tuple
-            (* t6 ... t1 *)
-            x
-            (* t7 ... Int *)
-            length
-              (* [t8] ... t1 *)
-              x
+      ((* t1->t2 *) \x
+        ((* t2 = t4 *) @
+          ((* t3->t4 = t5->String *) <print,t5>)
+          ((* t3 = (t6, t7) *) 2-tuple
+            ((* t6 = t1 *) x)
+            ((* t7 = Int *) length
+              ((* [t8] = t1 *) x)))))
 
   単一化後、次のようになります:
 
@@ -399,20 +376,13 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.53.3952&rep=rep1&type=p
 
     (* Context: Text t5 *)
     let g =
-      (* [t8]->String *)
-      \x
-        (* String *)
-        @
-          (* ([t8],Int)->String *)
-          <print,([t8],Int)>
-          (* ([t8], Int) *)
-          2-tuple
-            (* [t8] *)
-            x
-            (* Int *)
-            length
-              (* [t8] *)
-              x
+      ((* [t8]->String *) \x
+        ((* String *) @
+          ((* ([t8],Int)->String *) <print,([t8],Int)>)
+          ((* ([t8], Int) *) 2-tuple
+            ((* [t8] *) x)
+            ((* Int *) length
+              (* [t8] *) x))))
 
   プレースホルダは、2つのタプルのための特定のプリンタとして解決されます。
   この関数がオーバーロードされているように、さらにプレースホルダの分解は、タプルのコンポーネントに関連付けられている型のために必要とされます。
@@ -423,65 +393,16 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.53.3952&rep=rep1&type=p
 -->
 
     let g =
-      \d
-        \x
-          @
-            @
+      (\d
+        (\x
+          (@
+            (@
               print-tuple2
-              @
+              (@
                 d-Text-List
-                d
-              d-Text-Int
-            2-tuple
+                d)
+              d-Text-Int)
+            (2-tuple
               x
-              length
-                x
-
-  -----
-
-  別な書き方をしてみたバージョン
-
-    (* Context: Text t5 *)
-    let g =
-      (\x(
-        @(
-          (<print,t5>:t3->t4 ... t5->String),
-          (2-tuple(
-            (x: t6 ... t1),
-            (length(
-              (x: [t8] ... t1)
-            ):t7 ... Int)
-          ):t3 ... (t6, t7))
-        )
-        :t2 ... t4
-      ):t1->t2)
-
-    (* Context: Text t5 *)
-    let g =
-      (\x(
-        (@(
-          (<print,([t8],Int)>:([t8],Int)->String),
-          (2-tuple(
-            (x:[t8]),
-            (length(
-              (x:[t8])
-            ):Int)
-          ):([t8], Int))
-        ):String)
-        ):[t8]->String)
-
-
-    let g =
-      \d(
-        \x(
-          @(
-            @(
-              print-tuple2,
-              @(d-Text-List, d),
-              d-Text-Int
-            ),
-            2-tuple(
-              x,
-              length(x)
-            ))))
-
+              (length
+                x)))))
