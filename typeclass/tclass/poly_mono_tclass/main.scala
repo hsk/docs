@@ -17,15 +17,15 @@ object Infer extends App {
   case class EInst(name:String,p:T, members:Map[String, E],e:E) extends E
 
   sealed trait T
+  case class TVar(a: String) extends T
   case object TInt extends T
   case object TBool extends T
-  case class TVar(a: String) extends T
   case class TFun(a:T, b: T) extends T
   case class TRecord(t:Map[String,T]) extends T
   case class TCon(a: String, ts:List[T]) extends T
 
   sealed trait Scheme
-  case class Mono(t:T) extends Scheme
+  case class Poly(a:List[String], t:T) extends Scheme
   case object Over extends Scheme
 
   type Subst = Map[String, T]
@@ -42,11 +42,11 @@ object Infer extends App {
   val nullSubst = Map[String, T]()
   var subst = nullSubst
 
-  var counter = 0
+  var count = 0
 
   def new_tvar(prefix: String): T = {
-    val s = counter
-    counter = s + 1
+    val s = count
+    count = s + 1
     TVar(prefix + s)
   }
 
@@ -57,31 +57,65 @@ object Infer extends App {
       case TBool        => Set()
       case TFun(t1, t2) => ftv_t(t1).union(ftv_t(t2))
       case TRecord(map) =>
-        map.foldLeft(Set[String]()) { case (tvs, (k,t)) => tvs.union(ftv_t(t)) }      
+        map.foldLeft(Set[String]()) { case (tvs, (k,t)) => tvs.union(ftv_t(t)) }
     }
 
-  def apply_subst(s:Subst, t:T):T = {
+  def ftv_scheme(scheme: Scheme): Set[String] =
+    scheme match {
+      case Poly(vars, t) => ftv_t(t).diff(vars.toSet)
+    }
+
+  def ftv_assumps(assumps: Assumps): Set[String] =
+    assumps.values.toList.map(ftv_scheme).foldRight(Set[String]()){
+      case (x, s) => s.union(x)
+    }
+
+  def apply_subst(s:Subst, t: T): T =
     t match {
-      case TVar(a) =>
-        s.get(a) match {
-          case Some(a) => apply_subst(s, a)
-          case None => t
-        }
+      case TVar(n)      => s.getOrElse(n, TVar(n))
       case TFun(t1, t2) => TFun(apply_subst(s, t1), apply_subst(s, t2))
       case TRecord(map) => TRecord(map.map{case(k,t)=> (k,apply_subst(s, t)) })
       case t            => t
     }
-  }
 
   def apply_t(t: T): T = apply_subst(subst, t)
 
+  def apply_scheme(scheme: Scheme): Scheme = {
+    scheme match {
+      case Poly(vars, t) =>
+        Poly(vars, apply_subst(vars.foldRight(subst){ case(x, s) => s - x }, t))
+    }
+  }
 
-  def instantiate(cenv:CEnv, env: Assumps, e:E, n:String):(CEnv, E, T) = {
+  def apply_assumps(assumps: Assumps): Assumps =
+    assumps.map {
+      case (k, v) => (k, apply_scheme(v))
+    }
+
+  def generalize(cenv:CEnv, env: Assumps, e:E, t: T): (CEnv, E, Scheme) = {
+    val vars = ftv_t(t).diff(ftv_assumps(env)).toList
+    if(vars==List()) (cenv, e, Poly(List(), t))
+    else (cenv, e, Poly(vars, t))
+  }
+
+  def instantiate(cenv:CEnv, env: Assumps, e:E, n:String): (CEnv, E, T) = {
     env(n) match {
-      case Mono(t) => (cenv, e, t)
+      case Poly(vars, t) =>
+        val s = vars.foldLeft(Map[String, T]()) {
+          case (subst, k) => subst + (k -> new_tvar("a"))
+        }
+        (cenv, e, apply_subst(s, t))
       case Over => // オーバーロードされた型はプレースホルダにする
         val t = new_tvar("'dictOver")
         (cenv, EPlaceHolder(n, t), t)
+    }
+  }
+
+  def var_bind(u: String, t: T) { 
+    if (t != TVar(u)) {
+      if (ftv_t(t).contains(u))
+        throw TypeError("occurs check fails: " + u + " vs. " + show_t(t))
+      subst = subst + (u -> t)
     }
   }
 
@@ -90,15 +124,10 @@ object Infer extends App {
       case (TFun(l, r),TFun(l2, r2)) =>
         mgu(l, l2)
         mgu(r, r2)
-      case (TVar(u), t) =>
-        if (t != TVar(u)) {
-          if (ftv_t(t).contains(u))
-            throw TypeError("occurs check fails: " + u + " vs. " + show_t(t))
-          else subst = subst + (u -> t)
-        }
-      case (t, u @ TVar(_)) => mgu(u, t)
+      case (TVar(u), t) => var_bind(u, t)
+      case (t, TVar(u)) => var_bind(u, t)
       case (TInt, TInt) =>
-      case (TBool,TBool) =>
+      case (TBool, TBool) =>
       case (t@TRecord(map1), u@TRecord(map2)) =>
         if (map1.keys != map2.keys) 
           throw new TypeError("cannot unify " + show_t(t) + " with " + show_t(u))
@@ -110,9 +139,9 @@ object Infer extends App {
     }
   }
 
-  def ti(cenv:CEnv, env: Assumps, e: E): (CEnv, E, T) = {
+  def ti(cenv: CEnv, env: Assumps, e: E): (CEnv, E, T) = {
     e match {
-    case EVar(n) =>
+    case EVar(n) => 
       if (!env.contains(n))
         throw TypeError("unbound variable: " + n)
       instantiate(cenv, env, e, n)
@@ -120,7 +149,7 @@ object Infer extends App {
     case EBool(_) => (cenv, e, TBool)
     case EAbs(n, e1) =>
       val t = new_tvar("'abs")
-      val (cenv1, e1_, t1) = ti(cenv, env + (n -> Mono(t)), e1)
+      val (cenv1, e1_, t1) = ti(cenv, env + (n -> Poly(List(), t)), e1)
       (cenv1, EAbs(n, e1), TFun(t, t1))
     case EApp(e1, e2) =>
       try {
@@ -132,12 +161,11 @@ object Infer extends App {
       } catch {
         case TypeError(msg) => throw TypeError(msg + "\n in " + show_e(e))
       }
-
     case ELet(x, e1, e2) =>
       val (cenv1, e1_, t1) = ti(cenv, env, e1)
-      val (cenv2, e2_, t2) = ti(cenv1, env + (x -> Mono(t1)), e2)
-      (cenv2, ELet(x,e1_,e2_), t2)
-    
+      val (cenv1_, e1__, sc1) = generalize(cenv1, apply_assumps(env), e1_, t1)
+      val (cenv2, e2_, t2) = ti(cenv1_, apply_assumps(env + (x -> sc1)), e2)
+      (cenv2, ELet(x, e1__, e2_), t2)
     case EClass(name,p1,members,e) =>
       val cenv2 = cenv + (name -> TClass(p1, members, Map()))
       val env2 = members.foldLeft(env) {
@@ -164,6 +192,7 @@ object Infer extends App {
       }
     case e =>
       throw TypeError("invalid expression "+e)
+
     }
   }
 
@@ -192,7 +221,7 @@ object Infer extends App {
     }
   }
 
-  def type_inference(env:Assumps, e: E):(CEnv, E, T) = {
+  def type_inference(env:Map[String,Scheme], e: E):(CEnv, E, T) = {
     subst = nullSubst
     val (cenv, e_, t) = ti(Map(), env, e)
     (cenv, plane(cenv, e_), apply_t(t))
@@ -245,37 +274,32 @@ object Infer extends App {
 
   test(ELet("id", EAbs("x", EVar("x")),
     EVar("id")),
-    TFun(TVar("'abs0"), TVar("'abs0")))
+    TFun(TVar("a1"), TVar("a1")))
 
   test(ELet("id", EAbs("x", EVar("x")),
-    EApp(EVar("id"), EInt(1))),
-    TInt)
+    EApp(EVar("id"), EVar("id"))),
+    TFun(TVar("a5"), TVar("a5")))
 
   test(ELet("id", EAbs("x", ELet("y", EVar("x"), EVar("y"))),
-    EApp(EVar("id"), EInt(1))),
+   EApp(EVar("id"), EVar("id"))),
+    TFun(TVar("a9"), TVar("a9")))
+
+  test(ELet("id", EAbs("x", ELet("y", EVar("x"), EVar("y"))),
+   EApp(EApp(EVar("id"), EVar("id")), EInt(2))),
     TInt)
 
-  test_error(ELet("id", EAbs("x", ELet("y", EVar("x"), EVar("y"))),
-    EApp(EApp(EVar("id"), EVar("id")), EInt(2))))
-
   test_error(ELet("id", EAbs("x", EApp(EVar("x"), EVar("x"))),
-    EVar("id")))
+   EVar("id")))
 
   test(EAbs("m", ELet("y", EVar("m"),
         ELet("x", EApp(EVar("y"), EBool(true)),
               EVar("x")))),
-    TFun(TFun(TBool,TVar("'app11")),TVar("'app11")))
+    TFun(TFun(TBool,TVar("'app18")),TVar("'app18")))
 
   test_error(EApp(EInt(2), EInt(2)))
 
-
-  test(
-    EClass("Num","a",Map("add"->TFun(TVar("a"),TFun(TVar("a"),TVar("a")))),
-    EInt(1)),
-    TInt)
-
   assert(test2(
-    Map("+"->Mono(TFun(TInt,TFun(TInt,TInt)))),
+    Map("+"->Poly(List(), TFun(TInt,TFun(TInt,TInt)))),
 
     EClass("Num","a",Map("add"->TFun(TVar("a"), TFun(TVar("a"), TVar("a")))),
     EInst("Num",TInt,Map("add"->EAbs("x",EAbs("y",EApp(EApp(EVar("+"),EVar("x")),EVar("y"))))),
@@ -283,8 +307,8 @@ object Infer extends App {
 
     EType("Num",List("a"),TRecord(Map(
       "add" -> TFun(TVar("a"),TFun(TVar("a"),TVar("a"))))),
-    ELet("dict_13",ERecord(Map(
+    ELet("dict_20",ERecord(Map(
       "add" -> EAbs("x",EAbs("y",EApp(EApp(EVar("+"),EVar("x")),EVar("y")))))),
-    EApp(EApp(ERecordGet(EVar("dict_13"),"add"),EInt(1)),EInt(2))))))
-}
+    EApp(EApp(ERecordGet(EVar("dict_20"),"add"),EInt(1)),EInt(2))))))
 
+}

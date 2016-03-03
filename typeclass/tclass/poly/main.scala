@@ -35,17 +35,17 @@ object AlgorithmW extends App {
     TVar(prefix + s)
   }
 
-  def ftv_type(t: T): Set[String] =
+  def ftv_t(t: T): Set[String] =
     t match {
       case TVar(n)      => Set(n)
       case TInt         => Set()
       case TBool        => Set()
-      case TFun(t1, t2) => ftv_type(t1).union(ftv_type(t2))
+      case TFun(t1, t2) => ftv_t(t1).union(ftv_t(t2))
     }
 
   def ftv_scheme(scheme: Scheme): Set[String] =
     scheme match {
-      case Scheme(vars, t) => ftv_type(t).diff(vars.toSet)
+      case Scheme(vars, t) => ftv_t(t).diff(vars.toSet)
     }
 
   def ftv_assumps(assumps: Assumps): Set[String] =
@@ -75,7 +75,7 @@ object AlgorithmW extends App {
     }
 
   def generalize(env: Assumps, t: T): Scheme = {
-    val vars = ftv_type(t).diff(ftv_assumps(env)).toList
+    val vars = ftv_t(t).diff(ftv_assumps(env)).toList
     Scheme(vars, t)
   }
 
@@ -91,7 +91,7 @@ object AlgorithmW extends App {
 
   def var_bind(u: String, t: T) { 
     if (t != TVar(u)) {
-      if (ftv_type(t).contains(u))
+      if (ftv_t(t).contains(u))
         throw TypeError("occurs check fails: " + u + " vs. " + show_t(t))
       subst = subst + (u -> t)
     }
