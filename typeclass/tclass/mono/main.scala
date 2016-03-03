@@ -1,139 +1,134 @@
 object Infer extends App {
 
-  sealed trait Exp
-  case class EVar(a: String) extends Exp
-  case class EInt(a: Int) extends Exp
-  case class EBool(a: Boolean) extends Exp
-  case class EApp(a: Exp, b: Exp) extends Exp
-  case class EAbs(a: String, b: Exp) extends Exp
-  case class ELet(a: String, b: Exp, c: Exp) extends Exp
+  sealed trait E
+  case class EVar(a: String) extends E
+  case class EInt(a: Int) extends E
+  case class EBool(a: Boolean) extends E
+  case class EApp(a: E, b: E) extends E
+  case class EAbs(a: String, b: E) extends E
+  case class ELet(a: String, b: E, c: E) extends E
 
-  sealed trait Type
-  case object TInt extends Type
-  case object TBool extends Type
-  case class TVar(a: String) extends Type
-  case class TFun(a:Type, b: Type) extends Type
+  sealed trait T
+  case object TInt extends T
+  case object TBool extends T
+  case class TVar(a: String) extends T
+  case class TFun(a:T, b: T) extends T
 
-  type Subst = Map[String, Type]
-  type Assumps = Map[String, Type]
+  type Subst = Map[String, T]
+  type Assumps = Map[String, T]
 
   case class TypeError(s: String) extends Exception(s)
 
-  def show(t: Type): String = t.toString
-  def show(e: Exp): String = e.toString
+  def show_t(t: T): String = t.toString
+  def show_e(e: E): String = e.toString
 
-  def ftv_type(t: Type): Set[String] =
+  val nullSubst = Map[String, T]()
+  var subst = nullSubst
+
+  var count = 0
+
+  def new_tvar(prefix: String): T = {
+    val s = count
+    count = s + 1
+    TVar(prefix + s)
+  }
+
+  def ftv_t(t: T): Set[String] =
     t match {
       case TVar(n)      => Set(n)
       case TInt         => Set()
       case TBool        => Set()
-      case TFun(t1, t2) => ftv_type(t1).union(ftv_type(t2))
+      case TFun(t1, t2) => ftv_t(t1).union(ftv_t(t2))
     }
 
-  def apply_type(s: Subst, t: Type): Type =
+  def apply_t(t: T): T =
     t match {
-      case TVar(n)      => s.getOrElse(n, TVar(n))
-      case TFun(t1, t2) => TFun(apply_type(s, t1), apply_type(s, t2))
+      case TVar(n)      => subst.getOrElse(n, TVar(n))
+      case TFun(t1, t2) => TFun(apply_t(t1), apply_t(t2))
       case t            => t
     }
 
-  def apply_assumps(s: Subst, assumps: Assumps): Assumps =
+  def apply_assumps(assumps: Assumps): Assumps =
     assumps.map {
-      case (k, v) => (k, apply_type(s, v))
+      case (k, v) => (k, apply_t(v))
     }
 
-  val nullSubst = Map[String, Type]()
-
-  def composeSubst(s1: Subst, s2: Subst): Subst =
-    s2.map {
-      case (x, v) =>
-        (x, apply_type(s1, v))
-    } ++ s1
-
-  var tiSupply = 0
-
-  def newTVar(prefix: String): Type = {
-    val s = tiSupply
-    tiSupply = s + 1
-    TVar(prefix + s)
+  def var_bind(u: String, t: T) {  
+    if (t != TVar(u)) {
+      if (ftv_t(t).contains(u))
+        throw TypeError("occurs check fails: " + u + " vs. " + show_t(t))
+      subst = subst + (u -> t)
+    }
   }
 
-  def varBind(u: String, t: Type): Subst = 
-    if (t == TVar(u)) nullSubst
-    else if (ftv_type(t).contains(u))
-      throw TypeError("occurs check fails: " + u + " vs. " + show(t))
-    else Map(u -> t)
-
-  def mgu(t1: Type, t2: Type): Subst = {
+  def mgu(t1: T, t2: T) {
     (t1,t2) match {
       case (TFun(l, r),TFun(l2, r2)) =>
-        val s1 = mgu(l, l2)
-        val s2 = mgu(apply_type(s1, r), apply_type(s1, r2))
-        composeSubst(s1, s2)
-      case (TVar(u), t) => varBind(u, t)
-      case (t, TVar(u)) => varBind(u, t)
-      case (TInt, TInt) => nullSubst
-      case (TBool,TBool) => nullSubst
+        mgu(l, l2)
+        mgu(apply_t(r), apply_t(r2))
+      case (TVar(u), t) => var_bind(u, t)
+      case (t, TVar(u)) => var_bind(u, t)
+      case (TInt, TInt) =>
+      case (TBool,TBool) =>
       case (t1,t2) =>
-        throw TypeError("types do not unify: " + show(t1) + " vs. " + show (t2))
+        throw TypeError("types do not unify: " + show_t(t1) + " vs. " + show_t(t2))
     }
   }
 
-  // Main type inference function
-  def ti(env: Assumps, e: Exp): (Subst, Type) = {
+  def ti(env: Assumps, e: E): T = {
     e match {
     case EVar(n) => 
       if (env.contains(n))
-        (nullSubst, env(n))
+        env(n)
       else
         throw TypeError("unbound variable: " + n)
-    case EInt(_)  => (nullSubst, TInt)
-    case EBool(_) => (nullSubst, TBool)
+    case EInt(_)  => TInt
+    case EBool(_) => TBool
     case EAbs(n, e) =>
-      val tv = newTVar("'a")
+      val tv = new_tvar("'a")
       val env2 = env + (n -> tv)
-      val (s1, t1) = ti(env2, e)
-      (s1, TFun(apply_type(s1, tv), t1))
-    case exp @ EApp(e1, e2) =>
+      val t1 = ti(env2, e)
+      TFun(apply_t(tv), t1)
+    case EApp(e1, e2) =>
       try {
-        val tv = newTVar("'a")
-        val (s1, t1) = ti(env, e1)
-        val (s2, t2) = ti(apply_assumps(s1, env), e2)
-        val s3 = mgu(apply_type(s2, t1), TFun(t2, tv))
-        (composeSubst(s3,composeSubst(s2,s1)), apply_type(s3, tv))
+        val tv = new_tvar("'a")
+        val t1 = ti(env, e1)
+        val t2 = ti(apply_assumps(env), e2)
+        mgu(apply_t(t1), TFun(t2, tv))
+        apply_t(tv)
       } catch {
-        case TypeError(e) => throw TypeError(e + "\n in " + show(exp))
+        case TypeError(msg) => throw TypeError(msg + "\n in " + show_e(e))
       }
     case ELet(x, e1, e2) =>
-      val (s1, t1) = ti(env, e1)
+      val t1 = ti(env, e1)
       val env2 = env + (x -> t1)
-      val (s2, t2) = ti(apply_assumps(s1, env2), e2)
-      (composeSubst(s1, s2), t2)
+      val t2 = ti(apply_assumps(env2), e2)
+      t2
     }
   }
 
-  def type_inference(env:Map[String,Type], e: Exp):Type = {
-    val (s, t) = ti(env, e)
-    apply_type(s, t)
+  def type_inference(env:Map[String,T], e: E):T = {
+    subst = nullSubst
+    val t = ti(env, e)
+    apply_t(t)
   }
 
-  // Tests
-  def test(e: Exp, et: Type) {
+  def test(e: E, et: T) {
     try {
       val t = type_inference(Map(), e)
-      if(t!=et)println(show(e) + " :: " + show(t) + "\n")
+      if(t!=et)println(show_e(e) + " :: " + show_t(t) + "\n")
       assert(t == et)
     } catch {
       case TypeError(err) =>
-        println(show(e) + "\n " + err + "\n")
+        println(show_e(e) + "\n " + err + "\n")
         assert(false)
     }
   }
 
-  def testError(e:Exp) {
+  def test_error(e: E) {
     try {
       val t = type_inference(Map(), e)
-      println(show(e) + " :: " + show(t) + "\n")
+      println(show_e(e) + " :: " + show_t(t) + "\n")
 
       assert(false)
     } catch {
@@ -141,7 +136,6 @@ object Infer extends App {
     }
   }
 
-  // Main Program
   test(ELet("id", EAbs("x", EVar("x")),
     EVar("id")),
     TFun(TVar("'a0"), TVar("'a0")))
@@ -154,10 +148,10 @@ object Infer extends App {
    EApp(EVar("id"), EInt(1))),
     TInt)
 
-  testError(ELet("id", EAbs("x", ELet("y", EVar("x"), EVar("y"))),
+  test_error(ELet("id", EAbs("x", ELet("y", EVar("x"), EVar("y"))),
    EApp(EApp(EVar("id"), EVar("id")), EInt(2))))
 
-  testError(ELet("id", EAbs("x", EApp(EVar("x"), EVar("x"))),
+  test_error(ELet("id", EAbs("x", EApp(EVar("x"), EVar("x"))),
    EVar("id")))
 
   test(EAbs("m", ELet("y", EVar("m"),
@@ -165,7 +159,7 @@ object Infer extends App {
               EVar("x")))),
     TFun(TFun(TBool,TVar("'a11")),TVar("'a11")))
 
-  testError(EApp(EInt(2), EInt(2)))
+  test_error(EApp(EInt(2), EInt(2)))
 
 }
 

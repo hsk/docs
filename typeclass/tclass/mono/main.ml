@@ -35,44 +35,37 @@ let rec show_e (e: e): string =
   | EAbs(s, e) -> "EAbs(" ^ s ^ ", " ^ show_e e ^ ")"
   | ELet(s, e1, e2) -> "ELet(" ^ s ^ ", " ^ show_e e1 ^ ", " ^ show_e e2 ^ ")"
 
-let union l1 l2 =
-  List.fold_right (fun s l ->
-    if List.mem s l then l else s::l
-  ) l1 l2
-
-let rec ftv_type(t: t): string list =
-  match t with
-  | TVar(n)      -> [n]
-  | TInt         -> []
-  | TBool        -> []
-  | TFun(t1, t2) -> union (ftv_type t1) (ftv_type t2)
-
-let subst = ref []
-
-let rec apply_type (t: t): t =
-  match t with
-  | TVar(n)      -> if List.mem_assoc n !subst then List.assoc n !subst else TVar n
-  | TFun(t1, t2) -> TFun(apply_type t1, apply_type t2)
-  | t            -> t
-
-let rec apply_assumps (assumps: assumps): assumps =
-  List.map (fun (k, v) ->
-    (k, apply_type v)
-  ) assumps
-
 let nullSubst = []
-
+let subst = ref nullSubst
 
 let count = ref 0
 
-let rec newTVar(prefix: string): t =
+let rec new_tvar(prefix: string): t =
   let s = !count in
   count := s + 1;
   TVar(prefix ^ string_of_int s)
 
-let rec varBind(u: string) (t: t) = 
+let rec ftv_t(t: t): string list =
+  match t with
+  | TVar(n)      -> [n]
+  | TInt         -> []
+  | TBool        -> []
+  | TFun(t1, t2) -> union (ftv_t t1) (ftv_t t2)
+
+let rec apply_t (t: t): t =
+  match t with
+  | TVar(n)      -> if List.mem_assoc n !subst then List.assoc n !subst else TVar n
+  | TFun(t1, t2) -> TFun(apply_t t1, apply_t t2)
+  | t            -> t
+
+let rec apply_assumps (assumps: assumps): assumps =
+  List.map (fun (k, v) ->
+    (k, apply_t v)
+  ) assumps
+
+let rec var_bind(u: string) (t: t) = 
   if t = TVar(u) then () else
-  if List.mem u (ftv_type t) then
+  if List.mem u (ftv_t t) then
     raise (TypeError("occurs check fails: " ^ u ^ " vs. " ^ show_t t))
   else subst := (u, t) :: !subst
 
@@ -80,9 +73,9 @@ let rec mgu(t1: t) (t2: t): unit =
   match (t1, t2) with
   | (TFun(l, r),TFun(l2, r2)) ->
     mgu l l2;
-    mgu (apply_type r) (apply_type r2)
-  | (TVar(u), t) -> varBind u t
-  | (t, TVar(u)) -> varBind u t
+    mgu (apply_t r) (apply_t r2)
+  | (TVar(u), t) -> var_bind u t
+  | (t, TVar(u)) -> var_bind u t
   | (TInt, TInt) -> ()
   | (TBool,TBool) -> ()
   | (t1,t2) ->
@@ -99,17 +92,17 @@ let rec ti(env: assumps) (e: e): t =
   | EInt(_)  -> TInt
   | EBool(_) -> TBool
   | EAbs(n, e) ->
-    let tv = newTVar "'a" in
+    let tv = new_tvar "'a" in
     let env2 = (n , tv) :: env in
     let t1 = ti env2 e in
-    TFun(apply_type tv, t1)
+    TFun(apply_t tv, t1)
   | EApp(e1, e2) ->
     begin try
-      let tv = newTVar "'a" in
+      let tv = new_tvar "'a" in
       let t1 = ti env e1 in
       let t2 = ti (apply_assumps env) e2 in
-      mgu (apply_type t1) (TFun(t2, tv));
-      apply_type tv
+      mgu (apply_t t1) (TFun(t2, tv));
+      apply_t tv
     with
       | TypeError(msg) -> raise (TypeError (msg ^ "\n in " ^ show_e e))
     end
@@ -122,7 +115,7 @@ let rec ti(env: assumps) (e: e): t =
 let rec type_inference(env:assumps) (e: e):t = 
   subst := [];
   let t = ti env e in
-  apply_type t
+  apply_t t
 
 let rec test((e: e), (et: t)):unit =
   try
