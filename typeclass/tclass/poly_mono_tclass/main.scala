@@ -169,11 +169,16 @@ object Infer extends App {
     case EClass(name,p1,members,e) =>
       val cenv2 = cenv + (name -> TClass(p1, members, Map()))
       val env2 = members.foldLeft(env) {
-        case(env, (name1, t)) =>
+        case(env, (name1, _)) =>
           env + (name1 -> Over)
       }
       val (cenv_, r, t) = ti(cenv2, env2, e)
-      (cenv_, EType(name, List(p1), TRecord(members), r), t)
+      val r2 = members.foldLeft(r) {
+        case (r,(name:String,_))=>
+          val TVar(dict:String) = new_tvar("'dict")
+          ELet(name, EAbs(dict, ERecordGet(EVar(dict), name)), r)
+      }
+      (cenv_, EType(name, List(p1), TRecord(members), r2), t)
 
     case EInst(name, t1, members, e) =>
       cenv(name) match {
@@ -213,7 +218,7 @@ object Infer extends App {
           val tv = new_tvar("some")
           val t1 = apply_subst(Map(name->tv), members(n))
           mgu(t, t1)
-          ERecordGet(EVar(impls(apply_t(tv))), n)
+          EApp(EVar(n),EVar(impls(apply_t(tv))))
         case None => EVar(n)
       }
     case e =>
@@ -307,8 +312,9 @@ object Infer extends App {
 
     EType("Num",List("a"),TRecord(Map(
       "add" -> TFun(TVar("a"),TFun(TVar("a"),TVar("a"))))),
+    ELet("add", EAbs("'dict28", ERecordGet(EVar("'dict28"), "add")),
     ELet("dict_20",ERecord(Map(
       "add" -> EAbs("x",EAbs("y",EApp(EApp(EVar("+"),EVar("x")),EVar("y")))))),
-    EApp(EApp(ERecordGet(EVar("dict_20"),"add"),EInt(1)),EInt(2))))))
+    EApp(EApp(EApp(EVar("add"), EVar("dict_20")),EInt(1)),EInt(2)))))))
 
 }
