@@ -136,41 +136,6 @@ object PolyOverFun extends App {
 
   def ti(env: Assumps, e: E): (E, T) = {
     e match {
-    case EVar(n) => 
-      if (!env.contains(n))
-        throw TypeError("unbound variable: " + n)
-      val scheme = env(n)
-      if(n == "add") {
-        println("e="+e)
-      }
-      scheme match {
-        case Scheme(vars, t) =>
-          val (s,ps) = vars.foldLeft(Map[String, T](),List[(T,P)]()) {
-            case ((subst,ps), tv) =>
-              // 1. 型スキーム中に型パラメータがあれば対応する型変数を新たに作る。
-              val ntv = new_tvar("'inst_poly")
-
-              // 2. 型変数の述語を取得する。
-              val ps2 = preds.foldRight(ps){
-                case ((t,p), ps) =>
-                  if(t==TVar(tv)) (ntv,p)::ps
-                  else ps
-              }
-              (subst + (tv -> ntv), ps2)
-          }
-          if(ps==List()) {
-            (e, apply_subst(s, t))
-          } else {
-            // 3. 述語があれば、型と変数名を述語環境に保存する。
-            preds = preds ::: ps
-            // 4. 述語があれば、型が決定されていない可能性があるので
-            // プレースホルダEPVar(string,sc)に置き換える。
-            val t_ = apply_subst(s, t) 
-            val nvars = s.map{case(_,TVar(n))=>n}.toList
-            val e_ = EPVar(n, Scheme(nvars, t_))
-            (e_, t_)
-          }
-      }
     case EInt(_)  => (e, TInt)
     case EBool(_) => (e, TBool)
     case EAbs(n, e) =>
@@ -187,14 +152,73 @@ object PolyOverFun extends App {
       } catch {
         case TypeError(msg) => throw TypeError(msg + "\n in " + show_e(e))
       }
+    case EOver(x, ps, t, e) =>
+      // 1. 型環境に関数の型スキームを追加する
+      val env1 = env + (x -> Scheme(ps, t))
+      // 2. 述語環境に型パラメータの述語を追加する
+      ps.foreach{(p) => preds = (TVar(p), x)::preds }
+      // 3. クラス環境に名前を追加する
+      cenv = cenv + (x->Map[T,String]())
+      val (e2, t2) = ti(env1, e)
+      // 4. ELet(クラス名,EAbs("dict",EVar("dict")), 式2)に置き換える
+      val e_ = ELet(x, EAbs("f", EVar("f")), e2)
+      (e_, t2)
+    case EInst(x, t, e1, e2) =>
+      // 1. クラス環境からクラス名で型から辞書へのマップを取り出す
+      val map = cenv.get(x) match {
+        case None => throw new Exception("type error")
+        case Some(map) => map
+      }
+      // 2. 辞書変数名を作る
+      val TVar(dict) = new_tvar("'dict")
+      // 3. クラス環境に型名と辞書名を追加する
+      cenv = cenv + (x -> (map + (t->dict)))
+      val (e1_, t1) = ti(env, e1)
+      // 4. 型環境から型スキームを取り出し式e1の型チェックを行う
+      env.get(x) match {
+        case None => throw new Exception("type error")
+        case Some(Scheme(vars, sct)) =>
+      }
+      val (e2_, t2) = ti(env, e2)
+      // 5. ELet(辞書名,式,継続式)に置き換える
+      (ELet(dict, e1_, e2_), t2)
+    case EVar(n) =>
+      env.get(n) match {
+        case None => throw TypeError("unbound variable: " + n)
+        case Some(Scheme(vars, t)) =>
+          val (s, ps) = vars.foldRight(Map[String, T](),List[(T,P)]()) {
+            case (v, (subst, ps)) =>
+              val tv = TVar(v)
+              // 1. 型スキーム中に型パラメータがあれば対応する型変数を新たに作る。
+              val ntv = new_tvar("'inst_poly")
+              // 2. 型変数の述語を取得する。
+              val ps2 = preds.foldRight(ps){
+                case ((t, p), ps) if(t == tv) => (ntv,p)::ps
+                case _ => ps
+              }
+              (subst + (v -> ntv), ps2)
+          }
+          // 型は新しい型変数に置き換える
+          val t_ = apply_subst(s, t) 
+          if(ps==List()) {
+            (e, t_)
+          } else {
+            // 3. 述語があれば、型と変数名を述語環境に保存する。
+            preds = preds ::: ps
+            // 4. 述語があれば、型が決定されていない可能性があるので
+            // プレースホルダEPVar(string,sc)に置き換える。
+            (EPVar(n, Scheme(s.map{case(_,TVar(n))=>n}.toList, t_)), t_)
+          }
+      }
     case ELet(x, e1, e2) =>
       val (e1_, t1) = ti(env, e1)
       val env1 = apply_assumps(env)
 
-      // 1. 型スキームから型パラメータを取り出す。
+      // 1. 型から型パラメータを取り出し、型スキームを作る
       val tvars = ftv_t(t1).diff(ftv_assumps(env1)).toList
+      val sc1 = Scheme(tvars, t1)
 
-      // 2. 述語を型パラメータから取り出す。
+      // 2. 型パラメータから述語を取り出す。
       val ps = tvars.foldLeft(List[(T,P)]()) {
         case (ps, tv:String) =>
           preds.foldRight(ps) {
@@ -211,7 +235,6 @@ object PolyOverFun extends App {
             cenv= cenv +(add -> (cenv(add) + (t->ntvar)))
         }
       }          
-      val sc1 = Scheme(tvars, t1)
       val (e2_, t2) = ti(apply_assumps(env + (x -> sc1)), e2)
 
       if(ps==List()) {
@@ -221,51 +244,6 @@ object PolyOverFun extends App {
         (EPLet(x, sc1, e1_, e2_), t2)
       }
 
-    case EOver(x, ps, t, e) =>
-
-      // 1. 型環境に関数の型スキームを追加する
-      val env1 = env + (x -> Scheme(ps,t))
-
-      // 2. 述語環境に型パラメータの述語を追加する
-      ps.foreach{(p) => preds = (TVar(p), x)::preds }
-
-      // 3. クラス環境に名前を追加する
-      cenv = cenv + (x->Map[T,String]())
-
-      val (e2, t2) = ti(env1, e)
-
-      // 4. ELet(クラス名,EAbs("dict",EVar("dict")), 式2)に置き換える
-      val e_ = ELet(x, EAbs("f", EVar("f")), e2)
-
-      (e_, t2)
-
-    case EInst(x, t, e1, e2) =>
-
-      // 1. 型環境を見て一般的な型スキームを取り出す
-      val optScheme = env.get(x)
-      if (optScheme==None) throw new Exception("type error")
-
-      // 2. 型スキームから型変数の一般的型を取り出す
-      val Some(Scheme(vars, sct)) = optScheme
-
-      // 3. 辞書変数名を作る
-      val dictT @ TVar(dict) = new_tvar("'dict")
-
-      // 4. クラス環境から関数名で型から辞書へのマップを取り出す
-      val optMap = cenv.get(x)
-      if(optMap==None) throw new Exception("type error")
-      val Some(map) = optMap
-
-      val (e1_, t1) = ti(env, e1)
-      println("t="+t)
-      // 5. クラス環境に型名と辞書名を追加する
-      cenv = cenv + (x -> (map + (t->dict)))
-      println("e="+e+" cenv="+cenv)
-      val (e2_, t2) = ti(env, e2)
-      // 6. ELet(辞書名,式,継続式)に置き換える
-      val e_ = ELet(dict, e1_, e2_)
-
-      (e_, t2)
     }
   }
   def plane(e: E): E = {
@@ -274,20 +252,40 @@ object PolyOverFun extends App {
     case EInt(_)  => e
     case EBool(_) => e
     case EAbs(n, e1) => EAbs(n, plane(e1))
-    case EApp(e1, e2) => EApp(plane(e1),plane(e2))
+    case EApp(e1, e2) => EApp(plane(e1), plane(e2))
     case ELet(x, e1, e2) => ELet(x, plane(e1), plane(e2))
 
-    case EPLet(x, sc, e1, e2) =>
+    // 1. EPVar(変数名,型スキーム)の型スキームと変数名を取り出す。
+    case EPVar(n, sc) =>
+      // 2. 型スキームをプレーンにする。
+      val (vars, t) = apply_scheme2(sc)
+      // 3. 型変数でループする
+      vars.foldLeft(EVar(n):E) { case(e,v) =>
+        // 4.述語環境と型変数から、述語を求める
+        preds.foldLeft(e) {
+          case (e, (t, p)) if (t == v) =>
+            // 5. 述語に対するクラスを求める
+            val map = cenv(p)
+            // 6. クラスの型パラメータに対応する、辞書を求める。
+            map.get(t) match {
+              // 7. EApp(辞書,EVar(変数名))に置き換える。
+              case Some(n2) => EApp(e,EVar(n2))
+              case None => e
+            }
+          case (e, _) => e
+        }
+      }
 
+    case EPLet(x, sc, e1, e2) =>
       // 1. EPLet(x,sc,e1,e2)の型スキームから、型パラメータを求める。
-      val Scheme(vars, t) = apply_scheme(sc)
+      val (vars, t) = apply_scheme2(sc)
 
       // 2. 型パラメータと述語環境から述語を求める。
-      val ps = vars.foldLeft(List[(T,P)]()) {
-        case (ps, tv:String) =>
+      val ps = vars.foldRight(List[(T,P)]()) {
+        case (tv:T, ps) =>
           preds.foldRight(ps) {
             case ((t,p), ps) =>
-              if(t==TVar(tv)) (t,p)::ps else ps
+              if(t==tv) (t,p)::ps else ps
           }
       }
 
@@ -300,32 +298,6 @@ object PolyOverFun extends App {
       }
       ELet(x, e1_, plane(e2))
 
-    // 1. EPVar(変数名,型スキーム)の型スキームと変数名を取り出す。
-    case EPVar(n, sc) =>
-
-      // 2. 型スキームをプレーンにする。
-      val (vars, t) = apply_scheme2(sc)
-      // 3. 型変数でループする
-      vars.foldLeft(EVar(n):E) {
-        case(e,v) =>
-          // 4.述語でループする
-          preds.foldLeft(e) {
-            // 4. 型変数から、述語を求める
-            case (e, (t, p)) =>
-              if (t == v) {
-                // 5. 述語に対するクラスを求める
-                val map = cenv(p)
-                // 4. クラスの型パラメータに対応する、辞書を求める。
-                map.get(t) match {
-                  case Some(n2) =>
-                    // 5. EApp(辞書,EVar(変数名))に置き換える。
-                    EApp(e,EVar(n2))
-                  case None => e
-                }
-              } else e
-          }
-        
-      }
     case e =>
       throw TypeError("invalid expression "+e)
     }
@@ -337,8 +309,6 @@ object PolyOverFun extends App {
     subst = nullSubst
     cenv = nullCEnv
     val (e_, t) = ti(env, e)
-    println("preds="+preds)
-    println("cenv="+cenv)
     planePreds()
     println("preds="+preds)
     println("cenv="+cenv)
@@ -378,7 +348,7 @@ object PolyOverFun extends App {
         assert(false)
     }
   }
-/*
+
   test(ELet("id", EAbs("x", EVar("x")),
     EVar("id")),
     TFun(TVar("'inst_poly1"), TVar("'inst_poly1")))
@@ -404,7 +374,7 @@ object PolyOverFun extends App {
     TFun(TFun(TBool,TVar("a1")),TVar("a1")))
 
   test_error(EApp(EInt(2), EInt(2)))
-*/
+
   test2(
     Map("+"->Scheme(List(),TFun(TInt,TFun(TInt,TInt)))),
 
@@ -419,4 +389,3 @@ object PolyOverFun extends App {
     EInst("add",TInt,EAbs("x",EAbs("y",EApp(EApp(EVar("+"),EVar("x")),EVar("y")))),
     ELet("a",EVar("add"),EApp(EApp(EVar("a"),EInt(1)),EInt(2))))))
 }
-
