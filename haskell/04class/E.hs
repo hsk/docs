@@ -5,8 +5,7 @@ module E where
 
 import Data.List
 
-data E a
-  = V a
+data E a = V a
   | Add (E a) (E a)
   deriving (Eq, Show)
 

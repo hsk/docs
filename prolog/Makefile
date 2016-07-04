@@ -8,7 +8,8 @@ all:
 	gplc list.pl
 	gplc strlist.pl
 	gplc test01.pl
+	gplc sum.pl
 
 clean:
-	rm -rf hello add add2 calc calc2 fact list strlist test01 seqprover
+	rm -rf hello add add2 calc calc2 fact list strlist test01 seqprover sum
 

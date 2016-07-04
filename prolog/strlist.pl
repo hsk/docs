@@ -1,6 +1,9 @@
 /* gplc strlist.pl ; ./strlist */
 :- initialization(main).
 main :-
-  write("10 * 20 + 20"), nl,
+  X = "10 * 20 + 20",
+  write(X), nl,
+  atom_codes(C,X),
+  write(C),
   halt.
 
