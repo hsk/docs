@@ -1,6 +1,6 @@
-# calc
+# calc_check
 
-calcはflex, bisonを使って構文解析中に計算を行い、結果を返します。
+calc_checkは、flex, bisonを使って、構文チェックを行います。
 
 ## Lexical Syntax
 

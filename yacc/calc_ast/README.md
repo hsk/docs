@@ -1,6 +1,6 @@
-# calc
+# calc_ast
 
-calcはflex, bisonを使って構文解析中に計算を行い、結果を返します。
+calc_astはflex, bisonを使って構文木を作成し、構文木の内容を表示します。
 
 ## Lexical Syntax
 
