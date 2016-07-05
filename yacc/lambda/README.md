@@ -1,30 +1,36 @@
 # lambda
 
 lambdaはflex, bisonを使って構文木を作成し、λ計算を行います。
+現状、GCしないのでメモリリークします。
 
 ## Lexical Syntax
 
 ```
-digit    ::= ('0'|...|'9')
-alpha    ::= (('a'|...|'z'|'_'))
-space    ::= (' ' | '\t')
+digit    ::= '0' |...| '9'
+alpha    ::= 'a' |...| 'z' | '_'
+space    ::= ' ' | '\t' | '\r' | '\n'
 DOUBLE   ::= (('1'|...|'9') digit* | '0') ('.' digit+)?
 paren    ::= '(' | ')'
-operator ::= '+' | '-' | '*' | '/' | '=' | "->"
-keyword  ::= "let" | in" | "if" | "else"
+operator ::= '+' | '-' | '*' | '/' | '=' | "::" | "<=" | "->"
+keyword  ::= "let" | "rec" | "in" | "if" | "else"
 IDENT    ::= alpha (alpha | digit)*
 ```
 
+空白は、' '、'\t'、'\r'、'\n'です。
 数値はdouble値のみを使用できます。
-
-キーワードは"fun"および"in"です。
-
+キーワードは"let"、 "rec"、 "in"、 "if"、 "else" です。
+識別子はアルファベットとアンダーバーから始まり、アルファベットとアンダーバーと数の0個以上の文字列です。
+括弧は'('と')'です。
+演算子は、'+'、'-'、'*'、'/'、'='、"::"、"<="、"->"があります。
+コメントは今の所ありません。
 
 ## Operator Precedence
 
 assoc | operators
 ----- | ---------
 right | "->"
+right | "::"
+left  | "<="
 left  | '+' '-'
 left  | '*' '/'
 
@@ -35,10 +41,13 @@ program       ::= expr
 expr          ::= primary_expr
                 | infix_expr
                 | control_expr
-infix_expr    ::= expr '+' expr
+infix_expr    ::= expr "::" expr
+                | expr "<=" expr
+                | expr '+' expr
                 | expr '-' expr
                 | expr '*' expr
                 | expr '/' expr
+
 control_expr  ::= IDENT "->" expr
                 | expr expr
                 | "let" IDENT '=' expr "in" expr
@@ -46,6 +55,7 @@ control_expr  ::= IDENT "->" expr
                 | "if" expr "then" expr "else" expr
 primary_expr  ::= DOUBLE
                 | IDENT
+                | '(' ')'
                 | '(' expr ')'
 ```
 
@@ -82,19 +92,23 @@ prefix_expr   ::= '+' expr
 ### 中置演算子式
 
 ```
-infix_expr    ::= expr '+' expr
+infix_expr    ::= expr "::" expr
+                | expr "<=" expr
+                | expr '+' expr
                 | expr '-' expr
                 | expr '*' expr
                 | expr '/' expr
 ```
 
-中値演算子式で用いることができる演算子は'+' '-' '*' '/'の4つです。
+中値演算子式で用いることができる演算子は"::" "<=" '+' '-' '*' '/'の6つです。
 
 演算子の優先順位は以下の通りです。表の上が優先順位が低く、下が優先順位が高くなります。
 
 assoc | operators
 ----- | ---------
 right | "->"
+right | "::"
+left  | "<="
 left  | '+' '-'
 left  | '*' '/'
 
@@ -153,7 +167,11 @@ let rec式は、名前を再帰的に呼び出すことが可能にする式で�
 以下の例のように、再帰呼び出しをすることができます。
 
 ```
-let sum = x -> if x <= 0 then 0 else x + sum (x - 1) in
+let rec sum = x ->
+  if x <= 0
+  then 0
+  else x + sum (x - 1)
+in
 let x = sum 10 in
 x
 ```
@@ -165,7 +183,9 @@ if式は、分岐をすることができます。
 ```
 primary_expr  ::= DOUBLE
                 | IDENT
+                | '(' ')'
                 | '(' expr ')'
 ```
 
-プライマリ式は倍精度少数点数あるいは、変数、又は括弧で括られた式を書くことができます。
+プライマリ式は倍精度少数点数あるいは、変数、nil、又は括弧で括られた式を書くことができます。
+"()" はnil値を表します。
