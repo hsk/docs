@@ -1,7 +1,7 @@
 # yaccを使おう
 
 flex, bisonを使ってパーサを作って計算をしてみます。
-[calc_ast]()のみを見てわかるのであれば、[calc_ast](calc_ast)のみをコピると良いでしょう。
+[calc_ast](calc_ast)のみを見てわかるのであれば、[calc_ast](calc_ast)のみをコピると良いでしょう。
 
 ## [calc_check](calc_check)
 
