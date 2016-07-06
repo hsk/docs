@@ -14,3 +14,13 @@ flex, bisonを使ってパーサを作って計算をしてみます。
 ## [calc_ast](calc_ast)
 
 パース結果の抽象構文木に保存し、表示します。
+
+## [lambda](lambda)
+
+クロージャのあるλ計算
+
+## [cpp_arc_ast_eval](cpp_arc_ast_eval)
+
+cppで使う例なのだけど、Objective-CのARCのような感じでオートリリースプールを使ってメモリ管理します。
+ただの四則演算ですけど、とりあえず楽に作れます。
+

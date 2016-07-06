@@ -1,23 +1,21 @@
 %{
 #include "syntax.h"
 #include <stdio.h>
+#include "lexer.h"
 
 #define YYDEBUG 1
 #define YYERROR_VERBOSE 1
+
+static void
+yyerror(const char *s) {
+    fprintf(stderr, "%s\n", s);
+}
+int yylex();
+parser_state state;
 %}
 %union {
   double dbl;
 }
-%{
-static void
-yyerror(parser_state *p, const char *s) {
-    fprintf(stderr, "%s\n", s);
-}
-int yylex(YYSTYPE *lval, parser_state *p);
-%}
-%pure-parser
-%parse-param { parser_state *p }
-%lex-param { p }
 
 %type <dbl> expr primary
 %type <dbl> DOUBLE
@@ -27,7 +25,7 @@ int yylex(YYSTYPE *lval, parser_state *p);
 %left  '*' '/'
 
 %%
-program         : expr            { p->lval = $1; }
+program         : expr            { /*printf("line=%d\n", yylineno);*/ state.lval = $1; }
 expr            : expr '+' expr   { $$ = $1 + $3; }
                 | expr '-' expr   { $$ = $1 - $3; }
                 | expr '*' expr   { $$ = $1 * $3; }

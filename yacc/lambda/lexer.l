@@ -28,6 +28,8 @@ ident {alpha}({alpha}|{digit})*
 "let"                             { return LET; }
 "rec"                             { return REC; }
 "in"                              { return IN; }
+"true"                            { lval->bool = -1; return BOOL; }
+"false"                           { lval->bool =  0; return BOOL; }
 {ident}                           { int len = strlen(yytext);
                                     lval->str = malloc(len+1);
                                     strcpy(lval->str,yytext);

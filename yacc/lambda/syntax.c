@@ -87,6 +87,15 @@ syntax_double_new(double d)
 }
 
 syntax*
+syntax_bool_new(int b)
+{
+  syntax_bool* t = malloc(sizeof(syntax_bool));
+  t->tag = syntax_BOOL;
+  t->value = b;
+  return (syntax*)t;
+}
+
+syntax*
 syntax_var_new(const char* s)
 {
   int len = strlen(s);
@@ -169,6 +178,9 @@ syntax_p(syntax* t, int indent)
   case syntax_DOUBLE:
     printf("DOUBLE(%f)\n", ((syntax_double*)t)->value);
     break;
+  case syntax_BOOL:
+    printf("BOOL(%s)\n", ((syntax_double*)t)->value ? "true" : "false");
+    break;
   case syntax_VAR:
     printf("VAR");
     printf("(%.*s)\n", (int)((syntax_var*)t)->len, ((syntax_var*)t)->id);
@@ -207,6 +219,7 @@ syntax_free(syntax* t)
     syntax_free(((syntax_lambda*)t)->e1);
     break;
   case syntax_DOUBLE:
+  case syntax_BOOL:
   case syntax_VAR:
   case syntax_PRE:
     break;

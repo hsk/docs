@@ -12,6 +12,7 @@ typedef struct parser_state {
 
 typedef enum {
   syntax_DOUBLE,
+  syntax_BOOL,
   syntax_PRE,
   syntax_BIN,
   syntax_VAR,
@@ -34,6 +35,11 @@ typedef struct {
   syntax_HEADER;
   double value;
 } syntax_double;
+
+typedef struct {
+  syntax_HEADER;
+  int value;
+} syntax_bool;
 
 typedef struct {
   syntax_HEADER;
@@ -81,6 +87,7 @@ typedef struct syntax_lambda {
 extern syntax* syntax_bin_new(syntax*, int, syntax*);
 extern syntax* syntax_pre_new(int, syntax*);
 extern syntax* syntax_double_new(double);
+extern syntax* syntax_bool_new(int);
 extern syntax* syntax_if_new(syntax*, syntax*, syntax*);
 extern syntax* syntax_let_new(int rec, const char*, syntax*, syntax*);
 extern syntax* syntax_var_new(const char*);

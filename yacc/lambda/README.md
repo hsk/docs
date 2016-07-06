@@ -10,15 +10,16 @@ digit    ::= '0' |...| '9'
 alpha    ::= 'a' |...| 'z' | '_'
 space    ::= ' ' | '\t' | '\r' | '\n'
 DOUBLE   ::= (('1'|...|'9') digit* | '0') ('.' digit+)?
+BOOL     ::= "true" | "false"
 paren    ::= '(' | ')'
 operator ::= '+' | '-' | '*' | '/' | '=' | "::" | "<=" | "->"
-keyword  ::= "let" | "rec" | "in" | "if" | "else"
+keyword  ::= "let" | "rec" | "in" | "if" | "else" | "true" | "false"
 IDENT    ::= alpha (alpha | digit)*
 ```
 
 空白は、' '、'\t'、'\r'、'\n'です。
 数値はdouble値のみを使用できます。
-キーワードは"let"、 "rec"、 "in"、 "if"、 "else" です。
+キーワードは"let"、 "rec"、 "in"、 "if"、 "else" "true" "false" です。
 識別子はアルファベットとアンダーバーから始まり、アルファベットとアンダーバーと数の0個以上の文字列です。
 括弧は'('と')'です。
 演算子は、'+'、'-'、'*'、'/'、'='、"::"、"<="、"->"があります。
@@ -54,6 +55,7 @@ control_expr  ::= IDENT "->" expr
                 | "let" "rec" ID '=' expr "in" expr
                 | "if" expr "then" expr "else" expr
 primary_expr  ::= DOUBLE
+                | BOOL
                 | IDENT
                 | '(' ')'
                 | '(' expr ')'
@@ -182,10 +184,11 @@ if式は、分岐をすることができます。
 
 ```
 primary_expr  ::= DOUBLE
+                | BOOL
                 | IDENT
                 | '(' ')'
                 | '(' expr ')'
 ```
 
-プライマリ式は倍精度少数点数あるいは、変数、nil、又は括弧で括られた式を書くことができます。
+プライマリ式は倍精度少数点数、BOOL値(trueまたはfalse)、変数、nil、又は括弧で括られた式を書くことができます。
 "()" はnil値を表します。

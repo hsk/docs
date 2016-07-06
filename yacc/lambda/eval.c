@@ -69,7 +69,7 @@ eval(syntax* env, syntax* t) {
       e1 = eval(env, ((syntax_bin*)t)->l);
       e2 = eval(env, ((syntax_bin*)t)->r);
       if (e1->tag == syntax_DOUBLE && e2->tag == syntax_DOUBLE) {
-        return syntax_double_new(((syntax_double*)e1)->value <= ((syntax_double*)e2)->value);
+        return syntax_bool_new(((syntax_double*)e1)->value <= ((syntax_double*)e2)->value ? -1 : 0);
       }
       break;
     case CONS:
@@ -101,6 +101,7 @@ eval(syntax* env, syntax* t) {
     }
     break;
   case syntax_DOUBLE: return t;
+  case syntax_BOOL: return t;
   case syntax_VAR: return lookup(env, ((syntax_var*)t)->id);
   case syntax_LAMBDA: return t;
   case syntax_LET:
@@ -131,7 +132,7 @@ eval(syntax* env, syntax* t) {
 
   case syntax_IF:
       e1 = eval(env, ((syntax_if*)t)->e1);
-      if(e1->tag==syntax_DOUBLE && ((syntax_double*)e1)->value != 0.0)
+      if(e1->tag==syntax_BOOL && ((syntax_bool*)e1)->value != 0)
         return eval(env, ((syntax_if*)t)->e2);
       return eval(env, ((syntax_if*)t)->e3);
   case syntax_NIL: return t;

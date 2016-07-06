@@ -8,6 +8,7 @@
   double dbl;
   syntax* syntax;
   char* str;
+  int bool;
 }
 %{
 static void
@@ -23,8 +24,9 @@ int yylex(YYSTYPE *lval, parser_state *p);
 %type <syntax> expr primary_expr prefix_expr infix_expr control_expr
 %type <dbl> DOUBLE
 %type <str> IDENT
+%type <bool> BOOL
 
-%token DOUBLE ERROR
+%token DOUBLE BOOL ERROR
 %token IDENT
 %token IF THEN ELSE LET REC IN APP CONS
 
@@ -55,6 +57,7 @@ control_expr    : IF expr THEN expr ELSE expr    { $$ = syntax_if_new($2, $4, $6
                 | LET REC IDENT '=' expr IN expr { $$ = syntax_let_new(1, $3, $5, $7); free($3); }
                 | expr expr     %prec APP        { $$ = syntax_bin_new($1, APP, $2); }
 primary_expr    : DOUBLE                         { $$ = syntax_double_new($1); }
+                | BOOL                           { $$ = syntax_bool_new($1); }
                 | IDENT                          { $$ = syntax_var_new($1); free($1); }
                 | '(' ')'                        { $$ = syntax_nil; }
                 | '(' expr ')'                   { $$ = $2; }

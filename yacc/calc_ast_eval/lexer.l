@@ -2,10 +2,10 @@
 #include "syntax.h"
 #include "parser.h"
 #include <string.h>
-
-#define YY_DECL int yylex(YYSTYPE *lval, parser_state *p)
+#define YY_DECL int yylex()
 %}
 %option noyywrap
+%option yylineno
 %%
 
 [ \t]                             { }
@@ -17,7 +17,7 @@
 ")"                               { return ')'; }
 (([1-9][0-9]*)|0)(\.[0-9][0-9]*)? { double d;
                                     sscanf(yytext, "%lf", &d);
-                                    lval->dbl = d;
+                                    yylval.dbl = d;
                                     return DOUBLE;
                                   }
 .                                 {

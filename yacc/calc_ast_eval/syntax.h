@@ -1,14 +1,16 @@
 #ifndef SYNTAX_H
 #define SYNTAX_H
 
+typedef struct parser_state {
+  void *lval;
+} parser_state;
+
+extern parser_state state;
+
 typedef struct syntax_string {
   int len;
   char buf[0];
 } *syntax_string;
-
-typedef struct parser_state {
-  void *lval;
-} parser_state;
 
 typedef enum {
   syntax_DOUBLE,
