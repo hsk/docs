@@ -1,9 +1,14 @@
 all:
-	coqc -R abc abc abc/a.v b.v
+	coqc -R . Top abc/a   b
 	rm -rf b.mli
 	ocamlc -o b b.ml main.ml
 	./b
 
+Make:
+	coq_makefile abc/a.v b.v > Make
+	make -f Make
+
 clean:
-	rm -rf *.glob *.vo b.mli b.ml *.cm* b .*.aux
-	rm -rf abc/*.glob abc/*.vo abc/.*.aux
+	rm -rf *.glob *.vo *.v.d b.mli b.ml *.cm* b .*.aux Make
+	rm -rf abc/*.glob abc/*.vo abc/*.v.d abc/.*.aux
+

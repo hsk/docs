@@ -1,5 +1,5 @@
 Require Import ExtrOcamlNatInt.
-Require Import a.
+Require Import abc.a.
 
 Definition b n m := max n m.
 
