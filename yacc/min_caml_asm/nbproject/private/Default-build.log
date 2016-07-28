@@ -1,0 +1,120 @@
+clang++ -std=c++14 -o calc -Wno-deprecated-register *.cpp
+In file included from main.cpp:1:
+./ast.h:19:73: error: call to implicitly-deleted copy constructor of 'std::unique_ptr<T>'
+    Fun(std::vector<std::unique_ptr<T>> ts,std::unique_ptr<T> t):ts(ts),t(t){ ts.~vector(); }
+                                                                        ^ ~
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/memory:2600:31: note: copy constructor is implicitly deleted because 'unique_ptr<Type::T, std::__1::default_delete<Type::T> >' has a user-declared move constructor
+    _LIBCPP_INLINE_VISIBILITY unique_ptr(unique_ptr&& __u) _NOEXCEPT
+                              ^
+In file included from main.cpp:1:
+./ast.h:46:33: error: call to implicitly-deleted copy constructor of 'std::unique_ptr<Exp>'
+  Ans(std::unique_ptr<Exp> exp):exp(exp){}
+                                ^   ~~~
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/memory:2600:31: note: copy constructor is implicitly deleted because 'unique_ptr<Exp, std::__1::default_delete<Exp> >' has a user-declared move constructor
+    _LIBCPP_INLINE_VISIBILITY unique_ptr(unique_ptr&& __u) _NOEXCEPT
+                              ^
+In file included from main.cpp:1:
+./ast.h:52:11: error: call to implicitly-deleted copy constructor of 'std::unique_ptr<Type::T>'
+  :id(id),t(t),exp(exp),e(e) { }
+          ^ ~
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/memory:2600:31: note: copy constructor is implicitly deleted because 'unique_ptr<Type::T, std::__1::default_delete<Type::T> >' has a user-declared move constructor
+    _LIBCPP_INLINE_VISIBILITY unique_ptr(unique_ptr&& __u) _NOEXCEPT
+                              ^
+In file included from main.cpp:1:
+./ast.h:52:16: error: call to implicitly-deleted copy constructor of 'std::unique_ptr<Exp>'
+  :id(id),t(t),exp(exp),e(e) { }
+               ^   ~~~
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/memory:2600:31: note: copy constructor is implicitly deleted because 'unique_ptr<Exp, std::__1::default_delete<Exp> >' has a user-declared move constructor
+    _LIBCPP_INLINE_VISIBILITY unique_ptr(unique_ptr&& __u) _NOEXCEPT
+                              ^
+In file included from main.cpp:1:
+./ast.h:52:25: error: call to implicitly-deleted copy constructor of 'std::unique_ptr<E>'
+  :id(id),t(t),exp(exp),e(e) { }
+                        ^ ~
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/memory:2600:31: note: copy constructor is implicitly deleted because 'unique_ptr<E, std::__1::default_delete<E> >' has a user-declared move constructor
+    _LIBCPP_INLINE_VISIBILITY unique_ptr(unique_ptr&& __u) _NOEXCEPT
+                              ^
+In file included from main.cpp:1:
+./ast.h:86:63: error: call to implicitly-deleted copy constructor of 'std::unique_ptr<id_or_imm>'
+  Add (std::string id, std::unique_ptr<id_or_imm> imm):id(id),imm(imm) { }
+                                                              ^   ~~~
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/memory:2600:31: note: copy constructor is implicitly deleted because 'unique_ptr<id_or_imm, std::__1::default_delete<id_or_imm> >' has a user-declared move constructor
+    _LIBCPP_INLINE_VISIBILITY unique_ptr(unique_ptr&& __u) _NOEXCEPT
+                              ^
+In file included from main.cpp:1:
+./ast.h:90:63: error: call to implicitly-deleted copy constructor of 'std::unique_ptr<id_or_imm>'
+  Sub (std::string id, std::unique_ptr<id_or_imm> imm):id(id),imm(imm) { }
+                                                              ^   ~~~
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/memory:2600:31: note: copy constructor is implicitly deleted because 'unique_ptr<id_or_imm, std::__1::default_delete<id_or_imm> >' has a user-declared move constructor
+    _LIBCPP_INLINE_VISIBILITY unique_ptr(unique_ptr&& __u) _NOEXCEPT
+                              ^
+In file included from main.cpp:1:
+./ast.h:94:70: error: call to implicitly-deleted copy constructor of 'std::unique_ptr<id_or_imm>'
+  Ld  (std::string id, std::unique_ptr<id_or_imm> imm, int i):id(id),imm(imm),i(i) { }
+                                                                     ^   ~~~
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/memory:2600:31: note: copy constructor is implicitly deleted because 'unique_ptr<id_or_imm, std::__1::default_delete<id_or_imm> >' has a user-declared move constructor
+    _LIBCPP_INLINE_VISIBILITY unique_ptr(unique_ptr&& __u) _NOEXCEPT
+                              ^
+In file included from main.cpp:1:
+./ast.h:98:39: error: expected ')'
+  St  (std::string id, std::string id2; std::unique_ptr<id_or_imm> imm, int i):id(id),id2(id2),imm(imm),i(i) { }
+                                      ^
+./ast.h:98:7: note: to match this '('
+  St  (std::string id, std::string id2; std::unique_ptr<id_or_imm> imm, int i):id(id),id2(id2),imm(imm),i(i) { }
+      ^
+./ast.h:98:68: error: duplicate member 'imm'
+  St  (std::string id, std::string id2; std::unique_ptr<id_or_imm> imm, int i):id(id),id2(id2),imm(imm),i(i) { }
+                                                                   ^
+./ast.h:97:68: note: previous declaration is here
+public:std::string id; std::string id2; std::unique_ptr<id_or_imm> imm; int i;
+                                                                   ^
+./ast.h:98:73: error: expected member name or ';' after declaration specifiers
+  St  (std::string id, std::string id2; std::unique_ptr<id_or_imm> imm, int i):id(id),id2(id2),imm(imm),i(i) { }
+                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~      ^
+./ast.h:98:78: error: expected ';' at end of declaration list
+  St  (std::string id, std::string id2; std::unique_ptr<id_or_imm> imm, int i):id(id),id2(id2),imm(imm),i(i) { }
+                                                                             ^
+                                                                             ;
+./ast.h:102:22: error: expected ')'
+  Call(std::string id; std::vector<std::unique_ptr<std::string>> ids;):id(id),ids(ids) { }
+                     ^
+./ast.h:102:7: note: to match this '('
+  Call(std::string id; std::vector<std::unique_ptr<std::string>> ids;):id(id),ids(ids) { }
+      ^
+./ast.h:102:66: error: duplicate member 'ids'
+  Call(std::string id; std::vector<std::unique_ptr<std::string>> ids;):id(id),ids(ids) { }
+                                                                 ^
+./ast.h:101:66: note: previous declaration is here
+public:std::string id; std::vector<std::unique_ptr<std::string>> ids;
+                                                                 ^
+./ast.h:102:70: error: expected member name or ';' after declaration specifiers
+  Call(std::string id; std::vector<std::unique_ptr<std::string>> ids;):id(id),ids(ids) { }
+                                                                     ^
+./ast.h:116:27: error: call to implicitly-deleted copy constructor of 'std::unique_ptr<E>'
+  : name(name),args(args),body(body),ret(ret) {}
+                          ^    ~~~~
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/memory:2600:31: note: copy constructor is implicitly deleted because 'unique_ptr<E, std::__1::default_delete<E> >' has a user-declared move constructor
+    _LIBCPP_INLINE_VISIBILITY unique_ptr(unique_ptr&& __u) _NOEXCEPT
+                              ^
+In file included from main.cpp:1:
+./ast.h:116:38: error: call to implicitly-deleted copy constructor of 'std::unique_ptr<Type::T>'
+  : name(name),args(args),body(body),ret(ret) {}
+                                     ^   ~~~
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/memory:2600:31: note: copy constructor is implicitly deleted because 'unique_ptr<Type::T, std::__1::default_delete<Type::T> >' has a user-declared move constructor
+    _LIBCPP_INLINE_VISIBILITY unique_ptr(unique_ptr&& __u) _NOEXCEPT
+                              ^
+In file included from main.cpp:1:
+./ast.h:120:3: error: unknown type name 'fundef'; did you mean 'Fundef'?
+  fundef list * t
+  ^~~~~~
+  Fundef
+./ast.h:113:7: note: 'Fundef' declared here
+class Fundef {
+      ^
+./ast.h:120:14: error: expected ';' at end of declaration list
+  fundef list * t
+             ^
+             ;
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+20 errors generated.
+make: *** [all] Error 1

@@ -88,9 +88,9 @@ let _ =
   let ast = parse "1+2*3" in
   let codes = compile(ast) in
   emit("out.ll", codes);
-  match exec("llc out.ll -o out.s") with
+  match exec("llc-3.5 out.ll -o out.s") with
   | (a,b,c) -> print_string("(" ^ a ^ "," ^ b ^ "," ^ c ^ ")\n");
-  match exec("llvm-gcc -m64 out.s -o out.exe") with
+  match exec("clang -m64 out.s -o out.exe") with
   | (a,b,c) -> print_string("(" ^ a ^ "," ^ b ^ "," ^ c ^ ")\n");
   match exec("./out.exe") with
   | (a,b,c) -> print_string(a);

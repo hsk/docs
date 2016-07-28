@@ -1,0 +1,7 @@
+define add1(%eax:int):int {
+  %eax:int = add %eax 1
+  mov %eax
+}
+%eax:int = set 1
+%eax:int = call add1(%eax:int)
+call min_caml_print_int(%eax:int)
