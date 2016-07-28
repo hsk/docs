@@ -12,3 +12,4 @@ a:int = set 0
 b:int = set 1
 c:int = call fib(n:int,a:int,b:int)
 call min_caml_print_int(c:int)
+call min_caml_print_int(n:int)

@@ -8,6 +8,7 @@ int main(int argn, char** argv) {
 
 	if(argn != 2) {
 		printf("usage mincamlasm filename without \".mls\"...\n");
+		return -1;
 	}
 	auto name = std::string(argv[1]);
 
@@ -19,10 +20,9 @@ int main(int argn, char** argv) {
 	printf("%s\n", show_prog(prog.get()).c_str());
 	prog = simm(std::move(prog));
 	printf("%s\n", show_prog(prog.get()).c_str());
-	fp = fopen((name+".s").c_str(), "w");
 	prog = regAlloc(std::move(prog));
 	printf("%s\n", show_prog(prog.get()).c_str());
-	
+	fp = fopen((name+".s").c_str(), "w");
 	emit(fp, prog.get());
 	fclose(fp);
 	system((std::string("clang -m32 -o ")+name+".exe "+name+".s stub.c x86_libmincaml.s").c_str());

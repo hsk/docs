@@ -221,9 +221,10 @@ walk_exp_call(dest_t dest, E* cont, regenv_t regenv, std::function<UExp(svec_t)>
 	auto ys2 = svec_t();
 	for (auto y : ys) ys2.push_back(find_x(y, UInt(), regenv));
 	auto e = UAns(constr(ys2));
-	for (auto x : fv(cont)) {
+	auto xs = fv(cont);
+	for (auto x : xs) {
 		auto it = regenv.find(x);
-		if (x == dest.first && it == regenv.end()) continue;
+		if (x == dest.first || it == regenv.end()) continue;
 		e.reset(seq(USave(it->second, x), std::move(e)));
 	}
 	return wpair(std::move(e), regenv_t());

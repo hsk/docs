@@ -38,7 +38,7 @@
           <buildCommandWorkingDir>.</buildCommandWorkingDir>
           <buildCommand>${MAKE} -f Makefile</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
-          <executablePath>calc</executablePath>
+          <executablePath>mincamlasm</executablePath>
           <ccTool>
             <standard>11</standard>
             <incDir>

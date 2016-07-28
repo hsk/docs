@@ -70,9 +70,9 @@ svec_t fv(E* e) {
 }
 
 UE concat(UE e1, std::string x, UT t, UE e2) {
-	if (auto e = dynamic_cast<Ans*> (std::move(e1).get()))
+	if (auto e = dynamic_cast<Ans*> (e1.get()))
 		return ULet(x, std::move(t), std::move(e->exp), std::move(e2));
-	if (auto e = dynamic_cast<Let*> (std::move(e1).get()))
+	if (auto e = dynamic_cast<Let*> (e1.get()))
 		return ULet(e->id, std::move(e->t), std::move(e->exp), concat(std::move(e->e), x, std::move(t), std::move(e2)));
 	return NULL;
 }
