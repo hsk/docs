@@ -7,8 +7,7 @@ bool is_reg(std::string x) {
 	return x.c_str()[0] == '%' || x == reg_hp;
 }
 
-svec_t
-remove_and_uniq(std::set<std::string> xs, svec_t ls) {
+svec_t remove_and_uniq(std::set<std::string> xs, svec_t ls) {
 	svec_t rc;
 	for (auto l : ls) {
 		auto it = xs.find(l);
@@ -19,15 +18,13 @@ remove_and_uniq(std::set<std::string> xs, svec_t ls) {
 	return rc;
 }
 
-static
-svec_t fv_id_or_imm(Id_or_imm* imm) {
+static svec_t fv_id_or_imm(Id_or_imm* imm) {
 	if (auto im = dynamic_cast<V*> (imm))
 		return svec_t{im->v};
 	return svec_t();
 }
 
-static
-svec_t fv_exp(Exp* e) {
+static svec_t fv_exp(Exp* e) {
 	if (auto e_ = dynamic_cast<Mov*> (e)) return svec_t{e_->id};
 	if (auto e_ = dynamic_cast<Neg*> (e)) return svec_t{e_->id};
 	if (auto e_ = dynamic_cast<Save*> (e)) return svec_t{e_->id};
@@ -58,8 +55,7 @@ svec_t fv_exp(Exp* e) {
 	return svec_t();
 }
 
-static
-svec_t fv_e(E* e) {
+static svec_t fv_e(E* e) {
 	if (auto e_ = dynamic_cast<Ans*> (e))
 		return fv_exp(e_->exp.get());
 	if (auto e_ = dynamic_cast<Let*> (e))

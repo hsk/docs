@@ -11,4 +11,5 @@ n:int = set 10
 a:int = set 0
 b:int = set 1
 c:int = call fib(n:int,a:int,b:int)
+call min_caml_print_int(n:int)
 call min_caml_print_int(c:int)

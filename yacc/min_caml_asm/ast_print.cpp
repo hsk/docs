@@ -27,14 +27,7 @@ std::string show_type(T* t) {
 	if (dynamic_cast<Unit*>(t)) return "unit";
 	if (dynamic_cast<Bool*>(t)) return "bool";
 	if (dynamic_cast<Int*>(t)) return "int";
-	if (auto t_ = dynamic_cast<Fun*>(t))
-		return "(" + show_types(t_->ts) + ") -> " + show_type(t_->t.get());	
-	/*
-  | Type.Fun(ts, t) -> Printf.sprintf "(%s) -> %s" (String.concat ", " (ts|>List.map show_type)) (show_type t)
-  | Type.Tuple(ts) -> Printf.sprintf "(%s)" (String.concat ", " (ts|>List.map show_type))
-  | Type.Array t -> Printf.sprintf "[%s]" (show_type t)
-  | Type.Var _ -> assert false
-		  */
+	if (auto t_ = dynamic_cast<Fun*>(t)) return "(" + show_types(t_->ts) + ") -> " + show_type(t_->t.get());	
 	assert(false);
 }
 

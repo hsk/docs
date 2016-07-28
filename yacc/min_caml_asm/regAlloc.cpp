@@ -56,7 +56,7 @@ static std::pair<bool, svec_t> target_exp(std::string src, dest_t dest, Exp* exp
 	return std::pair<bool, svec_t>(false, svec_t());
 }
 
-// register targeting (caml2html: regalloc_target)
+// register targeting
 static std::pair<bool, svec_t> target_e(std::string src, dest_t dest, E* e) {
 	if (auto e_ = dynamic_cast<Ans*> (e))
 		return target_exp(src, std::move(dest), e_->exp.get());
@@ -142,7 +142,6 @@ UAlloc_result alloc(E* cont, regenv_t regenv, std::string x, T* t, svec_t prefer
 		if (live.find(r) == live.end())
 			// fprintf("allocated %s to %s\n", x, r);
 			return UAlloc_result(new Alloc(r));
-
 	for (auto r : all)
 		if (live.find(r) == live.end())
 			// fprintf("allocated %s to %s\n", x, r);
@@ -200,7 +199,7 @@ std::string show_regenv(regenv_t revenv) {
 	return concat(", ", r);
 }
 
-// ifのレジスタ割り当て (caml2html: regalloc_if)
+// ifのレジスタ割り当て
 static wpair walk_exp_if(dest_t dest, E* cont, regenv_t regenv, std::function<UExp(UE, UE)> constr, UE e1, UE e2) {
 
 	auto p1 = walk_e(dest, cont, regenv, std::move(e1));
@@ -241,7 +240,7 @@ walk_exp_call(dest_t dest, E* cont,
 	return wpair(std::move(e), regenv_t());
 }
 
-// 各命令のレジスタ割り当て (caml2html: regalloc_gprime)
+// 各命令のレジスタ割り当て
 static wpair
 walk_exp(dest_t dest, E* cont, regenv_t regenv, UExp exp) {
 	Exp* expp = exp.get();
@@ -291,10 +290,6 @@ walk_exp(dest_t dest, E* cont, regenv_t regenv, UExp exp) {
 		return walk_exp_if(dest, cont, regenv, [=](UE e1, UE e2) {
 			return UExp(new IfGE(find_x(e_->id, UInt(), regenv), find_imm(e_->imm.get(), regenv), std::move(e1), std::move(e2)));
 		}, std::move(e_->e1), std::move(e_->e2));
-	/*
-	  | CallDir(l, ys) -> walk_exp_call dest cont regenv (fun ys -> CallDir(l, ys)) ys
-	  | Save(x, y) -> assert false
-	 */
 	if (auto e_ = dynamic_cast<Call*> (expp))
 		return walk_exp_call(dest, cont, regenv, [=](auto ys) {
 			return new Call(e_->id, std::move(ys));
@@ -303,7 +298,7 @@ walk_exp(dest_t dest, E* cont, regenv_t regenv, UExp exp) {
 	assert(false);
 }
 
-// 使用される変数をスタックからレジスタへRestore (caml2html: regalloc_unspill)
+// 使用される変数をスタックからレジスタへRestore
 static wpair
 walk_exp_and_restore(dest_t dest, E* cont, regenv_t regenv, UExp exp) {
 	try {
@@ -314,18 +309,7 @@ walk_exp_and_restore(dest_t dest, E* cont, regenv_t regenv, UExp exp) {
 	}
 }
 
-E* concat2(E* e1, std::string x, T* t, E* e2) {
-	if (auto e = dynamic_cast<Ans*> (e1))
-		return new Let(x, UT(t->clone()), UExp(e->exp->clone()), UE(e2->clone()));
-	if (auto e = dynamic_cast<Let*> (e1)) {
-		return new Let(e->id, UT(e->t->clone()),
-				UExp(e->exp->clone()),
-				UE(concat2(e->e.get(), x, t, e2)));
-	}
-	return NULL;
-}
-
-// 命令列のレジスタ割り当て (caml2html: regalloc_g)
+// 命令列のレジスタ割り当て
 static wpair walk_e(dest_t dest, E* cont, regenv_t regenv, UE e) {
 	if (auto e_ = dynamic_cast<Ans*> (e.get()))
 		return walk_exp_and_restore(dest, cont, regenv, std::move(e_->exp));
@@ -334,7 +318,7 @@ static wpair walk_e(dest_t dest, E* cont, regenv_t regenv, UE e) {
 		if (regenv.find(e_->id) != regenv.end())
 			fprintf(stderr, "find error %s -> %s\n", e_->id.c_str(), regenv.find(e_->id)->second.c_str());
 		assert(regenv.find(e_->id) == regenv.end());
-		auto cont0 = UE(concat2(e_->e.get(), dest.first, dest.second, cont));
+		auto cont0 = concat(UE(e_->e->clone()), dest.first, UT(dest.second->clone()), UE(cont->clone()));
 		auto r1 = walk_exp_and_restore(dest_t(e_->id, e_->t.get()), cont0.get(), regenv, std::move(e_->exp));
 		// (e1_, regenv1)
 		auto targets = target_e(e_->id, dest, cont0.get());
@@ -365,7 +349,7 @@ static wpair walk_e(dest_t dest, E* cont, regenv_t regenv, UE e) {
 	assert(false);
 }
 
-// 関数のレジスタ割り当て (caml2html: regalloc_h)
+// 関数のレジスタ割り当て
 static UFundef walk_fundef(UFundef fundef) {
 	auto regenv = regenv_t{{fundef->name, reg_cl}};
 	int i = 0;
@@ -387,7 +371,7 @@ static UFundef walk_fundef(UFundef fundef) {
 			std::move(r.first), std::move(fundef->ret)));
 }
 
-// プログラム全体のレジスタ割り当て (caml2html: regalloc_f)
+// プログラム全体のレジスタ割り当て
 static UProg walk_prog(UProg prog) {
 	fprintf(stderr, "register allocation: may take some time (up to a few minutes, depending on the size of functions)\n");
 	auto fundefs = std::vector<std::unique_ptr < Fundef >> ();

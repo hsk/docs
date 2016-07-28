@@ -1,53 +1,44 @@
 #include "ast.h"
 #include <cassert>
 #include <algorithm>
-// すでにSaveされた変数の集合 (caml2html: emit_stackset)
 
-static
-std::set<std::string> stackset;
+// すでにSaveされた変数の集合
+static std::set<std::string> stackset;
 
-// Saveされた変数の、スタックにおける位置 (caml2html: emit_stackmap) *)
-static
-svec_t stackmap;
+// Saveされた変数の、スタックにおける位置
+static svec_t stackmap;
 
-static
-void save(std::string x) {
+static void save(std::string x) {
 	stackset.insert(x);
 	svec_t stackmap;
 	auto it = std::find(stackmap.begin(), stackmap.end(), x);
 	if (it == stackmap.end()) stackmap.push_back(x);
 }
 
-static
-int locate(std::string x) {
+static int locate(std::string x) {
 	auto iter = std::find(stackmap.begin(), stackmap.end(), x);
 	size_t index = std::distance(stackmap.begin(), iter);
 	if (index == stackmap.size()) return -1;
 	return index;
 }
 
-static
-int offset(std::string x) {
+static int offset(std::string x) {
 	return 4 * locate(x);
 }
 
-static
-int stacksize() {
+static int stacksize() {
 	return align(stackmap.size() * 4);
 }
 
-static
-std::string pp_id_or_imm(Id_or_imm* imm) {
+static std::string pp_id_or_imm(Id_or_imm* imm) {
 	if (auto im = dynamic_cast<V*> (imm)) return im->v;
 	if (auto im = dynamic_cast<C*> (imm))
 		return std::string("$") + std::to_string(im->i);
 	return std::string("");
 }
 
-// 関数呼び出しのために引数を並べ替える(register shuffling) (caml2html: emit_shuffle)
-
-static
-std::vector<std::pair<std::string, std::string>>
+// 関数呼び出しのために引数を並べ替える(register shuffling)
+static std::vector<std::pair<std::string, std::string>>
 shuffle(std::string sw, std::vector<std::pair<std::string, std::string>> xys) {
 	std::map<std::string, std::string> xys2;
 	// remove identical moves
@@ -81,21 +72,11 @@ shuffle(std::string sw, std::vector<std::pair<std::string, std::string>> xys) {
 	return insert<std::pair<std::string, std::string>>(xys4,shuffle(sw, xys3));
 }
 
-/*
-type dest =
-  | Tail
-  | NonTail of Id.t (* 末尾かどうかを表すデータ型 (caml2html: emit_dest) *)
- */
+static void walk_exp_tail(FILE* oc, Exp* exp);
+static void walk_exp_non_tail(FILE* oc, std::string x, Exp* exp);
 
-static
-void walk_exp_tail(FILE* oc, Exp* exp);
-static
-void walk_exp_non_tail(FILE* oc, std::string x, Exp* exp);
-
-// 命令列のアセンブリ生成 (caml2html: emit_g)
-
-static
-void walk_e_tail(FILE* oc, E* e) {
+// 命令列のアセンブリ生成
+static void walk_e_tail(FILE* oc, E* e) {
 	if (auto e_ = dynamic_cast<Ans*> (e))
 		return walk_exp_tail(oc, e_->exp.get());
 	if (auto e_ = dynamic_cast<Let*> (e)) {
@@ -104,8 +85,7 @@ void walk_e_tail(FILE* oc, E* e) {
 	}
 }
 
-static
-void walk_e_non_tail(FILE* oc, std::string x, E* e) {
+static void walk_e_non_tail(FILE* oc, std::string x, E* e) {
 	if (auto e_ = dynamic_cast<Ans*> (e))
 		return walk_exp_non_tail(oc, x, e_->exp.get());
 	if (auto e_ = dynamic_cast<Let*> (e)) {
@@ -114,8 +94,8 @@ void walk_e_non_tail(FILE* oc, std::string x, E* e) {
 	}
 }
 
-static
-void walk_exp_tail_if(FILE* oc, E* e1, E* e2, std::string b, std::string bn) {
+static void
+walk_exp_tail_if(FILE* oc, E* e1, E* e2, std::string b, std::string bn) {
 	auto b_else = genid(b + "_else");
 	fprintf(oc, "\t%s\t%s\n", bn.c_str(), b_else.c_str());
 	auto stackset_back = stackset;
@@ -125,8 +105,8 @@ void walk_exp_tail_if(FILE* oc, E* e1, E* e2, std::string b, std::string bn) {
 	walk_e_tail(oc, e2);
 }
 
-static
-void walk_exp_non_tail_if(FILE* oc, std::string dest, E* e1, E* e2, std::string b, std::string bn) {
+static void
+walk_exp_non_tail_if(FILE* oc, std::string dest, E* e1, E* e2, std::string b, std::string bn) {
 	auto b_else = genid(b + "_else");
 	auto b_cont = genid(b + "_cont");
 	fprintf(oc, "\t%s\t%s\n", bn.c_str(), b_else.c_str());
@@ -141,14 +121,11 @@ void walk_exp_non_tail_if(FILE* oc, std::string dest, E* e1, E* e2, std::string 
 	stackset.insert(stackset1.begin(), stackset1.end());
 }
 
-static
-void walk_exp_args(FILE* oc, std::vector<std::pair<std::string, std::string>>, svec_t);
+static void walk_exp_args(FILE* oc, std::vector<std::pair<std::string, std::string>>, svec_t);
 
-// 各命令のアセンブリ生成 (caml2html: emit_gprime)
-
-static
-void walk_exp_tail(FILE* oc, Exp* exp) {
-	// 末尾だったら計算結果を第一レジスタにセットしてret (caml2html: emit_tailret)
+// 各命令のアセンブリ生成
+static void walk_exp_tail(FILE* oc, Exp* exp) {
+	// 末尾だったら計算結果を第一レジスタにセットしてret
 	if (dynamic_cast<Nop*> (exp) || dynamic_cast<St*> (exp) || dynamic_cast<Save*> (exp)) {
 		auto unit = std::unique_ptr<T>(new Unit());
 		walk_exp_non_tail(oc, gentmp(unit.get()), exp);
@@ -178,15 +155,14 @@ void walk_exp_tail(FILE* oc, Exp* exp) {
 		walk_exp_tail_if(oc, e_->e1.get(), e_->e2.get(), "jge", "jl");
 	} else
 	if (auto e_ = dynamic_cast<Call*> (exp)) {
-		// 関数呼び出しの仮想命令の実装 (caml2html: emit_call)
+		// 関数呼び出しの仮想命令の実装
 		walk_exp_args(oc, std::vector<std::pair < std::string, std::string >> (), e_->ids);
 		fprintf(oc, "\tjmp\t%s\n", e_->id.c_str());
 	}
 }
 
-static
-void walk_exp_non_tail(FILE* oc, std::string dest, Exp* exp) {
-	// 末尾でなかったら計算結果をdestにセット (caml2html: emit_nontail)
+static void walk_exp_non_tail(FILE* oc, std::string dest, Exp* exp) {
+	// 末尾でなかったら計算結果をdestにセット
 	if (dynamic_cast<Nop*> (exp)) {
 	} else
 	if (auto e_ = dynamic_cast<Set*> (exp)) {
@@ -249,7 +225,7 @@ void walk_exp_non_tail(FILE* oc, std::string dest, Exp* exp) {
 		}
 		assert(false);
 	} else
-	// 退避の仮想命令の実装 (caml2html: emit_save)
+	// 退避の仮想命令の実装
 	if (auto e_ = dynamic_cast<Save*> (exp)) {
 		if (allregs.find(e_->id) != allregs.end() && stackset.find(e_->id2) == stackset.end()) {
 			save(e_->id2);
@@ -259,7 +235,7 @@ void walk_exp_non_tail(FILE* oc, std::string dest, Exp* exp) {
 		assert(stackset.find(e_->id2) != stackset.end());
 	} else
 	if (auto e_ = dynamic_cast<Restore*> (exp)) {
-		// 復帰の仮想命令の実装 (caml2html: emit_restore)
+		// 復帰の仮想命令の実装
 		fprintf(oc, "\tmovl\t%d(%s), %s\n", offset(e_->id), reg_sp, dest.c_str());
 	} else
 	if (auto e_ = dynamic_cast<IfEq*> (exp)) {
@@ -287,8 +263,8 @@ void walk_exp_non_tail(FILE* oc, std::string dest, Exp* exp) {
 	}
 }
 
-static
-void walk_exp_args(FILE* oc, std::vector<std::pair<std::string, std::string>> yrs, svec_t ys) {
+static void
+walk_exp_args(FILE* oc, std::vector<std::pair<std::string, std::string>> yrs, svec_t ys) {
 	assert(ys.size() <= regs.size() - yrs.size());
 	auto sw = std::string() + std::to_string(stacksize()) + ("(" reg_sp ")");
 	int i = 0;
@@ -301,16 +277,14 @@ void walk_exp_args(FILE* oc, std::vector<std::pair<std::string, std::string>> yr
 		fprintf(oc, "\tmovl\t%s, %s\n", yr.first.c_str(), yr.second.c_str());
 }
 
-static
-void walk_fundef(FILE* oc, Fundef* fundef) {
+static void walk_fundef(FILE* oc, Fundef* fundef) {
 	fprintf(oc, "%s:\n", fundef->name.c_str());
 	stackset.clear();
 	stackmap.clear();
 	walk_e_tail(oc, fundef->body.get());
 }
 
-static
-void walk_prog(FILE* oc, Prog* prog) {
+static void walk_prog(FILE* oc, Prog* prog) {
 	fprintf(stderr, "generating assembly...\n");
 	fprintf(oc, ".text\n");
 	for (auto& fundef : prog->fundefs) walk_fundef(oc, fundef.get());
