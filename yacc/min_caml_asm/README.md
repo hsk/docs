@@ -2,13 +2,21 @@
 
 このプロジェクトは、MinCamlのX86用のアセンブラ変換部分のみを取り出し、FloatをなくしてC++に移植したものです。
 
+## 依存プログラム
+
+flex, bison, clang, valgrind
+
+    brew install flex bison clang valgrind
+
 ## ビルド
 
+    git clone https://github.com/hsk/docs
+    cd docs/yacc/min_caml_asm
 	make
 
 ## 使い方
 
-	./calc x86_test/a
+	./calc
 
 ## ライセンス
 
@@ -25,8 +33,9 @@ MIT License
 7. __simm.cpp__ 即値最適化
 8. __regAlloc.cpp__ レジスタアロケーション
 9. __emit.cpp__ x86アセンブラ出力
-10. __stub.c__ 出力アセンブラとリンクするx86のメイン関数
-11. __x86_libmincaml.s__ 出力アセンブラとリンクするライブラリ
+10. __main.cpp__ メインプログラム
+11. __stub.c__ 出力アセンブラとリンクするx86のメイン関数
+12. __x86_libmincaml.s__ 出力アセンブラとリンクするライブラリ
 
 ## MinCamlAsm構文
 
