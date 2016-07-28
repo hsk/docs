@@ -12,11 +12,12 @@ flex, bison, clang, valgrind
 
     git clone https://github.com/hsk/docs
     cd docs/yacc/min_caml_asm
-	make
+    make
 
 ## 使い方
 
-	./calc
+	./mincamlasm x86_test/fib
+    ./x86_test/fib.exe
 
 ## ライセンス
 

@@ -1,0 +1,14 @@
+define fib(n:int,a:int,b:int):int {
+  ifeq n 0 {
+    mov a
+  } else {
+    n1:int = sub n 1
+    ab:int = add a b
+    call fib(n1:int, b:int,ab:int)
+  }
+}
+n:int = set 10
+a:int = set 0
+b:int = set 1
+c:int = call fib(n:int,a:int,b:int)
+call min_caml_print_int(c:int)
