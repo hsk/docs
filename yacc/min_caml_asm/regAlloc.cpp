@@ -109,25 +109,27 @@ public:
 	Alloc_result(std::string id) : id(id) {}
 	virtual ~Alloc_result() {}
 };
+typedef std::unique_ptr<Alloc_result> UAlloc_result;
 
 class Alloc : public Alloc_result {
 public:
 	Alloc(std::string id) : Alloc_result(id) {}
 };
+UAlloc_result UAlloc(std::string id) { return UAlloc_result(new Alloc(id)); }
 
 class Spill : public Alloc_result {
 public:
 	Spill(std::string id) : Alloc_result(id) {}
 };
-typedef std::unique_ptr<Alloc_result> UAlloc_result;
+UAlloc_result USpill(std::string id) { return UAlloc_result(new Spill(id)); }
 
 UAlloc_result alloc(E* cont, regenv_t regenv, std::string x, T* t, svec_t prefer) {
 	// allocate a register or spill a variable
 	assert(regenv.find(x) == regenv.end());
 	svec_t all;
 	if (!dynamic_cast<Unit*> (t)) all.insert(all.end(), allregs.begin(), allregs.end());
-	if (all.empty()) return UAlloc_result(new Alloc("%unit"));
-	if (is_reg(x)) return UAlloc_result(new Alloc(x));
+	if (all.empty()) return UAlloc("%unit");
+	if (is_reg(x)) return UAlloc(x);
 	auto free = fv(cont);
 	std::set<std::string> live; // 生きているレジスタ
 	for (auto y : free) {
@@ -138,20 +140,14 @@ UAlloc_result alloc(E* cont, regenv_t regenv, std::string x, T* t, svec_t prefer
 		}
 	}
 	// そうでないレジスタを探す
-	for (auto r : prefer)
-		if (live.find(r) == live.end())
-			// fprintf("allocated %s to %s\n", x, r);
-			return UAlloc_result(new Alloc(r));
-	for (auto r : all)
-		if (live.find(r) == live.end())
-			// fprintf("allocated %s to %s\n", x, r);
-			return UAlloc_result(new Alloc(r));		
+	for (auto r : prefer) if (live.find(r) == live.end()) return UAlloc(r);
+	for (auto r : all) if (live.find(r) == live.end()) return UAlloc(r);		
 	fprintf(stderr, "register allocation failed for %s\n", x.c_str());
 	// 型の合うレジスタ変数を探す
 	for (auto y : free)
 		if (!is_reg(y) && find(all.begin(), all.end(), regenv.find(y)->second) != all.end()) {
 			fprintf(stderr, "spilling %s from %s\n", y.c_str(), regenv.find(y)->second.c_str());
-			return UAlloc_result(new Spill(y));
+			return USpill(y);
 		}
 	assert(false);
 }
@@ -185,9 +181,9 @@ static std::string find_x(std::string x, UT t, regenv_t regenv) {
 static UId_or_imm find_imm(Id_or_imm* x, regenv_t regenv) {
 	if (auto im = dynamic_cast<V*> (x)) {
 		auto tint = UT(new Int());
-		return UId_or_imm(new V(find_x(im->v, std::move(tint), regenv)));
+		return UV(find_x(im->v, std::move(tint), regenv));
 	}
-	if (auto im = dynamic_cast<C*> (x)) return UId_or_imm(new C(im->i));
+	if (auto im = dynamic_cast<C*> (x)) return UC(im->i);
 	assert(false);
 }
 
@@ -224,10 +220,7 @@ static wpair walk_exp_if(dest_t dest, E* cont, regenv_t regenv, std::function<UE
 
 // 関数呼び出しのレジスタ割り当て
 static wpair
-walk_exp_call(dest_t dest, E* cont,
-		regenv_t regenv,
-		std::function<Exp*(svec_t)> constr,
-		svec_t ys) {
+walk_exp_call(dest_t dest, E* cont, regenv_t regenv, std::function<Exp*(svec_t)> constr, svec_t ys) {
 	auto ys2 = svec_t();
 	for (auto y : ys) ys2.push_back(find_x(y, UT(new Int()), regenv));
 	auto e = UAns(UExp(constr(ys2)));

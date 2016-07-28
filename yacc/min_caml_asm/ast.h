@@ -65,17 +65,15 @@ public:
 		return new V(v);
 	}
 };
+inline UId_or_imm UV(std::string v) { return UId_or_imm(new V(v)); }
 
 class C : public Id_or_imm {
 public:
 	int i;
-
-	C(int i) : i(i) {
-	}
-    Id_or_imm* clone() {
-		return new C(i);
-	}
+	C(int i) : i(i) {}
+    Id_or_imm* clone() { return new C(i); }
 };
+inline UId_or_imm UC(int i) { return UId_or_imm(new C(i)); }
 
 class Exp {
 public:
