@@ -47,6 +47,7 @@ public:
 		return new Fun(std::move(ts2), UT(t->clone()));
 	}
 };
+inline UT UFun(std::vector<UT> ts, UT t) { return UT(new Fun(std::move(ts),std::move(t))); }
 
 class Id_or_imm {
 public:
@@ -116,6 +117,7 @@ public:
   Nop() {}
   Exp* clone() { return new Nop(); }
 };
+inline UExp UNop() { return UExp(new Nop()); }
 
 class Set : public Exp {
 public:
@@ -125,6 +127,7 @@ public:
 	}
     Exp* clone() { return new Set(v); }
 };
+inline UExp USet(int v) { return UExp(new Set(v)); }
 
 class SetL : public Exp {
 public:
@@ -134,6 +137,7 @@ public:
 	}
     Exp* clone() { return new SetL(l); }
 };
+inline UExp USetL(std::string l) { return UExp(new SetL(l)); }
 
 class Mov : public Exp {
 public:
@@ -142,6 +146,7 @@ public:
 	Mov(std::string id) : id(id) {}
     Exp* clone() { return new Mov(id); }
 };
+inline UExp UMov(std::string id) { return UExp(new Mov(id)); }
 
 class Neg : public Exp {
 public:
@@ -151,6 +156,7 @@ public:
 	}
     Exp* clone() { return new Neg(id); }
 };
+inline UExp UNeg(std::string id) { return UExp(new Neg(id)); }
 
 class Add : public Exp {
 public:
@@ -162,6 +168,7 @@ public:
 	}
     Exp* clone() { return new Add(id,UId_or_imm(imm->clone())); }
 };
+inline UExp UAdd(std::string id, UId_or_imm imm) { return UExp(new Add(id, std::move(imm))); }
 
 class Sub : public Exp {
 public:
@@ -173,6 +180,7 @@ public:
 	}
     Exp* clone() { return new Sub(id,UId_or_imm(imm->clone())); }
 };
+inline UExp USub(std::string id, UId_or_imm imm) { return UExp(new Sub(id, std::move(imm))); }
 
 class Ld : public Exp {
 public:
@@ -185,6 +193,7 @@ public:
 	}
     Exp* clone() { return new Ld(id,UId_or_imm(imm->clone()), i); }
 };
+inline UExp ULd(std::string id, UId_or_imm imm, int i) { return UExp(new Ld(id, std::move(imm), i)); }
 
 class St : public Exp {
 public:
@@ -198,6 +207,7 @@ public:
 	}
     Exp* clone() { return new St(id,id2,UId_or_imm(imm->clone()), i); }
 };
+inline UExp USt(std::string id, std::string id2, UId_or_imm imm, int i) { return UExp(new St(id, id2, std::move(imm), i)); }
 
 class IfEq : public Exp {
 public:
@@ -211,6 +221,7 @@ public:
     Exp* clone() { return new IfEq(id,UId_or_imm(imm->clone()), UE(e1->clone()), UE(e2->clone())); }
 };
 inline UExp UIfEq(std::string id, UId_or_imm imm, UE e1, UE e2) { return UExp(new IfEq(id,std::move(imm), std::move(e1), std::move(e2))); }
+
 class IfLE : public Exp {
 public:
 	std::string id;
@@ -223,6 +234,7 @@ public:
     Exp* clone() { return new IfLE(id,UId_or_imm(imm->clone()), UE(e1->clone()), UE(e2->clone())); }
 };
 inline UExp UIfLE(std::string id, UId_or_imm imm, UE e1, UE e2) { return UExp(new IfLE(id,std::move(imm), std::move(e1), std::move(e2))); }
+
 class IfGE : public Exp {
 public:
 	std::string id;
@@ -245,6 +257,7 @@ public:
 	: id(id), ids(std::move(ids)) {}
     Exp* clone() { return new Call(id,ids); }
 };
+inline UExp UCall(std::string id, std::vector<std::string> ids) { return UExp(new Call(id, std::move(ids))); }
 
 class Save : public Exp {
 public:
@@ -255,6 +268,7 @@ public:
 	}
     Exp* clone() { return new Save(id,id2); }
 };
+inline UExp USave(std::string id, std::string id2) { return UExp(new Save(id, id2)); }
 
 class Restore : public Exp {
 public:
@@ -264,6 +278,7 @@ public:
 	}
     Exp* clone() { return new Restore(id); }
 };
+inline UExp URestore(std::string id) { return UExp(new Restore(id)); }
 
 class Fundef {
 public:
@@ -272,12 +287,14 @@ public:
 	UE body;
 	UT ret;
 
-	Fundef(std::string name, std::vector<std::string> args, UE body,
-	UT ret)
+	Fundef(std::string name, std::vector<std::string> args, UE body, UT ret)
 	: name(name), args(args), body(std::move(body)), ret(std::move(ret)) {
 	}
 };
 typedef std::unique_ptr<Fundef> UFundef;
+inline UFundef uFundef(std::string name, std::vector<std::string> args, UE body, UT ret) {
+	return UFundef(new Fundef(name,args,std::move(body),std::move(ret)));
+}
 
 class Prog {
 public:
@@ -290,6 +307,9 @@ public:
 	}
 };
 typedef std::unique_ptr<Prog> UProg;
+inline UProg uProg(std::vector<UFundef> fundefs, UE e) {
+	return UProg(new Prog(std::move(fundefs), std::move(e)));
+}
 
 std::string concat(std::string, svec_t);
 std::string show_t(std::string, T*);
@@ -299,7 +319,7 @@ std::string show_fundef(std::string, Fundef*);
 std::string show_prog(Prog*);
 
 inline E* seq(UExp e1, UE e2) {
-  return new Let("_", UT(new Unit()), std::move(e1), std::move(e2));
+  return new Let("_", UUnit(), std::move(e1), std::move(e2));
 }
 
 extern svec_t regs;

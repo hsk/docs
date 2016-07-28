@@ -127,8 +127,7 @@ static void walk_exp_args(FILE* oc, std::vector<std::pair<std::string, std::stri
 static void walk_exp_tail(FILE* oc, Exp* exp) {
 	// 末尾だったら計算結果を第一レジスタにセットしてret
 	if (dynamic_cast<Nop*> (exp) || dynamic_cast<St*> (exp) || dynamic_cast<Save*> (exp)) {
-		auto unit = std::unique_ptr<T>(new Unit());
-		walk_exp_non_tail(oc, gentmp(unit.get()), exp);
+		walk_exp_non_tail(oc, gentmp(UUnit().get()), exp);
 		fprintf(oc, "\tret\n");
 	} else
 	if (dynamic_cast<Set*> (exp) || dynamic_cast<SetL*> (exp) || dynamic_cast<Mov*> (exp)
