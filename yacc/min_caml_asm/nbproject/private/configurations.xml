@@ -11,6 +11,7 @@
         </df>
       </df>
       <df name="x86_test">
+        <in>fib.s</in>
       </df>
       <in>ast.cpp</in>
       <in>ast.h</in>

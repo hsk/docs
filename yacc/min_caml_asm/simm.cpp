@@ -50,31 +50,31 @@ static UExp walk_exp(env_t env, UExp e) {
 	if(auto e_ = dynamic_cast<Add*>(e.get())) {
 		if (auto v = dynamic_cast<V*>(e_->imm.get())) {
 			auto it = env.find(v->v);
-			if (it != env.end()) return UExp(new Add(e_->id, UC(it->second)));
+			if (it != env.end()) return UAdd(e_->id, UC(it->second));
 			auto it2 = env.find(e_->id);
 			if (it2 == env.end()) return e;
-			return UExp(new Add(v->v, UC(it2->second)));
+			return UAdd(v->v, UC(it2->second));
 		}
 	}
 	if(auto e_ = dynamic_cast<Sub*>(e.get())) {
 		if (auto v = dynamic_cast<V*>(e_->imm.get())) {
 			auto it = env.find(v->v);
 			if (it == env.end()) return e;
-			return UExp(new Sub(e_->id, UC(it->second)));
+			return USub(e_->id, UC(it->second));
 		}
 	}
 	if(auto e_ = dynamic_cast<Ld*>(e.get())) {
 		if (auto v = dynamic_cast<V*>(e_->imm.get())) {
 			auto it = env.find(v->v);
 			if (it == env.end()) return e;
-			return UExp(new Ld(e_->id, UC(it->second),e_->i));
+			return ULd(e_->id, UC(it->second),e_->i);
 		}
 	}
 	if(auto e_ = dynamic_cast<St*>(e.get())) {
 		if (auto v = dynamic_cast<V*>(e_->imm.get())) {
 			auto it = env.find(v->v);
 			if(it==env.end()) return e;
-			return UExp(new St(e_->id, e_->id2, UC(it->second),e_->i));
+			return USt(e_->id, e_->id2, UC(it->second),e_->i);
 		}
 	}
 	// 分岐命令の場合は両方を変換する
