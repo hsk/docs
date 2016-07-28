@@ -279,29 +279,27 @@ walk_exp(dest_t dest, E* cont, regenv_t regenv, UExp exp) {
 		auto z = find_x(e_->id2, UInt(), regenv);
 		return wpair(UAns(UExp(new St(x, z, std::move(y), e_->i))), regenv);
 	}
-	if (auto e_ = dynamic_cast<IfEq*> (expp)) {
+	if (auto e_ = dynamic_cast<IfEq*> (expp))
 		return walk_exp_if(dest, cont, regenv, [=](UE e1, UE e2) {
 			return UExp(new IfEq(find_x(e_->id, UInt(), regenv), find_imm(e_->imm.get(), regenv), std::move(e1), std::move(e2)));
 		}, std::move(e_->e1), std::move(e_->e2));
-	}
-	if (auto e_ = dynamic_cast<IfLE*> (expp)) {
+	if (auto e_ = dynamic_cast<IfLE*> (expp))
 		return walk_exp_if(dest, cont, regenv, [=](UE e1, UE e2) {
 			return UExp(new IfLE(find_x(e_->id, UInt(), regenv), find_imm(e_->imm.get(), regenv), std::move(e1), std::move(e2)));
 		}, std::move(e_->e1), std::move(e_->e2));
-	}
-	if (auto e_ = dynamic_cast<IfGE*> (expp)) {
+	if (auto e_ = dynamic_cast<IfGE*> (expp))
 		return walk_exp_if(dest, cont, regenv, [=](UE e1, UE e2) {
 			return UExp(new IfGE(find_x(e_->id, UInt(), regenv), find_imm(e_->imm.get(), regenv), std::move(e1), std::move(e2)));
 		}, std::move(e_->e1), std::move(e_->e2));
-	}
 	/*
 	  | CallDir(l, ys) -> walk_exp_call dest cont regenv (fun ys -> CallDir(l, ys)) ys
 	  | Save(x, y) -> assert false
 	 */
-	if (auto e_ = dynamic_cast<Call*> (expp)) {
-		auto l = e_->id;
-		return walk_exp_call(dest, cont, regenv, [ = ](auto ys){return new Call(l, std::move(ys));}, e_->ids);
-	}
+	if (auto e_ = dynamic_cast<Call*> (expp))
+		return walk_exp_call(dest, cont, regenv, [=](auto ys) {
+			return new Call(e_->id, std::move(ys));
+		}, e_->ids);
+
 	assert(false);
 }
 
@@ -333,9 +331,8 @@ static wpair walk_e(dest_t dest, E* cont, regenv_t regenv, UE e) {
 		return walk_exp_and_restore(dest, cont, regenv, std::move(e_->exp));
 	if (auto e_ = dynamic_cast<Let*> (e.get())) {
 		//  | Let((x, t) as xt, exp, e) ->
-		if (regenv.find(e_->id) != regenv.end()) {
+		if (regenv.find(e_->id) != regenv.end())
 			fprintf(stderr, "find error %s -> %s\n", e_->id.c_str(), regenv.find(e_->id)->second.c_str());
-		}
 		assert(regenv.find(e_->id) == regenv.end());
 		auto cont0 = UE(concat2(e_->e.get(), dest.first, dest.second, cont));
 		auto r1 = walk_exp_and_restore(dest_t(e_->id, e_->t.get()), cont0.get(), regenv, std::move(e_->exp));
@@ -382,8 +379,7 @@ static UFundef walk_fundef(UFundef fundef) {
 		regenv[y] = r;
 	}
 	auto a = regs[0];
-	if (dynamic_cast<Unit*> (fundef->ret.get()))
-		a = gentmp(fundef->ret.get());
+	if (dynamic_cast<Unit*> (fundef->ret.get())) a = gentmp(fundef->ret.get());
 	auto r = walk_e(dest_t(a, fundef->ret.get()),
 			UAns(UExp(new Mov(a))).get(), regenv, std::move(fundef->body));
 	return UFundef(

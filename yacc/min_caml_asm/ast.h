@@ -157,83 +157,86 @@ public:
 class Add : public Exp {
 public:
 	std::string id;
-	std::unique_ptr<Id_or_imm> imm;
+	UId_or_imm imm;
 
-	Add(std::string id, std::unique_ptr<Id_or_imm> imm)
+	Add(std::string id, UId_or_imm imm)
 	: id(id), imm(std::move(imm)) {
 	}
-    Exp* clone() { return new Add(id,std::unique_ptr<Id_or_imm>(imm->clone())); }
+    Exp* clone() { return new Add(id,UId_or_imm(imm->clone())); }
 };
 
 class Sub : public Exp {
 public:
 	std::string id;
-	std::unique_ptr<Id_or_imm> imm;
+	UId_or_imm imm;
 
-	Sub(std::string id, std::unique_ptr<Id_or_imm> imm)
+	Sub(std::string id, UId_or_imm imm)
 	: id(id), imm(std::move(imm)) {
 	}
-    Exp* clone() { return new Sub(id,std::unique_ptr<Id_or_imm>(imm->clone())); }
+    Exp* clone() { return new Sub(id,UId_or_imm(imm->clone())); }
 };
 
 class Ld : public Exp {
 public:
 	std::string id;
-	std::unique_ptr<Id_or_imm> imm;
+	UId_or_imm imm;
 	int i;
 
-	Ld(std::string id, std::unique_ptr<Id_or_imm> imm, int i)
+	Ld(std::string id, UId_or_imm imm, int i)
 	: id(id), imm(std::move(imm)), i(i) {
 	}
-    Exp* clone() { return new Ld(id,std::unique_ptr<Id_or_imm>(imm->clone()), i); }
+    Exp* clone() { return new Ld(id,UId_or_imm(imm->clone()), i); }
 };
 
 class St : public Exp {
 public:
 	std::string id;
 	std::string id2;
-	std::unique_ptr<Id_or_imm> imm;
+	UId_or_imm imm;
 	int i;
 
-	St(std::string id, std::string id2, std::unique_ptr<Id_or_imm> imm, int i)
+	St(std::string id, std::string id2, UId_or_imm imm, int i)
 	: id(id), id2(id2), imm(std::move(imm)), i(i) {
 	}
-    Exp* clone() { return new St(id,id2,std::unique_ptr<Id_or_imm>(imm->clone()), i); }
+    Exp* clone() { return new St(id,id2,UId_or_imm(imm->clone()), i); }
 };
 
 class IfEq : public Exp {
 public:
 	std::string id;
-	std::unique_ptr<Id_or_imm> imm;
+	UId_or_imm imm;
 	UE e1;
 	UE e2;
-	IfEq(std::string id, std::unique_ptr<Id_or_imm> imm, UE e1, UE e2)
+	IfEq(std::string id, UId_or_imm imm, UE e1, UE e2)
 	: id(id), imm(std::move(imm)), e1(std::move(e1)),e2(std::move(e2)) {
 	}
-    Exp* clone() { return new IfEq(id,std::unique_ptr<Id_or_imm>(imm->clone()), UE(e1->clone()), UE(e2->clone())); }
+    Exp* clone() { return new IfEq(id,UId_or_imm(imm->clone()), UE(e1->clone()), UE(e2->clone())); }
 };
+inline UExp UIfEq(std::string id, UId_or_imm imm, UE e1, UE e2) { return UExp(new IfEq(id,std::move(imm), std::move(e1), std::move(e2))); }
 class IfLE : public Exp {
 public:
 	std::string id;
-	std::unique_ptr<Id_or_imm> imm;
+	UId_or_imm imm;
 	UE e1;
 	UE e2;
-	IfLE(std::string id, std::unique_ptr<Id_or_imm> imm, UE e1, UE e2)
+	IfLE(std::string id, UId_or_imm imm, UE e1, UE e2)
 	: id(id), imm(std::move(imm)), e1(std::move(e1)),e2(std::move(e2)) {
 	}
-    Exp* clone() { return new IfLE(id,std::unique_ptr<Id_or_imm>(imm->clone()), UE(e1->clone()), UE(e2->clone())); }
+    Exp* clone() { return new IfLE(id,UId_or_imm(imm->clone()), UE(e1->clone()), UE(e2->clone())); }
 };
+inline UExp UIfLE(std::string id, UId_or_imm imm, UE e1, UE e2) { return UExp(new IfLE(id,std::move(imm), std::move(e1), std::move(e2))); }
 class IfGE : public Exp {
 public:
 	std::string id;
-	std::unique_ptr<Id_or_imm> imm;
+	UId_or_imm imm;
 	UE e1;
 	UE e2;
-	IfGE(std::string id, std::unique_ptr<Id_or_imm> imm, UE e1, UE e2)
+	IfGE(std::string id, UId_or_imm imm, UE e1, UE e2)
 	: id(id), imm(std::move(imm)), e1(std::move(e1)),e2(std::move(e2)) {
 	}
-    Exp* clone() { return new IfGE(id,std::unique_ptr<Id_or_imm>(imm->clone()), UE(e1->clone()), UE(e2->clone())); }
+    Exp* clone() { return new IfGE(id,UId_or_imm(imm->clone()), UE(e1->clone()), UE(e2->clone())); }
 };
+inline UExp UIfGE(std::string id, UId_or_imm imm, UE e1, UE e2) { return UExp(new IfGE(id,std::move(imm), std::move(e1), std::move(e2))); }
 
 class Call : public Exp {
 public:

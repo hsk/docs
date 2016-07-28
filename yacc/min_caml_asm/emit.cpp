@@ -280,9 +280,8 @@ void walk_exp_non_tail(FILE* oc, std::string dest, Exp* exp) {
 		if (ss > 0) fprintf(oc, "\taddl\t$%d, %s\n", ss, reg_sp);
 		fprintf(oc, "\tcall\t%s\n", e_->id.c_str());
 		if (ss > 0) fprintf(oc, "\tsubl\t$%d, %s\n", ss, reg_sp);
-		if (allregs.find(dest) != allregs.end() && dest != regs[0]) {
+		if (allregs.find(dest) != allregs.end() && dest != regs[0])
 			fprintf(oc, "\tmovl\t%s, %s\n", regs[0].c_str(), dest.c_str());
-		}
 	} else {
 		assert(false);
 	}
@@ -314,8 +313,7 @@ static
 void walk_prog(FILE* oc, Prog* prog) {
 	fprintf(stderr, "generating assembly...\n");
 	fprintf(oc, ".text\n");
-	for (auto& fundef : prog->fundefs)
-		walk_fundef(oc, fundef.get());
+	for (auto& fundef : prog->fundefs) walk_fundef(oc, fundef.get());
 	fprintf(oc, ".globl\tmin_caml_start\n");
 	fprintf(oc, "min_caml_start:\n");
 	fprintf(oc, ".globl\t_min_caml_start\n");

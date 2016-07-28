@@ -1,6 +1,6 @@
 # MinCamlAsm
 
-このプロジェクトは、MinCamlのX86用のアセンブラ変換部分のみを取り出し、FloatをなくしてC++に移植したものです。
+このプロジェクトは、MinCamlのX86用のアセンブラ変換部分のみを取り出し、浮動小数点数やArray等の型をなくしてC++に移植したものです。
 
 ## 依存プログラム
 
@@ -90,7 +90,15 @@ MIT License
 
 ## 説明
 
-MinCamlAsmは、パースした構文木をsimmで即値最適化をした後、regAllocでレジスタアロケーションを行い、emitでx86のアセンブラを生成します。
+MinCamlAsmはパースした構文木をsimmで即値最適化をした後、regAllocでレジスタアロケーションを行い、emitでx86のアセンブラを生成します。
+
+C++版とOCaml版の大きな違いはshared\_ptrではなくunique\_ptrを用いてメモリの移動を考慮に入れたアルゴリズムにしてある点です。
+おそらく、Rustのプログラムに考え方は似ているのではないかと思いますが、データは持ち主が一人いて所有権を移動させながらうまくやりくりしています。
+2箇所以上で所有したい場合はディープコピーが必要になるためcloneメソッドを各ASTに実装し用いています。
+
+C++にはパターンマッチがないのでdynamic_castによる型の分岐を用いています。
+高速化を考えるとメソッドディスパッチあるいはvisitorパターンで書き換えた方がよいかもしれません。
+ここでは、このやり方はOCamlのプログラムに近いという意味でわかりやすさを優先してdynamic_castを用いました。
 
 1. parse.y lexer.l 構文解析
 2. simm.cpp 即値最適化
@@ -99,13 +107,36 @@ MinCamlAsmは、パースした構文木をsimmで即値最適化をした後、
 
 ## 構文解析 parser.y lexer.l
 
-構文解析は、flex, bisonを用いています。
+構文解析はflex, bisonを用いています。
 そのため左再帰も右再帰も扱うことができるので便利です。
-ASTを引き渡す際に、unionを用いるため、値をポインタで持つ必要がある点に注意が必要です。
+ASTを引き渡す際にunionを用いるため値をポインタで持つ必要がある点に注意が必要です。
 ASTにはunique_ptrを使っているので、うまくメモリリークしないような工夫をしました。
 
 ## 即値最適化 simm
 
+変数に割り付けられた値がわかっていれば、即値として展開できる箇所は展開することで高速化します。
+
+simm関数がエントリポイントでstatic関数であるwalk\_prog,walk\_fundef,walk\_e,walk\_expが対応するデータ構造に対する処理です。
+即値にできるタイミングで環境に変数名(レジスタ名)の値が入っていれば即値に置き換えます。
+
+    // 各命令の即値最適化
+    static UExp walk_exp(std::map<std::string,int> env, UExp e)
+    // Let,Ansの即値最適化
+    static UE walk_e(std::map<std::string,int> env, UE e)
+    // トップレベル関数の即値最適化
+    static UFundef walk_fundef(UFundef fundef)
+    // プログラム全体の即値最適化
+    static UProg walk_prog(UProg prog)
+    UProg simm(UProg prog)
+
+
 ## レジスタアロケーション regAlloc
 
+無限レジスタ（変数）を有限個の実レジスタに置き換えます。
+simm関数と同様にregAllocがエントリポイントでwalk\_prog,walk\_fundef,walk\_e,walk\_expが対応するデータ構造に対する処理です。
+fv関数を用いて後続の生きている情報を取得し、環境regenv\_tの中身と比較しながらレジスタを割り付けます。
+
 ## x86アセンブラ出力 emit
+
+ここでは構造を変更することはないので、Progのポインタを受け取ってループして出力します。
+
