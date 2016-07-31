@@ -1,14 +1,6 @@
 use ast::*;
 use std::collections::HashMap;
-/*
-fn t(f:&Fn(String,IdOrImm,Box<E>,Box<E>)->Exp) -> Exp {
-  f(format!("tes"),IdOrImm::C(1), Box::new(E::Ans(Exp::Nop)), Box::new(E::Ans(Exp::Nop)))
-}
 
-fn t2() -> Exp {
-  t(&Exp::IfEq)
-}
-*/
 fn walk_exp_if(env:&HashMap<String,i32>, id:&String, imm:&IdOrImm, e1:&E, e2:&E, f:&Fn(String,IdOrImm,Box<E>,Box<E>)->Exp) -> Exp {
   match *imm {
     IdOrImm::V(ref v) =>

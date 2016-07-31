@@ -6,6 +6,9 @@ lalrpopを用いて、パースし、mlsファイルを読み込んでx86アセ�
 
 ## install & make & test
 
+	git clone --depth 1 https://github.com/hsk/docs
+	cd docs/yacc/min_caml_asm_rust
+
 lalrpopをcargoでインストール
 
     multirust run stable cargo lalrpop
