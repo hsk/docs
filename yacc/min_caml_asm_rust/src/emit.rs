@@ -54,7 +54,6 @@ fn shuffle(sw:String , xys:&Vec<(String,String)>) -> Vec<(String, String)> {
 pub struct Emit {
   stackset: HashSet<String>,
   stackmap: Vec<String>,
-  count: i32,
   file: File,
 }
 impl Emit {
@@ -67,7 +66,6 @@ impl Emit {
     Emit{
       stackset:HashSet::new(),
       stackmap:vec![],
-      count:0,
       file:file,
     }
   }
@@ -76,14 +74,6 @@ impl Emit {
       Err(why) => panic!("couldn't write to {}: {}", s, why.description()),
       Ok(_) => (),
     }
-  }
-  fn genid(&mut self, x:&String) -> String {
-    self.count += 1;
-    format!("{}.{}", x, self.count)
-  }
-  fn gentmp(&mut self, typ:&T) -> String {
-    self.count += 1;
-    format!("T{}{}", id_of_typ(typ), self.count)
   }
   fn save(&mut self, x:&String) {
     self.stackset.insert(x.clone());
@@ -124,7 +114,7 @@ impl Emit {
     }
   }
   fn walk_exp_tail_if(&mut self, e1:&E, e2:&E, b:&str, bn:&str) {
-    let b_else = self.genid(&format!("{}_else", b));
+    let b_else = genid(&format!("{}_else", b));
     self.print(format!("\t{}\t{}\n", bn, b_else));
     let stackset_back = self.stackset.clone();
     self.walk_e_tail(e1);
@@ -133,8 +123,8 @@ impl Emit {
     self.walk_e_tail(e2);
   }
   fn walk_exp_non_tail_if(&mut self, dest:&String, e1:&E, e2:&E, b:&str, bn:&str) {
-    let b_else = self.genid(&format!("{}_else", b));
-    let b_cont = self.genid(&format!("{}_cont", b));
+    let b_else = genid(&format!("{}_else", b));
+    let b_cont = genid(&format!("{}_cont", b));
     self.print(format!("\t{}\t{}\n", bn, b_else));
     let stackset_back = self.stackset.clone();
     self.walk_e_non_tail(dest, e1);
@@ -150,7 +140,7 @@ impl Emit {
   fn walk_exp_tail(&mut self, exp:&Exp) {
     match *exp {
       Exp::Nop | Exp::St(_,_,_,_) | Exp::Save(_,_) => {
-        let tmp = self.gentmp(&T::Unit);
+        let tmp = gentmp(&T::Unit);
         self.walk_exp_non_tail(&tmp, exp);
         self.print(format!("\tret\n"))
       }
