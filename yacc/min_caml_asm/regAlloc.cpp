@@ -85,9 +85,8 @@ static svec_t source_exp(T* t, Exp* exp) {
 	if (auto exp_ = dynamic_cast<Neg*> (exp)) return svec_t {exp_->id};
 	if (auto exp_ = dynamic_cast<Sub*> (exp)) return svec_t {exp_->id};
 	if (auto exp_ = dynamic_cast<Add*> (exp)) {
-		auto imm = exp_->imm.get();
-		if (auto im = dynamic_cast<V*> (imm)) return svec_t {exp_->id, im->v};
-		return svec_t{exp_->id};
+		if (auto im = dynamic_cast<V*> (exp_->imm.get())) return svec_t {exp_->id, im->v};
+		else return svec_t{exp_->id};
 	}
 	if (auto exp_ = dynamic_cast<IfEq*> (exp))
 		return insert<std::string>(source_e(t, exp_->e1.get()),source_e(t, exp_->e2.get()));
@@ -185,12 +184,6 @@ static UId_or_imm find_imm(Id_or_imm* x, regenv_t regenv) {
 }
 
 static wpair walk_e(dest_t dest, E* cont, regenv_t regenv, UE e);
-
-std::string show_regenv(regenv_t revenv) {
-	svec_t r;
-	for (auto it : revenv) r.push_back(it.first + ":" + it.second);
-	return concat(", ", r);
-}
 
 // ifのレジスタ割り当て
 static wpair walk_exp_if(dest_t dest, E* cont, regenv_t regenv, std::function<UExp(UE, UE)> constr, UE e1, UE e2) {

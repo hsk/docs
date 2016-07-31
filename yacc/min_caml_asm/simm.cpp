@@ -4,42 +4,16 @@
 
 typedef std::map<std::string,int> env_t;
 
-static UExp walk_exp(env_t env, UExp e);
-
-// 命令列の即値最適化
-static UE walk_e(env_t env, UE e) {
-	if(auto e_ = dynamic_cast<Ans*>(e.get()))
-		return UAns(walk_exp(env, std::move(e_->exp)));
-	if(auto e_ = dynamic_cast<Let*>(e.get())) {
-		auto ep = std::move(e);
-		// 即値なら
-		if (auto e2_ = dynamic_cast<Set*>(e_->exp.get())) {
-			auto ep2 = std::move(e_->exp);
-			// 環境に保存して後続を計算
-			env_t env2 = env;
-			env2[e_->id] = e2_->v;
-			auto e0 = walk_e(env2, std::move(e_->e));
-			// 後続でレジスタを使っていれば、letを残すが、使っていなければ消す
-			auto vec = fv(e0.get());
-			if (std::find(vec.begin(),vec.end(), e_->id) == vec.end()) return e0;
-			return ULet(e_->id, std::move(e_->t), USet(e2_->v), std::move(e0));
-		}
-		// 即値でなければ、そのまま
-		return ULet(e_->id, std::move(e_->t), walk_exp(env, std::move(e_->exp)), walk_e(env, std::move(e_->e)));
-	}
-	assert(false);
-}
+static UE walk_e(env_t env, UE e);
 
 static UExp walk_exp_if(env_t env, std::string id, UId_or_imm imm, UE e1, UE e2, std::function<UExp(std::string,UId_or_imm,UE,UE)> f) {
 	if(auto v = dynamic_cast<V*>(imm.get())){
 		auto it = env.find(v->v); 
 		if (it != env.end())
-			return f(id, UC(it->second),
-					walk_e(env, std::move(e1)), walk_e(env, std::move(e2)));
+			return f(id, UC(it->second), walk_e(env, std::move(e1)), walk_e(env, std::move(e2)));
 		it = env.find(id);
 		if (it != env.end())
-			return f(v->v, UC(it->second),
-					walk_e(env, std::move(e1)), walk_e(env, std::move(e2)));
+			return f(v->v, UC(it->second), walk_e(env, std::move(e1)), walk_e(env, std::move(e2)));
 	}
 	return f(id, std::move(imm), walk_e(env, std::move(e1)), walk_e(env, std::move(e2)));
 }
@@ -88,19 +62,41 @@ static UExp walk_exp(env_t env, UExp e) {
 	return e;
 }
 
+// 命令列の即値最適化
+static UE walk_e(env_t env, UE e) {
+	if(auto e_ = dynamic_cast<Ans*>(e.get()))
+		return UAns(walk_exp(env, std::move(e_->exp)));
+	if(auto e_ = dynamic_cast<Let*>(e.get())) {
+		auto ep = std::move(e);
+		// 即値なら
+		if (auto e2_ = dynamic_cast<Set*>(e_->exp.get())) {
+			auto ep2 = std::move(e_->exp);
+			// 環境に保存して後続を計算
+			env_t env2 = env;
+			env2[e_->id] = e2_->v;
+			auto e0 = walk_e(env2, std::move(e_->e));
+			// 後続でレジスタを使っていれば、letを残すが、使っていなければ消す
+			auto vec = fv(e0.get());
+			if (std::find(vec.begin(),vec.end(), e_->id) == vec.end()) return e0;
+			return ULet(e_->id, std::move(e_->t), USet(e2_->v), std::move(e0));
+		}
+		// 即値でなければ、そのまま
+		return ULet(e_->id, std::move(e_->t), walk_exp(env, std::move(e_->exp)), walk_e(env, std::move(e_->e)));
+	}
+	assert(false);
+}
+
 // トップレベル関数の即値最適化
-static UFundef walk_fundef(UFundef fundef) {
-	Fundef* f_ = fundef.get();
-	return uFundef(f_->name,f_->args,walk_e(env_t(), std::move(f_->body)),std::move(f_->ret));
+static UFundef walk_fundef(UFundef f) {
+	return uFundef(f->name, f->args, walk_e(env_t(), std::move(f->body)), std::move(f->ret));
 }
 
 // プログラム全体の即値最適化
 static UProg walk_prog(UProg prog) {
-	Prog* p_ = prog.get();
-	auto v = std::vector<std::unique_ptr<Fundef>>();
-	for(auto& fundef : p_->fundefs)
+	auto v = std::vector<UFundef>();
+	for (auto& fundef : prog->fundefs)
 		v.push_back(walk_fundef(std::move(fundef)));
-	return uProg(std::move(v), walk_e(env_t(),std::move(p_->e)));
+	return uProg(std::move(v), walk_e(env_t(),std::move(prog->e)));
 }
 
 UProg simm(UProg prog) {

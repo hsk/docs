@@ -317,6 +317,7 @@ std::string show_e(std::string, E*);
 std::string show_exp(std::string, Exp*);
 std::string show_fundef(std::string, Fundef*);
 std::string show_prog(Prog*);
+std::string show_regenv(regenv_t revenv);
 
 inline E* seq(UExp e1, UE e2) {
   return new Let("_", UUnit(), std::move(e1), std::move(e2));

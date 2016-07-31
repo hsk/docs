@@ -46,7 +46,6 @@ shuffle(std::string sw, std::vector<std::pair<std::string, std::string>> xys) {
 		if (xy.first == xy.second) continue;
 		xys2[xy.first] = xy.second;
 	}
-
 	// find acyclic moves
 	std::vector<std::pair<std::string, std::string>> xys3;
 	std::vector<std::pair<std::string, std::string>> xys4;

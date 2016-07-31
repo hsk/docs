@@ -97,3 +97,9 @@ std::string show_prog (Prog* prog) {
 		str += show_fundef(fundef.get());
 	return str + show_e("", prog->e.get());
 }
+
+std::string show_regenv(regenv_t revenv) {
+	svec_t r;
+	for (auto it : revenv) r.push_back(it.first + ":" + it.second);
+	return concat(", ", r);
+}

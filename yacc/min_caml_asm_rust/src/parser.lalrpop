@@ -1,0 +1,65 @@
+use std::str::FromStr;
+use ast::*;
+
+grammar;
+
+int         : i32    = { r"[0-9]+"                  => i32::from_str(<>).unwrap() };
+ident       : String = { r"[a-zA-Z_][a-zA-Z_0-9]*"  => match <> {"_"=>genid("_tmp"),a=>format!("{}",a)} };
+pub program : Prog = {
+                <(<fundef>)*> <term>                => Prog::Prog(<>),
+            };
+fundef      : Fundef = {
+                "define" <i:ident> "(" <a:args> ")" ":" <t:ty> "{" <e:term> "}"
+                                                    => Fundef::Fundef(i,a,e,t),
+            };
+args        : Vec<String> = {
+                <ts:(<id_ty> ",")*> <t:id_ty?>      => match t {
+                                                        None => ts,
+                                                        Some(t) => {let mut ts = ts; ts.push(t); ts} },
+            };
+id_ty       : String = {
+                <ident> ":" ty
+            };
+pub ty      : T = {
+                "unit"                              => T::Unit,
+                "bool"                              => T::Bool,
+                "int"                               => T::Int,
+                "(" <ts:tys> ")" "->" <t:ty>        => T::Fun(ts, Box::new(t)),
+            };
+tys         : Vec<T> = {
+                <ts1:(<ty> ",")*> <ty:ty?>          => match ty {
+                                                        Some(t) => { let mut ts = ts1; ts.push(t); ts }
+                                                        None    => ts1, },
+            };
+id_or_imm   : IdOrImm = {
+                <ident>                             => IdOrImm::V(<>),
+                <int>                               => IdOrImm::C(<>),
+            };
+term        : E = {
+                <i:ident> ":" <t:ty> "=" <e:exp> <ee:term>
+                                                    => E::Let(i,t,e,Box::new(ee)),
+                <exp>                               => E::Ans(<>),
+                <exp> <term>                        => seq(<>),
+            }; 
+exp         : Exp = {
+                "nop"                               => Exp::Nop,
+                "set" <int>                         => Exp::Set(<>),
+                "setl" <ident>                      => Exp::SetL(<>),
+                "mov" <ident>                       => Exp::Mov(<>),
+                "neg" <ident>                       => Exp::Neg(<>),
+                "add" <ident> <id_or_imm>           => Exp::Add(<>),
+                "sub" <ident> <id_or_imm>           => Exp::Sub(<>),
+                "ld" <ident> <id_or_imm> <int>      => Exp::Ld(<>),
+                "st" <ident> <ident> <id_or_imm> <int>
+                                                    => Exp::St(<>),
+                "ifeq" <i:ident> <m:id_or_imm> "{" <x:term> "}" "else" "{" <y:term> "}"
+                                                    => Exp::IfEq(i,m,Box::new(x),Box::new(y)),
+                "ifle" <i:ident> <m:id_or_imm> "{" <x:term> "}" "else" "{" <y:term> "}"
+                                                    => Exp::IfLE(i,m,Box::new(x),Box::new(y)),
+                "ifge" <i:ident> <m:id_or_imm> "{" <x:term> "}" "else" "{" <y:term> "}"
+                                                    => Exp::IfGE(i,m,Box::new(x),Box::new(y)),
+                "call" <ident> "(" <args> ")"       => Exp::Call(<>),
+                "save" <ident> <ident>              => Exp::Save(<>),
+                "restore" <ident>                   => Exp::Restore(<>),
+            };
+

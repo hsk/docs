@@ -1,0 +1,12 @@
+[package]
+name = "mincamlasm"
+version = "0.11.0"
+authors = ["Hiroshi Sakurai"]
+build = "build.rs"
+
+[build-dependencies]
+lalrpop = "0.11.0"
+
+[dependencies]
+lalrpop-util = "0.11.0"
+

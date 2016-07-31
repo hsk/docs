@@ -10,9 +10,12 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/Users/sakurai/git/lit-x86/dev/examples/all_ver/functional/parser.y</file>
-            <file>file:/Users/sakurai/git/lit-x86/dev/examples/all_ver/functional/lexer.l</file>
-            <file>file:/Users/sakurai/git/lit-x86/dev/examples/all_ver/functional/README.md</file>
+            <file>file:/Users/sakurai/git/docs/yacc/min_caml_asm/simm.cpp</file>
+            <file>file:/Users/sakurai/git/docs/yacc/min_caml_asm/ast_print.cpp</file>
+            <file>file:/Users/sakurai/git/docs/yacc/min_caml_asm/regAlloc.cpp</file>
+            <file>file:/Users/sakurai/git/docs/yacc/min_caml_asm/ast.h</file>
+            <file>file:/Users/sakurai/git/docs/yacc/min_caml_asm/ast.cpp</file>
+            <file>file:/Users/sakurai/git/docs/yacc/min_caml_asm/emit.cpp</file>
         </group>
     </open-files>
 </project-private>
