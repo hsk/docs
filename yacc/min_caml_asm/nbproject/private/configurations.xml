@@ -12,6 +12,7 @@
       </df>
       <df name="x86_test">
         <in>fib.s</in>
+        <in>nop.s</in>
       </df>
       <in>ast.cpp</in>
       <in>ast.h</in>
@@ -53,8 +54,6 @@
         <gdb_interceptlist>
           <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
         </gdb_interceptlist>
-        <gdb_signals>
-        </gdb_signals>
         <gdb_options>
           <DebugOptions>
           </DebugOptions>
