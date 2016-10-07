@@ -82,7 +82,7 @@ We use Barendregt’s Variable Convention throughout.
 For example, in the third evaluation rule, which un-nests let-bindings, we assume that we can appropriately α-rename the variable y which changes scope so that it is not captured in the final term u.
 </sup></sub>
 
-例えば、３つ目の評価ルールでは、ネストしていないlet束縛で、我々は適切にそれが最終的なｋ的なの項uで捕捉されないようにスコープを変更する変数yをα変換できることを前提としています。
+例えば、３つ目の評価ルールでは、ネストしていないlet束縛で、我々は適切にそれが最終的に項uで捕捉されないようにスコープを変更する変数yをα変換できることを前提としています。
 
 ----
 
