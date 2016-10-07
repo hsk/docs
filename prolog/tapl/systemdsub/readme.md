@@ -215,8 +215,8 @@ Dependent sums can be encoded using dependent functions, through an encoding sim
 
 System F における存在型のものと同様の符号化を通じて、依存 sums は 依存関数を使ってエンコードできます。
 
-	                  Σ(x : S)T ≡ ∀(z :{A : ⊥..>})∀(f :∀(x:S)∀(y :T)z.A)z.A
-	   pack [x, y] as Σ(x : S)T ≡ λ(z :{A : ⊥..>})λ(f :∀(x:S)∀(y :T)z.A)f x y
+	                   Σ(x : S)T ≡ ∀(z :{A : ⊥..>})∀(f :∀(x:S)∀(y :T)z.A)z.A
+	    pack [x, y] as Σ(x : S)T ≡ λ(z :{A : ⊥..>})λ(f :∀(x:S)∀(y :T)z.A)f x y
 	unpack x : S, y : T = t in u ≡ let z1 = t in let z2 = {A = U} in
 	                                let z3 = (λ(x:S)λ(y :T)u) in
 	                                let z4 = z1 z2 in z4 z3
