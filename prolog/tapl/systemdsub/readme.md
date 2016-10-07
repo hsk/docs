@@ -90,7 +90,7 @@ For example, in the third evaluation rule, which un-nests let-bindings, we assum
 The type assignment rules in Figure 1 define a straightforward dependent typing discipline.
 </sup></sub>
 
-図1のタイプの割り当てルールは単純依存型付け規則を定義します。
+図1のタイプの割り当てルールは単純な依存型付け規則を定義します。
 
 <sub><sup>
 A lambda abstraction has a dependent function type ∀(x:S)T.
@@ -215,8 +215,8 @@ Dependent sums can be encoded using dependent functions, through an encoding sim
 
 System F における存在型のものと同様の符号化を通じて、依存 sums は 依存関数を使ってエンコードできます。
 
-	                   Σ(x : S)T ≡ ∀(z :{A : ⊥..>})∀(f :∀(x:S)∀(y :T)z.A)z.A
-	    pack [x, y] as Σ(x : S)T ≡ λ(z :{A : ⊥..>})λ(f :∀(x:S)∀(y :T)z.A)f x y
+	                   Σ(x : S)T ≡ ∀(z :{A : ⊥..⊤})∀(f :∀(x:S)∀(y :T)z.A)z.A
+	    pack [x, y] as Σ(x : S)T ≡ λ(z :{A : ⊥..⊤})λ(f :∀(x:S)∀(y :T)z.A)f x y
 	unpack x : S, y : T = t in u ≡ let z1 = t in let z2 = {A = U} in
 	                                let z3 = (λ(x:S)λ(y :T)u) in
 	                                let z4 = z1 z2 in z4 z3
@@ -265,3 +265,98 @@ For the same reason, the typing rule (Let) for let expressions features a simila
 Finally, note that the above encoding allows for the unrestricted projection of “existential witnesses” via −.1, whereas no such operation exists on existential types in System F/F<:.
 
 最後に、そのような操作は、System F/F<:.における存在型に存在していないのに対し、上記の符号化は、`-.1`を介した「存在証明」の無制限の射影を可能にすることに注意してください。
+
+# 3 Embedding F<: in D<:
+
+# 3 D<: 内への F<: の埋め込み
+
+System D<: initially emerged as a generalization of F<:, mapping type lambdas to term lambdas and type parameters to type tags, and removing certain restrictions in a big-step evaluator for F<: (Rompf and Amin, 2015).
+
+System D<: は最初F<: の一般化として登場し、型ラムダから項ラムダと型パラメータから型タグをマップし、そしてF<: のビッグステップ評価の幾つかの制限を取り除きます(Rompf and Amin, 2015)。
+
+We make this correspondence explicit below.
+
+我々は以下でこの対応を明示的にします。
+
+Pick an injective mapping from type variables X to term variables xX.
+
+型変数`X`から項変数`xX`に単射の写像を選びます。
+
+In the following, any variable names not written with an X subscript are assumed to be outside the range of that mapping.
+
+以下では、Xの添え字で書かれていない任意の変数名は、そのマッピングの範囲外であると仮定されています。
+
+Let the translation ∗ from F<: types and terms to D<: types and terms be defined as follows.
+
+F<:型と項からD<:型と項への翻訳*を次のように定義してみましょう。
+
+(The definition of t∗ assumes a countable supply of fresh names x, X /∈ fv(t).)
+
+(t*の定義は、新鮮な名前`x, X /∈ fb(t)`の可算供給を前提としています。）
+
+	            X∗ = xX.A
+	            ⊤∗ = ⊤
+	     (T → U)∗ = ∀(x:T∗)U∗
+	(∀(X <: S)T)∗ = ∀(xX :{A : ⊥..S∗})T∗
+
+	            x∗ = x
+	 (λ(x : T)t)∗ = λ(x : T∗)t∗
+	(Λ(X <: S)t)∗ = λ(xX : {A : ⊥..S∗})t∗
+	        (t u)∗ = let x = t∗ in let y = u∗ in x y            x, y fresh
+	       (t[U])∗ = let x = t∗ in let yY = {A = U∗} in x yY    x, Y fresh
+
+Note that there are D<: terms that are not in the image of `∗`.
+
+`*`の像ではない D<:項があることに注意してください。
+
+An example is `λ(x : {A:⊤..⊤})x`.
+
+
+例は`λ(x : {A:⊤..⊤})x`です。
+
+Typing contexts are translated point-wise as follows:
+
+次のように型付けコンテキストはポイント単位で変換されます:
+
+	(X <: T)∗ = xX : {A : ⊥..T∗}
+	 (x : T)∗ = x : T∗
+
+Theorem 1. If `Γ |-F S <: T` then `Γ∗ |-D S∗ <: T∗`.
+
+定理1. もしも`Γ |-F S <: T` ならば `Γ∗ |-D S∗ <: T∗`。
+
+Proof.
+
+証明.
+
+The proof is by straight-forward induction on F<: subtyping derivations.
+
+証明はF<:のサブタイプの導出の単純な帰納法によります。
+
+The only non-trivial case is subtyping of type variables, which follows from (Var) and (Sel-<:).
+
+唯一の非自明なケースは (Var) かつ（SEL-<:) から、以下の型変数の部分的型付けです。
+
+	Γ∗, xX : {A : ⊥..T ∗}, Γ0∗ |- xX : {A : ⊥..T ∗}
+	--------------------------------------------------- (Sel-<:)
+	Γ∗, xX : {A : ⊥..T ∗}, Γ0∗ |- xX.A <: T∗
+
+Theorem 2. If `Γ |-F t : T` then `Γ∗ |-D t∗ : T∗`.
+
+定理2. もしも`Γ |-F t : T` ならば `Γ∗ |-D t∗ : T∗`。
+
+Proof (sketch).
+
+証明 (スケッチ).
+
+The proof is by induction on (System F) typing derivations.
+
+証明は(System F) 型付け導出に関する帰納法によるものです。
+
+The case for subsumption follows immediately from preservation of subtyping.
+
+包摂のためのケースは、部分型付けの保存からすぐに求まります。
+
+The only remaining interesting cases are type and term application, which are given in detail in Appendix A.2.
+
+唯一残っている興味深い例は、付録A.2に詳細に記載されている型と項の適用です。
