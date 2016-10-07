@@ -1,4 +1,6 @@
-# System D<:
+[The Essence of Dependent Object Types](https://infoscience.epfl.ch/record/215280/files/paper_1.pdf) の翻訳
+
+# 2. System D<:
 
 図1は我々のSystem D<: の式を要約したものです。
 これらの項言語は本質的にラベル`A`と型`T`が関連づいている型タグ`{A=T}`の値の形式が1つ追加されたラムダ計算です。
@@ -61,6 +63,7 @@ System F<: と同様、我々はいくつかの型に多相的な恒等関数を
 （1）型 `{A：T..T}` の引数は型 `{A:⊥..⊤}`のパラメータを使用することが可能であり、
 （2）依存結果型(dependent result type) `∀(x:a.A)a.A` は`T <: a.A <: T` であるため `∀(x:T)T` に変換することができます。
 
+## 2.1 
 
 # 参考文献
 

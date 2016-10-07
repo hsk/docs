@@ -174,7 +174,7 @@ Combined with dependent functions, these path-dependent types can express the id
 For example, take the polymorphic identity function in System F<: :
 </sup></sub>
 
-例えば、System F<: の多型恒等関数は：
+例えば、System F<: の多相的な恒等関数は：
 
 	⊢ Λ(α <: ⊤).λ(x : α).x : ∀(α <: ⊤).α → α
 
@@ -193,7 +193,7 @@ and in System D<: :
 Like in System F<:, we can apply the polymorphic identity function to some type, say T, to get the identity function on T:
 </sup></sub>
 
-System F<: と同様、我々はいくつかの型に多型恒等関数を適用することができるように、Tを用いてT上の恒等関数を取得します：
+System F<: と同様、我々はいくつかの型に多相的な恒等関数を適用することができるように、Tを用いてT上の恒等関数を取得します：
 
 	⊢ let f =... in let a = {A = T} in f a : ∀(x:T)T
 
@@ -205,3 +205,63 @@ The role of subtyping is essential: (1) the argument a of type {A : T..T} can be
 
 （1）型 `{A：T..T}` の引数は型 `{A:⊥..⊤}`のパラメータを使用することが可能であり、
 （2）依存結果型 `∀(x:a.A)a.A` は`T <: a.A <: T` であるため `∀(x:T)T` に変換することができます。
+
+
+## 2.1 Example: Dependent Sums
+
+## 2.1 例: 依存 Sums
+
+Dependent sums can be encoded using dependent functions, through an encoding similar to that of existential types in System F.
+
+System F における存在型のものと同様の符号化を通じて、依存 sums は 依存関数を使ってエンコードできます。
+
+	                  Σ(x : S)T ≡ ∀(z :{A : ⊥..>})∀(f :∀(x:S)∀(y :T)z.A)z.A
+	   pack [x, y] as Σ(x : S)T ≡ λ(z :{A : ⊥..>})λ(f :∀(x:S)∀(y :T)z.A)f x y
+	unpack x : S, y : T = t in u ≡ let z1 = t in let z2 = {A = U} in
+	                                let z3 = (λ(x:S)λ(y :T)u) in
+	                                let z4 = z1 z2 in z4 z3
+	                         z.1 ≡ unpack x : S, y : T = z in x
+	                         z.2 ≡ unpack x : S, y : T = z in y
+
+where U is the type of u.
+
+ここで、`U`は`u`の型です。
+
+The associated, admissible subtyping and typing rules are easy to derive and can be found in Appendix A.1.
+
+関連する、許容サブタイピングと型付け規則は導出が容易であり、付録A.1に記載されています。
+
+Note that
+
+1. unpacking via unpack x, y = t in u is only allowed if x and y do not appear free in the type U of u,
+2. similarly, the second projection operator −.2 may only be used if x does not appear free in T.
+	In such cases, we have Σ(x : S)T = S × T, i.e. z is in fact an ordinary pair.
+
+以下に注意してください:
+
+1. `u`の型`U`内で`x`と`y`が自由に現れない場合、`unpack x, y = t in u`を経てunpackingは、許可されています。
+2. 同様に、`T`内に`x`が自由に現れない場合は第2の射影演算子ー`.2`にのみ使用することができます。
+
+These restrictions may come as a surprise: while they are similar to the hygiene conditions imposed on existential types in System F/F<:, they do not apply to dependent sums in (fully) dependently typed languages.
+
+これらの制限は驚きとして来ることがあります: 彼らは、System F/F<:で存在型に課せられた衛生条件に似ていながら,彼らは（完全に）依存型付け言語に依存sumsには適用されません。
+
+In such languages, the bound names x, y can be prevented from leaking into the overall type of an unpack statement by substituting the projections t.1 and t.2 for occurrences of x and y in U.
+
+そのような言語では、バインドされた名前`x,y`は`U`内の`x`と`y`の出現のための射影`t.1`および`t.2`を置換することによりunpack文全体の型へ漏れるのを防止することができます。
+
+The same is true for the return type of the second projection z.2, which would be [x := z.1]T.
+
+`[x := z.1]T`となる第2の射影`z.2`の戻り値の型についても同様です。
+
+Unfortunately, such substitutions are forbidden in D<: because types may only depend on variables, as opposed to arbitrary terms (like z.1 or t.2).
+
+型は変数だけに依存する可能性があるため、残念ながら、このような置換はD <: で禁止されており、（`z.1`または`t.2`のような）任意の項とは対照的です。
+
+For the same reason, the typing rule (Let) for let expressions features a similar hygiene condition.
+
+同じ理由で、let式の型付け規則（Let）は、同様の衛生条件を備えています。
+
+Finally, note that the above encoding allows for the unrestricted projection of “existential witnesses” via −.1, whereas no such operation exists on existential types in System F/F<:.
+
+最後に、そのような操作は、System F/F<:.における存在型に存在していないのに対し、上記の符号化は、`-.1`を介した「存在証明」の無制限の射影を可能にすることに注意してください。
