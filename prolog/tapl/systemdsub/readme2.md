@@ -8,7 +8,7 @@
 ----
 
 我々の説明は二つの側面でRompfとAmin（2015）とは異なります。
-まず、項は[ANF形式](https://en.wikipedia.org/wiki/Algebraic_normal_form "Algebraic normal form")に制限されています。
+まず、項は[A正規形(ANF)](https://en.wikipedia.org/wiki/Algebraic_normal_form "Algebraic normal form")に制限されています。
 これは、すべての中間値はlet束縛の中で抽象化されています。
 次に、ビッグステップ評価とは対照的に、評価規則は小ステップ還元関係で表されます。
 還元は完全な置換の代わりに唯一の変数/変数のリネームを使用しています。
