@@ -38,12 +38,14 @@
 ----
 
 我々の説明は二つの側面でRompfとAmin（2015）とは異なります。
-まず、項はA正規形[A-normal form](https://en.wikipedia.org/wiki/A-normal_form "A-normal form")に制限されています。(A正規形は関数の評価に変数のみを使う)
-これは、すべての中間値はlet束縛の中で抽象化されています。
+まず、項はA正規形[A-normal form](https://en.wikipedia.org/wiki/A-normal_form "A-normal form")に制限されています。
+これは、すべての中間値はlet束縛の中で抽象化されています。(訳注: A正規形は関数適用の項に変数のみを用います。)
 次に、ビッグステップ評価とは対照的に、評価規則はスモールステップ簡約関係で表されます。
 簡約は完全な置換の代わりに唯一の変数/変数のリネームを使用しています。
 置換ステップによってコピーされる代わりに、値はそれらのlet束縛にとどまります。
-これは、call-by-need ラムダ計算[(Ariola et al., 1995)](https://pdfs.semanticscholar.org/2c7d/7e94298797ab0b9fb4ce6df957474da65b6b.pdf)に使用される技術に類似しています。(※訳注：評価文脈evaluation contextを使って、call-by-needの評価規則を記述した、Standard call-by-need reductionに似ている。)
+これは、call-by-need ラムダ計算[(Ariola et al., 1995)](https://pdfs.semanticscholar.org/2c7d/7e94298797ab0b9fb4ce6df957474da65b6b.pdf)に使用される技術に類似しています。
+
+(訳注：評価文脈evaluation contextを使って、call-by-needの評価規則を記述した、Standard call-by-need reductionに似ています。
 
 	Syntactic Domains
 
@@ -59,6 +61,10 @@
 	(Vs) let x = V in E[x]                -> let x = V in E[V]
 	(Cs) (let x = S in A) U               -> let x = S in A U
 	(As) let y = (let x = S in A) in E[y] -> let x = S in let y = A in E[y]
+
+	                        Standard call-by-need reduction
+
+)
 
 ----
 我々は全体を通して[Barendregtの変数規約](http://www21.in.tum.de/~berghofe/papers/CADE2007.pdf "Barendregt’s Variable Convention")を使用しています。
