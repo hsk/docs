@@ -62,7 +62,7 @@
 	(Cs) (let x = S in A) U               -> let x = S in A U
 	(As) let y = (let x = S in A) in E[y] -> let x = S in let y = A in E[y]
 
-	                        Standard call-by-need reduction
+<center>Standard call-by-need reduction</center>
 
 )
 
@@ -72,6 +72,29 @@
 
 ----
 
+	型付け規則 Γ ⊢ t : T
+
+	Γ,x :T, Γ’ ⊢ x : T           (Var)
+
+	Γ ⊢ t : T   Γ ⊢ T <: U
+	———————————————— (Sub)
+	Γ ⊢ t : U
+
+	Γ,x :T ⊢ t : U   x ∉ fv(T)
+	———————————————— (All-I)
+	Γ ⊢ λ(x:T)t:∀(x:T)U
+
+	Γ ⊢ x : ∀(z:S)T   Γ ⊢ y : S
+	———————————————— (All-E)
+	Γ ⊢ x y:[z::=y]T
+
+	Γ ⊢ t : U   Γ,x:T ⊢ u:U
+	x ∉ fv(U)
+	———————————————— (Let)
+	Γ ⊢ let x = t in u:U
+
+	Γ ⊢ {A=T}:{A:T..T}             (Typ-I)
+
 図1のタイプの割り当てルールは単純依存型付け規則を定義します。
 ラムダ抽象は、依存関数型`∀(x:S)T`を持ちます。
 これは、LF (Harper et al., 1993)の依存積(Dependent product)`Π(x:S)T`のようなものですが、一般的ではない項である制限変数`x`は唯一の他の変数をインスタンス化することができます。
@@ -80,6 +103,33 @@
 型タグを参照している変数`x`の型は、型の射影`x.A`で取り出すことができます。
 
 ----
+
+	部分型付け規則 Γ ⊢ T <: T
+
+	Γ ⊢ T <: ⊤           (Top)
+	Γ ⊢ T <: ⊥           (Bot)
+	Γ ⊢ T <: T           (Refl)
+
+	Γ ⊢ S <: T   Γ ⊢ T <: U
+	———————————————— (Trans)
+	Γ ⊢ S <: U
+
+	Γ ⊢ x : {A : S..T}
+	———————————————— (<:-Sel)
+	Γ ⊢ S <: x.A
+
+	Γ ⊢ x : {A : S..T}
+	———————————————— (Sel-<:)
+	Γ ⊢ x.A <: T
+
+	Γ ⊢ S2 <: S1
+	Γ, x : S2 ⊢ T1 <: T2
+	———————————————— (All-<:-All)
+	Γ ⊢ ∀(x:S1)T1 <: ∀(x:S2)T2
+
+	Γ ⊢ S2 <: S1 Γ ⊢ T1 <: T2
+	———————————————— (Typ-<:-Typ)
+	Γ ⊢ {A:S1..T1} <: {A:S2..T2}
 
 図1のサブタイプのルールは、先行して`S <: T`型間の（Reful 反射）及び（Trans トランス）のルールを定義します。
 これらは、`⊤`と`⊥`最大と最小のタイプ（Top）、（Bot）を明示し、
