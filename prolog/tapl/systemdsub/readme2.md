@@ -2,6 +2,34 @@
 
 # 2. System D<:
 
+	構文
+
+	x, y, z          変数
+	v ::=            値
+	　{A=T}          型タグ
+	　λ(x:T)t       ラムダ
+	s, t, u ::=      項
+	　x              変数
+	　v              値
+	　x y            関数適用
+	　let x = t in u let式
+
+	S,T,U ::=        型
+	  ⊤              top型
+	　⊥             bottom型
+	　{A:S..T}       型宣言
+	　x.A            型射影
+	　∀(x:S)T       依存関数
+
+	評価規則 t ---> t
+	        let x = v in e[x y] ---> let x = v in e[[z := y]t] if v=λ(z:T)t
+	             let x = y in t ---> [x::=y] t
+	let x = let y = s in t in u ---> let y = s in let x = t in u
+	                       e[t] ---> e[u]                      if t ---> u
+	                                 where e::=[] | let x = [] in t | let x = v in e
+
+	                                 図1. System D<:
+
 図1は我々のSystem D<: の式を要約したものです。
 これらの項言語は本質的にラベル`A`と型`T`が関連づいている型タグ`{A=T}`の値の形式が1つ追加されたラムダ計算です。
 現時点では、我々は一つの型ラベルだけが必要で、`A`はわずか1つの名前でアルファベット上の範囲とみなすことができます。
@@ -10,20 +38,12 @@
 ----
 
 我々の説明は二つの側面でRompfとAmin（2015）とは異なります。
-まず、項はA正規形[A-normal form](https://en.wikipedia.org/wiki/A-normal_form "A-normal form")に制限されています。
+まず、項はA正規形[A-normal form](https://en.wikipedia.org/wiki/A-normal_form "A-normal form")に制限されています。(A正規形は関数の評価に変数のみを使う)
 これは、すべての中間値はlet束縛の中で抽象化されています。
 次に、ビッグステップ評価とは対照的に、評価規則はスモールステップ簡約関係で表されます。
 簡約は完全な置換の代わりに唯一の変数/変数のリネームを使用しています。
 置換ステップによってコピーされる代わりに、値はそれらのlet束縛にとどまります。
-これは、call-by-need ラムダ計算[(Ariola et al., 1995)](https://pdfs.semanticscholar.org/2c7d/7e94298797ab0b9fb4ce6df957474da65b6b.pdf)に使用される技術に類似しています。(※訳注：評価文脈evaluation contextを使ったテクニックのこと)
-
-	評価規則 t ==> t
-
-	        let x = v in e[x y] ==> let x = v in e[[z := y]t] if v=λ(z:T)t
-	             let x = y in t ==> [x::=y] t
-	let x = let y = s in t in u ==> let y = s in let x = t in u
-	                       e[t] ==> e[u]                      if t ==> u
-	                                where e::=[] | let x = [] in t | let x = v in e
+これは、call-by-need ラムダ計算[(Ariola et al., 1995)](https://pdfs.semanticscholar.org/2c7d/7e94298797ab0b9fb4ce6df957474da65b6b.pdf)に使用される技術に類似しています。(※訳注：評価文脈evaluation contextを使って、call-by-needの評価規則を記述した、Standard call-by-need reductionに似ている。)
 
 	Syntactic Domains
 
