@@ -10,12 +10,35 @@
 ----
 
 我々の説明は二つの側面でRompfとAmin（2015）とは異なります。
-まず、項は[代数的正規形(ANF)](https://en.wikipedia.org/wiki/Algebraic_normal_form "Algebraic normal form")に制限されています。(※訳注 A正規形もANFだけど[A-normal form](https://en.wikipedia.org/wiki/A-normal_form "A-normal form")で意味がたぶん違う)
+まず、項はA正規形[A-normal form](https://en.wikipedia.org/wiki/A-normal_form "A-normal form")に制限されています。
 これは、すべての中間値はlet束縛の中で抽象化されています。
-次に、ビッグステップ評価とは対照的に、評価規則は小ステップ還元関係で表されます。
-還元は完全な置換の代わりに唯一の変数/変数のリネームを使用しています。
+次に、ビッグステップ評価とは対照的に、評価規則はスモールステップ簡約関係で表されます。
+簡約は完全な置換の代わりに唯一の変数/変数のリネームを使用しています。
 置換ステップによってコピーされる代わりに、値はそれらのlet束縛にとどまります。
-これは、call-by-need ラムダ計算[(Ariola et al., 1995)](https://pdfs.semanticscholar.org/2c7d/7e94298797ab0b9fb4ce6df957474da65b6b.pdf)に使用される技術に類似しています。
+これは、call-by-need ラムダ計算[(Ariola et al., 1995)](https://pdfs.semanticscholar.org/2c7d/7e94298797ab0b9fb4ce6df957474da65b6b.pdf)に使用される技術に類似しています。(※訳注：評価文脈evaluation contextを使ったテクニックのこと)
+
+	評価規則 t ==> t
+
+	        let x = v in e[x y] ==> let x = v in e[[z := y]t] if v=λ(z:T)t
+	             let x = y in t ==> [x::=y] t
+	let x = let y = s in t in u ==> let y = s in let x = t in u
+	                       e[t] ==> e[u]                      if t ==> u
+	                                where e::=[] | let x = [] in t | let x = v in e
+
+	Syntactic Domains
+
+	Variables           x,y,z
+	Values              V,W   ::= λx.T
+	Terms               S,T,U ::= V | T U
+	Answers             A,Ai  ::= λx.T | let x = T in A
+	Evaluation Contexts E,Ei  ::= [] | E T | let x = T in E | let x = E0 in E1[x]
+
+	Standard Reduction Rules
+
+	(Is) (λx.T) U                        -> let x = U in T
+	(Vs) let x = V in E[x]                -> let x = V in E[V]
+	(Cs) (let x = S in A) U               -> let x = S in A U
+	(As) let y = (let x = S in A) in E[y] -> let x = S in let y = A in E[y]
 
 ----
 我々は全体を通して[Barendregtの変数規約](http://www21.in.tum.de/~berghofe/papers/CADE2007.pdf "Barendregt’s Variable Convention")を使用しています。
