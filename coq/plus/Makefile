@@ -6,7 +6,3 @@ all:
 
 clean:
 	rm -rf *.glob *.vo .*.aux plus.mli plus.ml *.cm* plus
-
-
-
-
