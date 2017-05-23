@@ -1,4 +1,5 @@
-object AlgorithmW extends App {
+package main
+object main extends App {
 
   sealed trait E
   case class EVar(a: String) extends E
@@ -89,7 +90,7 @@ object AlgorithmW extends App {
     }
   }
 
-  def var_bind(u: String, t: T) { 
+  def var_bind(u: String, t: T) {
     if (t != TVar(u)) {
       if (ftv_t(t).contains(u))
         throw TypeError("occurs check fails: " + u + " vs. " + show_t(t))
@@ -113,7 +114,7 @@ object AlgorithmW extends App {
 
   def ti(env: Assumps, e: E): T = {
     e match {
-    case EVar(n) => 
+    case EVar(n) =>
       if (!env.contains(n))
         throw TypeError("unbound variable: " + n)
       instantiate(env(n))
@@ -193,4 +194,3 @@ object AlgorithmW extends App {
   test_error(EApp(EInt(2), EInt(2)))
 
 }
-

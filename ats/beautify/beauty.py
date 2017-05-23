@@ -189,7 +189,7 @@ def cnv(e):
             e3.append(s)
     return "".join(e3)
 
-# pritty ocaml grammer
+# super ml grammer
 
 keywords = reg(r"^(begin|end|if|else|then|let|in|val|implement|local|typedef|sortdef|datatype|extern|lam|try|with|fnx|fn|fun|case|of|orelse|macrodef|macdef|staload|dynload|open|struct|module|and|while|do|done)\b")
 semi = notp(";;") >> p(";")

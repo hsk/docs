@@ -2,7 +2,7 @@ all:
 	ocamlyacc parser.mly
 	ocamllex lexer.mll
 	rm parser.mli
-	ocamlc ast.ml parser.ml lexer.ml main.ml -o nat
+	ocamlc -g ast.ml parser.ml lexer.ml main.ml -o nat
 
 clean:
-	rm -f *.cm* parser.ml lexer.ml nat
+	rm -f *.cm* parser.ml lexer.ml nat *.o

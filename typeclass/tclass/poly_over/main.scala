@@ -1,4 +1,5 @@
-object PolyOverFun extends App {
+package infer
+object main extends App {
 
   sealed trait E
   case class EVar(a: String) extends E

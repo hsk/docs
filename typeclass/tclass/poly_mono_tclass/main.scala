@@ -1,3 +1,5 @@
+package infer
+
 object Infer extends App {
 
   sealed trait E
@@ -220,8 +222,7 @@ object Infer extends App {
           EApp(EVar(n),EVar(impls(apply_t(tv))))
         case None => EVar(n)
       }
-    case e =>
-      throw TypeError("invalid expression "+e)
+    case e => throw TypeError("invalid expression "+e)
     }
   }
 

@@ -1,1253 +1,1036 @@
-# How to make ad-hoc polymorphism less ad hoc
+# アドホック多相下でのアドホックの作り方
 
-http://www.cse.iitk.ac.in/users/karkare/courses/2010/cs653/Papers/ad-hoc-polymorphism.pdf
+  http://www.cse.iitk.ac.in/users/karkare/courses/2010/cs653/Papers/ad-hoc-polymorphism.pdf
 
-# アドホック多相型下でのアドホックの作り方
+  Philip Wadler and Stephen Blott
 
-Philip Wadler and Stephen Blott
+  University of Glasgow
 
-University of Glasgow
-
-October 1988
+  October 1988
 
 ## Abstract
 
-This paper presents type classes, a new approach to ad-hoc polymorphism.
-Type classes permit Overloading of arithmetic operators such as multiplication, and generalise the "eqtype variables" of Standard ML.
-Type classes extend the Hindley/Milner polymorphic type system, and provide a new approach to issues that arise in object-oriented programming, bounded type quantification, and abstract data types.
-This paper provides an informal introduction to type classes, and defines them formally by means of type inference rules.
+  本論文では、型クラス、アドホック多相への新しいアプローチを提示します。
+  型クラスは、乗算などの算術演算子のオーバーロードを許可し、Standard MLの「`eqtype` 変数」を一般化します。
+  型クラスはHindley/Milner多相型システムを拡張し、オブジェクト指向プログラミング、有界型定量化、および抽象データ型で発生する問題への新しいアプローチを提供します。
+  本稿では、クラスを入力するための非公式の導入を提供し、型推論規則によって正式にそれらを定義します。
 
-本論文では、型クラス、アドホック多型への新しいアプローチを提示します。
-型クラスは、乗算などの算術演算子のオーバーロードを許可し、標準MLの「eqtype変数」を一般化します。
-型クラスはヒンドリー/ミルナー多相型システムを拡張し、オブジェクト指向プログラミング、有界型定量化、および抽象データ型で発生する問題への新しいアプローチを提供します。
-本稿では、クラスを入力するための非公式の導入を提供し、型推論規則によって正式にそれらを定義します。
+## 1 イントロダクション
 
-## 1 Introduction
+  Stracheyは、二種類の多相型を区別するために、アドホックとパラメトリックの形容詞を選択した <a name="r_Str67"></a>[\[Str67\]](#Str67)。
+  アドホック多相は、関数が定義されている場合に発生します。いくつかの異なる型に対して、型ごとに異なる方法で動作します。
+  典型的な例は、オーバーロードの乗算です。
+  同じシンボルを使用して整数の乗算(`3 * 3`のように)と浮動小数点値の乗算(`3.14 * 3.14`のように)を表すことができます。
+  パラメトリック多相は、関数が定義されている場合に発生します。ある範囲の型に対して、各型に対して同じように作用します。
+  典型的な例は長さ関数であり、これは整数のリストと浮動小数点数のリストで同じように動作します。
 
-Strachey chose the adjectives ad-hoc and parametric to distinguish two varieties of polymorphism [Str67].
-Ad-hoc polymorphism occurs when a function is defined Over several different types, acting in a different way for each type.
-A typical example is overloaded multiplication:
-the same symbol may be used to denote multiplication of integers (as in 3\*3) and multiplication of floating point values (as in 3.14\*3.14).
+  ----
 
-Parametric polymorphism occurs when a function is defined Over a range of types, acting in the same way for each type.
-A typical example is the length function, which acts in the same way on a list of integers and a list of floating point numbers.
+  \*著者の所在地：スコットランド、グラスゴー大学、グラスゴーG12 8QQ)コンピューティングサイエンス学科。
 
-----
+  電子メール：wadler, blott@cs.glasgow.ac.uk。
 
-\*Authors' address: Department of Computing Science, University of Glasgow, Glasgow G12 8QQ), Scotland.
-Electronic mail: wadler, blott@cs.glasgow .ac.uk.
+  Published in： 1989年1月、テキサス州オースティン、プログラミング言語の原則に関する第16回ACMシンポジウム。
 
-Published in: 16'th ACM Symposium on Principles of Programming Languages, Austin, Texas, January 1989.
+  この資料の全部または一部を無償でコピーすることが許可されるのは、コピーが直接的な商業的利益のために作成または配布されていない場合、ACMの著作権表示と出版のタイトルと日付が表示され、コピーが 計算機協会の許可を得ている。
+  そうでなければコピーするか、または再発行するには、料金および/または特定の許可が必要です。
 
-Permission to copy without fee all or part of this material is granted provided that the copies are not made or distributed for direct commercial advantage, the ACM copyright notice and the title of the publication and its date appear, and notice is given that copying is by permission of the Association for Computing Machinery.
-To copy otherwise, or to republish, requires a fee and/or specific permission.
+  ----
 
-----
+  パラメトリック多相型に対する広く受け入れられているアプローチの1つは、Standard ML [<a name="r_HMM86"></a>[HMM86](#HMM86), <a name="r_Mil87"></a>[Mil87](#Mil87)]、Miranda<a name="r1"></a>[1](#1) <a name="r_Tur85"></a>[\[Tur85\]](#Tur85) および他の言語で使用されるHindley/Milner型システム[<a name="r_Hin69"></a>[Hin69](#Hin69), <a name="r_Mil78"></a>[Mil78](#Mil78), <a name="r_DM82"></a>[DM82](#DM82)]です。
+  一方、アドホック多相型には広く受け入れられているアプローチがないため、その名前は二重に適切です。
+  本稿では、Hindley/Milner型システムを拡張して特定の種類のオーバーロードを含む型クラスを提供し、Strachey分離された2種類の多相型をまとめます。
+  ここで提示された型システムは、Hindley/Milner型システムの一般化です。 そのシステムのように、型宣言が推論できるので、関数の明示的な型宣言は必要ありません。
+  推論プロセス中に、型クラスを使用するプログラムを、オーバーロードを使用しない同等のプログラムに変換することができます。
+  変換されたプログラムは、(一般化されていない)Hindley/Milner型システムで型付け可能です。
+  この論文の本文では、型クラスと変換ルールの非公式な紹介がありますが、付録では、型定義と変換の正式なルールを推論ルールの形で示しています(<a name="r_DM82"></a>[\[DM82\]](#DM82)のように)。
+  変換規則は、型クラスのセマンティクスを提供します。
+  また、必要に応じてプリプロセッサを記述するだけで、新しいシステムをHindley/Milner型の既存の言語に追加することもできます。
+  アドホック多相性の問題が生じる2つの場所は、算術と等価性のための演算子の定義です。
+  以下では、Standard MLとMirandaによって採用されたこれらの3つの問題へのアプローチを検討します。 2つの言語間でアプローチが異なるだけでなく、単一の言語でも異なっています。
+  しかし、我々が見るように、型クラスはこれらの問題に対処できる一様なメカニズムを提供します。
 
-One widely accepted approach to parametric polymorphism is the Hindley/Milner type system [Hin69, Mil78, DM82], which is used in Standard ML [HMM86, Mil87], Miranda1[Tur85], and other languages.
-On the other hand, there is no widely accepted approach to ad-hoc polymorphism,
-and so its name is doubly appropriate.
+  ----
 
-This paper presents type classes, which extend the Hindley/Milner type system to include certain kinds of overloading, and thus bring together the two sorts of polymorphism that Strachey separated.
+  <a name="1"></a>[1](#r1) MirandaはResearch Software Limitedの商標です。
 
-The type system presented here is a generalisation of the Hindley/Milner type system. As in that system, type declarations can be inferred, so explicit type declarations for functions are not required.
-During the inference process, it is possible to translate a program using type classes to an equivalent program that does not use overloading.
-The translated programs are typable in the (ungeneralised) Hindley/ Milner
-type system.
+  ----
 
-The body of this paper gives an informal introduction to type classes and the translation rules, while an appendix gives formal rules for typing and translation, in the form of inference rules (as in [DM82]).
-The translation rules provide a semantics for type classes.
-They also provide one possible implementation technique: if desired, the new system could be added to an existing language with Hindley/Milner types simply by writing a pre-processor.
+  この作業は、Lasky Functional Programming Language <a name="2"></a>[2](#2) を設計するHaskell委員会の努力から生まれました。
+  ハスケル委員会の目標の1つは、可能な限り問題に対処するための「オフザシェルフ」ソリューションを採用することでした。
+  算術と等価性は、標準的な解が得られなかった分野であることを認識するのに少し驚きました！
+  型クラスは、これらの問題のより良い解決策を見つける試みとして開発されました。 ソリューションはHaskellの設計に含まれるのに十分成功したと判断されました。
+  ただし、型クラスはHaskellから独立して判断する必要があります。 Standard MLのような別の言語に組み込むこともできます。
+  型クラスは、オブジェクト指向プログラミング、型の限定量化、抽象データ型 [<a name="r_CW85"></a>[CW85](#CW85), <a name="r_MP85"></a>[MP85](#MP85), <a name="r_Rey85"></a>[Rey85](#Rey85)] で発生する問題と密接に関連しているようです。
+  接続のいくつかは以下に概説されていますが、これらの関係を完全に理解するためにより多くの作業が必要です。
+  我々と非常によく似た型システムはStefan Kaes <a name="r_Kae88"></a>[\[Kae88\]](#Kae88) によって独立して発見されました。
+  我々の仕事は、Kaesのいくつかの点で改善されています。特に、関連する演算子をグループ化するための型クラスを導入し、より良い変換方法を提供します。
+  この論文は2つの部分に分かれています。本文は型クラスを非公式に紹介していますが、付録にはより正式な説明があります。
+  2章では、Standard MLとMirandaで使用されているようなアドホック多相型の限界を記述することにより、新しいシステムを動機づけます。
+  セクション3では、簡単な例を用いて型クラスを紹介します。
+  セクション4は、セクション3の例が型クラスなしで同等のプログラムにどのように変換されるかを示しています。
+  セクション5は、オーバーロードされた等価関数の定義である2番目の例を示しています。
+  セクション6では、サブクラスについて説明します。
+  第7章では、関連する作業と結論について説明します。
+  付録Aは、入力と変換の推論規則を示しています。
 
-Two places where the issues of ad-hoc polymorphism arise are the definition of Operators for arithmetic and equality.
-Below we examine the approaches to these three problems adopted by Standard ML and Miranda; not only do the approaches differ between the two languages, they also differ within a single language.
-But as we shall see, type classes provide a uniform mechanism that can address these problems.
+  -------
 
-----
+  <a name="2"></a>[2](#r2) ハスケル委員会には、Arvind、Brian Boutel、Jon Fairbairn、
+  ジョー・ファッセル、ポール・フダク、ジョン・ヒューズ、トーマス・ジョンソン、ディック・キーバーツ、
+  サイモン・ペイトン・ジョーンズ、リシュユール・ニッヒル、マイク・リーブ、フィリップ・ワドラー、デイヴィッド
+  ワイズ、ジョナサン・ヤング。
 
-1 Miranda is a trademark of Research Software Limited.
+  -------
 
-----
+## 2 アドホック多相型の限界
 
-This work grew out of the efforts of the Haskell committee to design a lazy functional programming language 2.
-One of the goals of the Haskell committee was to adopt "off the shelf" solutions to problems wherever possible.
-We were a little surprised to realise that arithmetic and equality were areas where no standard solution was available!
-Type classes were developed as an attempt to find a better solution to these problems; the solution was judged successful enough to be included in the Haskell design.
-However, type classes should be judged independently of Haskell; they could just as well be incorporated into another language, such as Standard ML.
+  このセクションは、スタンダードMLと Miranda で算術と等価性によって生じる問題を調べることによって、アドホック多相型の処理を動機づけます。
 
-Type classes appear to be closely related to issues that arise in object-oriented programming, bounded quantification of types, and abstract data types [CW85, MP85, Rey85].
-Some of the connections are outlined below, but more work is required to understand these relations fully.
+#### 算術
 
-A type system very similar to Ours has been discovered independently by Stefan Kaes [Kae88].
-Our work improves on Kaes' in several ways, notably by the introduction of type classes to group related operators, and by providing a better translation method.
+  オーバーロードに対する最も単純なアプローチでは、加算や乗算などの基本的な演算はオーバーロードされますが、それらの観点から定義された関数はオーバーロードされません。
+  たとえば、 `3 * 3` や `3.14 * 3.14` と書くことはできますが、定義することはできません
 
-This paper is divided into two parts: the body gives an informal introduction to type classes, while the appendix gives a more formal description.
-Section 2 motivates the new system by describing limitations of ad-hoc polymorphism as it is used in Standard ML, and Miranda.
-Section 3 introduces type classes by means of a simple example.
-Section 4 illustrates how the example of Section 3 may be translated into an equivalent program without type classes.
-Section 5 presents a second example, the definition of an overloaded equality function.
-Section 6 describes subclasses.
-Section 7 discusses related work and concludes.
-Appendix A presents inference rules for typing and translation.
+    square x = x * x
 
-## 2 Limitations of ad-hoc polymorphism
+  次に、
 
-This section motivates Our treatment of ad-hoc polymorphism, by examining problems that arise with arithmetic and equality in Standard ML and Miranda.
+    square 3
+    square 3.14
 
--------
+  これがStandard MLで取られたアプローチです。
+  (ちなみに、Standard MLには算術演算子のオーバーロードが含まれていますが、その正式な定義は、このオーバーロードがどのように解決されたかについて、意図的にあいまいです[<a name="r_HMT88"></a>[HMT88](#HMT88), page 71]
+  Standard MLのバージョンでは異なる方法でオーバーロードが解決されます)。
 
-\*The Haskell committee includes: Arvind, Brian Boutel, Jon Fairbairn,
-Joe Fasel, Paul Hudak, John Hughes, Thomas Johnsson, Dick Kieburtz,
-Simon Peyton Jones, Rishiyur Nikhil, Mike Reeve, Philip Wadler, David
-Wise, and Jonathan Young.
+  より一般的なアプローチは、上記の方程式が、 `Int -> Int` と `Float -> Float` 型の2つのオーバーロードされた`squares`の定義を表すことを可能にすることです。
+  しかし、関数を考えてみると：
 
--------
+    squares (x, y, z)
+        = (square x, square y, square z)
 
-Arithmetic. In the simplest approach to overloading, basic operations such as addition and multiplication are overloaded, but functions defined in terms of them are not.
-For example, although one can write 3\*3 and 3.14\*3.14, one cannot define
+  `x`、 `y`、および `z` のそれぞれは独立して `Int` 型または `Float` 型のいずれかを持つことができるため、この関数のオーバーロードされたバージョンは8つあります。
+  一般に、変換の数が指数関数的に増加している可能性があり、これがそのような解が広く使われていない理由の1つです。
 
-	square x = x * x
+  Miranda では、この問題は、算術演算をオーバーロードしないことによって回避されます。
+  Mirandaは浮動小数点型(「`num`」という名前)のみを提供し、演算が整数に制限されていることを示すために型システムを使用する方法はありません。
 
-and then write terms such as
+#### 等価性
 
-	square 3
-	square 3.14
+  等価操作の履歴は検査されています。
+  オーバーロードされ、完全に多態的で、部分的に多態的なものとして扱われています。
 
-This is the approach taken in Standard ML.
-(Incidentally, it is interesting to note that although Standard ML, includes overloading of arithmetic operators, its formal definition is deliberately ambiguous about how this overloading is resolved [HMT88, page 71], and different
-versions of Standard ML resolve overloading in different ways.)
+  等価性への最初のアプローチは、乗算のように、それをオーバーロードにすることです。
+  特に、等価性を認めるすべてのモノ型、すなわち、抽象型または関数型を含まないすべてのモノ型で、等価性がオーバーロードされる可能性があります。
+  そのような言語では、整数を超える等価性を表すために `3 * 4 == 12`、文字に対して等価性を表すために `'a' == 'b'` と書くことができます。
+  しかし、方程式によって関数 `member` を定義することはできません
 
-A more general approach is to allow the above equation to stand for the definition of two overloaded versions of square, with types Int -\> Int
-and Float -\> Float.
-But consider the function:
+    member [] y       = False
+    member (x : xs) y = (x == y) \/ member xs y
 
-	squares (x, y, z)
-	    = (square x, square y, square z)
+  次に、
 
-Since each of x, y, and z might, independently, have either type Int or type Float, there are eight possible overloaded versions of this function.
-In general, there may be exponential growth in the number of translations, and this is one reason why such solutions are not widely used.
+    member [1,2,3] 2
+    member "Haskell" 'k'
 
-In Miranda, this problem is side-stepped by not overloading arithmetic operations.
-Miranda provides only the floating point type (named "num"), and there is no way to use the type system to indicate that an operation is restricted to integers.
+  (文字のリスト `['a', 'b', 'c']` を `"abc"` と略記します)。
+  これは、Standard ML <a name="r_Mil84"></a>[\[Mil84\]](#Mil84) の最初のバージョンで取られたアプローチです。
 
-Equality. The history of the equality operation is checkered: it has been treated as overloaded, fully polymorphic, and partly polymorphic.
+  第2のアプローチは、完全な多相型を等価性にすることです。
+  この場合、その型は次のとおりです。
 
-The first approach to equality is to make it overloaded, just like multiplication.
-In particular, equality may be overloaded on every monotype that admits equality, i.e., does not contain an abstract type or a function type.
-In such a language, One may write 3\*4 == 12 to denote equality over integers, or 'a' == 'b' to denote equality over characters.
-But one cannot define a function member by the equations
+    (==) :: a -> a -> Bool
 
-	member [] y       = False
-	member (x : xs) y = (x == y) \/ member xs y
+  ここで、 `a`はすべての型に渡る型変数です。
+  `member` 関数の型は今
 
-and then write terms such as
+    member :: [a] -> a -> Bool
 
-	member [1,2,3] 2
-	member "Haskell" 'k'
+  です。("aのリスト"の型に対して`[a]`と書く)
+  つまり、関数や抽象型に等しい値を適用しても型エラーは発生しません。
+  これは Miranda で取られたアプローチです。関数型に等価が適用された場合、結果は実行時エラーです。 抽象型に等価が適用された場合、その結果は表現が等しいかどうかをテストすることになります。
+  この最後は、抽象化の原則に違反するバグと見なされるかもしれません。
 
-(We abbreviate a list of characters ['a', 'b', 'c'] as "abc".)
-This is the approach taken in the first version of Standard ML [Mil84].
+  第3のアプローチは、限定的な方法で等価性多相型を作ることです。
+  この場合、その型は次のとおりです。
 
-A second approach is to make equality fully polymorphic.
-In this case, its type is
+    (==) :: a(==) -> a (==)-> Bool
 
-	(==) :: a -> a -> Bool
+  ここで、 `a(==)` は、等価性を認める型以上の範囲の型変数です。
 
-where a is a type variable ranging over every type.
-The type of the member function is now
+  `member` 関数の型は今
 
-	member :: [a] -> a -> Bool
+    member :: [a(==)] -> a(==)-> Bool
 
-(We write [a] for the type "list of a".)
-This means that applying equality to functions or abstract types does not generate a type error.
-This is the approach taken in Miranda: if equality is applied on a function type, the result is a run-time error; if equality is applied on an abstract type, the result is to test the representation for equality.
-This last may be considered a bug, as it violates the principle of abstraction.
-A third approach is to make equality polymorphic in a limited way.
-In this case, its type is
+  です。関数型または抽象型に等価または `member` を適用すると、型エラーになります。
+  これは、Standard MLで現在取られているアプローチであり、 `a(==)` は「`a`」と書かれ、「`eqtype` 変数」と呼ばれます。
 
-	(==) :: a(==) -> a (==)-> Bool
+  多態的な等価性は、ランタイムシステムの実装者に特定の要求を課します。
+  たとえば、Standard MLでは、参照型は他の型とは異なるように等価性がテストされるため、実行時に参照を他のポインタと区別することができなければなりません。
 
-where a(==) is a type variable ranging Only Over types that admit equality.
-The type of the member function is now
+  オブジェクト指向プログラミング。
+  抽象型に対してユーザー定義の等価操作を含めるために多態性の等価性を拡張できるといいでしょう。
+  これを実装するには、すべてのオブジェクトにメソッドへのポインタ、つまり同等性テストを実行するプロシージャを指定する必要があります。
+  このプロパティで複数の操作を行う場合は、各オブジェクトに適切なメソッドの辞書へのポインタを渡す必要があります。
+  これはまさにオブジェクト指向プログラミング <a name="r_GR83"></a>[\[GR83\]](#GR83) で使われているアプローチです。
 
-	member :: [a(==)] -> a(==)-> Bool
+  多相同値の場合、これは、等価関数の両方の引数に同じ辞書へのポインタが含まれることを意味します
+  (両方とも同じ型なので)。
+  これは、おそらく辞書がオブジェクトとは独立して渡されるべきであることを示唆しています。 現在、多形性の等価性には、1つの辞書と2つのオブジェクト(辞書を除く)が渡されます。
+  これは、ここで説明する型クラスと変換メソッドの背後にある直感です。
 
-Applying equality, or member, on a function type or abstract type is now a type error.
-This is the approach currently taken in Standard ML, where a (==) is written ''a, and called an "eqtype variable".
+## 3 導入の例
 
-Polymorphic equality places certain demands upon the implementor of the run-time system.
-For instance, in Standard ML, reference types are tested for equality differently from other types, so it must be possible at run-time to distinguish references from other pointers.
+  ここでは、例を使って型クラスを紹介します。
 
-Object-oriented programming.
-It would be nice if polymorphic equality could be extended to include user-defined equality Operations over abstract types.
-To implement this, we would need to require that every object carry with it a pointer to a method, a procedure for performing the equality test.
-If we are to have more than One Operation with this property, then each object should carry with it a pointer to a dictionary of appropriate methods.
-This is exactly the approach used in object-oriented programming [GR83].
+  Int型とFloat型をオーバーロード `(+)`、 `(*)`、 `negate` (単項式マイナス)したいとします。
+  これを行うには、図1のクラス宣言に示すように、 `Num` という新しい型のクラスを導入します。
+  この宣言は、"適切な型の`(+)`、 `(*)` および `negate` という名前の関数が定義されている場合は、型 `a` がクラス `Num` に属している"と述べることができます。
 
-In the case of polymorphic equality, this means that both arguments of the equality function will contain a pointer to the same dictionary
-(since they are both of the same type).
-This suggests that perhaps dictionaries should be passed around independently of objects; now polymorphic equality would be passed one dictionary and two objects (minus dictionaries).
-This is the intuition behind type classes and the translation method described here.
+  図1の2つのインスタンス宣言に示すように、このクラスのインスタンスを宣言できるようになりました。
+  アサーション `Num Int` は "`Int` で定義された適切な型の `(+)`、 `(*)`、 `negate` という名前の関数があります"と読むことができます。
+  インスタンス宣言は、3つの関数に適切なバインディングを与えることによって、このアサーションを正当化します。
+  型推論アルゴリズムは、これらのバインディングが適切な型を持つこと、すなわち、 `addInt` 型が `Int -> Int -> Int` 型であり、同様に `mulInt` 型と `negInt` 型であることを検証する必要があります。
+  (`addInt`、 `mulInt`、および `negInt` は標準的なプレリュードで定義されていると仮定します)。
+  インスタンス `Num Float` も同様に宣言されます。
 
-## 3 An introductory example
+  表記法に関する注意： 型クラス名と型コンストラクタ名は大文字で始まり、型変数名は小文字で始まります。
+  ここで、`Num` は型クラスであり、 `Int` と `Float` は型コンストラクタであり、 `a` は型変数です。
 
-We will now introduce type classes by means of an example.
+  ここで、
 
-Say that we wish to overload (+), (*), and negate (unary minus) on types Int and Float.
-To do so, we intrOduce a new type class, called Num, as shown in the class declaration in Figure 1.
-This declaration may be read as stating "a, type a belongs to class Num if there are functions named (+), (*), and negate, of the appropriate types, defined on it."
+    square x = x + x
 
-We may now declare instances of this class, as shown by the two instance declarations in Figure 1.
-The assertion Num Int may be read "there are functions named (+), (*), and negate, of the appropriate types, defined on Int".
-The instance declaration justifies this assertion by giving appropriate bindings for the three functions.
-The type inference algorithm must verify that these bindings do have the appropriate type, i.e., that addint has type Int-\>Int-\>Int, and similarly for mulInt and neglint.
-(We assume that addsnt, mulInt, and neglint are defined in the standard prelude.) The instance Num Float is declared similarly.
+  この定義から`square` の型を推論できるアルゴリズムが存在します(付録で概説されています)。
+  型を導出します:
 
-A word on notational conventions: Type class names and type constructor names begin with a capital letter, and type variable names begin with a small letter.
-Here, Num is a type class, Int and Float are type constructors, and a is a type variable.
+    square :: Num a => a -> a
 
-We may now define
+  ----
 
-	square x = x + x
+    class Num a where
+      (+), (*) :: a -> a -> a
+      negate   :: a -> a
 
-There exists an algorithm that can infer the type of square from this definition (it is outlined in the appendix).
-It derives the type:
+    instance Num Int where
+      (+)    = addInt
+      (*)    = mulInt
+      negate = negInt
 
-	square :: Num a => a -> a
+    instance Num Float where
+      (+)    = addFloat
+      (*)    = mulFloat
+      negate = negFloat
 
-----
+    square   :: Num a => a -> a
+    square x = x * х
 
-	class Num a where
-	  (+), (*) :: a -> a -> a
-	  negate   :: a -> a
+    squares           :: Num a, Num b, Num c => (a, b, c) -> (a, b, c)
+    squares (x, y, z) =  (square x, square y, square z)
 
-	instance Num Int where
-	  (+)    = addInt
-	  (*)    = mulInt
-	  negate = negInt
+  図1：算術演算の定義
 
-	instance Num Float where
-	  (+)    = addFloat
-	  (*)    = mulFloat
-	  negate = negFloat
-	  
-	square   :: Num a => a -> a
-	square x = x * х
+    data NumD a = NumDict (a -> a -> a) (a -> a -> a) (a -> a)
 
-	squares           :: Num a, Num b, Num c => (a, b, c) -> (a, b, c)
-	squares (x, y, z) =  (square x, square y, square z)
+    add (NumDict a m n) = a
+    mul (NumDict a m n) = m
+    neg (NumDict a m n) = n
 
-Figure 1: Definition of arithmetic Operations
+    numDInt   :: NumD Tnt
+    numDInt   =  NumDict addInt mulInt negInt
+    numDFloat :: MumD F1oat
+    numDFloat =  NumDict addFloat mulFloat negFloat
 
-	data NumD a = NumDict (a -> a -> a) (a -> a -> a) (a -> a)
+    square'         :: NumD a -> a -> a
+    square' numDa X =  mul numDa X X
 
-	add (NumDict a m n) = a
-	mul (NumDict a m n) = m
-	neg (NumDict a m n) = n
-	
-	numDInt   :: NumD Tnt
-	numDInt   =  NumDict addInt mulInt negInt
-	numDFloat :: MumD F1oat
-	numDFloat =  NumDict addFloat mulFloat negFloat
+    squares' :: (NumD a, NumD b, NumD c) -> (a,b,c) -> (a,b,c)
 
-	square'         :: NumD a -> a -> a
-	square' numDa X =  mul numDa X X
+    squares' (numD a, numD b, numD c) (x, y, z)
+        = (square' numDa x, square' numDb y, square' numDc z)
 
-	squares' :: (NumD a, NumD b, NumD c) -> (a,b,c) -> (a,b,c)
+  図2： 算術演算の変換
 
-	squares' (numD a, numD b, numD c) (x, y, z)
-	    = (square' numDa x, square' numDb y, square' numDc z)
+  これは、"`square` は、 `a` がクラス `Num` に属するような(すなわち、 `(+)`、 `(*)`、 および `nagate` が `a` に定義されるような)すべての`a`に対して、 `a -> a` 型を有する。"とよみます。
 
-Figure 2: Translation of arithmetic Operations
+  ここで、
 
-This is read, "square has type a -\> a, for every a such that a belongs to class Num (i.e., such that (+), (*), and negate are defined on a)."
-We can now write terms such as
+    square 3
+    square 3.14
 
-	square 3
-	square 3.14
+  適切な型がそれぞれに導出されます(最初の式のInt、2番目の式の `Float`)。
+  一方、`square 'x'` と書くと、コンパイル時に型エラーが発生します。これは、 `Char` が(インスタンス宣言によって)数値型であると宣言されていないためです。
 
-and an appropriate type will be derived for each (Int for the first expression, Float for the second).
-On the other hand, writing square 'x' will yield a type error at compile time, because Char has not been asserted (via an instance declaration) to be a numeric type.
+  最後に、前述の関数 `squares` を定義すると、図1に示す型が推論されます。
+  この型は、`a`、 `b`、および `c` がクラス`Num` "に属すように、すべての`a`、 `b`、および `c` に対して「`square` に型 `(a,b,c) -> (a,b,c)` があります。」
+  (`a`、 `b` 、 `c` の直積である型については `(a,b,c)` と書きます。)
+  よって `squares` は8つの型ではなく1つの型です。
+  以下の項
 
-Finally, if we define the function squares mentioned previously, then the type given in Figure 1 will be inferred.
-This type may be read, "squares has the type (a,b,c) -\> (a,b,c) for every a, b, and c such that a, b, and c belong to class Num".
-(We write (a,b,c) for the type that is the cartesian product of a, b, and c.)
-So squares has one type, not eight.
-Terms such as
+    squares (1, 2, 3.14)
 
-	squares (1, 2, 3.14)
+  は適法であり、適切な型を導出します。
 
-are legal, and derive an appropriate type.
+## 4 変換
 
-## 4 Translation
+  この形式のオーバーロードの特徴の1つは、コンパイル時に、クラス宣言およびインスタンス宣言を含むプログラムを、そうでない同等のプログラムに変換することが可能であることです。
+  同等のプログラムは有効なHindley/Milner型を持つでしょう。
 
-One feature of this form of overloading is that it is possible at compile-time to translate any program containing class and instance declarations to an equivalent program that does not.
-The equivalent program will have a valid Hindley/Milner type.
+  変換方法は、例を用いて説明します。
+  図2は、図1の宣言の変換を示しています。
 
-The translation method will be illustrated by means of an example.
-Figure 2 shows the translation of the declarations in Figure 1.
+  各クラス宣言に対して、そのクラスの適切な「メソッド辞書」に対応する新しい型と、辞書内のメソッドにアクセスする関数を導入します。
+  この場合、クラス `Num` に対応して、図2に示すような型 `NumD` を導入します。
+  データ宣言は、 `NumD` を新しい型の型コンストラクタとして定義します。
+  この型の値は、値コンストラクタ `NumDict` を使用して作成され、示された型の3つのコンポーネントを持ちます。
+  関数 `add`、 `mul`、および `neg` は、 `NumD` 型の値をとり、それぞれ第1、第2、第3成分を返します。
 
-For each class declaration we introduce a new type, corresponding to an appropriate "method dictionary" for that class, and functions to access the methods in the dictionary.
-In this case, corresponding to the class Num we introduce the type NumD as shown in Figure 2.
-The data declaration defines NumD to be a type constructor for a new type.
-Values of this type are created using the value constructor NumDict, and have three components of the types shown.
-The functions add, mul, and neg take a value of type NumD and return its first, second, and third component, respectively.
+  `Num` クラスの各インスタンスは、 `NumD` 型の値の宣言に変換されます。
+  したがって、インスタンス `Num Int` に対応して、 `NumD Int` 型のデータ構造体を宣言し、同様に `Float` 型についてもデータ構造体を宣言します。
 
-Each instance of the class Num is translated into the declaration of a value of type NumD.
-Thus, corresponding to the instance Num Int we declare a data structure of type NumD Int, and similarly for Float.
+  `x + y`、 `x * y`、 および `negate x` という形式の各項は、次のように対応する項に置き換えられます。
 
-Each term of the form x+y, x\*y, and negate x is now replaced by a corresponding term, as follows:
+    x+y      --> add numD x y
+    х*у      --> mul numD x y
+    negate x --> neg numD x
 
-	x+y      --> add numD x y
-	х*у      –—> mul numD x y
-	negate x --> neg numD x
+  `numD` は適切な辞書です。
+  適切な辞書はどのように決定されていますか？
+  その型によって。
+  たとえば、次のような変換があります。
 
-where numD is an appropriate dictionary.
-How is the appropriate dictionary determined?
-By its type.
-For example, we have the following translations:
+    3 + 3
+      --> mul numDInt 3 3
 
-	3 + 3
-	  ——> mul numDInt 3 3
+    ​3.14 + 3.14
+      --> mul numDFloat 3.14 3.14
 
-	​3.14 + 3.14
-	  --> mul numDFloat 3.14 3.14
+  最適化として、コンパイラがベクタ縮約を実行して `mulInt 3 3` と `mulPloat 3.14 3.14` にそれぞれ変換するのは簡単です。
 
-As an optimisation, it is easy for the compiler to perform beta reductions to transform these into mulInt 3 3 and mulPloat 3.14 3.14, respectively.
+  関数の型にクラスが含まれている場合、これは実行時に渡される辞書に変換されます。
+  たとえば、その型の `square` の定義を次に示します
 
-If the type of a function contains a class, then this is translated into a dictionary that is passed at runtime.
-For example, here is the definition of square with its type
+    square   :: Num a => a -> a
+    square x =  x * x
 
-	square   :: Num a => a -> a
-	square x =  x * x
+  これは
 
-This translates to
+    square'        :: NumD a -> a -> a
+    square' numD x =  mul numD x x
 
-	square'        :: NumD a -> a -> a
-	square' numD x =  mul numD x x
+  `square` の各アプリケーションは、適切な余分なパラメータを渡すために変換する必要があります：
 
-Each application of square must be translated to pass in the appropriate extra parameter:
+    square 3
+      --> square' numDInt 3
+    square 3.2
+      --> square' numDFloat 3
 
-	square 3
-	  --> square' numDInt 3
-	square 3.2
-	  --> square' numDFloat 3
+  最後に、`square` の変換も図2に示されています。
+  型が8種類ではなく1種類があるのと同様に、8種類ではなく1種類の変換しかありません。
+  指数関数的な成長は避けられます。
 
-Finally, the translation of squares is also shown in Figure 2.
-Just as there is one type, rather than eight, there is only one translation, rather than eight.
-Exponential growth is avoided.
+## 5 さらなる例： 等価性
 
-## 5 A further example: equality
+  このセクションでは、クラス宣言とインスタンス宣言を使用して等価を定義する方法を示します。
+  型クラスは、Standard MLで使用される "`eqtype` 変数"の直接的な一般化として役立ちます。
+  標準的なMLとは異なり、このメカニズムにより、ユーザは、抽象的な型に対して等価性を直接的に拡張できます。
+  また、Standard MLとは異なり、このメカニズムはコンパイル時に変換されるため、ランタイムシステムの実装者に特別な要求はありません。
 
-This section shows how to define equality using class and instance declarations.
-Type classes serve as a straightforward generalisation of the "eqtype variables" used in Standard ML.
-Unlike Standard ML, this mechanism allows the user to extend equality over abstract types in a straightforward way.
-And, unlike Standard ML, this mechanism can be translated out at compile time, so it places no special demands on the implementor of the run-time system.
+    class Eq a where
+      (==) :: a -> a -> bool
 
-	class Eq a where
-	  (==) :: a -> a -> bool
+    instance Eq Int where
+      (==) = eqInt
 
-	instance Eq Int where
-	  (==) = eqInt
+    instance Eq Char Where
+      (==) = eqChar
 
-	instance Eq Char Where
-	  (==) = eqChar
+    member            :: Eq a => [a] -> a -> Bool
+    member [] y       =  False
+    member (x:xs) y   =  (x == y) \/ member xs y
 
-	member            :: Eq a => [a] -> a -> Bool
-	member [] y       =  False
-	member (x:xs) y   =  (x == y) \/ member xs y
+    instance Eq a, Eq b => Eq (a,b) where
+      (u,v) == (x,y)  = (u == x) & (v == y)
 
-	instance Eq a, Eq b => Eq (a,b) where
-	  (u,v) == (x,y)  = (u == x) & (v == y)
+    instance Eq a => Eq [a] where
+      [] == []        = True
+      [] == y:ys      = False
+      x:xs == []      = False
+      x:xs == y:ys    = (x == y) & (xs == ys)
 
-	instance Eq a => Eq [a] where
-	  [] == []        = True
-	  [] == y:ys      = False
-	  x:xs == []      = False
-	  x:xs == y:ys    = (x == y) & (xs == ys)
+    data Set a = MkSet [a]
 
-	data Set a = MkSet [a]
+    instance Eq a => Eq (Set a) where
+        MkSet xs == MkSet ys = and (map (member xs) ys)
+                        & and (map (member ys) xs)
 
-	instance Eq a => Eq (Set a) where
-		MkSet xs == MkSet ys = and (map (member xs) ys)
-		                & and (map (member ys) xs)
+  図3： 等価性の処理以上の改善を提供します。
 
+    data EqD a      = EqDict (a -> a -> Bool)
 
-Figure 3: Definition of equality
+    eq (EqDict e)   = e
 
-The definition is summarised in Figure 3.
-We begin by declaring a class, Eq, containing a single operator, (==), and instances Eq Int and Eq Char of this class.
+    eqDInt          :: EqD Int
+    eqDInt          =  EqDict eqInt
 
-We then define the member function in the usual way, as shown in Figure 3.
-The type of member need not be given explicitly, as it can be inferred.
-The inferred type is:
+    eqDChar         :: EqD Int
+    eqDChar         =  EqDict eqChar
 
-	member :: Eq a => [a] -> a -> Bool
+    member'                         :: EqD a -> [a] -> [a] -> Bool
+    member' eqDa [] y               =  False
+    member' eqDa (x:xs) y           = eq eqDa x y \/ member' eqDa xs y
 
-This is read "member has type [a] -\> a -\> Bool, for every type a such that a is in class Eq (i.e., such that equality is defined on a)" (This is exactly equivalent to the Standard ML type ''a list-\>''a-\>bool, where ''a is an "eqtype variable".)
-We may now write terms such as
+    eqDPair                         :: (EqD a, EqD b) -> EqD (a,b)
+    eqDPair (eqDa,eqDb)             =  EqDict (eqPair (eqDa,eqDb))
 
-	member [1,2,3] 2
-	member "Haskell" 'k'
+    eqPair                          :: (EqD a, EqD b) -> (a,b) -> (a,b) -> Bool
+    eqPair (eqDa,eqDb) (x,y) (u,v)  =  eq eqDa x u & eq eqDb y v
 
-which both evaluate to True.
+    eqDList                         :: EqD a -> EqD [a]
+    eqDList eqDa                    =  EqDict (eqList eqDa)
 
-Next, we give an instance defining equality over pairs.
-The first line of this instance reads, "for every a and b such that a is in class Eq and b is in class Eq, the pair (a,b) is also in class Eq."
-In other words, "if equality is defined on a and equality is defined on b, then equality is defined On (a,b)."
-The instance defines equality on pairs in terms of equality on the two components, in the usual way.
+    eqList                          :: EqD a -> [a] -> a -> Bool
+    eqList eqDa [] []               =  True
+    eqList eqDa [] (y:ys)           =  False
+    eqList eqDa (x:xs) []           =  False
+    eqList eqDa (x:xs) (y:ys)       =  eq eqDa x y & eq (eqDList eqDa) xs ys
 
-Similarly, it is possible to define equality Over lists.
-The first line of this instance reads, "if equality is defined on a, then equality is defined on type list of a'."
-We may now write terms such as
+  図4: 等価性の変換
 
-	"hello" == "goodbye"
-	[[1,2,3], [4,5,6]] == []
-	member ["Haskell", "Alonzo"] "Moses"
+  定義は図3に要約されています。
+  まずこのクラスの単一の演算子 `(==)` とインスタンス `Eq Int` と `Eq Char` を含むクラス `Eq` を宣言します。
 
-which all evaluate to False.
+  次に、図3に示すように、通常の方法で `member` 関数を定義します。
+  `member` の型は、推論できるので、明示的に指定する必要はありません。
+  推論される型は：
 
-The final data declaration defines a new type constructor Set and a new value constructor MkSet.
-If a module exports Set but hides MkSet, then outside of the module the representation of Set will not be accessible;
-this is the mechanism used in Haskell to define abstract data types.
-The final instance defines equality over sets.
-The first line of this instance reads, "if equality is defined on a, then equality is defined on type "set of a ."
+    member :: Eq. a => [a] -> a -> Bool
 
-	data EqD a    = EqDict (a -> a -> Bool)
+  これは「`member` はクラス `Eq` にある `a` がすべての型 `a` に対して(すなわち、等式がaで定義されるように) 型 `[a] - > a - > Bool` を持つ。」と読みます。
+  (これは、 `''a` が "`eqtype` 変数"である Standard ML の型 `''a list->''a->bool` とまったく同じです。)
 
-	eq (EqDict e) = e
+  我々は今、両方とも `True` と評価される
 
-	eqDInt        :: EqD Int
-	eqDInt        =  EqDict eqInt
+    member [1,2,3] 2
+    member "Haskell" 'k'
 
-	eqDChar       :: EqD Int
-	eqDChar       =  EqDict eqChar
+  のような項を書くことができます。
 
-	member'                 :: EqD a -> [a] -> a -> Bool
-	member' eqDa [] y       =  False
-	member' eqDa (x : xs) y =  eq eqDa x y \/ member' eqDa xs y
+  次に、ペアを介して等価を定義するインスタンスを与えます。
+  このインスタンスの最初の行には、
+  "`a` がクラス `Eq` にあり、 `b`がクラス `Eq` にあるようなすべての`a`と`b`について、ペア `(a,b)` もクラス `Eq` にあります"。
+  言い換えれば、「`a`に等価性が定義され、`b`に等価性が定義されている場合、等価性は `(a,b)` 上で定義されます。」
+  インスタンスは、通常の方法で、2つのコンポーネントの等価性の観点から、ペアの等価性を定義します。
 
-	eqDPair                 :: (EqD a, EqD b) -> EqD (a,b)
-	eqDPair (eqDa, eqDb)    =  EqDict (eqPair (eqDa, eqDb))
+  同様に、リストの上に等価性を定義することも可能です。
+  このインスタンスの最初の行は、 "`a` に等価性が定義されている場合、 `a` の型リストに等価性が定義されます。"
+  ここでは、
 
+    "hello" == "goodbye"
+    [[1,2,3], [4,5,6]] == []
+    member ["Haskell", "Alonzo"] "Moses"
 
-	eqPair                            :: (EqD a, EqD b) -> (a,b) -> (a,b) -> Bool
-	eqPair (eqDa, eqDb) (x, y) (u, v) =  eq eqDa x u & eq eqDb y v
-	
-	eqDList                            :: EqD a -> EqD [a]
-	eqDList eqDa                       =  EqDict (eqList eqDa)
+  これらはすべて `False` と評価されます。
 
-	eqList :: EqD a -> [a] -> [a] -> Bool
-	eqList eqDa [] []          = True
-	eqList eqDa [] (y:ys)      = False
-	eqList eqDa (x:xs) []      = False
-	eqList eqDa (x:xs) (y:ys)  = eq eqDa x y & eq (eqDList eqDa) xs ys
+  最終的なデータ宣言は、新しい型コンストラクタ `Set` と新しい値コンストラクタ `MkSet` を定義します。
+  モジュールが `Set` をエクスポートするが `MkSet` を隠すと、モジュールの外部では `Set`の表現にアクセスできなくなります。
+  これは抽象データ型を定義するためにHaskellで使用されるメカニズムです。
+  最終的なインスタンスは、セットに対する等価性を定義します。
+  このインスタンスの最初の行は、 "等価性が `a` に定義されている場合、等価性は型 '`a` の集合' に定義されます"。
 
-Figure 4: Translation of equality
+  この場合、集合はリストの形で表現され、2つの集合は、第1の `member` のすべての `member` が第2の `member` の `member` であれば等しくなるように取られ、逆も同様です。
+  (この定義では、リストのすべての要素に関数を適用する標準関数マップを使用し、および、ブール値のリストの連結を返します。)
+  集合の等価性が `member` の項で定義され、 `member` はオーバーロードされた等価性を使用しているので、
+  整数、整数のリスト集合、および整数の組の偶数組の集合に等価性を適用することが有効です。
 
-In this case, sets are represented in terms of lists, and two sets are taken to be equal if every member of the first is a member of the second, and vice-versa.
-(The definition uses standard functions map, which applies a function to every element of a list, and and, which returns the conjunction of a list of booleans.)
-Because set equality is defined in terms of member, and member uses overloaded equality, it is valid to apply equality to sets of integers, sets of lists of integers, and even sets of sets of integers.
+  この最後の例は、型クラス・メカニズムがオーバーロードされた関数を抽象データ型に対して自然な方法で定義する方法を示しています。
+  特に、これは、Standard ML、または Miranda で提供される平等の処理以上の改善を提供します。
 
-This last example shows how the type class mechanism allows overloaded functions to be defined Over abstract data types in a natural way.
-In particular, this provides an improvement Over the treatment of equality provided in Standard ML, or Miranda.
+### 5.1 等価性の変換
 
-### 5.1 Translation of equality
+  ここでは、変換メカニズムが等価性の例にどのように適用されるかを検討します。
 
-We now consider how the translation mechanism applies to the equality example.
+  図4は、図3の宣言の変換を示しています。
+  変換の最初の部分は何も新しく導入されておらず、第4章の変換に似ています。
 
-Figure 4 shows the translation of the declarations in Figure 3.
-The first part of the translation introduces nothing new, and is similar to the translation in Section 4.
+  まず、クラス `Eq` に対応する辞書 `EqD` を定義します。
+  この場合、クラスには1つの操作 `(==)` のみが含まれているため、辞書には1つのエントリしかありません。
+  セレクタ関数 `eq` は型 `EqD a` の辞書をとり、型 `a -> a -> Bool` の1つのエントリを返します。
+  インスタンス `Eq Int` と `Eq Char` に対応して、適切な等価関数を含む `EqD Int` 型と `EqD Char` 型の2つの辞書を定義し、
+  関数メンバを直接 '`member`' に変換します。
 
-We begin by defining a dicitionary EqD corresponding to the class Eq.
-In this case, the class contains Only one operation, (==), so the dictionary has only One entry.
-The selector function eq takes a dictionary of type EqD a and returns the One entry, of type a-\>a-\>Bool.
-Corresponding to the instances Eq Int and Eq Char we define two dictionaries of types EqD Int and EqD Char, containing the appropriate equality functions, and the function member is translated to member' in a straightforward way.
+  ここに3つの用語とその変換があります：
 
-Here are three terms and their translations:
+    3*4 == 12
+      -->  eq eqDInt (mul numDInt 3 4) 12
 
-	3*4 == 12
-	  -->  eq eqDInt (mul numDInt 3 4) 12
+    member [1,2,3] 2
+      -->  member' eqDInt [1,2,3] 2
 
-	member [1,2,3] 2
-	  -->  member' eqDInt [1,2,3] 2
+    member "Haskell" 'k'
+      --> member' eqDChar "Haskell" 'k'
 
-	member "Haskell" 'k'
-	  --> member' eqDChar "Haskell" 'k'
+  リストに対する等価性のためのインスタンス宣言の変換は少し難解です。
+  インスタンスの宣言が始まることを思い出してください
 
-The translation of the instance declaration for equality over lists is a little trickier.
-Recall that the instance declaration begins
+    instance Eq a => Eq [a] where
+        ...
 
-	instance Eq a => Eq [a] where
-		...
+  これは、等価が定義されている場合に型 `[a]` に対して等価が定義されることを示します。
+  これに対応して、型 `[a]` のインスタンス辞書は、型 `a` の辞書によってパラメータ化されているため、型
 
-This states that equality is defined over type [a] if equality is defined Over type a.
-Corresponding to this, the instance dictionary for type [a] is parameterised by a dictionary for type a, and so has the type
+    eqDList :: EqD a -> EqD [a]
 
-	eqDList :: EqD a -> EqD [a]
+  残りの変換は図4に示されており、対での等価性の変換も同様です。
+  ここに3つの用語とその変換があります：
 
-The remainder of the translation is shown in Figure 4, as is the translation for equality over pairs.
-Here are three terms and their translations:
+    "hello" == "goodbye"
+      --> eq (eqDList eqDChar)
+              "hello"
+              "goodbye"
 
-	"hello" == "goodbye"
-	  --> eq (eqDList eqDChar)
-	         "hello"
-	         "goodbye"
+    [[1,2,3], [4,5,6]] == []
+      --> eq (eqDList (eqDList eqDInt))
+              [[1,2,3], [4,5,6]]
+              []
 
-	[[1,2,3], [4,5,6]] == []
-	  --> eq (eqDList (eqDList eqDInt))
-	         [[1,2,3], [4,5,6]]
-	         []
+    member ["Haskell", "Alonzo"] "Moses"
+      --> member' (eqLList eqDChar)
+            ["Haskell", "Alonzo"]
+            "Moses"
 
-	member ["Haskell", "Alonzo"] "Moses"
-	  --> member' (eqLList eqDChar)
-	        ["Haskell", "Alonzo"]
-	        "Moses"
+  最適化として、コンパイラーは、 `eq(eqDList eqD)` 形式の項を `eqList eqD` に変換するためにベータ簡約を実行することは簡単です。ここで、 `eqD` は等価の辞書です。
+  この最適化は、上記の最初の2つの例に適用され、図4の `eqList` 自体の定義にも適用されます。
 
-As an Optimisation, it is easy for the compiler to perform beta reductions to transform terms of the form eq (eqDList eqD) into eqList eqD, where eqD is any dictionary for equality.
-This optimisation may be applied to the first two examples above, and also to the definition of eqList itself in Figure 4.
+  この変換技法の効率を、 Standard ML または Miranda に見られるような多相型等価性と比較することは価値があります。
+  `eqInt` などの個々の演算は、引数の型が事前に分かっているため、多態性の等価性よりも若干効率的です。
+  一方、 `member` や `eqList` などの操作では、ポリモーフィックな等価性が回避するオーバーヘッドを明示的に渡す必要があります。
+  これらのコストのトレードオフを評価するには、さらなる経験が必要です。
 
-It is worthwhile to compare the efficiency of this translation technique with polymorphic equality as found in Standard ML, or Miranda.
-The individual operations, such as eqInt are slightly more efficient than polymorphic equality, because the type of the argument is known in advance.
-On the other hand, operations such as member and eqList must explicitly pass an equality operation around, an overhead that polymorphic equality avoids.
-Further experience is needed to asses the trade-off between these costs.
+## 6 サブクラス
 
-## 6 Subclasses
+  前の説明では、`Number` と `Eq` は完全に別のクラスとみなされていました。
+  数値演算と等価演算の両方を使用したい場合、これらはそれぞれ型に別々に現れます：
 
-In the preceeding, Num and Eq were considered as completely separate classes.
-If we want to use both numerical and equality operations, then these each appear in the type separately:
+    memsq      :: Eq a, Num a => [a] -> a -> Bool
+    memsq xs x =  member xs (square x)
 
-	memsq :: Eq a, Num a => [a] -> a -> Bool
-	memsq xs x = member xs (square x)
+  現実的には、 `(+)`、 `(*)` 、およびそれに定義された`negate` `(==)` も定義されていると予想されます。 逆ではありません。
+  したがって、`Num`を式のサブクラスにすることは合理的です。
 
-As a practical matter, this seems a bit odd–we would expect every data type that has (+), (*), and negate defined on it to have (==) defined as well; but not the converse.
-Thus it seems sensible tO make Num a subclass of Eq.
+  我々は次のようにこれを行うことができます：
 
-We can do this as follows:
+    class Eq. a => Num a where
+      (+)    :: a -> a -> a
+      (*)    :: a -> a -> a
+      negate :: a -> a
 
-	class Eq. a => Num a where
-	  (+)    :: a -> a -> a
-	  (*)    :: a -> a -> a
-	  negate :: a -> a
+  これは、 `a` がクラス `Eq` にも属している場合にのみ、 `a` がクラス `Num` に属している可能性があることを主張します。
+  言い換えれば、 `Num` は `Eq` のサブクラスであり、等価的に `Eq` は `Num` のスーパークラスです。
+  インスタンス宣言は以前と同じですが、インスタンス宣言 `Num Int` は、同じスコープ内でインスタンス宣言 `Eq Int` がアクティブな場合にのみ有効です。
 
-This asserts that a may belong to class Num only if it also belongs to class Eq.
-In other words, Num is a subclass of Eq, or, equivalently, Eq is a superclass of Num.
-The instance declarations remain the same as before—but the instance declaration Num Int is only valid if there is also an instance declaration Eq Int active within the same scope.
+  このことから、型が `Num a` を含むときはいつでも、それは `Eq a` も含まなければならないことになります。 したがって、便利な省略形として、 `Num a` が存在するときは常に `Eq a` を型から省略することができます。
+  したがって、 `memsq` の型については、
 
-From this it follows that whenever a type contains Num a it must also contain Eq a; therefore as a convenient abbreviation we permit Eq a to be omitted from a type whenever Num a is present.
-Thus, for the type of memsa we could now write
+    memsq :: Num a => [a] -> a -> Bool
 
-	memsq :: Num a => [a] -> a -> Bool
+  修飾子 `Eq a` は `Num a` によって暗示されるので、もはや言及する必要はありません。
 
-The qualifier Eq a no longer needs to be mentioned, because it is implied by Num a.
+  一般に、各クラスは任意の数のサブクラスまたはスーパークラスを持つことができます。
+  ここには工夫した例があります：
 
-In general, each class may have any number of sub or superclasses.
-Here is a contrived example:
+    class Top a Where
+      fun 1 :: a -> a
 
-	class Top a Where
-	  fun 1 :: a -> a
+    class Top a => Left a where
+      fun2 :: a -> a
 
-	class Top a => Left a where
-	  fun2 :: a -> a
+    class Top a => Right a where
+      fun3 :: a -> a
 
-	class Top a => Right a where
-	  fun3 :: a -> a
+    class Left a, Right a => Bottom a
+      where
+      fun4 :: a -> a
 
-	class Left a, Right a => Bottom a
-	  where
-	  fun4 :: a -> a
+  これらの型間の関係は、次のように図式化することができます。
 
-The relationships among these types can be diagrammed as follows:
+        Top
+      /     \
+    Left   Right
+      \     /
+       Bottom
 
-	    Top
-	   /   \
-	  /     \
-	Left   Right
-	  \     /
-	   \   /
-	   Bottom
+  複数のスーパークラスは、オブジェクト指向言語を実装する通常の手段にいくつかの問題を提起しますが、ここで概説した変換スキームには問題はありません。
+  変換は、実行時に適切な辞書が渡されることを保証するだけです。 いくつかのオブジェクト指向システムのように特別なハッシング・スキームは必要ありません。
 
-Although multiple superclasses pose some problems for the usual means of implementing object-oriented languages, they pose no problems for the translation scheme outlined here.
-The translation simply assures that the appropriate dictionaries are passed at run-time; no special hashing schemes are required, as in some object-oriented systems.
+## 7 結論
 
-## 7 Conclusion
+  各インスタンスが満たさなければならないプロパティを指定して、クラス宣言にアサーションを追加することは当然考えられます。
 
-It is natural to think of adding assertions to the class declaration, specifying properties that each instance must satisfy:
+    class Eq a Where
+      (==) :: a -> a -> Bool
+      % (==) is an equivalence relation
 
-	class Eq a Where
-	  (==) :: a -> a -> Bool
-	  % (==) is an equivalence relation
+    class Num a Where
+        zero, one :: a
+        (+), (*) a -> a -> a
+        negate a -> a
+        % (zero, one, (+), (*), negate)
+        %   form a ring
 
-	class Num a Where
-		zero, one :: a
-		(+), (*) a -> a -> a
-		negate a -> a
-		% (zero, one, (+), (*), negate)
-		%   form a ring
+  これらのプロパティに依存する証明は、各インスタンス宣言ごとに保持されていることが証明されている限り有効です。ここでアサーションは単にコメントとして書かれています。より洗練されたシステムではおそらくそのようなアサーションを検証したり使用したりすることができます。
+  これは、クラス宣言がOBJ <a name="r_FGJM85"></a>[\[FGJM85\]](#FGJM85) のオブジェクト宣言に似るようになるため、クラスとオブジェクト指向プログラミングの関係を示唆しています。
 
-***
+  上の例では、ゼロや1などのオーバーロードされた定数を持つことができます。
+  ただし、定数の無制限オーバーロードは、余分な型情報を提供しないとオーバーロードを解決できない状況につながります。
+  たとえば、結果が `Int` か `Float` かを指定するコンテキストで使用されていなければ、 `* 1` という式は無意味です。
+  このため、このドキュメントでは、オーバーロードされていない定数を使用するよう注意しており:
+  `3` は `Int` 型、 `3.14` は`Float`型です。
+  より一般的な定数の扱いは、部分型間の強制を必要とするようです。
 
-It is valid for any proof to rely on these properties, so long as one proves that they hold for each instance declaration. Here the assertions have simply been written as comments; a more sophisticated system could perhaps verify or use such assertions.
-This suggests a relation between classes and object-oriented programming of a different sort, since class declarations now begin to resemble object declarations in OBJ [FGJM85].
+  クラスを複数の型変数に適用できるようにすることは合理的です。
+  たとえば、
 
-It is possible to have Overloaded constants, such as zero and one in the above example.
-However, unrestricted overloading of constants leads to situations where the overloading cannot be resolved without providing extra type information.
-For instance, the expression one \* one is meaningless unless it is used in a context that specifies whether its result is an Int or a Float.
-For this reason, we have been careful in this paper to use constants that are not overloaded: 3 has type Int, and 3.14 has type Float.
-A more general treatment of constants seems to require coercion between subtypes.
+    class Coerce a b where
+      coerce :: a -> b
 
-It is reasonable to allow a class to apply to more than one type variable.
-For instance, we might have
+    instance Coerce Int Float where
+      coerce = convertIntToFloat
 
-	class Coerce a b where
-	  coerce :: a -> b
+  この場合、アサーション `Coerce a b` は、 `a` が `b` の部分型であるというアサーションと同等と見なすことができます。
+  これは、この研究と有界定量化と部分型に関する研究との関係を示唆している(この領域における優れた調査のための[<a name="r_CW85"></a>[CW85](#CW85), <a name="r_Rey85"></a>[Rey85](#Rey85)]および最近の研究のための[<a name="r_Wan87"></a>[Wan87](#Wan87), <a name="r_Car88"></a>[Car88](#Car88)]参照)。
 
-	instance Coerce Int Float where
-	  coerce = convertIntToFloat
+  型クラスは、型変数がインスタンス化される型を制限する一種の有界量化子と考えることができます。
+  しかし、有界量化への他のアプローチとは異なり、型クラスは暗黙の強制変換を導入しません
+  (部分型 `Int` からスーパー型 `Float` へ、またはフィールド `x`、 `y`、 `z` を持つレコードからフィールド `x` と `y` を持つレコードに変換するなど)。
+  型クラスとこれらの他のアプローチとの間の関係のさらなる探求は、実りあるものになる可能性が高いのです。
 
-In this case, the assertion Coerce a b might be taken as equivalent to the assertion that a is a subtype of b.
-This suggests a relation between this work and work on bounded quantification and on subtypes (see [CW85,
-Rey85] for excellent surveys of work in this area, and [Wan87, Car88] for more recent work).
+  型クラスは、一種の抽象データ型と考えることもできます。
+  各型クラスは、関数とその型のコレクションを指定しますが、実装する方法は指定しません。
+  ある種の型クラスは、多くの実装を持つ抽象データ型に対応し、各インスタンス宣言に1つずつ対応します。
+  ここでも、抽象データ型[<a name="r_CW85"></a>[CW85](#CW85), <a name="r_MP85"></a>[MP85](#MP85), <a name="r_Rey85"></a>[Rey85](#Rey85)]に対する型クラスと現在の作業との関係の探求が求められているようです。
 
-Type classes may be thought of as a kind of bounded quantifier, limiting the types that a type variable may instantiate to.
-But unlike other approaches to bounded quantification, type classes do not introduce any implicit coercions
-(such as from subtype Int to supertype Float, or from a record with fields x, y, and z to a record
-with fields x and y).
-Further exploration of the relationship between type classes and these other approaches is likely to be fruitful.
+  我々はすでにKaesの仕事を参照しました。
+  我々の仕事の進歩の1つは、オーバーロードされた関数をクラスにグループ化する概念的で表記上の利点です。
+  さらに、我々のシステムはより一般的です。 Kaesは、上の例のような複数の型変数を含むオーバーロードを処理することはできません。
+  最後に、我々の変換ルールは彼の改善です。
+  Kaesは、2つの変換ルール(「セマンティクス」と呼ぶ)、つまり静的ルールと動的ルールの2つのセットを概説します。
+  彼のダイナミックセマンティクスは、ここで説明する言語よりも制限されています。彼の静的セマンティクスは似ているように見えますが、ここで説明する変換とは異なり、プログラムのサイズを大幅に増やすことができます。
 
-Type classes also may be thought of as a kind of abstract data type.
-Each type class specifies a collection of functions and their types, but not how they are to be implemented.
-In a way, each type class corresponds to an abstract data type with many implementations, one for each instance declaration.
-Again, exploration of the relationship between type classes and current work on abstract data types [CW85,
-MP85, Rey85] appears to be called for.
+  変換メソッドの1つの欠点は、実行時にメソッド辞書に対応して渡される新しいパラメータを導入することです。
+  部分的な評価 <a name="r_BEJ88"></a>[\[BEJ88\]](#BEJ88) を使用して特定の辞書に特化した関数のバージョンを生成することによって、これらのコストの一部を排除することは可能かもしれません。 これにより、コードサイズが増加する犠牲を払って実行時間が短縮されます。
+  我々のアプローチ(部分的な評価の有無にかかわらず)と他の手法とのトレードオフを評価するためには、さらなる研究が必要です。
 
-We have already referred to the work of Kaes.
-One advance of our work over his is the conceptual and notational benefit of grouping Overloaded functions into classes.
-In addition, our system is more general; Kaes cannot handle overloadings involving more than one type variable, such as the coerce example above.
-Finally, our translation rules are an improvement over his.
-Kaes outlines two sets of translation rules (which he calls "semantics"), one static and one dynamic.
-His dynamic semantics is more limited in power than the language described here; his static semantics appears similar in power, but, unlike the translation described here, can greatly increase the size of a program.
+  上記から明らかなように、多くの問題が引き続き検討されており、多くのトレードオフが依然として評価されています。
+  Haskellが提供する型クラスの実践的な経験を楽しみにしています。
 
-One drawback of our translation method is that it introduces new parameters to be passed at runtime, corresponding to method dictionaries.
-It may be possible to eliminate some of these costs by using partial evaluation [BEJ88] to generate versions of functions specialised for certain dictionaries; this would reduce run time at the cost of increasing code size.
-Further work is needed to assess the trade-offs between our approach (with or without partial evaluation) and other techniques.
+## 謝辞
 
-It is clear from the above that many issues remain to be explored, and many tradeoffs remain to be assessed.
-We look forward to the practical experience with type classes that Haskell will provide.
+  関数の型にオーバーロードが反映される可能性があるという重要な考えは、Joe Faselによって(別の形式で)提案されました。
+  議論やコメントについては、Luca Cardelli、Bob Harper、Paul Hudak、John Hughes、Stefan Kaes、John Launchbury、John Mitchell、Kevin Mitchell、Nick Rothwell、Mads Tofte、David Watt、Haskell委員のメンバーにも感謝しています。 、およびIFIP 2.8のメンバー。
 
-Acknowledgements.
-The important idea that Overloading might be reflected in the type of a function was suggested (in a rather different form) by Joe Fasel.
-For discussion and comments, we are also grateful to: Luca Cardelli, Bob Harper, Paul Hudak, John Hughes, Stefan Kaes, John Launchbury, John Mitchell, Kevin Mitchell, Nick Rothwell, Mads Tofte, David Watt, the members of the Haskell committee, and the members of IFIP 2.8.
+## A タイピングルールと変換ルール
 
-## A Typing and translation rules
+  この付録では、形式的な型付け規則と変換規則を示し、型付けと変換の両方を実行する1組の規則について説明します。
+  このルールは、DamasとMilner <a name="r_DM82"></a>[\[DM82\]](#DM82) によって与えられたルールの拡張です。
 
-This appendix presents the formal typing and translation rules, One set of rules performing both typing and translation.
-The rules are an extension of those given by Damas and Milner [DM82].
+## A.1 言語
 
-この付録は形式的な型付けと変換規則を示し、規則の1セットがタイピングと変換を実行します。
-規則は、ダマとミルナー［DM82］によって与えられたものの拡張です。
+  オーバーロードのためのタイピングと変換のルールを提示するには、基本的な問題を取り上げるやや簡単な言語を使用すると便利です。
+  通常の構文(識別子、関数適用、ラムダ抽象化、let式)を持つ言語に加えて、クラス宣言とインスタンス宣言にそれぞれ対応する2つの新しい構文 `over` と `inst` 式を使用します。
+  式と型の構文は図5に示されています。
 
-### A.1 Language
+  `over` の式は
 
-To present the typing and translation rules for overloading, it is helpful to use a slightly simpler language that captures the essential issues.
-We will use a language with the usual constructs (identifiers, applications, lambda abstractions, and let expressions), plus two new constructs, over and inst expressions, that correspond to class and instance declarations, respectively.
-The syntax of expressions and types is given in Figure 5.
+    over x :: σ in e
 
-タイピングとオーバーローディングに対する変換規則を提示するために、重要な問題を捕えるわずかにより単純な言語を使用することは、役に立ちます。
-我々はもう一度、2つの新しい構成概念をプラスして、普通の構成概念（識別子、アプリケーション、ラムダ抽象概念とされた表現）で言語を使用します、そして、それぞれ、overとinst式はクラスと例宣言ととても一致します。
-式と型の構文は、図5の中で与えられます。
+  オーバーロードされた識別子であると宣言します。
+  この宣言の範囲内で、一つ以上の対応する `inst` 式があるかもしれません
 
-An over expression
+    inst x :: σ' = e0 in e1
 
-overの式
+  ここで、型 `σ'` は、型 `σ` (後で正確になる概念)の実体(instance)です。
+  ラムダとlet式とは異なり、 `over` と `inst` 式中の束縛変数は、より小さい範囲で再宣言されないかもしれません。
+  また、ラムダとlet式とは異なり、 `over` 式と `inst` 式は明示的な型を含まなければなりません;他の式の型は、ここで与えられる規則によって推論されます。
 
-	over x :: σ in e
+  例えば、図3の中で与えられる等価式の一部の定義は、図6に示されます。
+  この図と残りのこの付録において、我々は型 `τ -> τ -> Bool` の省略形として、 `Eq τ` を使います。
 
-declares a to be an Overloaded identifier.
-Within the scope of this declaration, there may be one or more corresponding inst expressions
+  第2の例として、図1の中で与えられる算術演算子の一部の定義は、図7に示されます。
+  この数字では、我々は型の省略形として、 `Num τ` を使います。
 
-宣言のために、オーバーロードされた識別子であってください。
-この宣言の範囲内で、一つ以上の対応するinst式があるかもしれません
+    (τ -> τ -> τ, τ -> τ -> τ, τ -> τ)
 
-	inst x :: σ' = e0 in e1
+  形式言語に変換する際に、3つの演算子をグループ化して「辞書」にしました。
+  これは直接的であり、中心的な問題、すなわちオーバーロードを解決する方法とは独立しています。
 
-where the type σ' is an instance of the type σ (a notion to be made precise later).
-Unlike lambda and let expressions, the bound variables in over and inst expressions may not be redeclared in a smaller scope.
-Also unlike lambda and let expressions, over and inst expressions must contain explicit types; the types in other expressions will be inferred by the rules given here.
+## A.2 型
 
-ここで、型σ'は、型σ（後で正確になる概念）の実体(instance)です。
-ラムダとlet式とは異なり、overとinst式中の束縛変数は、より小さい範囲で再宣言されないかもしれません。
-また、ラムダとlet式とは異なり、overとinst式は明示的な型を含まなければなりません;他の式の型は、ここで与えられる規則によって推論されます。
+  Damas/Milnerシステムは、(`τ`と書かれている)型と(`σ`と書かれている)型スキームとを区別します。
+  我々のシステムでは、述語型の第3の構文グループが追加されています。
+  これらの構文は図5に示されています。
 
-As an example, a portion of the definition of equality given in Figure 3 is shown in Figure 6.
-In this figure, and in the rest of this appendix, we use Eq τ as an abbreviation for the type τ -> τ -> Bool.
+    Identifiers       x
+    Expressions       e ::= x
+                          | e0 e1
+                          | λx. e
+                          | let a = e0 in e1
+                          | over x :: σ in e
+                          | inst x :: σ = e0 in e1
+    Type variables    α
+    Type Constructors χ
+    Types             τ ::= (τ -> τ') | α | χ(τ1 ... τn)
+    Predicated Types  ρ ::= (x :: τ).ρ | τ
+    Type-schemes      σ ::= ∀α.σ | ρ
 
-例えば、図3の中で与えられる等価式の一部の定義は、図6に示されます。
-この図と残りのこの付録において、我々は型τ -> τ -> Boolの省略形として、Eq τを使います。
+  図5： 式と型の構文
 
-As a second example, a portion of the definition of arithmetic operators given in Figure 1 is shown in Figure 7.
-In this figure we use Num τ as an abbreviation for the type
+  フルスペックの言語では、我々は型を以下のように書きました
 
-第2の例として、図1の中で与えられる算術演算子の一部の定義は、図7に示されます。
-この数字では、我々はタイプの省略形として、Num τを使います。
+    member :: Eq a => [a] -> a -> Bool
 
-	(τ -> τ -> τ, τ -> τ -> τ, τ -> τ)
+  簡易な言語では、以下のように書きます
 
-In translating to the formal language, we have grouped the three operators together into a "dictionary".
-This is straightforward, and independent of the central issue: how to resolve overloading.
+    member :: ∀α. (eq :: Eq α). [α] -> α -> Bool
 
-形式言語に変換する際に、我々は「辞書」に3人のオペレーターを集めました。
-これはまっすぐで、中心問題から独立しています：どのように、オーバーローディングを分解するために。
+  制限 `Eq a` は、「等式が型 `a` に定義されている」と解釈され、対応する制限 `(eq :: Eq α)` は「`eq`が型 `Eq α` のインスタンスを持たなければならない」と読むことができます。
 
-### A.2 Types
+  一般に、 `(x :: τ).ρ` を述語型 `(x :: τ)` を述語と呼びます。
 
-The Damas/Milner system distinguishes between types (written τ) and type schemes (written σ).
-Our system adds a third syntactic group, predicated types.
-The syntax of these is given in Figure 5.
+  我々は、次の形式の型付けを導出するためのルールを与えます
 
-ダマ/ミルナー・システムは（τと書かれた）型と（σと書かれた)型スキームを区別します。
-我々のシステムは、第3の統語的なグループを加えると、タイプは断定しました。
-これらの構文は、図5の中で与えられます。
+    A |- e :: σ \ e^
 
-In the full language, we wrote types such as
-フルスペックの言語では、我々は型を以下のように書きました
+  これは、「一連の仮定 `A` の下では、式 `e` は変換付きの型付きが良い」と読むことができます。
+  それぞれのタイピングには変換も含まれているので、ルールは `型 \ 変換` の ペアの形をしています。
+  すべてのルールから '`\ e^`' 部分を削除するだけで、変換を参照せずにタイピングルールを提示することができます。
+  ただし、入力規則は変換を制御するため、変換規則を単独で表示することはできません。
+  例えば、型の述語の導入および排除は、変換におけるラムダ抽象の導入および排除を制御します。
 
-	member :: Eq a => [a] -> a -> Bool
+    over eq :: ∀α. Eq α in
+    inst eq :: Eq Int = eqInt in
+    inst eq :: Eq Char = eqChar in
+    inst eq :: ∀α.∀β.(eq :: Eq a).(eq :: Eq β). Eq (α, β)
+             = λp. λq. eq (fst p) (fst q) ∧ eq (snd p) (snd q) in
+    eq (1, 'a') (2, 'b')
 
-In the simplified language, we write this in the form
-簡易な言語では、我々はこれを以下のように書きます
+  図6： 形式化された等価性の定義
 
-	member :: ∀α. (eq :: Eq α). [α] -> α -> Bool
+    over numD :: ∀α. Num α in
+    inst numD :: Num Int = (addInt, mulInt, negInt) in
+    inst numD :: Num Float = (addFloat, mulFloat, negFloat) in
+    let (+) = fst numD in
+    let (*) = snd numD in
+    let negate = thd numD in
+    let square = λx. x * x in
+    square 3
 
-The restriction Eq a can be read "equality is defined on type a" and the corresponding restriction (eq :: Eq α) can be read "eq must have an instance of type Eq α".
+  図7： 形式化された算術演算の定義
 
-規制Eq、缶は「平等は、タイプ上で定められます、そして、対応する規制（eq：Eqα）「eqは、タイプEq αの例を持っていなければなりません」を読んで聞かせられることができる」を読んで聞かせられます。
+    (eq ::o ∀α.Eq α),
+    (eq ::i Eq Int  \ eq(Eq Int )),
+    (eq ::i Eq Char \ eq(Eq Char)),
+    (eq ::i ∀α.∀β.(eq :: Eq α).(eq :: Eq β).Eq (α, β) \ eq(∀α.∀β.(eq::Eq α).(eq::Eq β).Eq (α,β)) ),
+    (eq :: Eq α \ eq (Eq α)),
+    (eq :: Eq β \ eq (Eq β)),
+    (p :: (α, β) \ p),
+    (q :: (α, β) \ q)
 
-In general, we refer to (x :: τ).ρ as a predicated type and (x :: τ) as a predicate.
+  図8：いくつかの仮定
 
-一般に、我々は照会します（x：τ）.p 意味されたタイプとして、そして、（x ：τ）述部として。
+    TAUT A, (x :: σ \ x^) |- x :: σ \ x^
 
-We will give rules for deriving typings of the form
+    TAUT A, (x ::i σ \ x^) |- x :: σ \ x^
 
-我々は、形のtypingsを引き出すことに対する規則を与えます
+         A |- e :: ∀α. σ \ e^
+    SPEC -----------------------------
+         A |- e :: [α \ τ]σ \ e^
 
-	Α |- e :: σ \ e^
+         A |- e :: σ \ e^
+         α not free in A
+    GEN  -----------------------------
+         A |- e :: ∀α. σ \ e^
 
-This can be read as, "under the set of assumptions A, the expression e has well-typing a with translation e^".
-Each typing also includes a translation, so the rules derive typing\\translation pairs.
-It is possible to present the typing rules without reference to the translation, simply by deleting the '\\e^' portion from all rules.
-It is not, however, possible to present the translation rules independently, since typing controls the translation.
-For example, the introduction and elimination of predicates in types controls the introduction and elimination of lambda abstractions in translations.
+         A |- e :: (τ' -> τ) \ e^
+         A |- e':: τ' \ e'^
+    COMB -----------------------------
+         A |- (e e') :: τ \ (e^ e'^)
 
-これは、読まれることができます、「奪取Aのセットの下で、表現eは健康なタイピングをしますで変換e^」。
-各々のタイピングも変換を含むので、規則はタイピング変換組を引き出します。
-単にすべての規則から『\e^』部を削除することによって、変換に関係なくタイピング規則を提示することが、できます。
-タイピングが変換をコントロールする時から、しかし、独立して変換規則を提示することができません。
-たとえば、タイプの述部の導入と除去は、変換でラムダ抽象概念の導入と除去をコントロールします。
+         Ax, (x :: τ' \ x) |- e :: τ \ e^
+    ABS  ---------------------------------
+         A |- (λx.e) :: (τ' -> τ) \ (λx.e)
 
-	Identifiers       x
-	Expressions       e ::= x
-	                      | e0 e1
-	                      | λx. e
-	                      | let a = e0 in e1
-	                      | over x :: σ in e
-	                      | inst x :: σ = e0 in e1
-	Type variables    α
-	Type Constructors χ
-	Тypes             τ ::= (τ -> τ') | α | χ(τ1 ... τn)
-	Predicated Types  ρ ::= (x :: τ).ρ | τ
-	Type-schemes      σ ::= ∀α.σ | ρ
+         A |- e :: σ \ e^
+         Ax, (x :: σ \ x) |- e' :: τ \ e'^
+    LET  -----------------------------------------------
+         A |- (let x = e in e') :: τ \ (let x = e^ in e'^ )
 
-Figure 5: Syntax of expressions and types
+  図9：タイピングと変換規則(一部1)
 
-図5：式と型の構文
+## A.3 仮定
 
-	over eq :: ∀α. Eq α in
-	inst eq :: Eq Int = eqInt in
-	inst eq :: Eq Char = eqChar in
-	inst eq :: ∀α.∀β.(eq :: Eq a).(eq :: Eq β). Eq (α, β)
-	         = λp. λq. eq (fst p) (fst q) ∧ eq (snd p) (snd q) in
-	eq (1, 'a') (2, 'b')
+  型付けは仮定の集合` A` の文脈で行われます。
+  仮定は、型および変換情報を式の自由な識別子に結び付けます。
+  これには、lambdaとlet式でバインドされた識別子と、オーバーロードされた識別子が含まれます。
+  シーケンスとして書きますが、仮定は集合であるため、順序は関係ありません。
 
-Figure 6: Definition of equality, formalised
+  仮定リストでの束縛には3つの形があります：
 
-図6：平等（正式にされる）の定義
+  - `(x ::o σ)` は、オーバーロードされた識別子に使用されます;
+  - `(x ::i σ \ xσ)` は、オーバーロードされた識別子の宣言されたインスタンスに使用されます; そして
+  - `(x ::σ \ x^)` はラムダとlet束縛変数に使用され、オーバーロードされた識別子のインスタンスとみなされます。
 
-	over numD :: ∀α. Num α in
-	inst numD :: Num Int = (addInt, mulInt, negInt) in
-	inst numD :: Num Float = (addFloat, mulFloat, negFloat) in
-	let (+) = fst numD in
-	let (*) = snd numD in
-	let negate = thd numD in
-	let square = λx. x * x in
-	square 3
+  `(x :: σ \ x^)` および `(x ::i σ \ x^)` で、識別子 `x^` は `x` を変換したものです。
+  `x` がオーバーロードされた識別子でない場合(つまり、`x`がラムダまたはlet式でバインドされている場合)、仮定は `(x ::σ \ x)` の形式を持つため、 `x`　は単にそれ自体として変換されます。
 
-Figure 7: Definition of arithmetic Operations, formalised
+  図8は、図6の式
 
-図7：算術演算（正式にされる）の定義
+    λp. λq. eq (fst p) (fstq) ∧ eq (snd p) (sndq)
 
-	(eq ::o ∀α.Eq α),
-	(eq ::i Eq Int  \ eq(Eq Int )),
-	(eq ::i Eq Char \ eq(Eq Char)),
-	(eq ::i ∀α.∀β.(eq :: Eq α).(eq :: Eq β).Eq (α, β) \ eq(∀α.∀β.(eq::Eq α).(eq::Eq β).Eq (α,β)) ),
-	(eq :: Eq α \ eq (Eq α)),
-	(eq :: Eq β \ eq (Eq β)),
-	(p :: (α, β) \ p),
-	(q :: (α, β) \ q)
+  に推論ルールを適用する際に利用できる仮定を示しています。
 
-Figure 8: Some assumptions
+  3つのインスタンス宣言に対応する3つの `(::i)` バインディングと、2つのバインドされた変数の2つの `(::)` バインディングと、想定される等価インスタンスに対応する2つの `(::)` バインディングがあります。
+  (後で PRED ルールによって想定されるインスタンスがどのように導入されるかを見ることにします。)
 
-図8：いくらかの仮定
+## A.4 インスタンス
 
-	TAUT A, (x :: σ \ x^) |- x :: σ \ x^
+  仮定 `A` の集合が与えられると、次の型スキームとのインスタンス関係を定義します:
 
-	TAUT A, (x ::i σ \ x^) |- x :: σ \ x^
+    σ >-A σ'
 
-	     A |- e :: ∀α. σ \ e^
-	SPEC -----------------------------
-	     A |- e :: [α \ τ]σ \ e^
+  これは、「`σ` は仮定 `A` の下で `σ`より一般的です」と読むことができます。
+  これは、DamasとMilnerによって定義された関係と同じですが、述語型に適用されるように拡張されています。
 
-	     A |- e :: σ \ e^
-	     α not free in A
-	GEN  -----------------------------
-	     A |- e :: ∀α. σ \ e^
+  特定の一連の仮定のみが有効です。
+  妥当性の定義は `>-A` 関係に依存するため、有効な前提の定義と `>-A` の定義の間に(よく確立された)相互再帰があります。
+  このセクションでは、 `>-A` の定義を与え、次の節では有効な前提の定義について説明します。
 
-	     A |- e :: (τ' -> τ) \ e^
-	     A |- e':: τ' \ e^'
-	COMB -----------------------------
-	     A |- (e e') :: τ \ (e^ e^')
+  インスタンス関係
 
-	     Ax, (x :: τ' \ x) |- e :: τ \ e^
-	ABS  ---------------------------------
-	     A |- (λx.e) :: (τ' -> τ) \ (λx.e)
+    σ >-A σ'
 
-	     A |- e :: σ \ e^
-	     Ax, (x :: σ \ x) |- e' :: τ \ e^'
-	LET  -----------------------------------------------
-	     A |- (let x = e in e') :: τ \ (let x = e^ in e^' )
+  ここで `σ = ∀α1 ... αn.ρ` かつ `σ' = ∀β1 ... βm . ρ'` は次のように定義されています:
 
-Figure 9: Typing and translation rules, part 1
+    σ >-A σ' iff
+      (1) βi is not free in σ and
+      (2) ∃τ1, ..., τn. [τ1/α1, ..., τn/αn]ρ >-A ρ'
 
-図9：タイピングと変換規則（一部1）
+  この部分は Damas/Milner における定義と同様です。
+  `σ` の束縛変数は特殊化され、結果として得られる述語型が比較されます。
 
-## A.3 Assumptions
+  `ρ` の型部分の `ρ >-A ρ'`を `ρ'` の型部分(Damas/Milnerと同じ条件)に等しく定義し、`ρ` のすべての述語 `(x :: τ)` について、
 
-A.3仮定
+  - `ρ'` に `(x :: τ)` という形の述語があります(すなわち、両方の型に述語が現れる); または
+  - 述語は仮定 `A` のもとで除去することができます。
 
-Typing is done in the context of a set of assumptions, A.
-The assumptions bind typing and translation information to the free identifiers in an expression.
-This includes identifiers bound in lambda and let expression, and overloaded identifiers.
-Although we write them as sequences, assumptions are sets, and therefore the order is irrelevant.
+  述語 `(x::τ)` は、 `A` のもと以下のいずれかで除去することができます
 
-タイピングは、一組の仮定、仮定がタイプすることを結びつけるA.と変換情報の前後関係で、expressionで無料の識別子にされます。これはラムダで結びつけられる識別子を含んで、表現として、識別子にオーバーロードしました。我々がシーケンスとして彼らに手紙を書くが、仮定はセットです、したがって、勲位は無関係です。
+  - `(x :: τ \ x^)`が `A` にある; または
+  - `(x::i σ' \ x^)` が `A` にあり、かつ、 `σ' > A τ`。
 
-There are three forms of binding in an assumption list:
+  例えば、 `A0` が図8の仮定の集合である場合、
 
-仮定リストで結合することの3つの形が、あります：
+    (∀α. (eq :: Eq α). [a] -> α -> Bool)
+        >-A0 ([Int] -> Int –> Bool)
 
-- (x ::o σ) is used for overloaded identifiers;
-- (x ::o σ)はオーバーロードされた識別子のために使われます;
-- (x ::i σ \ xσ) is used for declared instances of Overloaded identifiers; and
-- (x ::i σ \ xσ)はオーバーロードされた識別子の宣言された実装のために使われます;そして、
-- (x :: σ \ x^) is used for lambda and let bound variables, and assumed instances of overloaded identifiers.
-- (x :: σ \ x^)はラムダとlet束縛変数のために使われて、オーバーロードされた識別子の実装とみなされます。
+  が成り立ちます。 一方、 `A0` には、 `eq` が型 `Float` のインスタンスを持つことを表明するバインディングが含まれていないため、
 
+    (∀α. (eq :: Eq α). [α] –> α –> Bool)
+          >-A0 ([Float] –> Float –> Bool)
 
-In (x :: σ \ x^) and (x ::i σ \ x^), the identifier x^ is the translation of x.
-If x is not an overloaded identifier (that is, if x is bound by a lambda or let expression), then the assumption for a has the form (x :: σ \ x), so x simply translates as itself.
+  は成り立ちません。
 
-(x :: σ \ x^) および (x ::i σ \ x^)で、識別子のx^はxを変換したものです。
-xがオーバーロードされた識別子でない場合(つまり、xはラムダやlet式によって束縛させている場合)、単にそれ自体として変換し、Xので、そのための前提は、フォーム（X::σ\ X）を持っています。
+  2つの型スキームは、それらが重複している場合、つまり、いくつかの仮定のセットの両方のインスタンスである型が存在する場合には、単一化可能です。
+  `σ` と `σ'` は、型 `τ` が存在し、次のような仮定 `A` の有効な集合が存在する場合、統一的であるといいます。
 
+    σ >-A τ Λ σ' >-A τ
 
-Figure 8 shows the assumptions available when applying the inference rules to the expression
+  `σ` と `σ'` が統一的でない場合、 `σ ＃ σ'` と書きます。
 
-図6に式
+         A, (x :: τ \ xτ) |- e :: ρ \ e^
+    PRED ---------------------------------- (x ::ο σ) ∈ A
+         A |- e :: (x :: τ).ρ \ (λxτ. e^)
 
-	λp. λq. eq (fst p) (fstq) ∧ eq (snd p) (sndq)
+         A |- e :: (x :: τ).ρ \ e^
+         A |- x :: τ \ e'^
+    REL  ------------------------------------ (x ::ο σ) ∈ A
+         A |- e :: ρ \ (e^ e'^)
 
-in Figure 6.
+         Ax, (x ::ο σ) |- e :: τ \ e^
+    OVER ---------------------------------
+         A |- (over x :: σ in e) :: τ \ e^
 
-に推論規則を適用すると、図8は、仮定が利用可能を示しています。
+         A, (x ::i σ' \ xσ') |- e' :: σ' \ e'^
+         A, (x ::i σ' \ xσ') |- e  :: τ  \ e^
+    INST ----------------------------------------------------------- (x ::ο σ) ∈ A
+         A |- (inst x :: σ' = e' in e) :: τ \ (let xσ' = e'^ in e^)
 
-There are three (::i) bindings, corresponding to the three instance declarations, and two (::) bindings for the two bound variables, and two (::) bindings corresponding to assumed instances of equality.
-(We shall see later how assumed instances are introduced by the PRED rule.)
+  図10： 型付け規則と変換規則、パート2
 
-2バインド変数のため:)バインディング、2つ（：平等の想定のインスタンスに対応する:)バインディング3インスタンス宣言に対応する3つ（:: I）バインディング、および2つは（あります。
-（私たちは、どのように想定インスタンスをPREDルールによって導入されたかを後で参照しなければなりません。）
+    let eq(Eq Int) = eqInt in
+    let eq(Eq Char) = eqChar in
+    let eq(∀α.∀β.(eq::Eq α).(eq::Eq β). Eq(α, β))
+        =  λeq(Eq α).λeq(Εq β).λp.λq.
+            eq(Εq α) (fst р) (fst q) /\ eq(Eq β) (snd р) (snd q) in
+    eq(∀σ.∀β.(eq::Eq a).(eq::Eq β). Eq (α,β)) eq(Eq Int) eq(Eq Char) (1, 'a') (2, 'b')
 
-## A.4 Instances
+  図11： 形式化された等価性の変換
 
-Given a set of assumptions A, we define an instance relation between type-schemes,
+    A1 : (eq ::o ∀α.Eq α)
+         (eqInt :: Eq Int \ eqInt)
+         (eqChar :: Eq Int \ eqChar)
 
-仮定Aのセットを考えると、私たちは型のスキーム間のインスタンスの関係を定義し、
+    e1 : inst eq :: Eq Int = eqInt in
+         inst eq :: Eq Char = eqChar in
+         eq
 
-	σ >-Α σ'.
+  図12： 問題のある式
 
-This can be read as "σ is more general than σ' under assumptions A".
-This is the same as the relationship defined by Damas and Milner, but extended to apply to predicated types.
+## A.5 有効な仮定
 
-これは、「σは仮定Aの下の「σ'よりも一般的である」と読むことができます。
-これはダマとミルナーによって定義された関係と同じであり、前提タイプに適用するために拡張さ購入。
+  証明内で使用される仮定のすべてのセットは有効でなければなりません。
+  有効な一連の仮定は、次のように誘導的に定義されます:
 
-Only certain sets of assumptions are valid.
-The definition of validity depends on the >-A relation, so there is a (well-founded) mutual recursion between the definition of valid assumptions and the definition of >-A.
-We give the definition of >-A in this section, and the definition of valid assumptions in the next.
+  - 空。 空の仮定の集合 `{}`、は有効です。
 
-仮定の唯一の特定のセットが有効です。
-妥当性の定義は>-Aの関係に依存するため、有効な前提条件の定義と>-Aの定義との（十分な根拠）相互再帰があります。
-私たちは、このセクションの>-Aの定義、および次の有効な仮定の定義を与えます。
+  - 通常の識別子。 `A` が有効な仮定集合である場合、
+    `x` は `A` には現れない識別子であり、
+    `σ` は型スキームであり、
 
-The instance relation
+        A, (x :: σ \ x)
 
-インスタンスの関係
+    は有効な仮定集合です。
 
-	σ >-Α σ'
+  - オーバーロードされた識別子。
 
-where σ = ∀α1 ... αn.ρ and σ' = ∀β1 ... βm . ρ', is defined as follows:
-ここでσ = ∀α1 ... αn.ρとσ' = ∀β1 ... βm . ρ'は次のように定義されています。
+    `A` が有効な仮定集合である場合、 `x` は `A` に現れない識別子であり、
+    `σ` は型スキームであり、 `τ, ..., τm` は型であり、
+    `σ1, ..., σn` は次のような型スキームです:
 
-	σ >-A σ' iff
-	  (1) βi is not free in σ and
-	  (2) ∃τ1, ..., τn. [τ1/α1, ..., τn/αn]ρ >-Α ρ'
+    - `σ >-A σ'i` 、`1` から `n` までの `i` について、および
+    - `σ >-A τi`、 `i` は `1` から `m` まで、
+    - `σi # σj`、 異なる `i`、 `j` について `1` から `n` まで
 
-This part is similar to the definition in Damas/Milner.
-The bound variables of σ are specialised and the resulting predicated types are compared.
+    そして
 
-この部分はダマス/ミルナーにおける定義と同様です。
-σのバインド変数は、特殊化され、結果の述語の種類が比較されます。
+        A, (r ::ο σ),
+        (x ::i σ1 \ xσ1), ..., (x ::i σn \ xσn) ,
+        (x ::  τ1 \ xτ1), ..., (x ::  τm \ xτm)
 
-Define ρ >- A ρ' iff the type part of ρ equals the type part of ρ' (the same condition as Damas/Milner), and for every predicate (x :: τ) in ρ, either
+    は有効な仮定集合です。
 
-いずれか、ρで（X::τ）ρ（ダマ/ミルナーと同じ条件）ρ 'のタイプの一部オフρのタイプの一部に等しい」、およびすべての述語のために - ρ>が定義
+  例えば、図8の仮定は有効な集合です。
+  ただし、このインスタンスが既に集合内にあるインスタンスと重複しているため、バインディング
 
-- there is a predicate of the form (x :: τ) in ρ' (i.e. the predicate appears in both types); or
+    (eq ::i ∀γ. Eq(Char, γ) \ eq(∀γ. Eq(Char, γ)) )
 
-- the predicate can be eliminated under assumptions A.
+  で拡張された場合、この集合は無効になります。
 
-- フォームの述語が（X::τ）ρで '（すなわち述語は両方のタイプに表示される）があります。または
-
-- 述語は仮定Aの下で除去することができます
-
-A predicate (x :: τ) can be eliminated under A iff either
-
-述語(x::τ)は、以下のいずれかで除去することができます
-
-- (x :: τ \ x^) is in A; or
-
-- (x ::i σ' \ x^) is in A and σ' > A τ.
-
-- (x :: τ \ x^)がAにある、または
-
-- (x::i σ' \ x^)がAにあり、かつ、σ' > A τ。
-
-For example, if A0 is the set of assumptions in Figure 8, then
-
-例えば、A0は、図8の仮定の集合は、その後、あります
-
-
-	(∀α. (eq :: Eq α). [a] -> α -> Bool)
-		>-A0 ([Int] -> Int –> Bool)
-
-holds. On the other hand,
-
-保持しています。 一方、
-
-	(∀α. (eq :: Eq α). [α] –> α –> Bool)
-	      >-A0 ([Float] –> Float –> Bool)
-
-does not hold, since Ao contains no binding asserting that eq has an instance at type Float.
-
-AOは何がその式をアサートすると、Float型でインスタンスを持って結合が含まれないため、保持していません。
-
-Two type-schemes are unifiable if they overlap, that is, if there exists a type that is an instance of both under some set of assumptions.
-We say that σ and σ' are unifiable if there exists a type τ and valid set of assumptions A such that
-
-それらが重複する場合の仮定のいくつかのセットの下で両方のインスタンスがあるタイプが存在する場合、2つのタイプの方式は、すなわち、単一化可能です。
-私たちは、そのような仮定の型τおよび有効なセットが存在する場合σとσ 'が単一化可能であると言います。
-
-	σ >-Α τ Λ σ' >-Α τ
-
-We write σ # σ' if σ and σ' are not unifiable.
-
-私たちは「σ場合、σ'σ＃のσを書く単一化可能ではありません。
-
-	     Α, (x :: τ \ xτ) |- e :: ρ \ e^
-	PRED ---------------------------------- (x ::ο σ) ∈ Α
-	     Α |- e :: (x :: τ).ρ \ (λxτ. e^)
-
-	     Α |- e :: (x :: τ). ρ \ e^
-	     Α |- x :: τ \ τ' e'^
-	REL  ------------------------------------ (x ::ο σ) ∈ Α
-	     A |- e :: ρ \ (e^ e'^)
-
-	     Αx, (r ::ο σ) |- e :: τ \ e^
-	OVER ---------------------------------
-	     A |- (over x :: σ in e) :: τ \ e^
-
-	     Α, (x ::i σ' \ xσ') |- e' :: σ' \ e'^
-	     Α, (x ::i σ' \ xσ') |- e  :: τ  \ e^
-	INST ----------------------------------------------------------- (x ::ο σ) ∈ Α
-	     A |- (inst x :: σ' = e' in e) :: τ \ (let xσ' = e'^ in e^)
-
-Figure 10: Typing and translation rules, part 2
-
-	let eq(Eq Int) = eqInt in
-	let eq(Eq Char) = eqChar in
-	let eq(∀α.∀β.(eq::Eq α).(eq::Eq β). Eq(α, β)) 
-	    =  λeq(Eq α).λeq(Εq β).λp.λq.
-		    eq(Εq α) (fst р) (fst q) /\ eq(Eq β) (snd р) (snd q) in
-	eq(∀σ.∀β.(eq::Eq a).(eq::Eq β). Eq (α,β)) eq(Eq Int) eq(Eq Char) (1, 'a') (2, 'b')
-
-Figure 11: Translation of equality, formalised
-
-	A1 : (eq ::o ∀α.Eq α)
-	     (eqInt :: Eq Int \ eqInt)
-	     (eqChar :: Eq Int \ eqChar)
-
-	e1 : inst eq :: Eq Int = eqľnt in
-	     inst eq :: Eq Char = eqChar in
-	     eq
-
-Figure 12: A problematic expression
-
-## A.5 Valid assumptions
-
-All sets of assumptions used within proofs must be valid.
-The valid sets of assumptions are inductively defined as follows:
-
-証明内で使用される仮定のすべてのセットは有効でなければなりません。
-次のような仮定の有効なセットは、誘導定義されています。
-
-- Empty. The empty assumption set, {}, is valid.
-
-- 空。空の仮定の集合は、{}、有効です。
-
-- Normal identifier. If A is a valid assumption set,
-	x is an identifier that does not appear in A, and
-	σ is a type scheme, then
-
-		Α, (x :: σ \ x)
-
-	is a valid assumption set.
-
-- 通常の識別子。 Aは有効な仮定のセットがある場合には、
-	xは Aに表示されていない識別子であり、
-	σは型スキームであり、その後、
-
-		Α, (x :: σ \ x)
-
-	は有効な仮定のセットです。
-
-- Overloaded identifier.
-	If A is a valid assumption set, x is an identifier that does not appear in A,
-	σ is a type scheme, and τ , ..., τm are types and
-	σ1, ..., σn are types schemes such that
-
-	– σ >-A 4 σ'i, for i from 1 to n, and
-	— σ >-A τi, for i from 1 to m, and
-	— σi # σj, for distinct i, j from 1 to n
-
-	then
-
-		Α, (r ::ο σ),
-		(x ::i σ1 \ xσ1), ..., (x ::i σn \ xσn) ,
-		(x ::  τ1 \ xτ1), ..., (x ::  τm \ xτm) 
-
-	is a valid assumption set.
-
-- オーバーロード識別子。
-
-	Aは有効な仮定のセットがある場合、xはAに表示されていない識別子は、あります
-	σは型スキームであり、τは、...、種類τmをされ、
-	σ1は、...、その種類のスキームは、ΣNあります
-
-	- σ>-A4Σ'I、iについて1からnまでの、および
-	- σ>-Aτiと、iについて1からmまで、および
-	- 個別のiに対するΣI＃1ΣJ、1からnまでのJ
-
-	その後
-
-		Α, (r ::ο σ),
-		(x ::i σ1 \ xσ1), ..., (x ::i σn \ xσn) ,
-		(x ::  τ1 \ xτ1), ..., (x ::  τm \ xτm) 
-
-	有効な仮定のセットです。
-
-For example, the assumptions in Figure 8 are a valid set.
-However, this set would be invalid if augmented with the binding
-
-例えば、図8の仮定が有効なセットです。
-結合で増強ただし、このセットは無効になります
-
-	(eq ::i ∀γ. Eq(Char, γ) \ eq(∀γ. Eq(Char, γ)) )
-
-as this instance overlaps with One already in the set.
-
-このインスタンスがセットにすでに一つと重複するとして。
-
-## A.6 Inference rules
 ## A.6 推論規則
 
-We now give inference rules that characterise welltypings of the form
+  現在の以下の形式のwelltypingsを特徴付ける推論規則を与えます
 
-現在の形式のウェル型付けを特徴付ける推論規則を与えます
+    A |- e :: σ \ e^
 
-	Α |- e :: σ \ e^
+  このルールは、図9と図10に示す2つのグループに分かれています。
+  最初のグループは Damas/Milner ルールに直接基づいています(図9)。
+  2つの小さな違いがあります。トランスレーションが簡単に各ルールに追加され、1つではなく2つのTAUTルールがあります(`(::)` バインディングのルールと `(::i)` バインディングのルール)。
 
-The rules break into two groups, shown in Figures 9 and 10.
-The first group is based directly on the Damas/Milner rules (Figure 9).
-There are two small differences: translations have been added to each rule in a straightforward way, and there are two TAUT rules instead of one (one rule for (::) bindings and One for (::i) bindings).
+  たとえば、整数と文字定数の種類についての仮定とともに、図8に示す一連の仮定を `A0` とします。
+  そして、上記の規則は、以下を導き出すのに十分です:
 
-ルールは、図9及び図10に示す2つのグループに分割します。
-最初のグループは、ダマ/ミルナールール（図9）に直接基づいています。
-二つの小さな違いがあります：変換は簡単な方法で、各ルールに追加されたが、その代わりに1（のための（一つのルールの2タウトルールがある：:)バインディングとするための一つの（::ⅰ）バインディングが）。
+    A0 |- (eq 1   2  ) :: Bool \ (eq(Eq Int) 1 2)
+    A0 |- (eq 'а' 'b') :: Bool \ (eq(Eq Char) 'а' 'b')
 
-For example, let A0 be the set of assumptions shown in Figure 8, together with assumptions about the types of integer and character constants.
-Then the above rules are sufficient to derive that
+  つまり、単純なオーバーロードを解決するにはこれらのルールだけで十分です。
 
-たとえば、A0は整数と文字定数の型についての仮定と一緒に、図8に示した仮定の集合とします。
-そして、上記の規則はそれを導き出すのに十分です
+  オーバーロードの複雑な使用には、残りの4つのルールが必要です(図10参照)。
+  最初の2つは述語の導入と削除を扱い、後の2つは `over` と `inst` 構文を扱います。
 
-	A0 |- (eq 1   2  ) :: Bool \ (eq(Eq Int) 1 2)
-	A0 |- (eq 'а' 'b') :: Bool \ (eq(Eq Char) 'а' 'b')
+  今まで見てきたように、クラスを含む型を持つ式(つまり、述語型を持つ式)は、実行時に辞書を渡す必要があるラムダ抽象化に変換されます。
+  この考え方は、PRED("predicate")ルールとREL("release")ルールにカプセル化されています。
+  PREDルールとRELルールは、GENとSPECルールがバインドされた型変数を導入し排除する方法と同様に述語を導入し、除去します。
+  特に、PREDルールは述語を型に追加し(その変換としてラムダ式を持ちます)、RELルールは型から述語を削除します(変換としてアプリケーションを持ちます)。
 
-That is, these rules alone are sufficient to resolve simple overloading.
+  OVERルールは、適切な `(::o)` バインディングを環境に追加する式に、適切な `(::i)` バインディングを環境に追加するINSTルール型のinst式を入力します。
+  仮定集合に対する妥当性条件は、オーバーロードされた識別子が有効な型でのみインスタンス化されることを保証します。
 
-つまり、単独でこれらのルールは単純な過負荷を解決するのに十分です。
+  いずれの変換も `over` 式または `inst` 式を含んでいないので、オーバーロードは含まれていません。
+  Hindley/Milnerシステムでは、変換自体が適切に型付けされていることを確認するのは簡単です。
 
-More complicated uses of overloading require the remaining four rules, shown in Figure 10.
-The first two deal with the introduction and elimination of predicates, and the second two deal with the over and inst constructs.
+  たとえば、図6のプログラムは、これらの規則によって図11のプログラムに変換されます。
+  読者は、これが図3から図4の変換に対応していることを容易に確認することができます。
+  我々はこのように、論文の本文に非公式に提示されたタイピングと変形の考え方をどのように形式化するかを示しました。
 
-オーバーロードのより複雑な用途は、図10に示した残りの4つのルールが必要です。
-導入と述語の排除、及びオーバーとその構築物で第2の契約で最初の二つの契約。
+## A.7 主要型付け
 
-As we have seen, expressions with types that contain classes (that is, expressions with predicated types) are translated to lambda abstractions that require a dictionary to be passed at run-time.
-This idea is encapsulated in the PRED ("predicate") and REL ("release") rules.
-The PRED and REL rules introduce and eliminate predicates analogously to the way that the GEN and SPEC rules introduce and eliminate bound type variables.
-In particular, the PRED rule adds a predicate to a type (and has a lambda expression as its translation) and the REL rule removes a predicate from a type (and has an application as its translation).
+  `A` と `e` が与えられたとき、我々は `σ` を `A` のもとでの `e` の主要な型スキームと呼び
 
-私たちはクラスを含むタイプと、式を見てきたように（つまり、述語タイプの表現）は、実行時に渡される辞書を必要とラムダ抽象に変換されます。
-このアイデアは、PRED（「述語」）とREL（"リリース"）のルールにカプセル化されます。
-PREDとRELのルールが紹介し、GENとSPEC規則が導入し、バインドされた型変数を排除する方法と同様に述語を排除します。
-特に、PREDルールは型に述語を追加します（とその変換としてラムダ式を持っている）とRELルールがタイプから述語を削除（およびその変換などのアプリケーションを持っています）。
+  - `A |- e :: σ \ e^` ; かつ
+  - すべての `σ'` について、 `A |- e :: σ' \ e'^` ならば `σ >-A σ'` です。
 
-The OVER rule types over expressions adding the appropriate (::o) binding to the environment, and the INST rule types inst expressions adding the appropriate (::i) binding to the environment.
-The validity condition on sets of assumptions ensures that Overloaded identifiers are only instanced at valid types.
+  Hindley/Milnerシステムの鍵となる結果は、well-typingなすべての式 `e` が主要型スキームであることです。
 
-適切な（:: O）（:: i）を環境に結合し、INSTのルールタイプは、適切なを追加する式をINST環境への結合を追加し、式の上にオーバールールタイプ。
-仮定のセットの有効条件は、オーバーロード識別子が唯一の有効な型でインスタンス化されることを保証します。
+  我々は、すべての有効な一連の仮定 `A` およびすべての式 `e` が `over` または `inst` 式を含まない場合、 `e` が `A` の下で型どりの良いものであれば、 `e` は `A` のもとで主要型スキームを持つと推論します。
 
-Notice that none of the translations contain over or inst expressions, therefore, they contain no overloading.
-It is easy to verify that the translations are themselves well-typed in the Hindley/Milner system.
+  たとえば、 `A0` は図8の仮定の集合とします。
+  そして、型付け
 
-変換のいずれもが、そのため、彼らは何のオーバーロードを含まない、上やインスト式含まれていません注意してください。
-これは、変換自体はヒンドリー/ミルナーシステムにおいてよく型付けされていることを検証するのは容易です。
+    A0 |- eq :: ∀α. Eq a \ eq(Eq alpha)
 
-For example, the program in Figure 6 is translated by these rules into the program in Figure 11.
-The reader can easily verify that this corresponds to the translation from Figure 3 to Figure 4.
-We have thus shown how to formalise the typing and transformation ideas that were presented informally in the body of the paper.
+  は主要です。
+  主要でない型付けの例は
 
-例えば、図6のプログラムは、図11のプログラムにこれらの規則で変換されています。
-読者は簡単に、これは図4に、図3からの変換に対応していることを確認することができます。
-そこで我々は、紙の本体で非公式に発表された入力と変換アイデアを正式にする方法が示されています。
+    A0 |- eq :: Eq Int  \ eq(Eq Int)
+    A0 |- eq :: Eq Char \ eq(Ep Char)
 
-## A.7 Principal typings
+  です。これらのそれぞれは、仮定 `A0` のもとでの主要型付けのインスタンスです。
 
-Given A and e, we call σ a principal type scheme for e under A iff
+  主要型の存在は、 `over` 式と `inst` 式を含む式では問題になります。
+  たとえば、図12の仮定集合と式を `A1` と `e1` とします。
+  そして、次の型付けを導出することが可能です
 
-Aとeが与えられたとき、我々はA中のeのためのσの主要な型スキームと呼び
+    A1 |- e1 :: Eq Int  \ eqInt
+    A1 |- e1 :: Eq Char \ eqChar
 
-- A |- e :: σ \ e^ ; and
-
-- for every σ', if A |- e :: σ' \ e'^ then σ >-A σ'
-
-- 全てのσ'で, A |- e :: σ' \ e'^ の場合 σ >-A σ'
-
-A key result in the Hindley/Milner system is that every expression e that has a well-typing has a principal type scheme.
-
-ヒンドリー/ミルナーシステム内の重要な結果はよくタイピングを持っているすべての式eが主要なタイプスキームを持っているということです。
-
-We conjecture that for every valid set of assumptions A and every expression e containing no over or inst expressions, if e has a well-typing under A then e has a principal type scheme under A.
-
-eはその後、電子の下でよくタイピングを持っている場合我々は、仮定Aのすべての有効なセットと、すべての式eのために何の上やインスト式含有していないと推測A.下の主要なタイプのスキームを持っています
-
-For example, let A0 be the set of assumptions in Figure 8.
-Then the typing
-
-たとえば、A0は図8の仮定の集合とします。
-そして、タイピング
-
-	A0 |- eq :: ∀α. Eq a \ eq(Eq alpha)
-
-is principal.
-Examples of non-principal typings are
-
-の主要です。
-非主要でないタイピングの例としては、
-
-	A0 |- eq :: Eq Int  \ eq(Eq Int)
-	A0 |- eq :: Eq Char \ eq(Ep Char)
-
-Each of these is an instance of the principal typing under assumptions A0.
-
-これらのそれぞれは、仮定のA0下の主要型付けのインスタンスです。
-
-The existence of principal types is problematic for expressions that contain over and inst expressions.
-For example, let A1 and e1 be the assumption set and expression in Figure 12.
-Then it is possible to derive the typings
-
-overとinst式を含む式のために、主要なタイプの存在は、問題を含みます。
-たとえば、A1とe1が図12における仮定集合と式とします。
-それは型付けを導出することが可能です
-
-	A1 |- e1 :: Eq Int  \ eqInt
-	A1 |- e1 :: Eq Char \ eqChar
-
-But there is no principal type!
-One possible resolution of this is to require that over and inst declarations have global scope.
-It remains an Open question whether there is some less drastic restriction that still ensures the existence of principal types.
-
-しかし、ここに主要型はありません！
-これの一つの可能な解像度がオーバーとinstの宣言はグローバルスコープを持っていることを要求することです。
-それはまだ主要タイプが存在することを保証するいくつかのより少なく劇的な制約があるかどうか未解決の問題のまま。
+  しかし、ここに主要型はありません！
+  これの可能な解決方法の1つは、 `over` 宣言とグローバル宣言にグローバルスコープが必要であることです。
+  主要型の存在を確実にする、それほど劇的ではない制限があるかどうかは未解決のままです。
 
 ## References
 
-[BEJ88] D. Bjørner, A. Ershov, and N.D. Jones, editors, Partial Evaluation and Mired Computation, North-Holland, 1988 (to appear).
+  <a name="BEJ88"></a>[\[BEJ88\]](#r_BEJ88) D. Bjørner, A. Ershov, and N.D. Jones, editors, Partial Evaluation and Mired Computation, North-Holland, 1988 (to appear).
 
-[CW85] L. Cardelli and P. Wegner, On understanding types, data abstraction, and polymorphism. Computing Surveys 17, 4, December 1985.
+  <a name="CW85"></a>[\[CW85\]](#r_CW85) L. Cardelli and P. Wegner, On understanding types, data abstraction, and polymorphism. Computing Surveys 17, 4, December 1985.
 
-[Car88] L. Cardelli, Structural subtyping and the
-notion of power type. In Proceedings of the 15th Annual Symposium on Principles of Programming Languages, San Diego, California, January 1988.
+  <a name="Car88"></a>[\[Car88\]](#r_Car88) L. Cardelli, Structural subtyping and the notion of power type. In Proceedings of the 15th Annual Symposium on Principles of Programming Languages, San Diego, California, January 1988.
 
-[DM82] L. Damas and R. Milner, Principal type schemes for functional programs. In Proceedings of the 9th Annual Symposium on Principles of Programming Languages, Albuquerque, N.M., January 1982.
+  <a name="DM82"></a>[\[DM82\]](#r_DM82) L. Damas and R. Milner, Principal type schemes for functional programs. In Proceedings of the 9th Annual Symposium on Principles of Programming Languages, Albuquerque, N.M., January 1982.
 
-[FGJM85] K. Futasagi, J.A. Goguen, J.-P. Jouannaud, and J. Meseguer, Principles of OBJ2. In Proceedings of the 12th Annual Symposium om Principles of Programming Languages, January 1985.
+  <a name="FGJM85"></a>[\[FGJM85\]](#r_FGJM85) K. Futasagi, J.A. Goguen, J.-P. Jouannaud, and J. Meseguer, Principles of OBJ2. In Proceedings of the 12th Annual Symposium om Principles of Programming Languages, January 1985.
 
-[GR83] A. Goldberg and D. Robson, Smalltalk80: The Language and Its Implementation. Addison-Wesley, 1983.
+  <a name="GR83"></a>[\[GR83\]](#r_GR83) A. Goldberg and D. Robson, Smalltalk80: The Language and Its Implementation. Addison-Wesley, 1983.
 
-[Hin69] R. Hindley, The principal type scheme of an object in combinatory logic. Trans. Am. Math. Soc. 146, pp. 29—60, December 1969.
+  <a name="Hin69"></a>[\[Hin69\]](#r_Hin69) R. Hindley, The principal type scheme of an object in combinatory logic. Trans. Am. Math. Soc. 146, pp. 29—60, December 1969.
 
-[HMM86] R. Harper, D. MacQueen, and R. Milner, Standard ML. Report ECS-LFCS-86-2, Edinburgh University, Computer Science Dept., 1986.
+  <a name="HMM86"></a>[\[HMM86\]](#r_HMM86) R. Harper, D. MacQueen, and R. Milner, Standard ML. Report ECS-LFCS-86-2, Edinburgh University, Computer Science Dept., 1986.
 
-[HMT88] R. Harper, R. Milner, and M. Tofte, The definition of Standard ML, version 2. Report ECS-LFCS-88-62, Edinburgh University, Computer Science Dept., 1988.
+  <a name="HMT88"></a>[\[HMT88\]](#r_HMT88) R. Harper, R. Milner, and M. Tofte, The definition of Standard ML, version 2. Report ECS-LFCS-88-62, Edinburgh University, Computer Science Dept., 1988.
 
-[Kae88] S. Kaes, Parametric polymorphism. In Proceedings of the 2'nd Furopean Symposium on Programming, Nancy, France, March 1988, LNCS 300, Springer-Verlag, 1988.
+  <a name="Kae88"></a>[\[Kae88\]](#r_Kae88) S. Kaes, Parametric polymorphism. In Proceedings of the 2'nd Furopean Symposium on Programming, Nancy, France, March 1988, LNCS 300, Springer-Verlag, 1988.
 
-[Mil78] R. Milner, A theory of type polymorphism in programming. J. Comput. Syst.
-Sci. 17, pp. 348–375, 1978.
+  <a name="Mil78"></a>[\[Mil78\]](#r_Mil78) R. Milner, A theory of type polymorphism in programming. J. Comput. Syst. Sci. 17, pp. 348–375, 1978.
 
-[Mil84] R. Milner, A proposal for Standard ML. In Proceedings of the Symposium on Lisp and Functional Programming, Austin, Texas, August 1984.
+  <a name="Mil84"></a>[\[Mil84\]](#r_Mil84) R. Milner, A proposal for Standard ML. In Proceedings of the Symposium on Lisp and Functional Programming, Austin, Texas, August 1984.
 
-[Mil87] R. Milner, Changes to the Standard ML core language. Report FCS-LFCS-87-33, Edinburgh University, Computer Science Dept., 1987.
+  <a name="Mil87"></a>[\[Mil87\]](#r_Mil87) R. Milner, Changes to the Standard ML core language. Report FCS-LFCS-87-33, Edinburgh University, Computer Science Dept., 1987.
 
-[MP85] J. C. Mitchell and G. D. Plotkin, Abstract types have existential type. In Proceedings of the 12th Annual Symposium on Principles of Programming Languages, January 1985.
+  <a name="MP85"></a>[\[MP85\]](#r_MP85) J. C. Mitchell and G. D. Plotkin, Abstract types have existential type. In Proceedings of the 12th Annual Symposium on Principles of Programming Languages, January 1985.
 
-[Rey85] J. C. Reynolds, Three approaches to type structure. In Mathematical Foundations of Software Development, LNCS 185, Springer-Verlag, 1985.
+  <a name="Rey85"></a>[\[Rey85\]](#r_Rey85) J. C. Reynolds, Three approaches to type structure. In Mathematical Foundations of Software Development, LNCS 185, Springer-Verlag, 1985.
 
-|Str67] C. Strachey, Fundamental concepts in programming languages. Lecture notes for International Summer School in Computer Programming, Copenhagen, Allgust 1967.
+  <a name="Str67"></a>[\[Str67\]](#r_Str67) C. Strachey, Fundamental concepts in programming languages. Lecture notes for International Summer School in Computer Programming, Copenhagen, Allgust 1967.
 
-[Turs85] D. A. Turner, Miranda: A non-strict functional language with polymorphic types. In Proceedings of the 2'nd International Conference on Functional Programming Languages and Computer Architecture, Nancy, France, September 1985. LNCS 201, Springer-Verlag, 1985.
+  <a name="Tur85"></a>[\[Tur85\]](#r_Tur85) D. A. Turner, Miranda: A non-strict functional language with polymorphic types. In Proceedings of the 2'nd International Conference on Functional Programming Languages and Computer Architecture, Nancy, France, September 1985. LNCS 201, Springer-Verlag, 1985.
 
-[Wan87] M. Wand, Complete type inference for simple objects. In Proceedings of the Symposium on Logic in Computer Science, Ithaca, NY, June 1987. IEEE Computer Society Press, 1987.
+  <a name="Wan87"></a>[\[Wan87\]](#r_Wan87) M. Wand, Complete type inference for simple objects. In Proceedings of the Symposium on Logic in Computer Science, Ithaca, NY, June 1987. IEEE Computer Society Press, 1987.

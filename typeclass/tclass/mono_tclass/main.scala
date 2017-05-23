@@ -1,4 +1,16 @@
+package test
 object Infer extends App {
+
+  sealed trait T
+  case object TInt extends T
+  case object TBool extends T
+  case class TVar(a: String) extends T
+  case class TFun(a:T, b: T) extends T
+  case class TRecord(t:Map[String,T]) extends T
+  case class TCon(a: String, ts:List[T]) extends T
+
+  case class TClass(name:String, members:Map[String,T],impls:Map[T,String])
+  type CEnv = Map[String, TClass]
 
   sealed trait E
   case class EVar(a: String) extends E
@@ -12,17 +24,9 @@ object Infer extends App {
   case class ERecordGet(e:E,f:String) extends E
   case class EType(name:String, prm:List[String], t:T, e:E) extends E
 
-  case class EPlaceHolder(e:String, t:T) extends E
+  case class ELazy(a:(CEnv)=>E) extends E
   case class EClass(name:String,p:String,members:Map[String,T],e:E) extends E
   case class EInst(name:String,p:T, members:Map[String, E],e:E) extends E
-
-  sealed trait T
-  case object TInt extends T
-  case object TBool extends T
-  case class TVar(a: String) extends T
-  case class TFun(a:T, b: T) extends T
-  case class TRecord(t:Map[String,T]) extends T
-  case class TCon(a: String, ts:List[T]) extends T
 
   sealed trait Scheme
   case class Mono(t:T) extends Scheme
@@ -31,8 +35,6 @@ object Infer extends App {
   type Subst = Map[String, T]
   type Assumps = Map[String, Scheme]
 
-  case class TClass(name:String, members:Map[String,T],impls:Map[T,String])
-  type CEnv = Map[String, TClass]
 
   case class TypeError(s: String) extends Exception(s)
 
@@ -41,7 +43,6 @@ object Infer extends App {
 
   val nullSubst = Map[String, T]()
   var subst = nullSubst
-
   var counter = 0
 
   def new_tvar(prefix: String): T = {
@@ -57,7 +58,7 @@ object Infer extends App {
       case TBool        => Set()
       case TFun(t1, t2) => ftv_t(t1).union(ftv_t(t2))
       case TRecord(map) =>
-        map.foldLeft(Set[String]()) { case (tvs, (k,t)) => tvs.union(ftv_t(t)) }      
+        map.foldLeft(Set[String]()) { case (tvs, (k,t)) => tvs.union(ftv_t(t)) }
     }
 
   def apply_subst(s:Subst, t:T):T = {
@@ -75,13 +76,23 @@ object Infer extends App {
 
   def apply_t(t: T): T = apply_subst(subst, t)
 
-
   def instantiate(cenv:CEnv, env: Assumps, e:E, n:String):(CEnv, E, T) = {
     env(n) match {
-      case Mono(t) => (cenv, e, t)
       case Over => // オーバーロードされた型はプレースホルダにする
         val t = new_tvar("'dictOver")
-        (cenv, EPlaceHolder(n, t), t)
+        val placeHolder =
+          ELazy({(cenv:CEnv) =>
+            cenv.find{case(klass,tclass)=>tclass.members.contains(n)} match {
+              case Some((klass,TClass(name:String, members:Map[String,T],impls:Map[T,String]))) =>
+                val tv = new_tvar("some")
+                val t1 = apply_subst(Map(name->tv), members(n))
+                mgu(t, t1)
+                EApp(EVar(n),EVar(impls(apply_t(tv))))
+              case None => EVar(n)
+            }
+          })
+        (cenv, placeHolder, t)
+      case Mono(t) => (cenv, e, t)
     }
   }
 
@@ -100,7 +111,7 @@ object Infer extends App {
       case (TInt, TInt) =>
       case (TBool,TBool) =>
       case (t@TRecord(map1), u@TRecord(map2)) =>
-        if (map1.keys != map2.keys) 
+        if (map1.keys != map2.keys)
           throw new TypeError("cannot unify " + show_t(t) + " with " + show_t(u))
         map1.foreach{case(k,t)=>
           mgu(map2(k),t)
@@ -137,7 +148,7 @@ object Infer extends App {
       val (cenv1, e1_, t1) = ti(cenv, env, e1)
       val (cenv2, e2_, t2) = ti(cenv1, env + (x -> Mono(t1)), e2)
       (cenv2, ELet(x,e1_,e2_), t2)
-    
+
     case EClass(name,p1,members,e) =>
       val cenv2 = cenv + (name -> TClass(p1, members, Map()))
       val env2 = members.foldLeft(env) {
@@ -155,7 +166,7 @@ object Infer extends App {
     case EInst(name, t1, members, e) =>
       cenv(name) match {
       case TClass(p, tmap, impls) =>
-        val TVar(dict) = new_tvar("dict_") 
+        val TVar(dict) = new_tvar("dict_")
         val cenv2 = cenv + (name -> TClass(p, tmap, impls+(t1->dict)))
         if (tmap.keys != members.keys)
           throw TypeError("instance member error "+name+" "+show_t(t1))
@@ -172,9 +183,15 @@ object Infer extends App {
     }
   }
 
+  def type_inference(env:Assumps, e: E):(CEnv, E, T) = {
+    subst = nullSubst
+    val (cenv, e_, t) = ti(Map(), env, e)
+    (cenv, plane(cenv, e_), apply_t(t))
+  }
+
   def plane(cenv:CEnv, e: E): E = {
     e match {
-    case EVar(n) => e
+    case EVar(n)  => e
     case EInt(_)  => e
     case EBool(_) => e
     case EAbs(n, e1) => EAbs(n, plane(cenv, e1))
@@ -183,24 +200,9 @@ object Infer extends App {
     case ERecord(map) => ERecord(map.map{case(k,e)=>(k,plane(cenv, e))})
     case ERecordGet(e, f) => ERecordGet(plane(cenv, e), f)
     case EType(name, prm, t, e) => EType(name,prm,t, plane(cenv, e))
-    case EPlaceHolder(n, t) =>
-      cenv.find{case(klass,tclass)=>tclass.members.contains(n)} match {
-        case Some((klass,TClass(name:String, members:Map[String,T],impls:Map[T,String]))) =>
-          val tv = new_tvar("some")
-          val t1 = apply_subst(Map(name->tv), members(n))
-          mgu(t, t1)
-          EApp(EVar(n),EVar(impls(apply_t(tv))))
-        case None => EVar(n)
-      }
-    case e =>
-      throw TypeError("invalid expression "+e)
+    case ELazy(f) => f(cenv)
+    case e => throw TypeError("invalid expression "+e)
     }
-  }
-
-  def type_inference(env:Assumps, e: E):(CEnv, E, T) = {
-    subst = nullSubst
-    val (cenv, e_, t) = ti(Map(), env, e)
-    (cenv, plane(cenv, e_), apply_t(t))
   }
 
   def test(e: E, et: T) {
@@ -293,4 +295,3 @@ object Infer extends App {
       "add" -> EAbs("x",EAbs("y",EApp(EApp(EVar("+"),EVar("x")),EVar("y")))))),
     EApp(EApp(EApp(EVar("add"), EVar("dict_14")),EInt(1)),EInt(2)))))))
 }
-

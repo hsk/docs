@@ -1,3 +1,4 @@
+package infer
 object Infer extends App {
 
   sealed trait E
@@ -459,7 +460,7 @@ object Infer extends App {
     EInst("Num",TInt,Map("add"->EAbs("x",EAbs("y",EApp(EApp(EVar("+"),EVar("x")),EVar("y"))))),
     ELet("a",EVar("add"),
     EApp(EApp(EVar("a"),EInt(1)),EInt(2)))))))
-*/
+  */
 
   assert(test3(
     Map("+" -> Poly(List(), Map(), TFun(TInt, TFun(TInt, TInt)))),
