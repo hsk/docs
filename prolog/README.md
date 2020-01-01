@@ -17,7 +17,7 @@ TODO: 誰かの誰かな批判はよくない。
 
 インストールはMacのHomebrewを使っている場合は、gprologをインストールします。
 
-	$ brew install gprolog
+	$ brew install gnu-prolog
 
 swi-prologを使う場合は
 
